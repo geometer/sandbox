@@ -2,6 +2,8 @@ import itertools
 from typing import List
 
 class Object:
+    """Common ancestor for all geometric objects like point, line, circle"""
+
     def __init__(self, scene, **kwargs):
         id = kwargs.get('id')
         if id:
@@ -69,24 +71,24 @@ class Scene:
         return '\n'.join([str(obj) for obj in self.__objects])
 
 class Point(Object):
+    """Abstract point class, all specific point classes inherit this class"""
+
     def __init__(self, scene: Scene, **kwargs):
         assert self.__class__ != Point, 'Cannot create abstract point'
         Object.__init__(self, scene, **kwargs)
 
 class FreePoint(Point):
+    """A point with arbitrary coordinates"""
+
     def __init__(self, scene: Scene, **kwargs):
         Point.__init__(self, scene, **kwargs)
 
 def assert_same_scene(obj0: Object, obj1: Object):
     assert obj0.scene == obj1.scene, 'Trying to use object from different scenes'
 
-class PointOnLine(Point):
-    def __init__(self, point0: Point, point1: Point, ratio: float, **kwargs):
-        assert_same_scene(point0, point1)
-
-        Point.__init__(self, point0.scene, point0=point0, point1=point1, ratio=ratio, **kwargs)
-
 class CentrePoint(Point):
+    """Gravity centre of given points (with equal weights)"""
+
     def __init__(self, points: List[Point], **kwargs):
         assert len(points) > 0, 'Cannot calculate centre of empty list'
         pt0 = points[0]
@@ -105,6 +107,8 @@ class Line(Object):
         self.point1 = point1
 
 class Circle(Object):
+    """Circle with given centre via given point"""
+
     def __init__(self, centre: Point, point: Point, **kwargs):
         assert_same_scene(centre, point)
 
@@ -113,10 +117,14 @@ class Circle(Object):
         self.point = point
 
 class FreePointOnCircle(Point):
+    """Arbitrary point on the circle"""
+
     def __init__(self, circle: Circle, **kwargs):
         Point.__init__(self, circle.scene, circle=circle, **kwargs)
 
 class CirclesIntersection(Point):
+    """Point that is an intersection of given circles. Usually requires a constraint for correct placement"""
+
     def __init__(self, circle0: Circle, circle1: Circle, **kwargs):
         assert_same_scene(circle0, circle1)
 
