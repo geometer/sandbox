@@ -15,7 +15,7 @@ class OppositeSideConstraint(Constraint):
 
     def validate(self, placement):
         def clockwise(p0: TwoDCoordinates, p1: TwoDCoordinates, p2: TwoDCoordinates) -> bool:
-            return TwoDVector(p1, p0).vectorProduct(TwoDVector(p2, p0)) < 0
+            return TwoDVector(p1, p0).vector_product(TwoDVector(p2, p0)) < 0
 
         a = placement.location(self.A)
         b = placement.location(self.B)

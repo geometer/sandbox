@@ -35,20 +35,20 @@ class TwoDVector:
     def length2(self) -> float:
         return self.x * self.x + self.y * self.y
 
-    def scalarProduct(self, other) -> float:
+    def scalar_product(self, other) -> float:
         return self.x * other.x + self.y * other.y
 
-    def vectorProduct(self, other) -> float:
+    def vector_product(self, other) -> float:
         return self.x * other.y - self.y * other.x
 
     def angle(self, other) -> float:
-        cos = self.scalarProduct(other) / self.length / other.length
+        cos = self.scalar_product(other) / self.length / other.length
         if cos >= 1:
             return 0
         elif cos <= -1:
-            return math.pi / 2 if self.vectorProduct(other) > 0 else -math.pi / 2
+            return math.pi / 2 if self.vector_product(other) > 0 else -math.pi / 2
         else:
-            return math.acos(cos) if self.vectorProduct(other) > 0 else -math.acos(cos)
+            return math.acos(cos) if self.vector_product(other) > 0 else -math.acos(cos)
 
 class IncompletePlacementError(Exception):
     """Internal error, should never be thrown to public"""
@@ -125,10 +125,10 @@ class Placement:
                             assert discr >= 0, 'Circles have no intersection points'
                             # y = (-b +- sqrt(discr)) / a
                             #print("%.3f y^2 + %.3f y + %.3f = 0" % (a, 2 * b, c))
-                            y1 = (-b + math.sqrt(discr)) / a
-                            y2 = (-b - math.sqrt(discr)) / a
-                            x1 = const + y_coef * y1
-                            x2 = const + y_coef * y2
+                            y_1 = (-b + math.sqrt(discr)) / a
+                            y_2 = (-b - math.sqrt(discr)) / a
+                            x_1 = const + y_coef * y_1
+                            x_2 = const + y_coef * y_2
                         elif math.fabs(c1.y - c0.y) > 5e-6:
                             y_coef = 2 * (c1.y - c0.y)
                             x_coef = 2 * (c0.x - c1.x) / y_coef
@@ -139,14 +139,13 @@ class Placement:
                             discr = b * b - a * c
                             assert discr >= 0, 'Circles have no intersection points'
                             #print("%.3f x^2 + %.3f x + %.3f = 0" % (a, 2 * b, c))
-                            x1 = -b + math.sqrt(discr) / a
-                            x2 = -b - math.sqrt(discr) / a
-                            y1 = const + x_coef * x1
-                            y2 = const + x_coef * x2
+                            x_1 = -b + math.sqrt(discr) / a
+                            x_2 = -b - math.sqrt(discr) / a
+                            y_1 = const + x_coef * x_1
+                            y_2 = const + x_coef * x_2
                         else:
                             raise PlacementFailedError
-                        #print('(%.3f, %.3f), (%.3f, %.3f)' % (y1, x1, y2, x2))
-                        add_list(p, [TwoDCoordinates(x1, y1), TwoDCoordinates(x2, y2)])
+                        add_list(p, [TwoDCoordinates(x_1, y_1), TwoDCoordinates(x_2, y_2)])
                     elif isinstance(p, CentrePoint):
                         coords = [self.location(pt) for pt in p.points]
                         add(p, TwoDCoordinates(
@@ -189,6 +188,6 @@ class Placement:
         assert isinstance(pt2, Point), 'Parameter is not a pt'
         assert isinstance(pt3, Point), 'Parameter is not a pt'
 
-        v0 = TwoDVector(self.location(pt0), self.location(pt1))
-        v1 = TwoDVector(self.location(pt2), self.location(pt3))
-        return v0.angle(v1)
+        vec0 = TwoDVector(self.location(pt0), self.location(pt1))
+        vec1 = TwoDVector(self.location(pt2), self.location(pt3))
+        return vec0.angle(vec1)
