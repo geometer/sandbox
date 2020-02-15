@@ -1,6 +1,7 @@
 import math
+from typing import List
 
-from sandbox import *
+from sandbox import Point, Placement
 
 class Vector:
     def __init__(self, start: Point, end: Point, placement: Placement):
@@ -16,30 +17,35 @@ class Vector:
         return self.placement.angle(self.start, self.end, other.start, other.end)
 
     def __eq__(self, other) -> bool:
-        return self.start == other.start and self.end == other.end or self.start == other.start and self.end == other.end
+        return self.start == other.start and self.end == other.end
 
     @property
     def name(self):
         return "%s %s" % (self.start.id, self.end.id)
 
 class Angle:
-    def __init__(self, v0: Vector, v1: Vector):
-        self.v0 = v0
-        self.v1 = v1
-        self.__arc = v0.angle(v1)
+    def __init__(self, vector0: Vector, vector1: Vector):
+        self.vector0 = vector0
+        self.vector1 = vector1
+        self.__arc = vector0.angle(vector1)
 
     def arc(self):
         return self.__arc
 
     @property
     def name(self):
-        return "∠(%s, %s)" % (self.v0.name, self.v1.name)
+        return "∠(%s, %s)" % (self.vector0.name, self.vector1.name)
 
 def vectors(placement: Placement):
     points = placement.scene.points
-    for i0 in range(0, len(points)):
-        for i1 in range(i0 + 1, len(points)):
-            yield Vector(points[i0], points[i1], placement)
+    for index0 in range(0, len(points)):
+        for index1 in range(index0 + 1, len(points)):
+            yield Vector(points[index0], points[index1], placement)
+
+def angles(vectors: List[Vector]):
+    for index0 in range(0, len(vectors)):
+        for index1 in range(index0 + 1, len(vectors)):
+            yield Angle(vectors[index0], vectors[index1])
 
 class LengthFamily:
     def __init__(self, vector: Vector):
@@ -49,14 +55,17 @@ class LengthFamily:
     def __test(self, vector: Vector) -> str:
         ratio = vector.length() / self.base.length()
         for i in range(1, 10):
-            candidate = ratio * i 
+            candidate = ratio * i
             if math.fabs(candidate - round(candidate)) < 5e-6:
                 return "%d/%d" % (round(candidate), i) if i > 1 else "%d" % round(candidate)
         ratio = ratio * ratio
         for i in range(1, 100):
-            candidate = ratio * i 
+            candidate = ratio * i
             if math.fabs(candidate - round(candidate)) < 5e-6:
-                return "SQRT(%d/%d)" % (round(candidate), i) if i > 1 else "SQRT(%d)" % round(candidate)
+                if i > 1:
+                    return "SQRT(%d/%d)" % (round(candidate), i)
+                else:
+                    return "SQRT(%d)" % round(candidate)
         return None
 
     def add(self, vector: Vector) -> bool:
@@ -79,32 +88,31 @@ def hunt(scene):
         for f in families:
             if f.add(s):
                 added = True
-                break 
+                break
         if not added:
             families.append(LengthFamily(s))
 
     print("%d segments in %d families" % (len(all_vectors), len([f for f in families if len(f.vectors) > 0])))
-    for f in families:
-        if len(f.vectors) > 0:
-            print("%s: %d segments" % (f.base.name, 1 + len(f.vectors)))
-            for s in f.vectors:
-                print("\t%s (%s)" % (s.name, s.comment))
+    for fam in families:
+        if len(fam.vectors) > 0:
+            print("%s: %d segments" % (fam.base.name, 1 + len(fam.vectors)))
+            for vec in fam.vectors:
+                print("\t%s (%s)" % (vec.name, vec.comment))
 
-    for i0 in range(0, len(all_vectors)):
-        for i1 in range(i0 + 1, len(all_vectors)):
-            angle = Angle(all_vectors[i0], all_vectors[i1])
-            arc = angle.arc()
-            if math.fabs(arc) < 5e-6:
-                print("%s = 0" % angle.name)
-            else:
-                ratio = arc / math.pi
-                for i in range(1, 60):
-                    candidate = i * ratio
-                    if math.fabs(candidate - round(candidate)) < 5e-6:
-                        if round(candidate) == 1:
-                            print("%s = PI / %d" % (angle.name, i))
-                        elif round(candidate) == -1:
-                            print("%s = -PI / %d" % (angle.name, i))
-                        else:
-                            print("%s = %d * PI / %d" % (angle.name, round(candidate), i))
-                        break
+    all_angles = list(angles(all_vectors))
+    for angle in all_angles:
+        arc = angle.arc()
+        if math.fabs(arc) < 5e-6:
+            print("%s = 0" % angle.name)
+        else:
+            ratio = arc / math.pi
+            for i in range(1, 60):
+                candidate = i * ratio
+                if math.fabs(candidate - round(candidate)) < 5e-6:
+                    if round(candidate) == 1:
+                        print("%s = PI / %d" % (angle.name, i))
+                    elif round(candidate) == -1:
+                        print("%s = -PI / %d" % (angle.name, i))
+                    else:
+                        print("%s = %d PI / %d" % (angle.name, round(candidate), i))
+                    break
