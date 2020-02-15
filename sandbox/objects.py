@@ -115,6 +115,10 @@ class Circle(Object):
         self.centre = centre
         self.point = point
 
+class FreePointOnCircle(Point):
+    def __init__(self, circle: Circle, **kwargs):
+        Point.__init__(self, circle.scene, circle=circle, **kwargs)
+
 class CirclesIntersection(Point):
     def __init__(self, circle0: Circle, circle1: Circle, **kwargs):
         assert_same_scene(circle0, circle1)

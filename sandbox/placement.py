@@ -3,7 +3,7 @@ import random
 from typing import Dict, List, Set
 
 from .objects import Object, Scene
-from .objects import Point, FreePoint, PointOnLine, CentrePoint, CirclesIntersection
+from .objects import Point, FreePoint, FreePointOnCircle, PointOnLine, CentrePoint, CirclesIntersection
 from .objects import Line, Circle
 
 class TwoDCoordinates:
@@ -93,6 +93,14 @@ class Placement:
                         add(p, TwoDCoordinates(
                             p.x if hasattr(p, 'x') else random.randrange(0, 100000, 1) / 1000.0,
                             p.y if hasattr(p, 'y') else random.randrange(0, 100000, 1) / 1000.0
+                        ))
+                    elif isinstance(p, FreePointOnCircle):
+                        o = self.location(p.circle.centre)
+                        r = o.distanceTo(self.location(p.circle.point))
+                        angle = random.randrange(0, 200000, 1) * math.pi / 100000
+                        add(p, TwoDCoordinates(
+                            o.x + math.sin(angle) * r,
+                            o.y + math.cos(angle) * r
                         ))
                     elif isinstance(p, PointOnLine):
                         c0 = self.location(p.point0)
