@@ -6,10 +6,14 @@ class Vector:
     def __init__(self, start: Point, end: Point, placement: Placement):
         self.start = start
         self.end = end
+        self.placement = placement
         self.__length = placement.distance(start, end)
 
     def length(self):
         return self.__length
+
+    def angle(self, other):
+        return self.placement.angle(self.start, self.end, other.start, other.end)
 
     def __eq__(self, other) -> bool:
         return self.start == other.start and self.end == other.end or self.start == other.start and self.end == other.end
@@ -77,7 +81,7 @@ def hunt(scene):
         for i1 in range(i0 + 1, len(all_vectors)):
             s0 = all_vectors[i0]
             s1 = all_vectors[i1]
-            angle = placement.angle(s0.start, s0.end, s1.start, s1.end)
+            angle = s0.angle(s1)
             if math.fabs(angle) < 5e-6:
                 print("%s parallel to %s" % (s0.name, s1.name))
             else:
