@@ -2,35 +2,35 @@ import math
 
 from sandbox import *
 
-class Segment:
-    def __init__(self, p0: Point, p1: Point, placement: Placement):
-        self.p0 = p0
-        self.p1 = p1
-        self.__length = placement.distance(p0, p1)
+class Vector:
+    def __init__(self, start: Point, end: Point, placement: Placement):
+        self.start = start
+        self.end = end
+        self.__length = placement.distance(start, end)
 
     def length(self):
         return self.__length
 
     def __eq__(self, other) -> bool:
-        return self.p0 == other.p0 and self.p1 == other.p1 or self.p0 == other.p0 and self.p1 == other.p1
+        return self.start == other.start and self.end == other.end or self.start == other.start and self.end == other.end
 
     @property
     def name(self):
-        return "%s %s" % (self.p0.id, self.p1.id)
+        return "%s %s" % (self.start.id, self.end.id)
 
-def segments(placement: Placement):
+def vectors(placement: Placement):
     points = placement.scene.points
     for i0 in range(0, len(points)):
         for i1 in range(i0 + 1, len(points)):
-            yield Segment(points[i0], points[i1], placement)
+            yield Vector(points[i0], points[i1], placement)
 
 class LengthFamily:
-    def __init__(self, segment: Segment):
-        self.base = segment
-        self.segments = []
+    def __init__(self, vector: Vector):
+        self.base = vector
+        self.vectors = []
 
-    def __test(self, segment: Segment) -> str:
-        ratio = segment.length() / self.base.length()
+    def __test(self, vector: Vector) -> str:
+        ratio = vector.length() / self.base.length()
         for i in range(1, 10):
             candidate = ratio * i 
             if math.fabs(candidate - round(candidate)) < 5e-6:
@@ -42,11 +42,11 @@ class LengthFamily:
                 return "SQRT(%d/%d)" % (round(candidate), i) if i > 1 else "SQRT(%d)" % round(candidate)
         return None
 
-    def add(self, segment: Segment) -> bool:
-        test = self.__test(segment)
+    def add(self, vector: Vector) -> bool:
+        test = self.__test(vector)
         if test:
-            segment.comment = test
-            self.segments.append(segment)
+            vector.comment = test
+            self.vectors.append(vector)
             return True
         else:
             return False
@@ -54,10 +54,10 @@ class LengthFamily:
 def hunt(scene):
     placement = Placement(scene)
 
-    all_segments = list(segments(placement))
-    all_segments.sort(key=Segment.length)
+    all_vectors = list(vectors(placement))
+    all_vectors.sort(key=Vector.length)
     families = []
-    for s in all_segments:
+    for s in all_vectors:
         added = False
         for f in families:
             if f.add(s):
@@ -66,18 +66,18 @@ def hunt(scene):
         if not added:
             families.append(LengthFamily(s))
 
-    print("%d segments in %d families" % (len(all_segments), len([f for f in families if len(f.segments) > 0])))
+    print("%d segments in %d families" % (len(all_vectors), len([f for f in families if len(f.vectors) > 0])))
     for f in families:
-        if len(f.segments) > 0:
-            print("%s: %d segments" % (f.base.name, 1 + len(f.segments)))
-            for s in f.segments:
+        if len(f.vectors) > 0:
+            print("%s: %d segments" % (f.base.name, 1 + len(f.vectors)))
+            for s in f.vectors:
                 print("\t%s (%s)" % (s.name, s.comment))
 
-    for i0 in range(0, len(all_segments)):
-        for i1 in range(i0 + 1, len(all_segments)):
-            s0 = all_segments[i0]
-            s1 = all_segments[i1]
-            angle = placement.angle(s0.p0, s0.p1, s1.p0, s1.p1)
+    for i0 in range(0, len(all_vectors)):
+        for i1 in range(i0 + 1, len(all_vectors)):
+            s0 = all_vectors[i0]
+            s1 = all_vectors[i1]
+            angle = placement.angle(s0.start, s0.end, s1.start, s1.end)
             if math.fabs(angle) < 5e-6:
                 print("%s parallel to %s" % (s0.name, s1.name))
             else:
