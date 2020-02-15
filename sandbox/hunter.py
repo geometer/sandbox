@@ -99,11 +99,13 @@ class AngleFamily:
         self.angles = []
 
     def __test(self, angle: Angle) -> str:
-        ratio = angle.arc() / self.base.arc()
-        for i in range(1, 10):
-            candidate = ratio * i
-            if math.fabs(candidate - round(candidate)) < 5e-6:
-                return "%d/%d" % (round(candidate), i) if i > 1 else "%d" % round(candidate)
+        for addition0 in (0, 2 * math.pi, -2 * math.pi):
+            for addition1 in (0, 2 * math.pi, -2 * math.pi):
+                ratio = (angle.arc() + addition0) / (self.base.arc() + addition1)
+                for i in range(1, 10):
+                    candidate = ratio * i
+                    if math.fabs(candidate - round(candidate)) < 5e-6:
+                        return "%d/%d" % (round(candidate), i) if i > 1 else "%d" % round(candidate)
         return None
 
     def add(self, angle: Angle) -> bool:
