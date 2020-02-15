@@ -16,33 +16,50 @@ class Vector:
     def angle(self, other):
         return self.placement.angle(self.start, self.end, other.start, other.end)
 
+    @property
+    def reversed(self):
+        return Vector(self.end, self.start, self.placement)
+
     def __eq__(self, other) -> bool:
         return self.start == other.start and self.end == other.end
 
-    @property
-    def name(self):
+    def __str__(self):
         return "%s %s" % (self.start.id, self.end.id)
 
 class Angle:
     def __init__(self, vector0: Vector, vector1: Vector):
-        self.vector0 = vector0
-        self.vector1 = vector1
-        self.__arc = vector0.angle(vector1)
+        if vector0.end == vector1.end:
+            self.vector0 = vector0.reversed
+            self.vector1 = vector1.reversed
+        elif vector0.start == vector1.end:
+            self.vector0 = vector0
+            self.vector1 = vector1.reversed
+        elif vector0.end == vector1.start:
+            self.vector0 = vector0.reversed
+            self.vector1 = vector1
+        else:
+            self.vector0 = vector0
+            self.vector1 = vector1
+        self.__arc = self.vector0.angle(self.vector1)
 
     def arc(self):
         return self.__arc
 
-    @property
-    def name(self):
-        return "∠(%s, %s)" % (self.vector0.name, self.vector1.name)
+    def abs_arc(self):
+        return math.fabs(self.__arc)
 
-def vectors(placement: Placement):
+    def __str__(self):
+        if self.vector0.start == self.vector1.start:
+            return "∠ %s %s %s" % (self.vector0.end.id, self.vector0.start.id, self.vector1.end.id)
+        return "∠(%s, %s)" % (self.vector0, self.vector1)
+
+def __vectors(placement: Placement):
     points = placement.scene.points
     for index0 in range(0, len(points)):
         for index1 in range(index0 + 1, len(points)):
             yield Vector(points[index0], points[index1], placement)
 
-def angles(vectors: List[Vector]):
+def __angles(vectors: List[Vector]):
     for index0 in range(0, len(vectors)):
         for index1 in range(index0 + 1, len(vectors)):
             yield Angle(vectors[index0], vectors[index1])
@@ -71,8 +88,28 @@ class LengthFamily:
     def add(self, vector: Vector) -> bool:
         test = self.__test(vector)
         if test:
-            vector.comment = test
-            self.vectors.append(vector)
+            self.vectors.append({'vector': vector, 'comment': test})
+            return True
+        else:
+            return False
+
+class AngleFamily:
+    def __init__(self, angle: Angle):
+        self.base = angle
+        self.angles = []
+
+    def __test(self, angle: Angle) -> str:
+        ratio = angle.arc() / self.base.arc()
+        for i in range(1, 10):
+            candidate = ratio * i
+            if math.fabs(candidate - round(candidate)) < 5e-6:
+                return "%d/%d" % (round(candidate), i) if i > 1 else "%d" % round(candidate)
+        return None
+
+    def add(self, angle: Angle) -> bool:
+        test = self.__test(angle)
+        if test:
+            self.angles.append({'angle': angle, 'comment': test})
             return True
         else:
             return False
@@ -80,39 +117,59 @@ class LengthFamily:
 def hunt(scene):
     placement = Placement(scene)
 
-    all_vectors = list(vectors(placement))
+    all_vectors = list(__vectors(placement))
     all_vectors.sort(key=Vector.length)
     families = []
-    for s in all_vectors:
+    for vec in all_vectors:
         added = False
-        for f in families:
-            if f.add(s):
+        for fam in families:
+            if fam.add(vec):
                 added = True
                 break
         if not added:
-            families.append(LengthFamily(s))
+            families.append(LengthFamily(vec))
 
     print("%d segments in %d families" % (len(all_vectors), len([f for f in families if len(f.vectors) > 0])))
     for fam in families:
         if len(fam.vectors) > 0:
-            print("%s: %d segments" % (fam.base.name, 1 + len(fam.vectors)))
-            for vec in fam.vectors:
-                print("\t%s (%s)" % (vec.name, vec.comment))
+            print("%s: %d segments" % (fam.base, 1 + len(fam.vectors)))
+            for data in fam.vectors:
+                print("\t%s (%s)" % (data['vector'], data['comment']))
 
-    all_angles = list(angles(all_vectors))
+    all_angles = list(__angles(all_vectors))
+    all_angles.sort(key=Angle.abs_arc)
     for angle in all_angles:
         arc = angle.arc()
         if math.fabs(arc) < 5e-6:
-            print("%s = 0" % angle.name)
+            print("%s = 0" % angle)
         else:
             ratio = arc / math.pi
             for i in range(1, 60):
                 candidate = i * ratio
                 if math.fabs(candidate - round(candidate)) < 5e-6:
                     if round(candidate) == 1:
-                        print("%s = PI / %d" % (angle.name, i))
+                        print("%s = PI / %d" % (angle, i))
                     elif round(candidate) == -1:
-                        print("%s = -PI / %d" % (angle.name, i))
+                        print("%s = -PI / %d" % (angle, i))
                     else:
-                        print("%s = %d PI / %d" % (angle.name, round(candidate), i))
+                        print("%s = %d PI / %d" % (angle, round(candidate), i))
                     break
+
+    families = []
+    for ang in all_angles:
+        if ang.abs_arc() < 5e-6:
+            continue
+        added = False
+        for fam in families:
+            if fam.add(ang):
+                added = True
+                break
+        if not added:
+            families.append(AngleFamily(ang))
+
+    print("%d angles in %d families" % (len(all_angles), len([f for f in families if len(f.angles) > 0])))
+    for fam in families:
+        if len(fam.angles) > 0:
+            print("%s: %d angles" % (fam.base, 1 + len(fam.angles)))
+            for pair in fam.angles:
+                print("\t%s (%s)" % (pair['angle'], pair['comment']))
