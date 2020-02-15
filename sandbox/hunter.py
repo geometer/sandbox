@@ -22,6 +22,19 @@ class Vector:
     def name(self):
         return "%s %s" % (self.start.id, self.end.id)
 
+class Angle:
+    def __init__(self, v0: Vector, v1: Vector):
+        self.v0 = v0
+        self.v1 = v1
+        self.__arc = v0.angle(v1)
+
+    def arc(self):
+        return self.__arc
+
+    @property
+    def name(self):
+        return "∠(%s, %s)" % (self.v0.name, self.v1.name)
+
 def vectors(placement: Placement):
     points = placement.scene.points
     for i0 in range(0, len(points)):
@@ -79,20 +92,19 @@ def hunt(scene):
 
     for i0 in range(0, len(all_vectors)):
         for i1 in range(i0 + 1, len(all_vectors)):
-            s0 = all_vectors[i0]
-            s1 = all_vectors[i1]
-            angle = s0.angle(s1)
-            if math.fabs(angle) < 5e-6:
-                print("%s parallel to %s" % (s0.name, s1.name))
+            angle = Angle(all_vectors[i0], all_vectors[i1])
+            arc = angle.arc()
+            if math.fabs(arc) < 5e-6:
+                print("%s = 0" % angle.name)
             else:
-                ratio = angle / math.pi
+                ratio = arc / math.pi
                 for i in range(1, 60):
                     candidate = i * ratio
                     if math.fabs(candidate - round(candidate)) < 5e-6:
                         if round(candidate) == 1:
-                            print("angle between %s and %s = PI / %d" % (s0.name, s1.name, i))
+                            print("%s = PI / %d" % (angle.name, i))
                         elif round(candidate) == -1:
-                            print("angle between %s and %s = -PI / %d" % (s0.name, s1.name, i))
+                            print("%s = -PI / %d" % (angle.name, i))
                         else:
-                            print("angle between %s and %s = %d * PI / %d" % (s0.name, s1.name, round(candidate), i))
+                            print("%s = %d * PI / %d" % (angle.name, round(candidate), i))
                         break
