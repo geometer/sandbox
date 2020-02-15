@@ -87,11 +87,10 @@ class LengthFamily:
 
     def add(self, vector: Vector) -> bool:
         test = self.__test(vector)
-        if test:
-            self.vectors.append({'vector': vector, 'comment': test})
-            return True
-        else:
+        if test is None:
             return False
+        self.vectors.append({'vector': vector, 'comment': test})
+        return True
 
 class AngleFamily:
     def __init__(self, angle: Angle):
@@ -110,11 +109,10 @@ class AngleFamily:
 
     def add(self, angle: Angle) -> bool:
         test = self.__test(angle)
-        if test:
-            self.angles.append({'angle': angle, 'comment': test})
-            return True
-        else:
+        if test is None:
             return False
+        self.angles.append({'angle': angle, 'comment': test})
+        return True
 
 def hunt(scene):
     placement = Placement(scene)

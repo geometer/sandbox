@@ -4,9 +4,6 @@ from .placement import TwoDCoordinates, TwoDVector
 class Constraint:
     pass
 
-def clockwise(p0: TwoDCoordinates, p1: TwoDCoordinates, p2: TwoDCoordinates) -> bool:
-    return TwoDVector(p1, p0).vectorProduct(TwoDVector(p2, p0)) < 0
-
 class OppositeSideConstraint(Constraint):
     # Points A and B are located on opposite sides relative to the line PQ
 
@@ -17,6 +14,9 @@ class OppositeSideConstraint(Constraint):
         self.Q = Q
 
     def validate(self, placement):
+        def clockwise(p0: TwoDCoordinates, p1: TwoDCoordinates, p2: TwoDCoordinates) -> bool:
+            return TwoDVector(p1, p0).vectorProduct(TwoDVector(p2, p0)) < 0
+
         a = placement.location(self.A)
         b = placement.location(self.B)
         p = placement.location(self.P)

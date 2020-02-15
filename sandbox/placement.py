@@ -1,10 +1,9 @@
 import math
 import random
-from typing import Dict, List, Set
+from typing import List, Set
 
-from .objects import Object, Scene
+from .objects import Scene
 from .objects import Point, FreePoint, FreePointOnCircle, PointOnLine, CentrePoint, CirclesIntersection
-from .objects import Line, Circle
 
 class TwoDCoordinates:
     def __init__(self, x: float, y: float):
@@ -56,7 +55,7 @@ class IncompletePlacementError(Exception):
 
 class PlacementFailedError(Exception):
     """Cannot place to meet all the conditions"""
-    
+
 class Placement:
     class TempPlacement:
         def __init__(self, placement, point, coords):

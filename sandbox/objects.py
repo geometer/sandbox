@@ -16,6 +16,7 @@ class Object:
 
         self.scene = scene
         self.__dict__.update(kwargs)
+        self.__constraints = None
         scene.add(self)
 
     @property
@@ -23,32 +24,29 @@ class Object:
         return '%s `%s`' % (self.__class__.__name__, self.id)
 
     def add_constraint(self, constraint):
-        try:
-            self.__constraints.append(constraint)
-        except:
+        if self.__constraints is None:
             self.__constraints = []
-            self.__constraints.append(constraint)
+        self.__constraints.append(constraint)
 
     @property
     def constraints(self):
-        try:
-            return list(self.__constraints)
-        except:
-            return []
+        return list(self.__constraints) if self.__constraints is not None else []
 
     def __str__(self):
-        d = {}
-        for k in self.__dict__:
-            if k == 'id' or k == 'scene':
+        dct = {}
+        for key in self.__dict__:
+            if key in ('id', 'scene'):
                 continue
-            v = self.__dict__[k]
-            if isinstance(v, Object):
-                d[k] = v.name
-            elif isinstance(v, list):
-                d[k] = [e.name if isinstance(e, Object) else str(e) for e in v]
+            value = self.__dict__[key]
+            if value is None:
+                continue
+            if isinstance(value, Object):
+                dct[key] = value.name
+            elif isinstance(value, list):
+                dct[key] = [elt.name if isinstance(elt, Object) else str(elt) for elt in value]
             else:
-                d[k] = v
-        return '%s `%s` %s' % (self.__class__.__name__, self.id, d)
+                dct[key] = value
+        return '%s `%s` %s' % (self.__class__.__name__, self.id, dct)
 
 class Scene:
     def __init__(self):
@@ -58,18 +56,17 @@ class Scene:
     def points(self):
         return [p for p in self.__objects if isinstance(p, Point)]
 
-    def add(self, object: Object):
-        self.__objects.append(object)
+    def add(self, obj: Object):
+        self.__objects.append(obj)
 
     def get(self, key: str):
-        for o in self.__objects:
-            if o.id == key:
-                return o
-        else:
-            return None
+        for obj in self.__objects:
+            if obj.id == key:
+                return obj
+        return None
 
     def __str__(self):
-        return '\n'.join([str(o) for o in self.__objects])
+        return '\n'.join([str(obj) for obj in self.__objects])
 
 class Point(Object):
     def __init__(self, scene: Scene, **kwargs):
@@ -80,8 +77,8 @@ class FreePoint(Point):
     def __init__(self, scene: Scene, **kwargs):
         Point.__init__(self, scene, **kwargs)
 
-def assert_same_scene(o0: Object, o1: Object):
-    assert o0.scene == o1.scene, 'Trying to use object from different scenes'
+def assert_same_scene(obj0: Object, obj1: Object):
+    assert obj0.scene == obj1.scene, 'Trying to use object from different scenes'
 
 class PointOnLine(Point):
     def __init__(self, point0: Point, point1: Point, ratio: float, **kwargs):
@@ -92,11 +89,11 @@ class PointOnLine(Point):
 class CentrePoint(Point):
     def __init__(self, points: List[Point], **kwargs):
         assert len(points) > 0, 'Cannot calculate centre of empty list'
-        p0 = points[0]
+        pt0 = points[0]
         for index in range(1, len(points)):
-            assert_same_scene(p0, points[index])
+            assert_same_scene(pt0, points[index])
 
-        Point.__init__(self, p0.scene, **kwargs)
+        Point.__init__(self, pt0.scene, **kwargs)
         self.points = points
 
 class Line(Object):
