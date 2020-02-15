@@ -140,18 +140,15 @@ def hunt(scene):
 
     all_angles = list(__angles(all_vectors))
     all_angles.sort(key=Angle.abs_arc)
-    other_angles = []
     for angle in all_angles:
         arc = angle.arc()
         if math.fabs(arc) < 5e-6:
             print("%s = 0" % angle)
         else:
             ratio = arc / math.pi
-            found = False
             for i in range(1, 60):
                 candidate = i * ratio
                 if math.fabs(candidate - round(candidate)) < 5e-6:
-                    found = True
                     if round(candidate) == 1:
                         print("%s = PI / %d" % (angle, i))
                     elif round(candidate) == -1:
@@ -159,11 +156,13 @@ def hunt(scene):
                     else:
                         print("%s = %d PI / %d" % (angle, round(candidate), i))
                     break
-            if not found:
-                other_angles.append(angle)
 
     families = []
-    for ang in other_angles:
+    zero_count = 0
+    for ang in all_angles:
+        if ang.abs_arc() < 5e-6:
+            zero_count += 1
+            continue
         added = False
         for fam in families:
             if fam.add(ang):
@@ -172,7 +171,7 @@ def hunt(scene):
         if not added:
             families.append(AngleFamily(ang))
 
-    print("%d angles in %d families" % (len(other_angles), len([f for f in families if len(f.angles) > 0])))
+    print("%d non-zero angles in %d families" % (len(all_angles) - zero_count, len([f for f in families if len(f.angles) > 0])))
     for fam in families:
         if len(fam.angles) > 0:
             print("%s: %d angles" % (fam.base, 1 + len(fam.angles)))
