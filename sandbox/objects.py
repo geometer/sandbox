@@ -58,12 +58,30 @@ class Scene:
         def free_point(self, **kwargs):
             return Scene.Point(self.scene, origin='line', line=self, **kwargs)
 
+        def intersection_point(self, obj, **kwargs):
+            """Creates an intersection point of the line and given object (line or circle).
+               Requires a constraint for correct placement if the object a circle"""
+            self.scene._assert_line_or_circle(obj)
+            if isinstance(obj, Scene.Circle):
+                return Scene.Point(self.scene, origin='intersection(circle,line)', circle=obj, line=self, **kwargs)
+            else:
+                return Scene.Point(self.scene, origin='intersection(line,line)', line0=self, line1=obj, **kwargs)
+
     class Circle(Object):
         def __init__(self, scene, **kwargs):
             Scene.Object.__init__(self, scene, **kwargs)
 
         def free_point(self, **kwargs):
             return Scene.Point(self.scene, origin='circle', circle=self, **kwargs)
+
+        def intersection_point(self, obj, **kwargs):
+            """Creates an intersection point of the line and given object (line or circle).
+               Requires a constraint for correct placement"""
+            self.scene._assert_line_or_circle(obj)
+            if isinstance(obj, Scene.Circle):
+                return Scene.Point(self.scene, origin='intersection(circle,circle)', circle0=self, circle1=obj, **kwargs)
+            else:
+                return Scene.Point(self.scene, origin='intersection(circle,line)', circle=self, line=obj, **kwargs)
 
     def __init__(self):
         self.__objects = []
@@ -72,23 +90,23 @@ class Scene:
     def points(self):
         return [p for p in self.__objects if isinstance(p, Scene.Point)]
 
-    def __assert_point(self, obj):
+    def _assert_point(self, obj):
         assert isinstance(obj, Scene.Point)
         assert obj.scene == self
 
-    def __assert_points(self, *args):
+    def _assert_points(self, *args):
         for p in args:
-            self.__assert_point(p)
+            self._assert_point(p)
 
-    def __assert_line_or_circle(self, obj):
+    def _assert_line_or_circle(self, obj):
         assert isinstance(obj, Scene.Line) or isinstance(obj, Scene.Circle), 'Unexpected type %s' % type(obj)
         assert obj.scene == self
 
-    def __assert_line(self, obj):
+    def _assert_line(self, obj):
         assert isinstance(obj, Scene.Line)
         assert obj.scene == self
 
-    def __assert_circle(self, obj):
+    def _assert_circle(self, obj):
         assert isinstance(obj, Scene.Circle)
         assert obj.scene == self
 
@@ -96,37 +114,21 @@ class Scene:
         return Scene.Point(self, origin='free', **kwargs)
 
     def line(self, point0, point1, **kwargs):
-        self.__assert_points(point0, point1)
+        self._assert_points(point0, point1)
         return Scene.Line(self, point0=point0, point1=point1, **kwargs)
 
     def circle(self, **kwargs):
         centre = kwargs.get('centre')
-        self.__assert_point(centre)
+        self._assert_point(centre)
         point = kwargs.get('point')
         if point:
             del kwargs['point']
             return Scene.Circle(self, radius_start=centre, radius_end=point, **kwargs)
-        self.__assert_points(kwargs.get('radius_start'), kwargs.get('radius_end'))
+        self._assert_points(kwargs.get('radius_start'), kwargs.get('radius_end'))
         return Scene.Circle(self, **kwargs)
 
-    def intersection_point(self, obj0, obj1, **kwargs):
-        """Point that is an intersection of given objects (lines or circles).
-           Requires a constraint for correct placement if at lease one on the objects is a circle"""
-        self.__assert_line_or_circle(obj0)
-        self.__assert_line_or_circle(obj1)
-        if isinstance(obj0, Scene.Circle):
-            if isinstance(obj1, Scene.Circle):
-                return Scene.Point(self, origin='intersection(circle,circle)', circle0=obj0, circle1=obj1, **kwargs)
-            else:
-                return Scene.Point(self, origin='intersection(circle,line)', circle=obj0, line=obj1, **kwargs)
-        else:
-            if isinstance(obj1, Scene.Circle):
-                return Scene.Point(self, origin='intersection(circle,line)', circle=obj1, line=obj0, **kwargs)
-            else:
-                return Scene.Point(self, origin='intersection(line,line)', line0=obj0, line1=obj1, **kwargs)
-
     def centre_point(self, *args, **kwargs):
-        self.__assert_points(*args)
+        self._assert_points(*args)
         return Scene.Point(self, origin='centre', points=args, **kwargs)
 
     def add(self, obj: Object):

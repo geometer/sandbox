@@ -12,7 +12,7 @@ C = scene.free_point(label='C')
 def napoleonic(A: Scene.Point, B: Scene.Point, C: Scene.Point):
     c0 = scene.circle(centre=A, point=B)
     c1 = scene.circle(centre=B, point=A)
-    V = scene.intersection_point(c0, c1, label=C.label + '1')
+    V = c0.intersection_point(c1, label=C.label + '1')
     V.add_constraint(OppositeSideConstraint(C, V, A, B))
     scene.centre_point(A, B, V, label=C.label + '2')
 

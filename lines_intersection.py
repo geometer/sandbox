@@ -10,7 +10,7 @@ C = scene.free_point(label='C', x=3, y=10)
 D = scene.free_point(label='D', x=4, y=11)
 AB = scene.line(A, B)
 CD = scene.line(C, D)
-scene.intersection_point(AB, CD, label='E')
+AB.intersection_point(CD, label='E')
 
 print(scene)
 print(Placement(scene))
