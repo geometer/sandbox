@@ -54,7 +54,7 @@ class Scene:
 
         def line_via(self, point, **kwargs):
             self.scene._assert_point(point)
-            assert self != point
+            assert self != point, 'Cannot create a line by a single point'
             return Scene.Line(self.scene, point0=self, point1=point, **kwargs)
 
     class Line(Object):
@@ -68,7 +68,7 @@ class Scene:
             """Creates an intersection point of the line and given object (line or circle).
                Requires a constraint for correct placement if the object a circle"""
             self.scene._assert_line_or_circle(obj)
-            assert self != obj
+            assert self != obj, 'The line does not cross itself'
             if isinstance(obj, Scene.Circle):
                 return Scene.Point(self.scene, origin='intersection(circle,line)', circle=obj, line=self, **kwargs)
             else:
@@ -85,7 +85,7 @@ class Scene:
             """Creates an intersection point of the line and given object (line or circle).
                Requires a constraint for correct placement"""
             self.scene._assert_line_or_circle(obj)
-            assert self != obj
+            assert self != obj, 'The circle does not cross itself'
             if isinstance(obj, Scene.Circle):
                 return Scene.Point(self.scene, origin='intersection(circle,circle)', circle0=self, circle1=obj, **kwargs)
             else:
