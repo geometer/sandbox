@@ -22,5 +22,6 @@ A1 = scene.intersection_point(para, scene.line(A, C), id='A1')
 B1 = scene.intersection_point(para, scene.line(B, C), id='B1')
 
 print(scene)
-
-hunt(scene)
+placement = Placement(scene)
+print('|D A1| = %.5f' % placement.distance('D', 'A1'))
+print('|D B1| = %.5f' % placement.distance('D', 'B1'))

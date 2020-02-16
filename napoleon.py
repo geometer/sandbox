@@ -6,19 +6,19 @@ from sandbox import *
 
 scene = Scene()
 
-#A = FreePoint(scene, id='A', x=0, y=0)
-#B = FreePoint(scene, id='B', x=0, y=100)
-#C = FreePoint(scene, id='C', x=50, y=50)
-A = scene.freePoint(id='A')
-B = scene.freePoint(id='B')
-C = scene.freePoint(id='C')
+#A = scene.free_point(scene, id='A', x=0, y=0)
+#B = scene.free_point(scene, id='B', x=0, y=100)
+#C = scene.free_point(scene, id='C', x=50, y=50)
+A = scene.free_point(id='A')
+B = scene.free_point(id='B')
+C = scene.free_point(id='C')
 
 def napoleonic(A: Scene.Point, B: Scene.Point, C: Scene.Point):
     c0 = scene.circle(centre=A, point=B)
     c1 = scene.circle(centre=B, point=A)
-    V = scene.intersectionPoint(c0, c1, id=C.id + '1')
+    V = scene.intersection_point(c0, c1, id=C.id + '1')
     V.add_constraint(OppositeSideConstraint(C, V, A, B))
-    scene.centrePoint(A, B, V, id=C.id + '2')
+    scene.centre_point(A, B, V, id=C.id + '2')
 
 napoleonic(A, B, C)
 napoleonic(C, A, B)
