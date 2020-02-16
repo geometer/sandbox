@@ -5,10 +5,10 @@ from sandbox.hunter import hunt
 
 scene = Scene()
 
-O = FreePoint(scene, id='O')
-A = FreePoint(scene, id='A')
-c = Circle(centre=O, point=A)
-B = FreePointOnCircle(c, id='B')
-C = FreePointOnCircle(c, id='C')
+O = scene.freePoint(id='O')
+A = scene.freePoint(id='A')
+c = scene.circle(centre=O, point=A)
+B = scene.freePoint(circle=c, id='B')
+C = scene.freePoint(circle=c, id='C')
 
 hunt(scene)

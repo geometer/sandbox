@@ -1,9 +1,8 @@
 import math
 import random
-from typing import List, Set
+from typing import Set
 
 from .objects import Scene
-from .objects import Point, FreePoint, FreePointOnLine, FreePointOnCircle, CentrePoint, CirclesIntersection
 
 class TwoDCoordinates:
     def __init__(self, x: float, y: float):
@@ -62,7 +61,7 @@ class Placement:
             self._coordinates = dict(placement._coordinates)
             self._coordinates[point] = coords
 
-        def location(self, point: Point) -> TwoDCoordinates:
+        def location(self, point: Scene.Point) -> TwoDCoordinates:
             loca = self._coordinates.get(point)
             if loca is None:
                 raise IncompletePlacementError
@@ -71,9 +70,9 @@ class Placement:
     def __init__(self, scene: Scene):
         self.scene = scene
         self._coordinates = {}
-        not_placed: Set[Point] = set(scene.points)
+        not_placed: Set[Scene.Point] = set(scene.points)
 
-        def add(p: Point, coords):
+        def add(p: Scene.Point, coords):
             if isinstance(coords, TwoDCoordinates):
                 coords = [coords]
             for candidate in coords:
@@ -87,20 +86,20 @@ class Placement:
         while len(not_placed) > 0:
             for p in list(not_placed):
                 try:
-                    if isinstance(p, FreePoint):
+                    if p.origin == 'free':
                         add(p, TwoDCoordinates(
                             p.x if hasattr(p, 'x') else random.randrange(0, 100000, 1) / 1000.0,
                             p.y if hasattr(p, 'y') else random.randrange(0, 100000, 1) / 1000.0
                         ))
-                    elif isinstance(p, FreePointOnCircle):
+                    elif p.origin == 'circle':
                         o = self.location(p.circle.centre)
-                        r = o.distanceTo(self.location(p.circle.point))
+                        r = self.location(p.circle.radius_start).distanceTo(self.location(p.circle.radius_end))
                         angle = random.randrange(0, 200000, 1) * math.pi / 100000
                         add(p, TwoDCoordinates(
                             o.x + math.sin(angle) * r,
                             o.y + math.cos(angle) * r
                         ))
-                    elif isinstance(p, FreePointOnLine):
+                    elif p.origin == 'line':
                         loc0 = self.location(p.line.point0)
                         loc1 = self.location(p.line.point1)
                         angle = random.randrange(-99999, 99999, 1) * math.pi / 200000
@@ -109,11 +108,11 @@ class Placement:
                             0.5 * (loc0.x + loc1.x) + coef * (loc0.x - loc1.x),
                             0.5 * (loc0.y + loc1.y) + coef * (loc0.y - loc1.y)
                         ))
-                    elif isinstance(p, CirclesIntersection):
+                    elif p.origin == 'intersection(circle,circle)':
                         c0 = self.location(p.circle0.centre)
                         c1 = self.location(p.circle1.centre)
-                        r02 = c0.distance2To(self.location(p.circle0.point))
-                        r12 = c1.distance2To(self.location(p.circle1.point))
+                        r02 = self.location(p.circle0.radius_start).distance2To(self.location(p.circle0.radius_end))
+                        r12 = self.location(p.circle1.radius_start).distance2To(self.location(p.circle1.radius_end))
                         # (x - c0.x)^2 + (y - c0.y)^2 == r02
                         # (x - c1.x)^2 + (y - c1.y)^2 == r12
                         # 2x(c1.x - c0.x) + c0.x^2 - c1.x^2 + 2y(c1.y - c0.y) + c0.y^2 - c1.y^2 = r02 - r12
@@ -154,16 +153,18 @@ class Placement:
                         else:
                             raise PlacementFailedError
                         add(p, [TwoDCoordinates(x_1, y_1), TwoDCoordinates(x_2, y_2)])
-                    elif isinstance(p, CentrePoint):
+                    elif p.origin == 'centre':
                         coords = [self.location(pt) for pt in p.points]
                         add(p, TwoDCoordinates(
                             sum(c.x for c in coords) / len(coords),
                             sum(c.y for c in coords) / len(coords),
                         ))
+                    else:
+                        raise PlacementFailedError('Origin `%s` not supported in placement' % p.origin)
                 except IncompletePlacementError:
                     pass
 
-    def location(self, point: Point) -> TwoDCoordinates:
+    def location(self, point: Scene.Point) -> TwoDCoordinates:
         loca = self._coordinates.get(point)
         if loca is None:
             raise IncompletePlacementError
@@ -175,8 +176,8 @@ class Placement:
         if isinstance(point1, str):
             point1 = self.scene.get(point1)
 
-        assert isinstance(point0, Point), 'Parameter is not a point'
-        assert isinstance(point1, Point), 'Parameter is not a point'
+        assert isinstance(point0, Scene.Point), 'Parameter is not a point'
+        assert isinstance(point1, Scene.Point), 'Parameter is not a point'
 
         return self.location(point0).distanceTo(self.location(point1))
 
@@ -191,10 +192,10 @@ class Placement:
         if isinstance(pt3, str):
             pt3 = self.scene.get(pt3)
 
-        assert isinstance(pt0, Point), 'Parameter is not a pt'
-        assert isinstance(pt1, Point), 'Parameter is not a pt'
-        assert isinstance(pt2, Point), 'Parameter is not a pt'
-        assert isinstance(pt3, Point), 'Parameter is not a pt'
+        assert isinstance(pt0, Scene.Point), 'Parameter is not a pt'
+        assert isinstance(pt1, Scene.Point), 'Parameter is not a pt'
+        assert isinstance(pt2, Scene.Point), 'Parameter is not a pt'
+        assert isinstance(pt3, Scene.Point), 'Parameter is not a pt'
 
         vec0 = TwoDVector(self.location(pt0), self.location(pt1))
         vec1 = TwoDVector(self.location(pt2), self.location(pt3))

@@ -1,10 +1,10 @@
 import math
 from typing import List
 
-from sandbox import Point, Placement
+from sandbox import Scene, Placement
 
 class Vector:
-    def __init__(self, start: Point, end: Point, placement: Placement):
+    def __init__(self, start: Scene.Point, end: Scene.Point, placement: Placement):
         self.start = start
         self.end = end
         self.placement = placement
