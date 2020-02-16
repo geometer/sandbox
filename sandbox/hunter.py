@@ -147,12 +147,13 @@ def hunt(scene):
             for i in range(1, 60):
                 candidate = i * ratio
                 if math.fabs(candidate - round(candidate)) < 5e-6:
+                    pi = "PI" if i == 1 else ("PI / %d" % i)
                     if round(candidate) == 1:
-                        print("%s = PI / %d" % (angle, i))
+                        print("%s = %s" % (angle, pi))
                     elif round(candidate) == -1:
-                        print("%s = -PI / %d" % (angle, i))
+                        print("%s = -%s" % (angle, pi))
                     else:
-                        print("%s = %d PI / %d" % (angle, round(candidate), i))
+                        print("%s = %d %s" % (angle, round(candidate), pi))
                     break
 
     families = []
