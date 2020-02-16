@@ -106,6 +106,12 @@ class Line(Object):
         self.point0 = point0
         self.point1 = point1
 
+class FreePointOnLine(Point):
+    """Arbitrary point on the circle"""
+
+    def __init__(self, line: Line, **kwargs):
+        Point.__init__(self, line.scene, line=line, **kwargs)
+
 class Circle(Object):
     """Circle with given centre via given point"""
 
