@@ -10,7 +10,7 @@ B = scene.free_point(label='B')
 C = scene.free_point(label='C')
 M = scene.centre_point(A, B, label='M')
 l = scene.line(C, M)
-D = scene.free_point(line=l, label='D')
+D = l.free_point(label='D')
 E = scene.intersection_point(
     scene.circle(centre=D, radius_start=A, radius_end=B),
     scene.circle(centre=B, radius_start=A, radius_end=D),

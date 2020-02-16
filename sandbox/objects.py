@@ -55,9 +55,15 @@ class Scene:
         def __init__(self, scene, **kwargs):
             Scene.Object.__init__(self, scene, **kwargs)
 
+        def free_point(self, **kwargs):
+            return Scene.Point(self.scene, origin='line', line=self, **kwargs)
+
     class Circle(Object):
         def __init__(self, scene, **kwargs):
             Scene.Object.__init__(self, scene, **kwargs)
+
+        def free_point(self, **kwargs):
+            return Scene.Point(self.scene, origin='circle', circle=self, **kwargs)
 
     def __init__(self):
         self.__objects = []
@@ -87,16 +93,6 @@ class Scene:
         assert obj.scene == self
 
     def free_point(self, **kwargs):
-        circle = kwargs.get('circle')
-        if circle:
-            self.__assert_circle(circle)
-            return Scene.Point(self, origin='circle', **kwargs)
-
-        line = kwargs.get('line')
-        if line:
-            self.__assert_line(line)
-            return Scene.Point(self, origin='line', **kwargs)
-
         return Scene.Point(self, origin='free', **kwargs)
 
     def line(self, point0, point1, **kwargs):
