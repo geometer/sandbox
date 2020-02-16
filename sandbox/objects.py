@@ -5,15 +5,15 @@ class Scene:
         """Common ancestor for all geometric objects like point, line, circle"""
 
         def __init__(self, scene, **kwargs):
-            id = kwargs.get('id')
-            if id:
-                assert scene.get(id) is None, 'Object with key `%s` already exists' % id
+            label = kwargs.get('label')
+            if label:
+                assert scene.get(label) is None, 'Object with label `%s` already exists' % label
             else:
                 pattern = self.__class__.__name__ + ' %d'
                 for index in itertools.count():
-                    id = pattern % index
-                    if scene.get(id) is None:
-                        self.id = id
+                    label = pattern % index
+                    if scene.get(label) is None:
+                        self.label = label
                         break
 
             self.scene = scene
@@ -23,7 +23,7 @@ class Scene:
 
         @property
         def name(self):
-            return '%s `%s`' % (self.__class__.__name__, self.id)
+            return '%s `%s`' % (self.__class__.__name__, self.label)
 
         def add_constraint(self, constraint):
             if self.__constraints is None:
@@ -37,7 +37,7 @@ class Scene:
         def __str__(self):
             dct = {}
             for key in self.__dict__:
-                if key in ('id', 'scene'):
+                if key in ('label', 'scene'):
                     continue
                 value = self.__dict__[key]
                 if value is None:
@@ -48,7 +48,7 @@ class Scene:
                     dct[key] = [elt.name if isinstance(elt, Scene.Object) else str(elt) for elt in value]
                 else:
                     dct[key] = value
-            return '%s `%s` %s' % (self.__class__.__name__, self.id, dct)
+            return '%s `%s` %s' % (self.__class__.__name__, self.label, dct)
 
     class Point(Object):
         def __init__(self, scene, **kwargs):
@@ -142,7 +142,7 @@ class Scene:
 
     def get(self, key: str):
         for obj in self.__objects:
-            if obj.id == key:
+            if obj.label == key:
                 return obj
         return None
 

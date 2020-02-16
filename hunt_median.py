@@ -5,21 +5,21 @@ from sandbox.hunter import hunt
 
 scene = Scene()
 
-A = scene.free_point(id='A')
-B = scene.free_point(id='B')
-C = scene.free_point(id='C')
-M = scene.centre_point(A, B, id='M')
+A = scene.free_point(label='A')
+B = scene.free_point(label='B')
+C = scene.free_point(label='C')
+M = scene.centre_point(A, B, label='M')
 l = scene.line(C, M)
-D = scene.free_point(line=l, id='D')
+D = scene.free_point(line=l, label='D')
 E = scene.intersection_point(
     scene.circle(centre=D, radius_start=A, radius_end=B),
     scene.circle(centre=B, radius_start=A, radius_end=D),
-    id='E'
+    label='E'
 )
 E.add_constraint(OppositeSideConstraint(E, A, B, D))
 para = scene.line(D, E)
-A1 = scene.intersection_point(para, scene.line(A, C), id='A1')
-B1 = scene.intersection_point(para, scene.line(B, C), id='B1')
+A1 = scene.intersection_point(para, scene.line(A, C), label='A1')
+B1 = scene.intersection_point(para, scene.line(B, C), label='B1')
 
 print(scene)
 

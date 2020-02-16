@@ -24,4 +24,4 @@ class OppositeSideConstraint(Constraint):
         return clockwise(p, q, a) != clockwise(p, q, b)
 
     def __str__(self):
-        return 'Points %s and %s are located on opposite sides relative to the line (%s %s)' % (self.A.id, self.B.id, self.P.id, self.Q.id)
+        return 'Points %s and %s are located on opposite sides relative to the line (%s %s)' % (self.A.label, self.B.label, self.P.label, self.Q.label)

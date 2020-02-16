@@ -24,7 +24,7 @@ class Vector:
         return self.start == other.start and self.end == other.end
 
     def __str__(self):
-        return "%s %s" % (self.start.id, self.end.id)
+        return "%s %s" % (self.start.label, self.end.label)
 
 class Angle:
     def __init__(self, vector0: Vector, vector1: Vector):
@@ -50,7 +50,7 @@ class Angle:
 
     def __str__(self):
         if self.vector0.start == self.vector1.start:
-            return "∠ %s %s %s" % (self.vector0.end.id, self.vector0.start.id, self.vector1.end.id)
+            return "∠ %s %s %s" % (self.vector0.end.label, self.vector0.start.label, self.vector1.end.label)
         return "∠(%s, %s)" % (self.vector0, self.vector1)
 
 def __vectors(placement: Placement):
