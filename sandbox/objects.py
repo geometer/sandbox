@@ -21,10 +21,6 @@ class Scene:
             self.__constraints = None
             scene.add(self)
 
-        @property
-        def name(self):
-            return '%s `%s`' % (self.__class__.__name__, self.label)
-
         def add_constraint(self, constraint):
             if self.__constraints is None:
                 self.__constraints = []
@@ -43,9 +39,9 @@ class Scene:
                 if value is None:
                     continue
                 if isinstance(value, Scene.Object):
-                    dct[key] = value.name
-                elif isinstance(value, list):
-                    dct[key] = [elt.name if isinstance(elt, Scene.Object) else str(elt) for elt in value]
+                    dct[key] = value.label
+                elif isinstance(value, list) or isinstance(value, tuple):
+                    dct[key] = [elt.label if isinstance(elt, Scene.Object) else str(elt) for elt in value]
                 else:
                     dct[key] = value
             return '%s `%s` %s' % (self.__class__.__name__, self.label, dct)
