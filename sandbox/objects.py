@@ -5,6 +5,7 @@ class Scene:
         """Common ancestor for all geometric objects like point, line, circle"""
 
         def __init__(self, scene, **kwargs):
+            assert isinstance(scene, Scene)
             label = kwargs.get('label')
             if label:
                 assert scene.get(label) is None, 'Object with label `%s` already exists' % label
@@ -51,6 +52,11 @@ class Scene:
             assert 'origin' in kwargs, 'Cannot create a point with unknown origin'
             Scene.Object.__init__(self, scene, **kwargs)
 
+        def line_via(self, point, **kwargs):
+            self.scene._assert_point(point)
+            assert self != point
+            return Scene.Line(self.scene, point0=self, point1=point, **kwargs)
+
     class Line(Object):
         def __init__(self, scene, **kwargs):
             Scene.Object.__init__(self, scene, **kwargs)
@@ -62,6 +68,7 @@ class Scene:
             """Creates an intersection point of the line and given object (line or circle).
                Requires a constraint for correct placement if the object a circle"""
             self.scene._assert_line_or_circle(obj)
+            assert self != obj
             if isinstance(obj, Scene.Circle):
                 return Scene.Point(self.scene, origin='intersection(circle,line)', circle=obj, line=self, **kwargs)
             else:
@@ -78,6 +85,7 @@ class Scene:
             """Creates an intersection point of the line and given object (line or circle).
                Requires a constraint for correct placement"""
             self.scene._assert_line_or_circle(obj)
+            assert self != obj
             if isinstance(obj, Scene.Circle):
                 return Scene.Point(self.scene, origin='intersection(circle,circle)', circle0=self, circle1=obj, **kwargs)
             else:
@@ -112,10 +120,6 @@ class Scene:
 
     def free_point(self, **kwargs):
         return Scene.Point(self, origin='free', **kwargs)
-
-    def line(self, point0, point1, **kwargs):
-        self._assert_points(point0, point1)
-        return Scene.Line(self, point0=point0, point1=point1, **kwargs)
 
     def circle(self, **kwargs):
         centre = kwargs.get('centre')
