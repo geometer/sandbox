@@ -72,9 +72,7 @@ class Placement:
         self._coordinates = {}
         not_placed: Set[Scene.Point] = set(scene.points)
 
-        def add(p: Scene.Point, coords):
-            if isinstance(coords, TwoDCoordinates):
-                coords = [coords]
+        def add(p: Scene.Point, *coords):
             for candidate in coords:
                 temp = Placement.TempPlacement(self, p, candidate)
                 if all(cs.validate(temp) for cs in p.constraints):
@@ -107,6 +105,32 @@ class Placement:
                         add(p, TwoDCoordinates(
                             0.5 * (loc0.x + loc1.x) + coef * (loc0.x - loc1.x),
                             0.5 * (loc0.y + loc1.y) + coef * (loc0.y - loc1.y)
+                        ))
+                    elif p.origin == 'intersection(line,line)':
+                        p0 = self.location(p.line0.point0)
+                        p1 = self.location(p.line0.point1)
+                        p2 = self.location(p.line1.point0)
+                        p3 = self.location(p.line1.point1)
+                        # x = a * p0.x + (1-a) * p1.x
+                        # y = a * p0.y + (1-a) * p1.y
+                        # x = b * p2.x + (1-b) * p3.x
+                        # y = b * p2.y + (1-b) * p3.y
+
+                        # x = p1.x + a * (p0.x - p1.x) | *(p0.y - p1.y)
+                        # y = p1.y + a * (p0.y - p1.y) | *(p0.x - p1.x)
+                        # (p0.y - p1.y) * x + (p1.x - p0.x) * y = p1.x * p0.y - p1.y * p0.x
+                        # (p2.y - p3.y) * x + (p3.x - p2.x) * y = p3.x * p2.y - p3.y * p2.x
+                        cx0 = p0.y - p1.y
+                        cy0 = p1.x - p0.x
+                        cx1 = p2.y - p3.y
+                        cy1 = p3.x - p2.x
+                        s0 = p1.x * p0.y - p1.y * p0.x
+                        s1 = p3.x * p2.y - p3.y * p2.x
+                        discr = cx0 * cy1 - cx1 * cy0
+                        assert math.fabs(discr) > 1e-6, 'Lines have no intersection points'
+                        add(p, TwoDCoordinates(
+                            (s0 * cy1 - s1 * cy0) / discr,
+                            (s1 * cx0 - s0 * cx1) / discr,
                         ))
                     elif p.origin == 'intersection(circle,circle)':
                         c0 = self.location(p.circle0.centre)
@@ -152,7 +176,7 @@ class Placement:
                             y_2 = const + x_coef * x_2
                         else:
                             raise PlacementFailedError
-                        add(p, [TwoDCoordinates(x_1, y_1), TwoDCoordinates(x_2, y_2)])
+                        add(p, TwoDCoordinates(x_1, y_1), TwoDCoordinates(x_2, y_2))
                     elif p.origin == 'centre':
                         coords = [self.location(pt) for pt in p.points]
                         add(p, TwoDCoordinates(
@@ -200,3 +224,6 @@ class Placement:
         vec0 = TwoDVector(self.location(pt0), self.location(pt1))
         vec1 = TwoDVector(self.location(pt2), self.location(pt3))
         return vec0.angle(vec1)
+
+    def __str__(self):
+        return '\n'.join([('%s => (%s)' % (pt, self.location(pt))) for pt in self.scene.points])

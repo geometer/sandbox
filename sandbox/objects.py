@@ -126,12 +126,12 @@ class Scene:
             if isinstance(obj1, Scene.Circle):
                 return Scene.Point(self, origin='intersection(circle,circle)', circle0=obj0, circle1=obj1, **kwargs)
             else:
-                raise('Not implemented yet')
+                return Scene.Point(self, origin='intersection(circle,line)', circle=obj0, line=obj1, **kwargs)
         else:
             if isinstance(obj1, Scene.Circle):
-                raise('Not implemented yet')
+                return Scene.Point(self, origin='intersection(circle,line)', circle=obj1, line=obj0, **kwargs)
             else:
-                raise('Not implemented yet')
+                return Scene.Point(self, origin='intersection(line,line)', line0=obj0, line1=obj1, **kwargs)
 
     def centrePoint(self, *args, **kwargs):
         self.__assert_points(*args)
