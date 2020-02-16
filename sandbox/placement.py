@@ -73,7 +73,9 @@ class Placement:
         self._coordinates = {}
         not_placed: Set[Point] = set(scene.points)
 
-        def add_list(p: Point, coords: List[TwoDCoordinates]):
+        def add(p: Point, coords):
+            if isinstance(coords, TwoDCoordinates):
+                coords = [coords]
             for candidate in coords:
                 temp = Placement.TempPlacement(self, p, candidate)
                 if all(cs.validate(temp) for cs in p.constraints):
@@ -81,9 +83,6 @@ class Placement:
                     not_placed.remove(p)
                     return
             raise PlacementFailedError
-
-        def add(p: Point, coord: TwoDCoordinates):
-            add_list(p, [coord])
 
         while len(not_placed) > 0:
             for p in list(not_placed):
@@ -145,7 +144,7 @@ class Placement:
                             y_2 = const + x_coef * x_2
                         else:
                             raise PlacementFailedError
-                        add_list(p, [TwoDCoordinates(x_1, y_1), TwoDCoordinates(x_2, y_2)])
+                        add(p, [TwoDCoordinates(x_1, y_1), TwoDCoordinates(x_2, y_2)])
                     elif isinstance(p, CentrePoint):
                         coords = [self.location(pt) for pt in p.points]
                         add(p, TwoDCoordinates(
