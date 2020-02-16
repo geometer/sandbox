@@ -79,7 +79,7 @@ class Scene:
             self.__assert_point(p)
 
     def __assert_line_or_circle(self, obj):
-        assert isinstance(obj, Scene.Line) or isinstance(obj, Scene.Circle)
+        assert isinstance(obj, Scene.Line) or isinstance(obj, Scene.Circle), 'Unexpected type %s' % type(obj)
         assert obj.scene == self
 
     def __assert_line(self, obj):
@@ -114,6 +114,8 @@ class Scene:
         if point:
             del kwargs['point']
             return Scene.Circle(self, radius_start=centre, radius_end=point, **kwargs)
+        self.__assert_points(kwargs.get('radius_start'), kwargs.get('radius_end'))
+        return Scene.Circle(self, **kwargs)
 
     def intersectionPoint(self, obj0, obj1, **kwargs):
         """Point that is an intersection of given objects (lines or circles).
