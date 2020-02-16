@@ -46,7 +46,7 @@ class TwoDVector:
         if cos >= 1:
             return 0
         elif cos <= -1:
-            return math.pi / 2 if self.vector_product(other) > 0 else -math.pi / 2
+            return math.pi if self.vector_product(other) > 0 else -math.pi
         else:
             return math.acos(cos) if self.vector_product(other) > 0 else -math.acos(cos)
 
