@@ -57,7 +57,7 @@ class CoreScene:
             self.scene.assert_point(point)
             assert coef0 + coef1 != 0
             return CoreScene.Point(self.scene, origin='ratio', point0=self, point1=point, coef0=coef0, coef1=coef1, **kwargs)
-             
+
         def line_via(self, point, **kwargs):
             self.scene.assert_point(point)
             assert self != point, 'Cannot create a line by a single point'
