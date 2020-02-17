@@ -41,7 +41,7 @@ class Scene:
                     continue
                 if isinstance(value, Scene.Object):
                     dct[key] = value.label
-                elif isinstance(value, list) or isinstance(value, tuple):
+                elif isinstance(value, (list, tuple)):
                     dct[key] = [elt.label if isinstance(elt, Scene.Object) else str(elt) for elt in value]
                 else:
                     dct[key] = value
@@ -124,8 +124,8 @@ class Scene:
 
     def centre_point(self, *args, **kwargs):
         assert len(args) > 0
-        for p in args:
-            self.assert_point(p)
+        for point in args:
+            self.assert_point(point)
         return Scene.Point(self, origin='centre', points=args, **kwargs)
 
     def add(self, obj: Object):
