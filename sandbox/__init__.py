@@ -1,3 +1,3 @@
+from .core import Constraint
 from .scene import Scene
 from .placement import Placement
-from .constraint import OppositeSideConstraint

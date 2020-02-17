@@ -32,14 +32,14 @@ class CoreScene:
             self.__constraints = None
             scene.add(self)
 
-        def add_constraint(self, constraint):
-            if self.__constraints is None:
-                self.__constraints = []
-            self.__constraints.append(constraint)
-
         @property
         def constraints(self):
             return list(self.__constraints) if self.__constraints is not None else []
+
+        def add_constraint(self, kind, *args, **kwargs):
+            if self.__constraints is None:
+                self.__constraints = []
+            self.__constraints.append(Constraint(kind, self, *args, **kwargs))
 
         def __str__(self):
             dct = {}
@@ -176,3 +176,20 @@ class CoreScene:
         aux = len([o for o in self.__objects if o.auxiliary])
         return '\n'.join([str(obj) for obj in self.__objects]) + \
                ('\n\nTotal: %s objects (+ %s auxiliary)\n' % (count - aux, aux))
+
+class Constraint:
+    class Kind(Enum):
+        opposite_side     = (CoreScene.Point, CoreScene.Point, CoreScene.Line)
+
+        def __init__(self, *params):
+            self.params = params
+
+    def __init__(self, kind, *args, **kwargs):
+        assert isinstance(kind, Constraint.Kind)
+        assert len(args) == len(kind.params)
+        assert isinstance(args[0], kind.params[0])
+        for index in range(1, len(args)):
+            args[0].scene.assert_type(args[index], kind.params[index])
+        self.kind = kind
+        self.params = args
+        self.__dict__.update(kwargs)

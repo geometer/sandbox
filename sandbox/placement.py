@@ -2,7 +2,7 @@ import math
 import random
 from typing import Set
 
-from .core import CoreScene
+from .core import CoreScene, Constraint
 
 class TwoDCoordinates:
     def __init__(self, x: float, y: float):
@@ -67,6 +67,21 @@ class Placement:
                 raise IncompletePlacementError
             return loca
 
+        def validate(self, constraint):
+            if constraint.kind == Constraint.Kind.opposite_side:
+                pt0 = self.location(constraint.params[0])
+                pt1 = self.location(constraint.params[1])
+                line = constraint.params[2]
+                start = self.location(line.point0)
+                end = self.location(line.point1)
+
+                def clockwise(p0: TwoDCoordinates, p1: TwoDCoordinates, p2: TwoDCoordinates) -> bool:
+                    return TwoDVector(p1, p0).vector_product(TwoDVector(p2, p0)) < 0
+
+                return clockwise(start, end, pt0) != clockwise(start, end, pt1)
+            else:
+                raise PlacementFailedError('Constraint `%s` not supported in placement' % constraint.kind)
+
     def __init__(self, scene: CoreScene):
         self.scene = scene
         self._coordinates = {}
@@ -75,7 +90,7 @@ class Placement:
         def add(p: CoreScene.Point, *coords):
             for candidate in coords:
                 temp = Placement.TempPlacement(self, p, candidate)
-                if all(cs.validate(temp) for cs in p.constraints):
+                if all(temp.validate(cs) for cs in p.constraints):
                     self._coordinates[p] = candidate
                     not_placed.remove(p)
                     return
