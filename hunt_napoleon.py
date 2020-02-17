@@ -10,9 +10,9 @@ B = scene.free_point(label='B')
 C = scene.free_point(label='C')
 
 def napoleonic(A: Scene.Point, B: Scene.Point, C: Scene.Point):
-    c0 = A.circle_via(B)
-    c1 = B.circle_via(A)
-    line = A.line_via(B, auxiliary=True)
+    c0 = A.circle_through(B)
+    c1 = B.circle_through(A)
+    line = A.line_through(B, auxiliary=True)
     V = c0.intersection_point(c1, label=C.label + '1')
     V.add_constraint(OppositeSideConstraint(C, V, line))
     scene.gravity_centre_point(A, B, V, label=C.label + '2')

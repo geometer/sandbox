@@ -7,7 +7,7 @@ scene = Scene()
 
 O = scene.free_point(label='O')
 A = scene.free_point(label='A')
-c = O.circle_via(A)
+c = O.circle_through(A)
 B = c.free_point(label='B')
 C = c.free_point(label='C')
 

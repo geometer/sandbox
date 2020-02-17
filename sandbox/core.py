@@ -1,3 +1,8 @@
+"""
+Core module.
+Normally, do not add new construction methods here, do this in scene.py instead.
+"""
+
 import itertools
 
 class CoreScene:
@@ -58,12 +63,12 @@ class CoreScene:
             assert coef0 + coef1 != 0
             return CoreScene.Point(self.scene, origin='ratio', point0=self, point1=point, coef0=coef0, coef1=coef1, **kwargs)
 
-        def line_via(self, point, **kwargs):
+        def line_through(self, point, **kwargs):
             self.scene.assert_point(point)
             assert self != point, 'Cannot create a line by a single point'
             return CoreScene.Line(self.scene, point0=self, point1=point, **kwargs)
 
-        def circle_via(self, point, **kwargs):
+        def circle_through(self, point, **kwargs):
             self.scene.assert_point(point)
             assert self != point, 'Cannot create a circle of zero radius'
             return CoreScene.Circle(self.scene, centre=self, radius_start=self, radius_end=point, **kwargs)
