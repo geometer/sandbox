@@ -84,12 +84,12 @@ class Placement:
         while len(not_placed) > 0:
             for p in list(not_placed):
                 try:
-                    if p.origin == 'free':
+                    if p.origin == CoreScene.Point.Origin.free:
                         add(p, TwoDCoordinates(
                             p.x if hasattr(p, 'x') else random.randrange(0, 100000, 1) / 1000.0,
                             p.y if hasattr(p, 'y') else random.randrange(0, 100000, 1) / 1000.0
                         ))
-                    elif p.origin == 'circle':
+                    elif p.origin == CoreScene.Point.Origin.circle:
                         o = self.location(p.circle.centre)
                         r = self.location(p.circle.radius_start).distanceTo(self.location(p.circle.radius_end))
                         angle = random.randrange(0, 200000, 1) * math.pi / 100000
@@ -97,7 +97,7 @@ class Placement:
                             o.x + math.sin(angle) * r,
                             o.y + math.cos(angle) * r
                         ))
-                    elif p.origin == 'line':
+                    elif p.origin == CoreScene.Point.Origin.line:
                         loc0 = self.location(p.line.point0)
                         loc1 = self.location(p.line.point1)
                         angle = random.randrange(-99999, 99999, 1) * math.pi / 200000
@@ -106,14 +106,14 @@ class Placement:
                             0.5 * (loc0.x + loc1.x) + coef * (loc0.x - loc1.x),
                             0.5 * (loc0.y + loc1.y) + coef * (loc0.y - loc1.y)
                         ))
-                    elif p.origin == 'ratio':
+                    elif p.origin == CoreScene.Point.Origin.ratio:
                         p0 = self.location(p.point0)
                         p1 = self.location(p.point1)
                         add(p, TwoDCoordinates(
                             (p.coef0 * p0.x + p.coef1 * p1.x) / (p.coef0 + p.coef1),
                             (p.coef0 * p0.y + p.coef1 * p1.y) / (p.coef0 + p.coef1)
                         ))
-                    elif p.origin == 'intersection(line,line)':
+                    elif p.origin == CoreScene.Point.Origin.line_x_line:
                         p0 = self.location(p.line0.point0)
                         p1 = self.location(p.line0.point1)
                         p2 = self.location(p.line1.point0)
@@ -139,7 +139,7 @@ class Placement:
                             (s0 * cy1 - s1 * cy0) / discr,
                             (s1 * cx0 - s0 * cx1) / discr,
                         ))
-                    elif p.origin == 'intersection(circle,circle)':
+                    elif p.origin == CoreScene.Point.Origin.circle_x_circle:
                         c0 = self.location(p.circle0.centre)
                         c1 = self.location(p.circle1.centre)
                         r02 = self.location(p.circle0.radius_start).distance2To(self.location(p.circle0.radius_end))

@@ -3,6 +3,7 @@ Core module.
 Normally, do not add new construction methods here, do this in scene.py instead.
 """
 
+from enum import Enum, auto
 import itertools
 
 class CoreScene:
@@ -53,13 +54,22 @@ class CoreScene:
                 elif isinstance(value, (list, tuple)):
                     dct[key] = [elt.label if isinstance(elt, CoreScene.Object) else str(elt) for elt in value]
                 else:
-                    dct[key] = value
+                    dct[key] = str(value)
             return '%s `%s` %s' % (self.__class__.__name__, self.label, dct)
 
     class Point(Object):
-        def __init__(self, scene, **kwargs):
-            assert 'origin' in kwargs, 'Cannot create a point with unknown origin'
-            CoreScene.Object.__init__(self, scene, **kwargs)
+        class Origin(Enum):
+            free              = auto()
+            ratio             = auto()
+            line              = auto() 
+            circle            = auto()
+            line_x_line       = auto()
+            circle_x_line     = auto()
+            circle_x_circle   = auto()
+
+        def __init__(self, scene, origin, **kwargs):
+            assert isinstance(origin, CoreScene.Point.Origin), 'origin must be a Point.Origin, not %s' % type(origin)
+            CoreScene.Object.__init__(self, scene, origin=origin, **kwargs)
 
         def ratio_point(self, point, coef0: int, coef1: int, **kwargs):
             """
@@ -71,7 +81,7 @@ class CoreScene:
             assert coef0 + coef1 != 0
             if self == point:
                 return self
-            return CoreScene.Point(self.scene, origin='ratio', point0=self, point1=point, coef0=coef0, coef1=coef1, **kwargs)
+            return CoreScene.Point(self.scene, CoreScene.Point.Origin.ratio, point0=self, point1=point, coef0=coef0, coef1=coef1, **kwargs)
 
         def line_through(self, point, **kwargs):
             self.scene.assert_point(point)
@@ -94,7 +104,7 @@ class CoreScene:
             CoreScene.Object.__init__(self, scene, **kwargs)
 
         def free_point(self, **kwargs):
-            return CoreScene.Point(self.scene, origin='line', line=self, **kwargs)
+            return CoreScene.Point(self.scene, CoreScene.Point.Origin.line, line=self, **kwargs)
 
         def intersection_point(self, obj, **kwargs):
             """
@@ -104,16 +114,16 @@ class CoreScene:
             self.scene.assert_line_or_circle(obj)
             assert self != obj, 'The line does not cross itself'
             if isinstance(obj, CoreScene.Circle):
-                return CoreScene.Point(self.scene, origin='intersection(circle,line)', circle=obj, line=self, **kwargs)
+                return CoreScene.Point(self.scene, CoreScene.Point.Origin.circle_x_line, circle=obj, line=self, **kwargs)
             else:
-                return CoreScene.Point(self.scene, origin='intersection(line,line)', line0=self, line1=obj, **kwargs)
+                return CoreScene.Point(self.scene, CoreScene.Point.Origin.line_x_line, line0=self, line1=obj, **kwargs)
 
     class Circle(Object):
         def __init__(self, scene, **kwargs):
             CoreScene.Object.__init__(self, scene, **kwargs)
 
         def free_point(self, **kwargs):
-            return CoreScene.Point(self.scene, origin='circle', circle=self, **kwargs)
+            return CoreScene.Point(self.scene, CoreScene.Point.Origin.circle, circle=self, **kwargs)
 
         def intersection_point(self, obj, **kwargs):
             """
@@ -123,9 +133,9 @@ class CoreScene:
             self.scene.assert_line_or_circle(obj)
             assert self != obj, 'The circle does not cross itself'
             if isinstance(obj, CoreScene.Circle):
-                return CoreScene.Point(self.scene, origin='intersection(circle,circle)', circle0=self, circle1=obj, **kwargs)
+                return CoreScene.Point(self.scene, CoreScene.Point.Origin.circle_x_circle, circle0=self, circle1=obj, **kwargs)
             else:
-                return CoreScene.Point(self.scene, origin='intersection(circle,line)', circle=self, line=obj, **kwargs)
+                return CoreScene.Point(self.scene, CoreScene.Point.Origin.circle_x_line, circle=self, line=obj, **kwargs)
 
     def __init__(self):
         self.__objects = []
@@ -150,7 +160,7 @@ class CoreScene:
         self.assert_type(obj, CoreScene.Line, CoreScene.Circle)
 
     def free_point(self, **kwargs):
-        return CoreScene.Point(self, origin='free', **kwargs)
+        return CoreScene.Point(self, origin=CoreScene.Point.Origin.free, **kwargs)
 
     def add(self, obj: Object):
         self.__objects.append(obj)
