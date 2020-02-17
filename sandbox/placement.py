@@ -2,7 +2,7 @@ import math
 import random
 from typing import Set
 
-from .base import BaseScene
+from .core import CoreScene
 
 class TwoDCoordinates:
     def __init__(self, x: float, y: float):
@@ -61,18 +61,18 @@ class Placement:
             self._coordinates = dict(placement._coordinates)
             self._coordinates[point] = coords
 
-        def location(self, point: BaseScene.Point) -> TwoDCoordinates:
+        def location(self, point: CoreScene.Point) -> TwoDCoordinates:
             loca = self._coordinates.get(point)
             if loca is None:
                 raise IncompletePlacementError
             return loca
 
-    def __init__(self, scene: BaseScene):
+    def __init__(self, scene: CoreScene):
         self.scene = scene
         self._coordinates = {}
-        not_placed: Set[BaseScene.Point] = set(scene.points())
+        not_placed: Set[CoreScene.Point] = set(scene.points())
 
-        def add(p: BaseScene.Point, *coords):
+        def add(p: CoreScene.Point, *coords):
             for candidate in coords:
                 temp = Placement.TempPlacement(self, p, candidate)
                 if all(cs.validate(temp) for cs in p.constraints):
@@ -105,6 +105,13 @@ class Placement:
                         add(p, TwoDCoordinates(
                             0.5 * (loc0.x + loc1.x) + coef * (loc0.x - loc1.x),
                             0.5 * (loc0.y + loc1.y) + coef * (loc0.y - loc1.y)
+                        ))
+                    elif p.origin == 'ratio':
+                        p0 = self.location(p.point0)
+                        p1 = self.location(p.point1)
+                        add(p, TwoDCoordinates(
+                            (p.coef0 * p0.x + p.coef1 * p1.x) / (p.coef0 + p.coef1),
+                            (p.coef0 * p0.y + p.coef1 * p1.y) / (p.coef0 + p.coef1)
                         ))
                     elif p.origin == 'intersection(line,line)':
                         p0 = self.location(p.line0.point0)
@@ -182,7 +189,7 @@ class Placement:
                 except IncompletePlacementError:
                     pass
 
-    def location(self, point: BaseScene.Point) -> TwoDCoordinates:
+    def location(self, point: CoreScene.Point) -> TwoDCoordinates:
         loca = self._coordinates.get(point)
         if loca is None:
             raise IncompletePlacementError
@@ -194,8 +201,8 @@ class Placement:
         if isinstance(point1, str):
             point1 = self.scene.get(point1)
 
-        assert isinstance(point0, BaseScene.Point), 'Parameter is not a point'
-        assert isinstance(point1, BaseScene.Point), 'Parameter is not a point'
+        assert isinstance(point0, CoreScene.Point), 'Parameter is not a point'
+        assert isinstance(point1, CoreScene.Point), 'Parameter is not a point'
 
         return self.location(point0).distanceTo(self.location(point1))
 
@@ -210,10 +217,10 @@ class Placement:
         if isinstance(pt3, str):
             pt3 = self.scene.get(pt3)
 
-        assert isinstance(pt0, BaseScene.Point), 'Parameter is not a pt'
-        assert isinstance(pt1, BaseScene.Point), 'Parameter is not a pt'
-        assert isinstance(pt2, BaseScene.Point), 'Parameter is not a pt'
-        assert isinstance(pt3, BaseScene.Point), 'Parameter is not a pt'
+        assert isinstance(pt0, CoreScene.Point), 'Parameter is not a pt'
+        assert isinstance(pt1, CoreScene.Point), 'Parameter is not a pt'
+        assert isinstance(pt2, CoreScene.Point), 'Parameter is not a pt'
+        assert isinstance(pt3, CoreScene.Point), 'Parameter is not a pt'
 
         vec0 = TwoDVector(self.location(pt0), self.location(pt1))
         vec1 = TwoDVector(self.location(pt2), self.location(pt3))

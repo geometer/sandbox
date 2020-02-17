@@ -1,4 +1,4 @@
-from .base import BaseScene
+from .core import CoreScene
 from .placement import TwoDCoordinates, TwoDVector
 
 class Constraint:
@@ -7,7 +7,7 @@ class Constraint:
 class OppositeSideConstraint(Constraint):
     # Points A and B are located on opposite sides relative to the line
 
-    def __init__(self, A: BaseScene.Point, B: BaseScene.Point, line: BaseScene.Line):
+    def __init__(self, A: CoreScene.Point, B: CoreScene.Point, line: CoreScene.Line):
         self.A = A
         self.B = B
         self.line = line

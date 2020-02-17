@@ -1,11 +1,11 @@
 import itertools
 
-class BaseScene:
+class CoreScene:
     class Object:
         """Common ancestor for all geometric objects like point, line, circle"""
 
         def __init__(self, scene, **kwargs):
-            assert isinstance(scene, BaseScene)
+            assert isinstance(scene, CoreScene)
             if 'label' in kwargs:
                 assert scene.get(kwargs['label']) is None, 'Object with label `%s` already exists' % label
             else:
@@ -40,10 +40,10 @@ class BaseScene:
                 value = self.__dict__[key]
                 if value is None:
                     continue
-                if isinstance(value, BaseScene.Object):
+                if isinstance(value, CoreScene.Object):
                     dct[key] = value.label
                 elif isinstance(value, (list, tuple)):
-                    dct[key] = [elt.label if isinstance(elt, BaseScene.Object) else str(elt) for elt in value]
+                    dct[key] = [elt.label if isinstance(elt, CoreScene.Object) else str(elt) for elt in value]
                 else:
                     dct[key] = value
             return '%s `%s` %s' % (self.__class__.__name__, self.label, dct)
@@ -51,82 +51,87 @@ class BaseScene:
     class Point(Object):
         def __init__(self, scene, **kwargs):
             assert 'origin' in kwargs, 'Cannot create a point with unknown origin'
-            BaseScene.Object.__init__(self, scene, **kwargs)
+            CoreScene.Object.__init__(self, scene, **kwargs)
 
+        def ratio_point(self, point, coef0: int, coef1: int, **kwargs):
+            self.scene.assert_point(point)
+            assert coef0 + coef1 != 0
+            return CoreScene.Point(self.scene, origin='ratio', point0=self, point1=point, coef0=coef0, coef1=coef1, **kwargs)
+             
         def line_via(self, point, **kwargs):
             self.scene.assert_point(point)
             assert self != point, 'Cannot create a line by a single point'
-            return BaseScene.Line(self.scene, point0=self, point1=point, **kwargs)
+            return CoreScene.Line(self.scene, point0=self, point1=point, **kwargs)
 
         def circle_via(self, point, **kwargs):
             self.scene.assert_point(point)
             assert self != point, 'Cannot create a circle of zero radius'
-            return BaseScene.Circle(self.scene, centre=self, radius_start=self, radius_end=point, **kwargs)
+            return CoreScene.Circle(self.scene, centre=self, radius_start=self, radius_end=point, **kwargs)
 
         def circle_with_radius(self, start, end, **kwargs):
             self.scene.assert_point(start)
             self.scene.assert_point(end)
             assert start != end, 'Cannot create a circle of zero radius'
-            return BaseScene.Circle(self.scene, centre=self, radius_start=start, radius_end=end, **kwargs)
+            return CoreScene.Circle(self.scene, centre=self, radius_start=start, radius_end=end, **kwargs)
 
     class Line(Object):
         def __init__(self, scene, **kwargs):
-            BaseScene.Object.__init__(self, scene, **kwargs)
+            CoreScene.Object.__init__(self, scene, **kwargs)
 
         def free_point(self, **kwargs):
-            return BaseScene.Point(self.scene, origin='line', line=self, **kwargs)
+            return CoreScene.Point(self.scene, origin='line', line=self, **kwargs)
 
         def intersection_point(self, obj, **kwargs):
             """Creates an intersection point of the line and given object (line or circle).
                Requires a constraint for determinate placement if the object a circle"""
             self.scene.assert_line_or_circle(obj)
             assert self != obj, 'The line does not cross itself'
-            if isinstance(obj, BaseScene.Circle):
-                return BaseScene.Point(self.scene, origin='intersection(circle,line)', circle=obj, line=self, **kwargs)
+            if isinstance(obj, CoreScene.Circle):
+                return CoreScene.Point(self.scene, origin='intersection(circle,line)', circle=obj, line=self, **kwargs)
             else:
-                return BaseScene.Point(self.scene, origin='intersection(line,line)', line0=self, line1=obj, **kwargs)
+                return CoreScene.Point(self.scene, origin='intersection(line,line)', line0=self, line1=obj, **kwargs)
 
     class Circle(Object):
         def __init__(self, scene, **kwargs):
-            BaseScene.Object.__init__(self, scene, **kwargs)
+            CoreScene.Object.__init__(self, scene, **kwargs)
 
         def free_point(self, **kwargs):
-            return BaseScene.Point(self.scene, origin='circle', circle=self, **kwargs)
+            return CoreScene.Point(self.scene, origin='circle', circle=self, **kwargs)
 
         def intersection_point(self, obj, **kwargs):
             """Creates an intersection point of the line and given object (line or circle).
                Requires a constraint for determinate placement"""
             self.scene.assert_line_or_circle(obj)
             assert self != obj, 'The circle does not cross itself'
-            if isinstance(obj, BaseScene.Circle):
-                return BaseScene.Point(self.scene, origin='intersection(circle,circle)', circle0=self, circle1=obj, **kwargs)
+            if isinstance(obj, CoreScene.Circle):
+                return CoreScene.Point(self.scene, origin='intersection(circle,circle)', circle0=self, circle1=obj, **kwargs)
             else:
-                return BaseScene.Point(self.scene, origin='intersection(circle,line)', circle=self, line=obj, **kwargs)
+                return CoreScene.Point(self.scene, origin='intersection(circle,line)', circle=self, line=obj, **kwargs)
 
     def __init__(self):
         self.__objects = []
 
     def points(self, skip_auxiliary=False):
         if skip_auxiliary:
-            return [p for p in self.__objects if isinstance(p, BaseScene.Point) and not p.auxiliary]
+            return [p for p in self.__objects if isinstance(p, CoreScene.Point) and not p.auxiliary]
         else:
-            return [p for p in self.__objects if isinstance(p, BaseScene.Point)]
+            return [p for p in self.__objects if isinstance(p, CoreScene.Point)]
 
     def assert_type(self, obj, *args):
         assert isinstance(obj, args), 'Unexpected type %s' % type(obj)
         assert obj.scene == self
 
     def assert_point(self, obj):
-        self.assert_type(obj, BaseScene.Point)
+        self.assert_type(obj, CoreScene.Point)
 
     def assert_line(self, obj):
-        self.assert_type(obj, BaseScene.Line)
+        self.assert_type(obj, CoreScene.Line)
 
     def assert_line_or_circle(self, obj):
-        self.assert_type(obj, BaseScene.Line, BaseScene.Circle)
+        self.assert_type(obj, CoreScene.Line, CoreScene.Circle)
 
     def free_point(self, **kwargs):
-        return BaseScene.Point(self, origin='free', **kwargs)
+        return CoreScene.Point(self, origin='free', **kwargs)
 
     def add(self, obj: Object):
         self.__objects.append(obj)
