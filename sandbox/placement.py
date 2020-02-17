@@ -2,7 +2,7 @@ import math
 import random
 from typing import Set
 
-from .scene import Scene
+from .base import BaseScene
 
 class TwoDCoordinates:
     def __init__(self, x: float, y: float):
@@ -61,18 +61,18 @@ class Placement:
             self._coordinates = dict(placement._coordinates)
             self._coordinates[point] = coords
 
-        def location(self, point: Scene.Point) -> TwoDCoordinates:
+        def location(self, point: BaseScene.Point) -> TwoDCoordinates:
             loca = self._coordinates.get(point)
             if loca is None:
                 raise IncompletePlacementError
             return loca
 
-    def __init__(self, scene: Scene):
+    def __init__(self, scene: BaseScene):
         self.scene = scene
         self._coordinates = {}
-        not_placed: Set[Scene.Point] = set(scene.points)
+        not_placed: Set[BaseScene.Point] = set(scene.points())
 
-        def add(p: Scene.Point, *coords):
+        def add(p: BaseScene.Point, *coords):
             for candidate in coords:
                 temp = Placement.TempPlacement(self, p, candidate)
                 if all(cs.validate(temp) for cs in p.constraints):
@@ -177,18 +177,12 @@ class Placement:
                         else:
                             raise PlacementFailedError
                         add(p, TwoDCoordinates(x_1, y_1), TwoDCoordinates(x_2, y_2))
-                    elif p.origin == 'centre':
-                        coords = [self.location(pt) for pt in p.points]
-                        add(p, TwoDCoordinates(
-                            sum(c.x for c in coords) / len(coords),
-                            sum(c.y for c in coords) / len(coords),
-                        ))
                     else:
                         raise PlacementFailedError('Origin `%s` not supported in placement' % p.origin)
                 except IncompletePlacementError:
                     pass
 
-    def location(self, point: Scene.Point) -> TwoDCoordinates:
+    def location(self, point: BaseScene.Point) -> TwoDCoordinates:
         loca = self._coordinates.get(point)
         if loca is None:
             raise IncompletePlacementError
@@ -200,8 +194,8 @@ class Placement:
         if isinstance(point1, str):
             point1 = self.scene.get(point1)
 
-        assert isinstance(point0, Scene.Point), 'Parameter is not a point'
-        assert isinstance(point1, Scene.Point), 'Parameter is not a point'
+        assert isinstance(point0, BaseScene.Point), 'Parameter is not a point'
+        assert isinstance(point1, BaseScene.Point), 'Parameter is not a point'
 
         return self.location(point0).distanceTo(self.location(point1))
 
@@ -216,14 +210,14 @@ class Placement:
         if isinstance(pt3, str):
             pt3 = self.scene.get(pt3)
 
-        assert isinstance(pt0, Scene.Point), 'Parameter is not a pt'
-        assert isinstance(pt1, Scene.Point), 'Parameter is not a pt'
-        assert isinstance(pt2, Scene.Point), 'Parameter is not a pt'
-        assert isinstance(pt3, Scene.Point), 'Parameter is not a pt'
+        assert isinstance(pt0, BaseScene.Point), 'Parameter is not a pt'
+        assert isinstance(pt1, BaseScene.Point), 'Parameter is not a pt'
+        assert isinstance(pt2, BaseScene.Point), 'Parameter is not a pt'
+        assert isinstance(pt3, BaseScene.Point), 'Parameter is not a pt'
 
         vec0 = TwoDVector(self.location(pt0), self.location(pt1))
         vec1 = TwoDVector(self.location(pt2), self.location(pt3))
         return vec0.angle(vec1)
 
     def __str__(self):
-        return '\n'.join([('%s => (%s)' % (pt, self.location(pt))) for pt in self.scene.points])
+        return '\n'.join([('%s => (%s)' % (pt, self.location(pt))) for pt in self.scene.points()])

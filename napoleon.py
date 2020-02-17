@@ -18,7 +18,7 @@ def napoleonic(A: Scene.Point, B: Scene.Point, C: Scene.Point):
     c1 = B.circle_via(A)
     V = c0.intersection_point(c1, label=C.label + '1')
     V.add_constraint(OppositeSideConstraint(C, V, A, B))
-    scene.centre_point(A, B, V, label=C.label + '2')
+    scene.gravity_centre_point(A, B, V, label=C.label + '2')
 
 napoleonic(A, B, C)
 napoleonic(C, A, B)

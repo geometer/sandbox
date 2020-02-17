@@ -6,9 +6,8 @@ class BaseScene:
 
         def __init__(self, scene, **kwargs):
             assert isinstance(scene, BaseScene)
-            label = kwargs.get('label')
-            if label:
-                assert scene.get(label) is None, 'Object with label `%s` already exists' % label
+            if 'label' in kwargs:
+                assert scene.get(kwargs['label']) is None, 'Object with label `%s` already exists' % label
             else:
                 pattern = self.__class__.__name__ + ' %d'
                 for index in itertools.count():
@@ -16,6 +15,8 @@ class BaseScene:
                     if scene.get(label) is None:
                         self.label = label
                         break
+            if 'auxiliary' not in kwargs:
+                self.auxiliary = None
 
             self.scene = scene
             self.__dict__.update(kwargs)
@@ -105,9 +106,11 @@ class BaseScene:
     def __init__(self):
         self.__objects = []
 
-    @property
-    def points(self):
-        return [p for p in self.__objects if isinstance(p, BaseScene.Point)]
+    def points(self, skip_auxiliary=False):
+        if skip_auxiliary:
+            return [p for p in self.__objects if isinstance(p, BaseScene.Point) and not p.auxiliary]
+        else:
+            return [p for p in self.__objects if isinstance(p, BaseScene.Point)]
 
     def assert_type(self, obj, *args):
         assert isinstance(obj, args), 'Unexpected type %s' % type(obj)
@@ -121,12 +124,6 @@ class BaseScene:
 
     def free_point(self, **kwargs):
         return BaseScene.Point(self, origin='free', **kwargs)
-
-    def centre_point(self, *args, **kwargs):
-        assert len(args) > 0
-        for point in args:
-            self.assert_point(point)
-        return BaseScene.Point(self, origin='centre', points=args, **kwargs)
 
     def add(self, obj: Object):
         self.__objects.append(obj)

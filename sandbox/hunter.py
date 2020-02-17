@@ -54,10 +54,12 @@ class Angle:
         return "∠(%s, %s)" % (self.vector0, self.vector1)
 
 def __vectors(placement: Placement):
-    points = placement.scene.points
+    points = placement.scene.points(skip_auxiliary=True)
     for index0 in range(0, len(points)):
         for index1 in range(index0 + 1, len(points)):
-            yield Vector(points[index0], points[index1], placement)
+            vec = Vector(points[index0], points[index1], placement)
+            if math.fabs(vec.length()) >= 5e-6:
+                yield vec
 
 def __angles(vectors: List[Vector]):
     for index0 in range(0, len(vectors)):

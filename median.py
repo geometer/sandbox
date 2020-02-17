@@ -8,7 +8,7 @@ scene = Scene()
 A = scene.free_point(label='A')
 B = scene.free_point(label='B')
 C = scene.free_point(label='C')
-M = scene.centre_point(A, B, label='M')
+M = scene.gravity_centre_point(A, B, label='M')
 l = C.line_via(M)
 D = l.free_point(label='D')
 E = D.circle_with_radius(A, B).intersection_point(
