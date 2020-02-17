@@ -119,6 +119,9 @@ class BaseScene:
     def assert_point(self, obj):
         self.assert_type(obj, BaseScene.Point)
 
+    def assert_line(self, obj):
+        self.assert_type(obj, BaseScene.Line)
+
     def assert_line_or_circle(self, obj):
         self.assert_type(obj, BaseScene.Line, BaseScene.Circle)
 

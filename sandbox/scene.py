@@ -23,3 +23,12 @@ class Scene(BaseScene):
         line0 = points[0].line_via(centre0, auxiliary=True);
         line1 = points[-1].line_via(centre1, auxiliary=True);
         return line0.intersection_point(line1, **kwargs)
+
+    def parallel_line(self, line, point, **kwargs):
+        self.assert_line(line)
+        self.assert_point(point)
+        circle0 = point.circle_with_radius(line.point0, line.point1, auxiliary=True)
+        circle1 = line.point0.circle_with_radius(line.point1, point, auxiliary=True)
+        extra = circle0.intersection_point(circle1, auxiliary=True)
+        extra.add_constraint(OppositeSideConstraint(extra, line.point1, point, line.point0))
+        return point.line_via(extra)
