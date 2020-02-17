@@ -7,7 +7,9 @@ import itertools
 
 class CoreScene:
     class Object:
-        """Common ancestor for all geometric objects like point, line, circle"""
+        """
+        Common ancestor for all geometric objects like point, line, circle
+        """
 
         def __init__(self, scene, **kwargs):
             assert isinstance(scene, CoreScene)
@@ -60,8 +62,15 @@ class CoreScene:
             CoreScene.Object.__init__(self, scene, **kwargs)
 
         def ratio_point(self, point, coef0: int, coef1: int, **kwargs):
+            """
+            Constructs new point as (coef0 * self + coef1 * point) / (coef0 + coef1).
+            Requires coef0 + coef1 != 0.
+            No other conditions.
+            """
             self.scene.assert_point(point)
             assert coef0 + coef1 != 0
+            if self == point:
+                return self
             return CoreScene.Point(self.scene, origin='ratio', point0=self, point1=point, coef0=coef0, coef1=coef1, **kwargs)
 
         def line_through(self, point, **kwargs):
@@ -88,8 +97,10 @@ class CoreScene:
             return CoreScene.Point(self.scene, origin='line', line=self, **kwargs)
 
         def intersection_point(self, obj, **kwargs):
-            """Creates an intersection point of the line and given object (line or circle).
-               Requires a constraint for determinate placement if the object a circle"""
+            """
+            Creates an intersection point of the line and given object (line or circle).
+            Requires a constraint for determinate placement if the object a circle
+            """
             self.scene.assert_line_or_circle(obj)
             assert self != obj, 'The line does not cross itself'
             if isinstance(obj, CoreScene.Circle):
@@ -105,8 +116,10 @@ class CoreScene:
             return CoreScene.Point(self.scene, origin='circle', circle=self, **kwargs)
 
         def intersection_point(self, obj, **kwargs):
-            """Creates an intersection point of the line and given object (line or circle).
-               Requires a constraint for determinate placement"""
+            """
+            Creates an intersection point of the circle and given object (line or circle).
+            Requires a constraint for determinate placement
+            """
             self.scene.assert_line_or_circle(obj)
             assert self != obj, 'The circle does not cross itself'
             if isinstance(obj, CoreScene.Circle):
