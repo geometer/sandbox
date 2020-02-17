@@ -11,8 +11,9 @@ class CoreScene:
 
         def __init__(self, scene, **kwargs):
             assert isinstance(scene, CoreScene)
-            if 'label' in kwargs:
-                assert scene.get(kwargs['label']) is None, 'Object with label `%s` already exists' % label
+            label = kwargs.get('label')
+            if label:
+                assert scene.get(label) is None, 'Object with label `%s` already exists' % label
             else:
                 pattern = self.__class__.__name__ + ' %d'
                 for index in itertools.count():
