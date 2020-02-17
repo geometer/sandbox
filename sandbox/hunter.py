@@ -181,12 +181,10 @@ class AngleFamily:
 def hunt_proportional_segments(vectors):
     families = []
     for vec in vectors:
-        added = False
         for fam in families:
             if fam.add(vec):
-                added = True
                 break
-        if not added:
+        else:
             families.append(LengthFamily(vec))
 
     print("%d segments in %d families" % (len(vectors), len([f for f in families if len(f.vectors) > 0])))
@@ -222,12 +220,10 @@ def hunt_proportional_angles(angles):
         if ngl.abs_arc() < 5e-6:
             zero_count += 1
             continue
-        added = False
         for fam in families:
             if fam.add(ngl):
-                added = True
                 break
-        if not added:
+        else:
             families.append(AngleFamily(ngl))
 
     print("%d non-zero angles in %d families" % (len(angles) - zero_count, len([f for f in families if len(f.angles) > 0])))
@@ -243,16 +239,23 @@ def hunt_similar_triangles(triangles):
             print("%s equilateral" % trn)
         elif trn.isosceles():
             print("%s isosceles" % trn)
-    for index0 in range(0, len(triangles)):
-        trn0 = triangles[index0]
-        for index1 in range(index0 + 1, len(triangles)):
-            for variation in range(0, 6):
-                trn1 = triangles[index1].variation(variation)
-                if trn0.similar(trn1):
-                    print('%s ∼ %s' % (trn0, trn1))
-                    break
 
-def hunt(scene, options = ['all']):
+    families = []
+    for trn in triangles:
+        for fam in families:
+            for variation in range(0, 6):
+                var = trn.variation(variation)
+                if fam[0].similar(var):
+                    fam.append(var)
+                    break
+        else:
+            families.append([trn])
+
+    for fam in families:
+        if len(fam) > 1:
+            print(" ∼ ".join([str(trn) for trn in fam]))
+
+def hunt(scene, options = ('all')):
     placement = Placement(scene)
 
     all_vectors = list(__vectors(placement))
