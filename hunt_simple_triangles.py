@@ -20,5 +20,5 @@ A = scene2.free_point(label='A')
 B = scene2.free_point(label='B')
 C = B.circle_via(A).free_point(label='C')
 
-print('\n*** Isoscales ABC (AB = BC) ***\n')
+print('\n*** Isosceles ABC (AB = BC) ***\n')
 hunt(scene2)
