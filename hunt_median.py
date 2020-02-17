@@ -13,7 +13,8 @@ l = C.line_via(M)
 D = l.free_point(label='D')
 E = D.circle_with_radius(A, B).intersection_point(
     B.circle_with_radius(A, D),
-    label='E'
+    label='E',
+    auxiliary=True
 )
 E.add_constraint(OppositeSideConstraint(E, A, B, D))
 para = D.line_via(E)
@@ -22,4 +23,5 @@ B1 = para.intersection_point(B.line_via(C), label='B1')
 
 #print(scene)
 
-hunt(scene, 'similar_triangles')
+#hunt(scene, 'similar_triangles')
+hunt(scene, 'all')

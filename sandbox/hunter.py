@@ -75,6 +75,19 @@ class Triangle:
         self.side1 = side1
         self.side2 = side2
 
+    def variation(self, index):
+        if index == 1:
+            return Triangle(self.pt0, self.pt2, self.pt1, self.side0, self.side2, self.side1)
+        if index == 2:
+            return Triangle(self.pt1, self.pt0, self.pt2, self.side1, self.side0, self.side2)
+        if index == 3:
+            return Triangle(self.pt1, self.pt2, self.pt0, self.side1, self.side2, self.side0)
+        if index == 4:
+            return Triangle(self.pt2, self.pt0, self.pt1, self.side2, self.side0, self.side1)
+        if index == 5:
+            return Triangle(self.pt2, self.pt1, self.pt0, self.side2, self.side1, self.side0)
+        return self
+
     def __eq__(self, other) -> bool:
         return self.pt0 == other.pt0 and self.pt1 == other.pt1 and self.pt2 == other.pt2
 
@@ -104,11 +117,6 @@ def __triangles(placement: Placement):
                     side1 = loc2.distanceTo(loc0)
                     side2 = loc0.distanceTo(loc1)
                     yield Triangle(pt0, pt1, pt2, side0, side1, side2)
-                    yield Triangle(pt0, pt2, pt1, side0, side2, side1)
-                    yield Triangle(pt1, pt0, pt2, side1, side0, side2)
-                    yield Triangle(pt1, pt2, pt0, side1, side2, side0)
-                    yield Triangle(pt2, pt0, pt1, side2, side0, side1)
-                    yield Triangle(pt2, pt1, pt0, side2, side1, side0)
 
 class LengthFamily:
     def __init__(self, vector: Vector):
@@ -221,9 +229,13 @@ def hunt_proportional_angles(angles):
 
 def hunt_similar_triangles(triangles):
     for index0 in range(0, len(triangles)):
-        for index1 in range(index0 + 1, len(triangles)):
-            if triangles[index0].similar(triangles[index1]):
-                print('%s ∼ %s' % (triangles[index0], triangles[index1]))
+        trn0 = triangles[index0]
+        for index1 in range(index0, len(triangles)):
+            variation_range = range(1, 6) if index0 == index1 else range(0, 6)
+            for variation in variation_range:
+                trn1 = triangles[index1].variation(variation)
+                if trn0.similar(trn1):
+                    print('%s ∼ %s' % (trn0, trn1))
 
 def hunt(scene, options = ['all']):
     placement = Placement(scene)
