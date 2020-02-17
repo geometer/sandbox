@@ -10,10 +10,10 @@ class Scene(BaseScene):
         if len(points) == 2:
             circle0 = points[0].circle_via(points[1], auxiliary=True)
             circle1 = points[1].circle_via(points[0], auxiliary=True)
+            line0 = points[0].line_via(points[1], auxiliary=True)
             pt0 = circle0.intersection_point(circle1, auxiliary=True)
             pt1 = circle0.intersection_point(circle1, auxiliary=True)
-            pt1.add_constraint(OppositeSideConstraint(pt1, pt0, points[0], points[1]))
-            line0 = points[0].line_via(points[1], auxiliary=True)
+            pt1.add_constraint(OppositeSideConstraint(pt1, pt0, line0))
             line1 = pt0.line_via(pt1, auxiliary=True)
             return line0.intersection_point(line1, **kwargs)
         
@@ -29,6 +29,7 @@ class Scene(BaseScene):
         self.assert_point(point)
         circle0 = point.circle_with_radius(line.point0, line.point1, auxiliary=True)
         circle1 = line.point0.circle_with_radius(line.point1, point, auxiliary=True)
-        extra = circle0.intersection_point(circle1, auxiliary=True)
-        extra.add_constraint(OppositeSideConstraint(extra, line.point1, point, line.point0))
-        return point.line_via(extra)
+        extra_line = point.line_via(line.point0, auxiliary=True)
+        extra_point = circle0.intersection_point(circle1, auxiliary=True)
+        extra_point.add_constraint(OppositeSideConstraint(extra_point, line.point1, extra_line))
+        return point.line_via(extra_point)
