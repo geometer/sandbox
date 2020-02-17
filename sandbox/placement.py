@@ -2,7 +2,7 @@ import math
 import random
 from typing import Set
 
-from .objects import Scene
+from .scene import Scene
 
 class TwoDCoordinates:
     def __init__(self, x: float, y: float):
