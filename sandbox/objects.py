@@ -77,7 +77,7 @@ class Scene:
 
         def intersection_point(self, obj, **kwargs):
             """Creates an intersection point of the line and given object (line or circle).
-               Requires a constraint for correct placement if the object a circle"""
+               Requires a constraint for determinate placement if the object a circle"""
             self.scene.assert_line_or_circle(obj)
             assert self != obj, 'The line does not cross itself'
             if isinstance(obj, Scene.Circle):
@@ -94,7 +94,7 @@ class Scene:
 
         def intersection_point(self, obj, **kwargs):
             """Creates an intersection point of the line and given object (line or circle).
-               Requires a constraint for correct placement"""
+               Requires a constraint for determinate placement"""
             self.scene.assert_line_or_circle(obj)
             assert self != obj, 'The circle does not cross itself'
             if isinstance(obj, Scene.Circle):
