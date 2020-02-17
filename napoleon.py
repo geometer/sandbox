@@ -28,7 +28,7 @@ napoleonic(B, C, A)
 print(scene)
 
 placement = Placement(scene)
-print(placement)
+#print(placement)
 
 #print('|A B| = %.5f' % placement.distance('A', 'B'))
 #print('|A C1| = %.5f' % placement.distance('A', 'C1'))

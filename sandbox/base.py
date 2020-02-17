@@ -138,4 +138,7 @@ class BaseScene:
         return None
 
     def __str__(self):
-        return '\n'.join([str(obj) for obj in self.__objects])
+        count = len(self.__objects)
+        aux = len([o for o in self.__objects if o.auxiliary])
+        return '\n'.join([str(obj) for obj in self.__objects]) + \
+               ('\n\nTotal: %s objects (+ %s auxiliary)\n' % (count - aux, aux))
