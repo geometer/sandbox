@@ -55,16 +55,18 @@ class Angle:
 
 def __vectors(placement: Placement):
     points = placement.scene.points(skip_auxiliary=True)
-    for index0 in range(0, len(points)):
-        for index1 in range(index0 + 1, len(points)):
-            vec = Vector(points[index0], points[index1], placement)
+    for index in range(0, len(points)):
+        point0 = points[index]
+        for point1 in points[index + 1:]:
+            vec = Vector(point0, point1, placement)
             if math.fabs(vec.length()) >= 5e-6:
                 yield vec
 
 def __angles(vectors: List[Vector]):
     for index0 in range(0, len(vectors)):
-        for index1 in range(index0 + 1, len(vectors)):
-            yield Angle(vectors[index0], vectors[index1])
+        vec0 = vectors[index0]
+        for vec1 in vectors[index0 + 1:]:
+            yield Angle(vec0, vec1)
 
 class Triangle:
     def __init__(self, pt0: Scene.Point, pt1: Scene.Point, pt2: Scene.Point, side0: float, side1: float, side2: float):
@@ -143,10 +145,9 @@ class LengthFamily:
         for i in range(1, 100):
             candidate = ratio * i
             if math.fabs(candidate - round(candidate)) < 5e-6:
-                if i > 1:
-                    return "SQRT(%d/%d)" % (round(candidate), i)
-                else:
+                if i == 1:
                     return "SQRT(%d)" % round(candidate)
+                return "SQRT(%d/%d)" % (round(candidate), i)
         return None
 
     def add(self, vector: Vector) -> bool:
@@ -255,7 +256,7 @@ def hunt_similar_triangles(triangles):
         if len(fam) > 1:
             print(" ∼ ".join([str(trn) for trn in fam]))
 
-def hunt(scene, options = ('all')):
+def hunt(scene, options=('all')):
     placement = Placement(scene)
 
     all_vectors = list(__vectors(placement))
