@@ -57,6 +57,17 @@ class Scene:
             assert self != point, 'Cannot create a line by a single point'
             return Scene.Line(self.scene, point0=self, point1=point, **kwargs)
 
+        def circle_via(self, point, **kwargs):
+            self.scene._assert_point(point)
+            assert self != point, 'Cannot create a circle of zero radius'
+            return Scene.Circle(self.scene, centre=self, radius_start=self, radius_end=point, **kwargs)
+
+        def circle_with_radius(self, start, end, **kwargs):
+            self.scene._assert_point(start)
+            self.scene._assert_point(end)
+            assert start != end, 'Cannot create a circle of zero radius'
+            return Scene.Circle(self.scene, centre=self, radius_start=start, radius_end=end, **kwargs)
+
     class Line(Object):
         def __init__(self, scene, **kwargs):
             Scene.Object.__init__(self, scene, **kwargs)
@@ -102,10 +113,6 @@ class Scene:
         assert isinstance(obj, Scene.Point)
         assert obj.scene == self
 
-    def _assert_points(self, *args):
-        for p in args:
-            self._assert_point(p)
-
     def _assert_line_or_circle(self, obj):
         assert isinstance(obj, Scene.Line) or isinstance(obj, Scene.Circle), 'Unexpected type %s' % type(obj)
         assert obj.scene == self
@@ -121,18 +128,10 @@ class Scene:
     def free_point(self, **kwargs):
         return Scene.Point(self, origin='free', **kwargs)
 
-    def circle(self, **kwargs):
-        centre = kwargs.get('centre')
-        self._assert_point(centre)
-        point = kwargs.get('point')
-        if point:
-            del kwargs['point']
-            return Scene.Circle(self, radius_start=centre, radius_end=point, **kwargs)
-        self._assert_points(kwargs.get('radius_start'), kwargs.get('radius_end'))
-        return Scene.Circle(self, **kwargs)
-
     def centre_point(self, *args, **kwargs):
-        self._assert_points(*args)
+        assert len(args) > 0
+        for p in args:
+            self._assert_point(p)
         return Scene.Point(self, origin='centre', points=args, **kwargs)
 
     def add(self, obj: Object):
