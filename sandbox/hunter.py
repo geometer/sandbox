@@ -94,6 +94,16 @@ class Triangle:
     def __str__(self):
         return "△ %s %s %s" % (self.pt0.label, self.pt1.label, self.pt2.label)
 
+    def equilateral(self):
+        return math.fabs(self.side0 - self.side1) < 5e-6 and \
+               math.fabs(self.side0 - self.side2) < 5e-6 and \
+               math.fabs(self.side1 - self.side2) < 5e-6
+
+    def isosceles(self):
+        return math.fabs(self.side0 - self.side1) < 5e-6 or \
+               math.fabs(self.side0 - self.side2) < 5e-6 or \
+               math.fabs(self.side1 - self.side2) < 5e-6
+
     def similar(self, other) -> bool:
         ratio = self.side0 / other.side0
         if math.fabs(ratio / self.side1 * other.side1 - 1) >= 5e-6:
@@ -228,14 +238,19 @@ def hunt_proportional_angles(angles):
                 print("\t%s (%s)" % (pair['angle'], pair['comment']))
 
 def hunt_similar_triangles(triangles):
+    for trn in triangles:
+        if trn.equilateral():
+            print("%s equilateral" % trn)
+        elif trn.isosceles():
+            print("%s isosceles" % trn)
     for index0 in range(0, len(triangles)):
         trn0 = triangles[index0]
-        for index1 in range(index0, len(triangles)):
-            variation_range = range(1, 6) if index0 == index1 else range(0, 6)
-            for variation in variation_range:
+        for index1 in range(index0 + 1, len(triangles)):
+            for variation in range(0, 6):
                 trn1 = triangles[index1].variation(variation)
                 if trn0.similar(trn1):
                     print('%s ∼ %s' % (trn0, trn1))
+                    break
 
 def hunt(scene, options = ['all']):
     placement = Placement(scene)
