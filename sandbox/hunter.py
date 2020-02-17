@@ -66,6 +66,50 @@ def __angles(vectors: List[Vector]):
         for index1 in range(index0 + 1, len(vectors)):
             yield Angle(vectors[index0], vectors[index1])
 
+class Triangle:
+    def __init__(self, pt0: Scene.Point, pt1: Scene.Point, pt2: Scene.Point, side0: float, side1: float, side2: float):
+        self.pt0 = pt0
+        self.pt1 = pt1
+        self.pt2 = pt2
+        self.side0 = side0
+        self.side1 = side1
+        self.side2 = side2
+
+    def __eq__(self, other) -> bool:
+        return self.pt0 == other.pt0 and self.pt1 == other.pt1 and self.pt2 == other.pt2
+
+    def __str__(self):
+        return "△ %s %s %s" % (self.pt0.label, self.pt1.label, self.pt2.label)
+
+    def similar(self, other) -> bool:
+        ratio = self.side0 / other.side0
+        if math.fabs(ratio / self.side1 * other.side1 - 1) >= 5e-6:
+            return False
+        return math.fabs(ratio / self.side2 * other.side2 - 1) < 5e-6
+
+def __triangles(placement: Placement):
+    points = placement.scene.points(skip_auxiliary=True)
+    for index0 in range(0, len(points)):
+        pt0 = points[index0]
+        loc0 = placement.location(pt0)
+        for index1 in range(index0 + 1, len(points)):
+            pt1 = points[index1]
+            loc1 = placement.location(pt1)
+            for index2 in range(index1 + 1, len(points)):
+                pt2 = points[index2]
+                loc2 = placement.location(pt2)
+                area = loc0.x * (loc1.y - loc2.y) + loc1.x * (loc2.y - loc0.y) + loc2.x * (loc0.y - loc1.y)
+                if math.fabs(area) > 5e-6:
+                    side0 = loc1.distanceTo(loc2)
+                    side1 = loc2.distanceTo(loc0)
+                    side2 = loc0.distanceTo(loc1)
+                    yield Triangle(pt0, pt1, pt2, side0, side1, side2)
+                    yield Triangle(pt0, pt2, pt1, side0, side2, side1)
+                    yield Triangle(pt1, pt0, pt2, side1, side0, side2)
+                    yield Triangle(pt1, pt2, pt0, side1, side2, side0)
+                    yield Triangle(pt2, pt0, pt1, side2, side0, side1)
+                    yield Triangle(pt2, pt1, pt0, side2, side1, side0)
+
 class LengthFamily:
     def __init__(self, vector: Vector):
         self.base = vector
@@ -116,13 +160,9 @@ class AngleFamily:
         self.angles.append({'angle': angle, 'comment': test})
         return True
 
-def hunt(scene):
-    placement = Placement(scene)
-
-    all_vectors = list(__vectors(placement))
-    all_vectors.sort(key=Vector.length)
+def hunt_proportional_segments(vectors):
     families = []
-    for vec in all_vectors:
+    for vec in vectors:
         added = False
         for fam in families:
             if fam.add(vec):
@@ -131,19 +171,18 @@ def hunt(scene):
         if not added:
             families.append(LengthFamily(vec))
 
-    print("%d segments in %d families" % (len(all_vectors), len([f for f in families if len(f.vectors) > 0])))
+    print("%d segments in %d families" % (len(vectors), len([f for f in families if len(f.vectors) > 0])))
     for fam in families:
         if len(fam.vectors) > 0:
             print("%s: %d segments" % (fam.base, 1 + len(fam.vectors)))
             for data in fam.vectors:
                 print("\t%s (%s)" % (data['vector'], data['comment']))
 
-    all_angles = list(__angles(all_vectors))
-    all_angles.sort(key=Angle.abs_arc)
-    for angle in all_angles:
-        arc = angle.arc()
+def hunt_rational_angles(angles):
+    for ngl in angles:
+        arc = ngl.arc()
         if math.fabs(arc) < 5e-6:
-            print("%s = 0" % angle)
+            print("%s = 0" % ngl)
         else:
             ratio = arc / math.pi
             for i in range(1, 60):
@@ -151,30 +190,58 @@ def hunt(scene):
                 if math.fabs(candidate - round(candidate)) < 5e-6:
                     pi = "PI" if i == 1 else ("PI / %d" % i)
                     if round(candidate) == 1:
-                        print("%s = %s" % (angle, pi))
+                        print("%s = %s" % (ngl, pi))
                     elif round(candidate) == -1:
-                        print("%s = -%s" % (angle, pi))
+                        print("%s = -%s" % (ngl, pi))
                     else:
-                        print("%s = %d %s" % (angle, round(candidate), pi))
+                        print("%s = %d %s" % (ngl, round(candidate), pi))
                     break
 
+def hunt_proportional_angles(angles):
     families = []
     zero_count = 0
-    for ang in all_angles:
-        if ang.abs_arc() < 5e-6:
+    for ngl in angles:
+        if ngl.abs_arc() < 5e-6:
             zero_count += 1
             continue
         added = False
         for fam in families:
-            if fam.add(ang):
+            if fam.add(ngl):
                 added = True
                 break
         if not added:
-            families.append(AngleFamily(ang))
+            families.append(AngleFamily(ngl))
 
-    print("%d non-zero angles in %d families" % (len(all_angles) - zero_count, len([f for f in families if len(f.angles) > 0])))
+    print("%d non-zero angles in %d families" % (len(angles) - zero_count, len([f for f in families if len(f.angles) > 0])))
     for fam in families:
         if len(fam.angles) > 0:
             print("%s: %d angles" % (fam.base, 1 + len(fam.angles)))
             for pair in fam.angles:
                 print("\t%s (%s)" % (pair['angle'], pair['comment']))
+
+def hunt_similar_triangles(triangles):
+    for index0 in range(0, len(triangles)):
+        for index1 in range(index0 + 1, len(triangles)):
+            if triangles[index0].similar(triangles[index1]):
+                print('%s ∼ %s' % (triangles[index0], triangles[index1]))
+
+def hunt(scene, options = ['all']):
+    placement = Placement(scene)
+
+    all_vectors = list(__vectors(placement))
+    all_vectors.sort(key=Vector.length)
+
+    if 'proportional_segments' in options or 'all' in options:
+        hunt_proportional_segments(all_vectors)
+
+    all_angles = list(__angles(all_vectors))
+    all_angles.sort(key=Angle.abs_arc)
+
+    if 'rational_angles' in options or 'all' in options:
+        hunt_rational_angles(all_angles)
+
+    if 'proportional_angles' in options or 'all' in options:
+        hunt_proportional_angles(all_angles)
+
+    if 'similar_triangles' in options or 'all' in options:
+        hunt_similar_triangles(list(__triangles(placement)))

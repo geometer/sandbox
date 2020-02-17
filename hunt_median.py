@@ -20,6 +20,6 @@ para = D.line_via(E)
 A1 = para.intersection_point(A.line_via(C), label='A1')
 B1 = para.intersection_point(B.line_via(C), label='B1')
 
-print(scene)
+#print(scene)
 
-hunt(scene)
+hunt(scene, 'similar_triangles')
