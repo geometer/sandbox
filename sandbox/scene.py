@@ -52,3 +52,16 @@ class Scene(CoreScene):
         tmp2 = line.intersection_point(circle, auxiliary=True)
         tmp2.add_constraint(Constraint.Kind.not_equal, tmp)
         return tmp.ratio_point(tmp2, 1, 1, **kwargs)
+
+    def perpendicular_bisector_line(self, point0, point1, **kwargs):
+        """
+        The perpendicular bisector to the segment [point0, point1]
+        """
+        self.assert_point(point0)
+        self.assert_point(point1)
+        circle0 = point0.circle_through(point1, auxiliary=True)
+        circle1 = point1.circle_through(point0, auxiliary=True)
+        tmp0 = circle0.intersection_point(circle1, auxiliary=True)
+        tmp1 = circle0.intersection_point(circle1, auxiliary=True)
+        tmp1.add_constraint(Constraint.Kind.not_equal, tmp0)
+        return tmp0.line_through(tmp1, **kwargs)
