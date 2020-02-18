@@ -38,7 +38,7 @@ class Scene(CoreScene):
         """
         Constructs a line parallel to the given line through the given point.
         """
-        fourth = self.opposite_parallelogram_point(point, line.point0, line.point1, auxiliary=True)
+        fourth = self.opposite_parallelogram_point(line.point0, point, line.point1, auxiliary=True)
         return point.line_through(fourth, **kwargs)
 
     def perpendicular_foot_point(self, point, line, **kwargs):
