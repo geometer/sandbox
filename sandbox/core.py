@@ -49,7 +49,9 @@ class CoreScene:
                 value = self.__dict__[key]
                 if value is None:
                     continue
-                if isinstance(value, CoreScene.Object):
+                if isinstance(value, Enum):
+                    dct[key] = value.name
+                elif isinstance(value, CoreScene.Object):
                     dct[key] = value.label
                 elif isinstance(value, (list, tuple)):
                     dct[key] = [elt.label if isinstance(elt, CoreScene.Object) else str(elt) for elt in value]
@@ -194,3 +196,6 @@ class Constraint:
         self.kind = kind
         self.params = args
         self.__dict__.update(kwargs)
+
+    def __str__(self):
+        return 'Constraint(%s) %s' % (self.kind.name, [para.label for para in self.params])
