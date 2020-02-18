@@ -102,9 +102,12 @@ class Triangle:
                math.fabs(self.side1 - self.side2) < 5e-6
 
     def isosceles(self):
-        return math.fabs(self.side0 - self.side1) < 5e-6 or \
-               math.fabs(self.side0 - self.side2) < 5e-6 or \
-               math.fabs(self.side1 - self.side2) < 5e-6
+        if math.fabs(self.side0 - self.side1) < 5e-6:
+            return self.variation(4)
+        if math.fabs(self.side0 - self.side2) < 5e-6:
+            return self.variation(2)
+        if math.fabs(self.side1 - self.side2) < 5e-6:
+            return self
 
     def similar(self, other) -> bool:
         ratio = self.side0 / other.side0
@@ -235,11 +238,13 @@ def hunt_proportional_angles(angles):
                 print("\t%s (%s)" % (pair['angle'], pair['comment']))
 
 def hunt_similar_triangles(triangles):
-    for trn in triangles:
-        if trn.equilateral():
-            print("%s equilateral" % trn)
-        elif trn.isosceles():
-            print("%s isosceles" % trn)
+    equilaterals = [trn for trn in triangles if trn.equilateral()]
+    print('Equilateral triangles: ' + ', '.join([str(trn) for trn in equilaterals]))
+
+    triangles = [trn for trn in triangles if not trn.equilateral()]
+
+    isosceles = filter(None, [trn.isosceles() for trn in triangles])
+    print('Isosceles triangles: ' + ', '.join([str(trn) for trn in isosceles]))
 
     families = []
     for trn in triangles:
