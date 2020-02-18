@@ -2,7 +2,7 @@
 This module is to be extended in the future to add more construction methods.
 """
 
-from .core import CoreScene
+from .core import CoreScene, Constraint
 
 class Scene(CoreScene):
     """
@@ -40,3 +40,15 @@ class Scene(CoreScene):
         """
         fourth = self.opposite_parallelogram_point(point, line.point0, line.point1, auxiliary=True)
         return point.line_through(fourth, **kwargs)
+
+    def perpendicular_foot_point(self, point, line, **kwargs):
+        """
+        The foot of the perpendicular from the point to the line
+        """
+        self.assert_point(point)
+        self.assert_line(line)
+        tmp = line.free_point(auxiliary=True)
+        circle = point.circle_through(tmp, auxiliary=True)
+        tmp2 = line.intersection_point(circle, auxiliary=True)
+        tmp2.add_constraint(Constraint.Kind.not_equal, tmp)
+        return tmp.ratio_point(tmp2, 1, 1, **kwargs)

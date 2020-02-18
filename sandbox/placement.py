@@ -68,7 +68,11 @@ class Placement:
             return loca
 
         def validate(self, constraint):
-            if constraint.kind == Constraint.Kind.opposite_side:
+            if constraint.kind == Constraint.Kind.not_equal:
+                pt0 = self.location(constraint.params[0])
+                pt1 = self.location(constraint.params[1])
+                return math.fabs(pt0.x - pt1.x) >= 5e-6 or math.fabs(pt0.y - pt1.y) >= 5e-6
+            elif constraint.kind == Constraint.Kind.opposite_side:
                 pt0 = self.location(constraint.params[0])
                 pt1 = self.location(constraint.params[1])
                 line = constraint.params[2]
@@ -154,6 +158,47 @@ class Placement:
                             (s0 * cy1 - s1 * cy0) / discr,
                             (s1 * cx0 - s0 * cx1) / discr,
                         ))
+                    elif p.origin == CoreScene.Point.Origin.circle_x_line:
+                        c = self.location(p.circle.centre)
+                        r2 = self.location(p.circle.radius_start).distance2To(self.location(p.circle.radius_end))
+                        p0 = self.location(p.line.point0)
+                        p1 = self.location(p.line.point1)
+                        # (x - c.x)^2 + (y - c.y)^2 == r2
+                        # x = a * p0.x + (1-a) * p1.x
+                        # y = a * p0.y + (1-a) * p1.y
+                        # (p0.y - p1.y) * x + (p1.x - p0.x) * y = p1.x * p0.y - p1.y * p0.x
+                        if math.fabs(p1.x - p0.x) >= 5e-6:
+                            # y = ((p0.y - p1.y) * x - (p1.x * p0.y - p1.y * p0.x)) / (p0.x - p1.x)
+                            coef_x = (p0.y - p1.y) / (p0.x - p1.x)
+                            coef = (p1.x * p0.y - p1.y * p0.x) / (p1.x - p0.x)
+                            # y = coef_x * x + coef
+                            # (x - c.x)^2 + (coef_x * x + coef - c.y)^2 = r2
+                            # (1 + coef_x^2) * x^2 + 2 * (coef_x * (coef - c.y) - c.x) * x + c.x^2 + (coef - c.y)^2 - r2 = 0
+                            qa = 1 + coef_x * coef_x
+                            qb = coef_x * (coef - c.y) - c.x 
+                            qc = c.x * c.x + (coef - c.y) * (coef - c.y) - r2
+                            discr = qb * qb - qa * qc
+                            assert discr >= 0, 'Circles have no intersection points'
+                            # y = (-qb +- sqrt(discr)) / qa
+                            x_1 = (-qb + math.sqrt(discr)) / qa
+                            x_2 = (-qb - math.sqrt(discr)) / qa
+                            y_1 = coef + coef_x * x_1
+                            y_2 = coef + coef_x * x_2
+                        elif math.fabs(p1.y - p0.y) >= 5e-6:
+                            coef_y = (p0.x - p1.x) / (p0.y - p1.y)
+                            coef = (p1.y * p0.x - p1.x * p0.y) / (p1.y - p0.y)
+                            qa = 1 + coef_y * coef_y
+                            qb = coef_y * (coef - c.x) - c.y 
+                            qc = c.y * c.y + (coef - c.x) * (coef - c.x) - r2
+                            discr = qb * qb - qa * qc
+                            assert discr >= 0, 'Circles have no intersection points'
+                            y_1 = (-qb + math.sqrt(discr)) / qa
+                            y_2 = (-qb - math.sqrt(discr)) / qa
+                            x_1 = coef + coef_y * y_1
+                            x_2 = coef + coef_y * y_2
+                        else:
+                            raise PlacementFailedError
+                        add(p, TwoDCoordinates(x_1, y_1), TwoDCoordinates(x_2, y_2))
                     elif p.origin == CoreScene.Point.Origin.circle_x_circle:
                         c0 = self.location(p.circle0.centre)
                         c1 = self.location(p.circle1.centre)

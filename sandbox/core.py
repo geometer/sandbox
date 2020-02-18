@@ -179,6 +179,7 @@ class CoreScene:
 
 class Constraint:
     class Kind(Enum):
+        not_equal         = (CoreScene.Point, CoreScene.Point)
         opposite_side     = (CoreScene.Point, CoreScene.Point, CoreScene.Line)
 
         def __init__(self, *params):
