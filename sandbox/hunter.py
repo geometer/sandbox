@@ -256,6 +256,47 @@ def hunt_similar_triangles(triangles):
         if len(fam) > 1:
             print(" ∼ ".join([str(trn) for trn in fam]))
 
+def hunt_coincidences(placement: Placement):
+    used_points = set()
+    points = placement.scene.points(skip_auxiliary=True)
+    for index0 in range(0, len(points)):
+        pt0 = points[index0]
+        if pt0 in used_points:
+            continue
+        loc0 = placement.location(pt0)
+        same_points = [pt0]
+        for index1 in range(index0 + 1, len(points)):
+            pt1 = points[index1]
+            loc1 = placement.location(pt1)
+            if loc1.distanceTo(loc0) < 5e-6:
+                same_points.append(pt1)
+                used_points.add(pt1)
+        if len(same_points) > 1:
+            print('same point: %s' % [pt.label for pt in same_points])
+
+def hunt_collinears(placement: Placement):
+    used_pairs = set()
+    points = placement.scene.points(skip_auxiliary=True)
+    for index0 in range(0, len(points)):
+        pt0 = points[index0]
+        loc0 = placement.location(pt0)
+        for index1 in range(index0 + 1, len(points)):
+            pt1 = points[index1]
+            if (pt0, pt1) in used_pairs:
+                continue
+            loc1 = placement.location(pt1)
+            collinear = [pt0, pt1]
+            for index2 in range(index1 + 1, len(points)):
+                pt2 = points[index2]
+                loc2 = placement.location(pt2)
+                area = loc0.x * (loc1.y - loc2.y) + loc1.x * (loc2.y - loc0.y) + loc2.x * (loc0.y - loc1.y)
+                if math.fabs(area) < 5e-6:
+                    for pt in collinear:
+                        used_pairs.add((pt, pt2))
+                    collinear.append(pt2)
+            if len(collinear) > 2:
+                print('collinear: %s' % [pt.label for pt in collinear])
+
 def hunt(scene, options=('all')):
     placement = Placement(scene)
 
@@ -276,3 +317,9 @@ def hunt(scene, options=('all')):
 
     if 'similar_triangles' in options or 'all' in options:
         hunt_similar_triangles(list(__triangles(placement)))
+
+    if 'coincidences' in options or 'all' in options:
+        hunt_coincidences(placement)
+
+    if 'collinears' in options or 'all' in options:
+        hunt_collinears(placement)
