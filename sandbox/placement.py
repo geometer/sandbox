@@ -56,6 +56,12 @@ class PlacementFailedError(Exception):
     """Cannot place to meet all the conditions"""
 
 class Placement:
+    def __random_real(self):
+        return math.tan(random.uniform(- math.pi / 2, math.pi / 2))
+
+    def __random_real_in_range(self, start, end):
+        return random.uniform(start, end)
+
     class TempPlacement:
         def __init__(self, placement, point, coords):
             self._coordinates = dict(placement._coordinates)
@@ -105,13 +111,13 @@ class Placement:
                 try:
                     if p.origin == CoreScene.Point.Origin.free:
                         add(p, TwoDCoordinates(
-                            p.x if hasattr(p, 'x') else random.randrange(0, 100000, 1) / 1000.0,
-                            p.y if hasattr(p, 'y') else random.randrange(0, 100000, 1) / 1000.0
+                            p.x if hasattr(p, 'x') else self.__random_real(),
+                            p.y if hasattr(p, 'y') else self.__random_real()
                         ))
                     elif p.origin == CoreScene.Point.Origin.circle:
                         o = self.location(p.circle.centre)
                         r = self.location(p.circle.radius_start).distanceTo(self.location(p.circle.radius_end))
-                        angle = random.randrange(0, 200000, 1) * math.pi / 100000
+                        angle = self.__random_real_in_range(0, 2 * math.pi)
                         add(p, TwoDCoordinates(
                             o.x + math.sin(angle) * r,
                             o.y + math.cos(angle) * r
@@ -119,8 +125,7 @@ class Placement:
                     elif p.origin == CoreScene.Point.Origin.line:
                         loc0 = self.location(p.line.point0)
                         loc1 = self.location(p.line.point1)
-                        angle = random.randrange(-99999, 99999, 1) * math.pi / 200000
-                        coef = math.tan(angle)
+                        coef = self.__random_real()
                         add(p, TwoDCoordinates(
                             0.5 * (loc0.x + loc1.x) + coef * (loc0.x - loc1.x),
                             0.5 * (loc0.y + loc1.y) + coef * (loc0.y - loc1.y)
