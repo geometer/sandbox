@@ -239,12 +239,14 @@ def hunt_proportional_angles(angles):
 
 def hunt_similar_triangles(triangles):
     equilaterals = [trn for trn in triangles if trn.equilateral()]
-    print('Equilateral triangles: ' + ', '.join([str(trn) for trn in equilaterals]))
+    if equilaterals:
+        print('Equilateral triangles: ' + ', '.join([str(trn) for trn in equilaterals]))
 
     triangles = [trn for trn in triangles if not trn.equilateral()]
 
-    isosceles = filter(None, [trn.isosceles() for trn in triangles])
-    print('Isosceles triangles: ' + ', '.join([str(trn) for trn in isosceles]))
+    isosceles = list(filter(None, [trn.isosceles() for trn in triangles]))
+    if isosceles:
+        print('Isosceles triangles: ' + ', '.join([str(trn) for trn in isosceles]))
 
     families = []
     for trn in triangles:
@@ -254,6 +256,9 @@ def hunt_similar_triangles(triangles):
                 if fam[0].similar(var):
                     fam.append(var)
                     break
+            else:
+                continue
+            break
         else:
             families.append([trn])
 
