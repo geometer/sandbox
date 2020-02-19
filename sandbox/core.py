@@ -29,17 +29,11 @@ class CoreScene:
 
             self.scene = scene
             self.__dict__.update(kwargs)
-            self.__constraints = None
+            self.constraints = []
             scene.add(self)
 
-        @property
-        def constraints(self):
-            return list(self.__constraints) if self.__constraints is not None else []
-
-        def add_constraint(self, kind, *args, **kwargs):
-            if self.__constraints is None:
-                self.__constraints = []
-            self.__constraints.append(Constraint(kind, self, *args, **kwargs))
+        def constraint(self, kind, *args, **kwargs):
+            self.constraints.append(Constraint(kind, self.scene, self, *args, **kwargs))
 
         def __str__(self):
             dct = {}
@@ -54,7 +48,8 @@ class CoreScene:
                 elif isinstance(value, CoreScene.Object):
                     dct[key] = value.label
                 elif isinstance(value, (list, tuple)):
-                    dct[key] = [elt.label if isinstance(elt, CoreScene.Object) else str(elt) for elt in value]
+                    if value:
+                        dct[key] = [elt.label if isinstance(elt, CoreScene.Object) else str(elt) for elt in value]
                 else:
                     dct[key] = str(value)
             return '%s `%s` %s' % (self.__class__.__name__, self.label, dct)
@@ -141,6 +136,10 @@ class CoreScene:
 
     def __init__(self):
         self.__objects = []
+        self.constraints = []
+
+    def constraint(self, kind, *args, **kwargs):
+        self.constraints.append(Constraint(kind, self, *args, **kwargs))
 
     def points(self, skip_auxiliary=False):
         if skip_auxiliary:
@@ -183,19 +182,25 @@ class Constraint:
     class Kind(Enum):
         not_equal         = (CoreScene.Point, CoreScene.Point)
         opposite_side     = (CoreScene.Point, CoreScene.Point, CoreScene.Line)
+        distance          = (CoreScene.Point, CoreScene.Point, int)
 
         def __init__(self, *params):
             self.params = params
 
-    def __init__(self, kind, *args, **kwargs):
+    def __init__(self, kind, scene, *args, **kwargs):
         assert isinstance(kind, Constraint.Kind)
         assert len(args) == len(kind.params)
-        assert isinstance(args[0], kind.params[0])
-        for index in range(1, len(args)):
-            args[0].scene.assert_type(args[index], kind.params[index])
+        self.params = []
+        for (arg, knd) in zip(args, kind.params):
+            if issubclass(knd, CoreScene.Object):
+                if isinstance(arg, str):
+                    arg = scene.get(arg)
+                scene.assert_type(arg, knd)
+            else:
+                assert isinstance(arg, knd)
+            self.params.append(arg)
         self.kind = kind
-        self.params = args
         self.__dict__.update(kwargs)
 
     def __str__(self):
-        return 'Constraint(%s) %s' % (self.kind.name, [para.label for para in self.params])
+        return 'Constraint(%s) %s' % (self.kind.name, [para.label if isinstance(para, CoreScene.Object) else para for para in self.params])

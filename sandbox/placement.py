@@ -1,3 +1,4 @@
+from functools import reduce
 import math
 import random
 from typing import Set
@@ -32,7 +33,7 @@ class TwoDVector:
 
     @property
     def length2(self) -> float:
-        return self.x * self.x + self.y * self.y
+        return self.x ** 2 + self.y ** 2
 
     def scalar_product(self, other) -> float:
         return self.x * other.x + self.y * other.y
@@ -56,11 +57,24 @@ class PlacementFailedError(Exception):
     """Cannot place to meet all the conditions"""
 
 class Placement:
-    def __random_real(self):
-        return math.tan(random.uniform(- math.pi / 2, math.pi / 2))
+    class Parameters:
+        def __init__(self, params = None):
+            self.coords = dict(params.coords) if params else {}
+            self.angles = dict(params.angles) if params else {}
 
-    def __random_real_in_range(self, start, end):
-        return random.uniform(start, end)
+        def get_coord(self, label):
+            value = self.coords.get(label)
+            if value is None:
+                value = math.tan(random.uniform(-math.pi / 2, math.pi / 2))
+                self.coords[label] = value
+            return value
+
+        def get_angle(self, label):
+            value = self.angles.get(label)
+            if value is None:
+                value = random.uniform(0, 2 * math.pi)
+                self.angles[label] = value
+            return value
 
     class TempPlacement:
         def __init__(self, placement, point, coords):
@@ -92,9 +106,10 @@ class Placement:
             else:
                 raise PlacementFailedError('Constraint `%s` not supported in placement' % constraint.kind)
 
-    def __init__(self, scene: CoreScene):
+    def __init__(self, scene: CoreScene, params = None):
         self.scene = scene
         self._coordinates = {}
+        self.params = params if params else Placement.Parameters()
         not_placed: Set[CoreScene.Point] = set(scene.points())
 
         def add(p: CoreScene.Point, *coords):
@@ -111,13 +126,13 @@ class Placement:
                 try:
                     if p.origin == CoreScene.Point.Origin.free:
                         add(p, TwoDCoordinates(
-                            p.x if hasattr(p, 'x') else self.__random_real(),
-                            p.y if hasattr(p, 'y') else self.__random_real()
+                            p.x if hasattr(p, 'x') else self.params.get_coord(p.label + '.x'),
+                            p.y if hasattr(p, 'y') else self.params.get_coord(p.label + '.y')
                         ))
                     elif p.origin == CoreScene.Point.Origin.circle:
                         o = self.location(p.circle.centre)
                         r = self.location(p.circle.radius_start).distanceTo(self.location(p.circle.radius_end))
-                        angle = self.__random_real_in_range(0, 2 * math.pi)
+                        angle = self.params.get_angle(p.label + '.angle')
                         add(p, TwoDCoordinates(
                             o.x + math.sin(angle) * r,
                             o.y + math.cos(angle) * r
@@ -125,7 +140,7 @@ class Placement:
                     elif p.origin == CoreScene.Point.Origin.line:
                         loc0 = self.location(p.line.point0)
                         loc1 = self.location(p.line.point1)
-                        coef = self.__random_real()
+                        coef = self.params.get_coord(p.label + '.coef')
                         add(p, TwoDCoordinates(
                             0.5 * (loc0.x + loc1.x) + coef * (loc0.x - loc1.x),
                             0.5 * (loc0.y + loc1.y) + coef * (loc0.y - loc1.y)
@@ -181,7 +196,7 @@ class Placement:
                             # (1 + coef_x^2) * x^2 + 2 * (coef_x * (coef - c.y) - c.x) * x + c.x^2 + (coef - c.y)^2 - r2 = 0
                             qa = 1 + coef_x * coef_x
                             qb = coef_x * (coef - c.y) - c.x 
-                            qc = c.x * c.x + (coef - c.y) * (coef - c.y) - r2
+                            qc = c.x ** 2 + (coef - c.y) ** 2 - r2
                             discr = qb * qb - qa * qc
                             assert discr >= 0, 'Circles have no intersection points'
                             # y = (-qb +- sqrt(discr)) / qa
@@ -291,5 +306,50 @@ class Placement:
         vec1 = TwoDVector(self.location(pt2), self.location(pt3))
         return vec0.angle(vec1)
 
-    def __str__(self):
-        return '\n'.join([('%s => (%s)' % (pt, self.location(pt))) for pt in self.scene.points()])
+    def dump(self):
+        print('Parameters:')
+        if self.params.coords:
+            print('\n'.join([('%s => %.5f' % (label, self.params.coords[label])) for label in self.params.coords]))
+        if self.params.angles:
+            print('\n'.join([('%s => %.5f' % (label, self.params.angles[label])) for label in self.params.angles]))
+        print('\nCoordinates:')
+        print('\n'.join([('%s => %s' % (pt.label, self.location(pt))) for pt in self.scene.points()]))
+        print('\nDeviation: %.5f' % self.deviation())
+
+    def deviation(self):
+        square = 0.0
+        for cnstr in self.scene.constraints:
+            if cnstr.kind == Constraint.Kind.distance:
+                pt0 = self.location(cnstr.params[0])
+                pt1 = self.location(cnstr.params[1])
+                square += (pt0.distanceTo(pt1) - cnstr.params[2]) ** 2
+            else:
+                raise PlacementFailedError('Constraint `%s` not supported in adjustment' % cnstr.kind)
+        return math.sqrt(square)
+
+    def iterate(self):
+        keys = list(self.params.coords.keys())
+
+        gradient = []
+        for index in range(0, len(keys)):
+            key = keys[index]
+            params = Placement.Parameters(self.params)
+            params.coords[key] = self.params.coords[key] + 1e-4
+            test = Placement(self.scene, params)
+            gradient.append(test.deviation() - self.deviation())
+        length = math.sqrt(reduce((lambda s, x : s + x ** 2), gradient, 0))
+        gradient = [d * 1.e-8 / length for d in gradient]
+
+        deg = 0
+        previous = self
+        while True:
+            coef = 2 ** deg
+            params = Placement.Parameters(self.params)
+            for index in range(0, len(keys)):
+                key = keys[index]
+                params.coords[key] = self.params.coords[key] - gradient[index] * coef
+            test = Placement(self.scene, params)
+            if test.deviation() > previous.deviation():
+                return previous
+            previous = test
+            deg += 1

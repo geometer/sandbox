@@ -18,7 +18,7 @@ def napoleonic(A: Scene.Point, B: Scene.Point, C: Scene.Point):
     c1 = B.circle_through(A)
     line = A.line_through(B, auxiliary=True)
     V = c0.intersection_point(c1, label=C.label + '1')
-    V.add_constraint(Constraint.Kind.opposite_side, C, line)
+    V.constraint(Constraint.Kind.opposite_side, C, line)
     scene.gravity_centre_point(A, B, V, label=C.label + '2')
 
 napoleonic(A, B, C)
@@ -28,7 +28,7 @@ napoleonic(B, C, A)
 print(scene)
 
 placement = Placement(scene)
-#print(placement)
+#placement.dump()
 
 #print('|A B| = %.5f' % placement.distance('A', 'B'))
 #print('|A C1| = %.5f' % placement.distance('A', 'C1'))
