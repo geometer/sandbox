@@ -3,8 +3,6 @@
 # Problem 4 from http://zadachi.mccme.ru/2012/
 
 from sandbox import *
-from sandbox.placement import PlacementFailedError
-from sandbox.hunter import hunt
 
 scene = Scene()
 
