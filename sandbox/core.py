@@ -29,11 +29,10 @@ class CoreScene:
 
             self.scene = scene
             self.__dict__.update(kwargs)
-            self.constraints = []
             scene.add(self)
 
         def constraint(self, kind, *args, **kwargs):
-            self.constraints.append(Constraint(kind, self.scene, self, *args, **kwargs))
+            self.scene.constraint(kind, self, *args, **kwargs);
 
         def __str__(self):
             dct = {}
@@ -136,10 +135,15 @@ class CoreScene:
 
     def __init__(self):
         self.__objects = []
-        self.constraints = []
+        self.validation_constraints = []
+        self.adjustment_constraints = []
 
     def constraint(self, kind, *args, **kwargs):
-        self.constraints.append(Constraint(kind, self, *args, **kwargs))
+        cns = Constraint(kind, self, *args, **kwargs)
+        if kind.stage == Stage.validation:
+            self.validation_constraints.append(cns)
+        else:
+            self.adjustment_constraints.append(cns)
 
     def points(self, skip_auxiliary=False):
         if skip_auxiliary:
@@ -178,14 +182,19 @@ class CoreScene:
         return '\n'.join([str(obj) for obj in self.__objects]) + \
                ('\n\nTotal: %s objects (+ %s auxiliary)\n' % (count - aux, aux))
 
+class Stage(Enum):
+    validation        = auto()
+    adjustment        = auto()
+
 class Constraint:
     class Kind(Enum):
-        not_equal         = (CoreScene.Point, CoreScene.Point)
-        opposite_side     = (CoreScene.Point, CoreScene.Point, CoreScene.Line)
-        quadrilateral     = (CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
-        distance          = (CoreScene.Point, CoreScene.Point, int)
+        not_equal         = (Stage.validation, CoreScene.Point, CoreScene.Point)
+        opposite_side     = (Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
+        quadrilateral     = (Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
+        distance          = (Stage.adjustment, CoreScene.Point, CoreScene.Point, int)
 
-        def __init__(self, *params):
+        def __init__(self, stage, *params):
+            self.stage = stage
             self.params = params
 
     def __init__(self, kind, scene, *args, **kwargs):

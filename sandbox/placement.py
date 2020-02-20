@@ -120,11 +120,22 @@ class Placement:
         self._coordinates = {}
         self.params = params if params else Placement.Parameters()
         not_placed: Set[CoreScene.Point] = set(scene.points())
+        passed_constraints = set()
 
         def add(p: CoreScene.Point, *coords):
             for candidate in coords:
                 temp = Placement.TempPlacement(self, p, candidate)
-                if all(temp.validate(cs) for cs in p.constraints):
+                for cs in self.scene.validation_constraints:
+                    if cs in passed_constraints:
+                        continue
+                    try:
+                        if temp.validate(cs):
+                            passed_constraints.add(cs)
+                        else:
+                            break
+                    except IncompletePlacementError:
+                        continue
+                else:
                     self._coordinates[p] = candidate
                     not_placed.remove(p)
                     return
@@ -332,13 +343,13 @@ class Placement:
 
     def deviation(self):
         square = 0.0
-        for cnstr in self.scene.constraints:
+        for cnstr in self.scene.adjustment_constraints:
             if cnstr.kind == Constraint.Kind.distance:
                 pt0 = self.location(cnstr.params[0])
                 pt1 = self.location(cnstr.params[1])
                 square += (pt0.distanceTo(pt1) - cnstr.params[2]) ** 2
             else:
-                raise PlacementFailedError('Constraint `%s` not supported in adjustment' % cnstr.kind)
+                assert False, 'Constraint `%s` not supported in adjustment' % cnstr.kind
         return mpmath.sqrt(square)
 
     def iterate(self):
