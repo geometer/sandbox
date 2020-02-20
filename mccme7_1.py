@@ -1,6 +1,6 @@
 #!/var/www/sandbox/virtualenv/bin/python
 
-# Task 7 from http://zadachi.mccme.ru/2012/
+# Problem 7 from http://zadachi.mccme.ru/2012/
 
 from sandbox import *
 from sandbox.placement import PlacementFailedError

@@ -3,7 +3,7 @@ Core module.
 Normally, do not add new construction methods here, do this in scene.py instead.
 """
 
-from enum import Enum, auto
+from enum import Enum, auto, unique
 import itertools
 
 class CoreScene:
@@ -219,13 +219,17 @@ class Stage(Enum):
     adjustment        = auto()
 
 class Constraint:
+    @unique
     class Kind(Enum):
-        not_equal         = (Stage.validation, CoreScene.Point, CoreScene.Point)
-        opposite_side     = (Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
-        quadrilateral     = (Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
-        distance          = (Stage.adjustment, CoreScene.Point, CoreScene.Point, int)
+        not_equal         = ('not_equal', Stage.validation, CoreScene.Point, CoreScene.Point)
+        opposite_side     = ('opposite_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
+        quadrilateral     = ('quadrilateral', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
+        inside_triangle   = ('inside_triangle', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
+        outside_triangle  = ('outside_triangle', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
+        distance          = ('distance', Stage.adjustment, CoreScene.Point, CoreScene.Point, int)
+        equal_distances   = ('equal_distances', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
 
-        def __init__(self, stage, *params):
+        def __init__(self, name, stage, *params):
             self.stage = stage
             self.params = params
 

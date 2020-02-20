@@ -88,8 +88,17 @@ class Placement:
                 raise IncompletePlacementError
             return loca
 
+        # TODO: below we do not cosider case clockwise == 0
         def clockwise(self, p0: TwoDCoordinates, p1: TwoDCoordinates, p2: TwoDCoordinates) -> bool:
             return TwoDVector(p1, p0).vector_product(TwoDVector(p2, p0)) < 0
+
+        def clockwise_sign(self, p0: TwoDCoordinates, p1: TwoDCoordinates, p2: TwoDCoordinates) -> bool:
+            clo = self.clockwise(p0, p1, p2)
+            if clo > 0:
+                return 1
+            if clo < 0:
+                return -1
+            return 0
 
         def validate(self, constraint):
             if constraint.kind == Constraint.Kind.not_equal:
@@ -113,7 +122,26 @@ class Placement:
                     if self.clockwise(x, y, z) > 0:
                         count += 1
                 return count != 2
+            if constraint.kind == Constraint.Kind.inside_triangle:
+                pt0 = self.location(constraint.params[0])
+                pt1 = self.location(constraint.params[1])
+                pt2 = self.location(constraint.params[2])
+                pt3 = self.location(constraint.params[3])
+                count = 0
+                for (x, y, z) in [(pt0, pt1, pt2), (pt0, pt2, pt3), (pt0, pt3, pt1)]:
+                    count += self.clockwise_sign(x, y, z)
+                return count == 3 or count == -3
+            if constraint.kind == Constraint.Kind.outside_triangle:
+                pt0 = self.location(constraint.params[0])
+                pt1 = self.location(constraint.params[1])
+                pt2 = self.location(constraint.params[2])
+                pt3 = self.location(constraint.params[3])
+                count = 0
+                for (x, y, z) in [(pt0, pt1, pt2), (pt0, pt2, pt3), (pt0, pt3, pt1)]:
+                    count += self.clockwise_sign(x, y, z)
+                return count == 1 or count == -1
 
+            print('DEBUG: assertion failed')
             assert False, 'Constraint `%s` not supported in placement' % constraint.kind
 
     def __init__(self, scene: CoreScene, params=None):
@@ -351,6 +379,12 @@ class Placement:
                 pt0 = self.location(cnstr.params[0])
                 pt1 = self.location(cnstr.params[1])
                 square += (pt0.distance_to(pt1) - cnstr.params[2]) ** 2
+            elif cnstr.kind == Constraint.Kind.equal_distances:
+                pt0 = self.location(cnstr.params[0])
+                pt1 = self.location(cnstr.params[1])
+                pt2 = self.location(cnstr.params[2])
+                pt3 = self.location(cnstr.params[3])
+                square += (pt0.distance_to(pt1) - pt2.distance_to(pt3)) ** 2
             else:
                 assert False, 'Constraint `%s` not supported in adjustment' % cnstr.kind
         return mpmath.sqrt(square)
