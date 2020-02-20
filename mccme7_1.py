@@ -2,8 +2,6 @@
 
 # Task 7 from http://zadachi.mccme.ru/2012/
 
-from sys import stdout
-
 from sandbox import *
 from sandbox.placement import PlacementFailedError
 from sandbox.hunter import hunt
@@ -24,22 +22,7 @@ scene.constraint(Constraint.Kind.distance, A, D, 2)
 
 scene.dump()
 
-while True:
-    try:
-        placement = Placement(scene)
-        for index in range(0, 400):
-            if index % 10 == 0:
-                stdout.write('Deviation on step %d: %.7f\r' % (index, placement.deviation()))
-                stdout.flush()
-            new_placement = placement.iterate()
-            if new_placement == placement:
-                print('Deviation on step %d: %.7f' % (index, placement.deviation()))
-                break
-            placement = new_placement
-        if placement.deviation() < 1e-6:
-            break
-    except PlacementFailedError as e:
-        print(e)
+placement = iterative_placement(scene, print_progress=True)
 
 print('|O A| = %.5f' % placement.distance('O', 'A'))
 print('|A C| = %.5f' % placement.distance('A', 'C'))

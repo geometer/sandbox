@@ -2,6 +2,7 @@ from functools import reduce
 import mpmath
 from mpmath import mpf
 from typing import Set
+from sys import stdout
 
 from .core import CoreScene, Constraint
 
@@ -95,14 +96,14 @@ class Placement:
                 pt0 = self.location(constraint.params[0])
                 pt1 = self.location(constraint.params[1])
                 return mpmath.fabs(pt0.x - pt1.x) >= 5e-6 or mpmath.fabs(pt0.y - pt1.y) >= 5e-6
-            elif constraint.kind == Constraint.Kind.opposite_side:
+            if constraint.kind == Constraint.Kind.opposite_side:
                 pt0 = self.location(constraint.params[0])
                 pt1 = self.location(constraint.params[1])
                 line = constraint.params[2]
                 start = self.location(line.point0)
                 end = self.location(line.point1)
                 return self.clockwise(start, end, pt0) != self.clockwise(start, end, pt1)
-            elif constraint.kind == Constraint.Kind.quadrilateral:
+            if constraint.kind == Constraint.Kind.quadrilateral:
                 pt0 = self.location(constraint.params[0])
                 pt1 = self.location(constraint.params[1])
                 pt2 = self.location(constraint.params[2])
@@ -112,8 +113,8 @@ class Placement:
                     if self.clockwise(x, y, z) > 0:
                         count += 1
                 return count != 2
-            else:
-                assert False, 'Constraint `%s` not supported in placement' % constraint.kind
+
+            assert False, 'Constraint `%s` not supported in placement' % constraint.kind
 
     def __init__(self, scene: CoreScene, params=None):
         self.scene = scene
@@ -390,3 +391,24 @@ class Placement:
                 return previous
             previous = test
             deg += 1
+
+def iterative_placement(scene, max_attempts=100, max_iterations=400, print_progress=False):
+    for _ in range(0, max_attempts):
+        try:
+            placement = Placement(scene)
+            for index in range(0, max_iterations):
+                if print_progress and index % 10 == 0:
+                    stdout.write('Deviation on step %d: %.7f\r' % (index, placement.deviation()))
+                    stdout.flush()
+                new_placement = placement.iterate()
+                if new_placement == placement:
+                    break
+                placement = new_placement
+            if print_progress:
+                print('Deviation on step %d: %.7f' % (index, placement.deviation()))
+            if placement.deviation() < 1e-6:
+                return placement
+        except PlacementFailedError as e:
+            if print_progress:
+                print(e)
+    return None

@@ -14,14 +14,7 @@ scene.constraint(Constraint.Kind.distance, 'C', 'A', 3)
 
 scene.dump()
 
-placement = Placement(scene)
-
-for index in range(0, 10000):
-    print('Deviation %d: %.12f' % (index, placement.deviation()))
-    new_placement = placement.iterate()
-    if new_placement == placement:
-        break
-    placement = new_placement
+placement = iterative_placement(scene)
 
 print('\n')
 placement.dump()
