@@ -53,6 +53,13 @@ class Scene(CoreScene):
         tmp2.constraint(Constraint.Kind.not_equal, tmp)
         return tmp.ratio_point(tmp2, 1, 1, **kwargs)
 
+    def line_through(self, point, **kwargs):
+        """
+        A line through the point
+        """
+        self.assert_point(point)
+        return point.line_through(self.free_point(auxiliary=True), **kwargs)
+
     def perpendicular_bisector_line(self, point0, point1, **kwargs):
         """
         The perpendicular bisector to the segment [point0, point1]
