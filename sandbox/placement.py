@@ -1,12 +1,12 @@
 from functools import reduce
-import math
-import random
+import mpmath
+from mpmath import mpf
 from typing import Set
 
 from .core import CoreScene, Constraint
 
 class TwoDCoordinates:
-    def __init__(self, x: float, y: float):
+    def __init__(self, x: mpf, y: mpf):
         self.x = x
         self.y = y
 
@@ -14,12 +14,12 @@ class TwoDCoordinates:
         return '(%.5f, %.5f)' % (self.x, self.y)
 
     def __eq__(self, other):
-        return math.fabs(self.x - other.x) < 5e-6 and math.fabs(self.y - other.y) < 5e-6
+        return mpmath.fabs(self.x - other.x) < 5e-6 and mpmath.fabs(self.y - other.y) < 5e-6
 
-    def distanceTo(self, other) -> float:
+    def distanceTo(self, other) -> mpf:
         return TwoDVector(other, self).length
 
-    def distance2To(self, other) -> float:
+    def distance2To(self, other) -> mpf:
         return TwoDVector(other, self).length2
 
 class TwoDVector:
@@ -28,27 +28,27 @@ class TwoDVector:
         self.y = end.y - start.y
 
     @property
-    def length(self) -> float:
-        return math.hypot(self.x, self.y)
+    def length(self) -> mpf:
+        return mpmath.hypot(self.x, self.y)
 
     @property
-    def length2(self) -> float:
+    def length2(self) -> mpf:
         return self.x ** 2 + self.y ** 2
 
-    def scalar_product(self, other) -> float:
+    def scalar_product(self, other) -> mpf:
         return self.x * other.x + self.y * other.y
 
-    def vector_product(self, other) -> float:
+    def vector_product(self, other) -> mpf:
         return self.x * other.y - self.y * other.x
 
-    def angle(self, other) -> float:
+    def angle(self, other) -> mpf:
         cos = self.scalar_product(other) / self.length / other.length
         if cos >= 1:
             return 0
         elif cos <= -1:
-            return math.pi
+            return mpmath.pi
         else:
-            return math.acos(cos) if self.vector_product(other) > 0 else -math.acos(cos)
+            return mpmath.acos(cos) if self.vector_product(other) > 0 else -mpmath.acos(cos)
 
 class IncompletePlacementError(Exception):
     """Internal error, should never be thrown to public"""
@@ -65,14 +65,14 @@ class Placement:
         def get_coord(self, label):
             value = self.coords.get(label)
             if value is None:
-                value = math.tan(random.uniform(-math.pi / 2, math.pi / 2))
+                value = mpmath.tan(mpmath.rand() * mpmath.pi - mpmath.pi / 2)
                 self.coords[label] = value
             return value
 
         def get_angle(self, label):
             value = self.angles.get(label)
             if value is None:
-                value = random.uniform(0, 2 * math.pi)
+                value = mpmath.rand() * 2 * mpmath.pi
                 self.angles[label] = value
             return value
 
@@ -91,7 +91,7 @@ class Placement:
             if constraint.kind == Constraint.Kind.not_equal:
                 pt0 = self.location(constraint.params[0])
                 pt1 = self.location(constraint.params[1])
-                return math.fabs(pt0.x - pt1.x) >= 5e-6 or math.fabs(pt0.y - pt1.y) >= 5e-6
+                return mpmath.fabs(pt0.x - pt1.x) >= 5e-6 or mpmath.fabs(pt0.y - pt1.y) >= 5e-6
             elif constraint.kind == Constraint.Kind.opposite_side:
                 pt0 = self.location(constraint.params[0])
                 pt1 = self.location(constraint.params[1])
@@ -134,8 +134,8 @@ class Placement:
                         r = self.location(p.circle.radius_start).distanceTo(self.location(p.circle.radius_end))
                         angle = self.params.get_angle(p.label + '.angle')
                         add(p, TwoDCoordinates(
-                            o.x + math.sin(angle) * r,
-                            o.y + math.cos(angle) * r
+                            o.x + mpmath.sin(angle) * r,
+                            o.y + mpmath.cos(angle) * r
                         ))
                     elif p.origin == CoreScene.Point.Origin.line:
                         loc0 = self.location(p.line.point0)
@@ -173,7 +173,7 @@ class Placement:
                         s0 = p1.x * p0.y - p1.y * p0.x
                         s1 = p3.x * p2.y - p3.y * p2.x
                         discr = cx0 * cy1 - cx1 * cy0
-                        assert math.fabs(discr) > 1e-6, 'Lines have no intersection points'
+                        assert mpmath.fabs(discr) > 1e-6, 'Lines have no intersection points'
                         add(p, TwoDCoordinates(
                             (s0 * cy1 - s1 * cy0) / discr,
                             (s1 * cx0 - s0 * cx1) / discr,
@@ -187,7 +187,7 @@ class Placement:
                         # x = a * p0.x + (1-a) * p1.x
                         # y = a * p0.y + (1-a) * p1.y
                         # (p0.y - p1.y) * x + (p1.x - p0.x) * y = p1.x * p0.y - p1.y * p0.x
-                        if math.fabs(p1.x - p0.x) >= 5e-6:
+                        if mpmath.fabs(p1.x - p0.x) >= 5e-6:
                             # y = ((p0.y - p1.y) * x - (p1.x * p0.y - p1.y * p0.x)) / (p0.x - p1.x)
                             coef_x = (p0.y - p1.y) / (p0.x - p1.x)
                             coef = (p1.x * p0.y - p1.y * p0.x) / (p1.x - p0.x)
@@ -200,11 +200,11 @@ class Placement:
                             discr = qb * qb - qa * qc
                             assert discr >= 0, 'Circles have no intersection points'
                             # y = (-qb +- sqrt(discr)) / qa
-                            x_1 = (-qb + math.sqrt(discr)) / qa
-                            x_2 = (-qb - math.sqrt(discr)) / qa
+                            x_1 = (-qb + mpmath.sqrt(discr)) / qa
+                            x_2 = (-qb - mpmath.sqrt(discr)) / qa
                             y_1 = coef + coef_x * x_1
                             y_2 = coef + coef_x * x_2
-                        elif math.fabs(p1.y - p0.y) >= 5e-6:
+                        elif mpmath.fabs(p1.y - p0.y) >= 5e-6:
                             coef_y = (p0.x - p1.x) / (p0.y - p1.y)
                             coef = (p1.y * p0.x - p1.x * p0.y) / (p1.y - p0.y)
                             qa = 1 + coef_y * coef_y
@@ -212,8 +212,8 @@ class Placement:
                             qc = c.y * c.y + (coef - c.x) * (coef - c.x) - r2
                             discr = qb * qb - qa * qc
                             assert discr >= 0, 'Circles have no intersection points'
-                            y_1 = (-qb + math.sqrt(discr)) / qa
-                            y_2 = (-qb - math.sqrt(discr)) / qa
+                            y_1 = (-qb + mpmath.sqrt(discr)) / qa
+                            y_2 = (-qb - mpmath.sqrt(discr)) / qa
                             x_1 = coef + coef_y * y_1
                             x_2 = coef + coef_y * y_2
                         else:
@@ -227,7 +227,7 @@ class Placement:
                         # (x - c0.x)^2 + (y - c0.y)^2 == r02
                         # (x - c1.x)^2 + (y - c1.y)^2 == r12
                         # 2x(c1.x - c0.x) + c0.x^2 - c1.x^2 + 2y(c1.y - c0.y) + c0.y^2 - c1.y^2 = r02 - r12
-                        if math.fabs(c1.x - c0.x) > 5e-6:
+                        if mpmath.fabs(c1.x - c0.x) > 5e-6:
                             # 2x(c1.x - c0.x) = r02 - r12 - c0.x^2 - c0.y^2 + c1.x^2 + c1.y^2 + 2y(c0.y - c1.y)
                             x_coef = 2 * (c1.x - c0.x)
                             y_coef = 2 * (c0.y - c1.y) / x_coef
@@ -243,11 +243,11 @@ class Placement:
                             assert discr >= 0, 'Circles have no intersection points'
                             # y = (-b +- sqrt(discr)) / a
                             #print("%.3f y^2 + %.3f y + %.3f = 0" % (a, 2 * b, c))
-                            y_1 = (-b + math.sqrt(discr)) / a
-                            y_2 = (-b - math.sqrt(discr)) / a
+                            y_1 = (-b + mpmath.sqrt(discr)) / a
+                            y_2 = (-b - mpmath.sqrt(discr)) / a
                             x_1 = const + y_coef * y_1
                             x_2 = const + y_coef * y_2
-                        elif math.fabs(c1.y - c0.y) > 5e-6:
+                        elif mpmath.fabs(c1.y - c0.y) > 5e-6:
                             y_coef = 2 * (c1.y - c0.y)
                             x_coef = 2 * (c0.x - c1.x) / y_coef
                             const = (r02 - r12 - c0.y * c0.y - c0.x * c0.x + c1.y * c1.y + c1.x * c1.x) / y_coef
@@ -257,8 +257,8 @@ class Placement:
                             discr = b * b - a * c
                             assert discr >= 0, 'Circles have no intersection points'
                             #print("%.3f x^2 + %.3f x + %.3f = 0" % (a, 2 * b, c))
-                            x_1 = -b + math.sqrt(discr) / a
-                            x_2 = -b - math.sqrt(discr) / a
+                            x_1 = -b + mpmath.sqrt(discr) / a
+                            x_2 = -b - mpmath.sqrt(discr) / a
                             y_1 = const + x_coef * x_1
                             y_2 = const + x_coef * x_2
                         else:
@@ -325,7 +325,7 @@ class Placement:
                 square += (pt0.distanceTo(pt1) - cnstr.params[2]) ** 2
             else:
                 raise PlacementFailedError('Constraint `%s` not supported in adjustment' % cnstr.kind)
-        return math.sqrt(square)
+        return mpmath.sqrt(square)
 
     def iterate(self):
         keys = list(self.params.coords.keys())
@@ -334,11 +334,12 @@ class Placement:
         for index in range(0, len(keys)):
             key = keys[index]
             params = Placement.Parameters(self.params)
-            params.coords[key] = self.params.coords[key] + 1e-4
+            params.coords[key] = self.params.coords[key] + mpf(1e-10)
             test = Placement(self.scene, params)
             gradient.append(test.deviation() - self.deviation())
-        length = math.sqrt(reduce((lambda s, x : s + x ** 2), gradient, 0))
-        gradient = [d * 1.e-8 / length for d in gradient]
+        #length = mpmath.sqrt(mpmath.nsum((lambda x: x ** 2), *gradient))
+        length = mpmath.sqrt(reduce((lambda s, x : s + x ** 2), gradient, 0))
+        gradient = [d * mpf('1.e-10') / length for d in gradient]
 
         deg = 0
         previous = self

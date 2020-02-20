@@ -18,7 +18,7 @@ print('\n'.join([str(cnstr) for cnstr in scene.constraints]))
 placement = Placement(scene)
 
 for index in range(0, 10000):
-    print('Deviation %d: %.7f' % (index, placement.deviation()))
+    print('Deviation %d: %.12f' % (index, placement.deviation()))
     new_placement = placement.iterate()
     if new_placement == placement:
         break

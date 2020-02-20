@@ -1,9 +1,9 @@
-import math
+import mpmath
 from typing import List
 
 from sandbox import Scene, Placement
 
-ERROR = 1e-4
+ERROR = mpmath.mpf(5e-6)
 
 class Vector:
     def __init__(self, start: Scene.Point, end: Scene.Point, placement: Placement):
@@ -48,7 +48,7 @@ class Angle:
         return self.__arc
 
     def abs_arc(self):
-        return math.fabs(self.__arc)
+        return mpmath.fabs(self.__arc)
 
     def __str__(self):
         if self.vector0.start == self.vector1.start:
@@ -61,7 +61,7 @@ def __vectors(placement: Placement):
         point0 = points[index]
         for point1 in points[index + 1:]:
             vec = Vector(point0, point1, placement)
-            if math.fabs(vec.length()) >= ERROR:
+            if mpmath.fabs(vec.length()) >= ERROR:
                 yield vec
 
 def __angles(vectors: List[Vector]):
@@ -99,23 +99,23 @@ class Triangle:
         return "△ %s %s %s" % (self.pt0.label, self.pt1.label, self.pt2.label)
 
     def equilateral(self):
-        return math.fabs(self.side0 - self.side1) < ERROR and \
-               math.fabs(self.side0 - self.side2) < ERROR and \
-               math.fabs(self.side1 - self.side2) < ERROR
+        return mpmath.fabs(self.side0 - self.side1) < ERROR and \
+               mpmath.fabs(self.side0 - self.side2) < ERROR and \
+               mpmath.fabs(self.side1 - self.side2) < ERROR
 
     def isosceles(self):
-        if math.fabs(self.side0 - self.side1) < ERROR:
+        if mpmath.fabs(self.side0 - self.side1) < ERROR:
             return self.variation(4)
-        if math.fabs(self.side0 - self.side2) < ERROR:
+        if mpmath.fabs(self.side0 - self.side2) < ERROR:
             return self.variation(2)
-        if math.fabs(self.side1 - self.side2) < ERROR:
+        if mpmath.fabs(self.side1 - self.side2) < ERROR:
             return self
 
     def similar(self, other) -> bool:
         ratio = self.side0 / other.side0
-        if math.fabs(ratio / self.side1 * other.side1 - 1) >= ERROR:
+        if mpmath.fabs(ratio / self.side1 * other.side1 - 1) >= ERROR:
             return False
-        return math.fabs(ratio / self.side2 * other.side2 - 1) < ERROR
+        return mpmath.fabs(ratio / self.side2 * other.side2 - 1) < ERROR
 
 def __triangles(placement: Placement):
     points = placement.scene.points(skip_auxiliary=True)
@@ -129,7 +129,7 @@ def __triangles(placement: Placement):
                 pt2 = points[index2]
                 loc2 = placement.location(pt2)
                 area = loc0.x * (loc1.y - loc2.y) + loc1.x * (loc2.y - loc0.y) + loc2.x * (loc0.y - loc1.y)
-                if math.fabs(area) > ERROR:
+                if mpmath.fabs(area) > ERROR:
                     side0 = loc1.distanceTo(loc2)
                     side1 = loc2.distanceTo(loc0)
                     side2 = loc0.distanceTo(loc1)
@@ -144,12 +144,12 @@ class LengthFamily:
         ratio = vector.length() / self.base.length()
         for i in range(1, 10):
             candidate = ratio * i
-            if math.fabs(candidate - round(candidate)) < ERROR:
+            if mpmath.fabs(candidate - round(candidate)) < ERROR:
                 return "%d/%d" % (round(candidate), i) if i > 1 else "%d" % round(candidate)
         ratio = ratio * ratio
         for i in range(1, 100):
             candidate = ratio * i
-            if math.fabs(candidate - round(candidate)) < ERROR:
+            if mpmath.fabs(candidate - round(candidate)) < ERROR:
                 if i == 1:
                     return "SQRT(%d)" % round(candidate)
                 return "SQRT(%d/%d)" % (round(candidate), i)
@@ -168,12 +168,12 @@ class AngleFamily:
         self.angles = []
 
     def __test(self, angle: Angle) -> str:
-        for addition0 in (0, 2 * math.pi, -2 * math.pi):
-            for addition1 in (0, 2 * math.pi, -2 * math.pi):
+        for addition0 in (0, 2 * mpmath.pi, -2 * mpmath.pi):
+            for addition1 in (0, 2 * mpmath.pi, -2 * mpmath.pi):
                 ratio = (angle.arc() + addition0) / (self.base.arc() + addition1)
                 for i in range(1, 10):
                     candidate = ratio * i
-                    if math.fabs(candidate - round(candidate)) < ERROR:
+                    if mpmath.fabs(candidate - round(candidate)) < ERROR:
                         return "%d/%d" % (round(candidate), i) if i > 1 else "%d" % round(candidate)
         return None
 
@@ -203,13 +203,13 @@ def hunt_proportional_segments(vectors):
 def hunt_rational_angles(angles):
     for ngl in angles:
         arc = ngl.arc()
-        if math.fabs(arc) < ERROR:
+        if mpmath.fabs(arc) < ERROR:
             print("%s = 0" % ngl)
         else:
-            ratio = arc / math.pi
+            ratio = arc / mpmath.pi
             for i in range(1, 60):
                 candidate = i * ratio
-                if math.fabs(candidate - round(candidate)) < ERROR:
+                if mpmath.fabs(candidate - round(candidate)) < ERROR:
                     pi = "PI" if i == 1 else ("PI / %d" % i)
                     if round(candidate) == 1:
                         print("%s = %s" % (ngl, pi))
@@ -302,7 +302,7 @@ def hunt_collinears(placement: Placement):
                 pt2 = points[index2]
                 loc2 = placement.location(pt2)
                 area = loc0.x * (loc1.y - loc2.y) + loc1.x * (loc2.y - loc0.y) + loc2.x * (loc0.y - loc1.y)
-                if math.fabs(area) < ERROR:
+                if mpmath.fabs(area) < ERROR:
                     for pt in collinear:
                         used_pairs.add((pt, pt2))
                     collinear.append(pt2)
