@@ -12,5 +12,5 @@ AB = A.line_through(B)
 CD = C.line_through(D)
 AB.intersection_point(CD, label='E')
 
-print(scene)
-print(Placement(scene))
+scene.dump()
+Placement(scene).dump()

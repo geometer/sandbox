@@ -22,6 +22,8 @@ scene.constraint(Constraint.Kind.distance, B, C, 4)
 scene.constraint(Constraint.Kind.distance, C, D, 5)
 scene.constraint(Constraint.Kind.distance, A, D, 2)
 
+scene.dump()
+
 while True:
     try:
         placement = Placement(scene)

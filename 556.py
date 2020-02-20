@@ -12,8 +12,7 @@ scene.constraint(Constraint.Kind.distance, 'A', 'B', 5)
 scene.constraint(Constraint.Kind.distance, 'C', 'B', 5)
 scene.constraint(Constraint.Kind.distance, 'C', 'A', 6)
 
-print(scene)
-print('\n'.join([str(cnstr) for cnstr in scene.constraints]))
+scene.dump()
 
 placement = Placement(scene)
 

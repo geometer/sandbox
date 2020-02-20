@@ -176,11 +176,19 @@ class CoreScene:
                 return obj
         return None
 
-    def __str__(self):
+    def dump(self):
+        print('Objects:')
+        print('\n'.join(['\t' + str(obj) for obj in self.__objects]))
         count = len(self.__objects)
         aux = len([o for o in self.__objects if o.auxiliary])
-        return '\n'.join([str(obj) for obj in self.__objects]) + \
-               ('\n\nTotal: %s objects (+ %s auxiliary)\n' % (count - aux, aux))
+        print('Total: %s objects (+ %s auxiliary)' % (count - aux, aux))
+        if self.validation_constraints:
+            print('\nValidation constraints:')
+            print('\n'.join(['\t' + str(cnstr) for cnstr in self.validation_constraints]))
+        if self.adjustment_constraints:
+            print('\nAdjustment constraints:')
+            print('\n'.join(['\t' + str(cnstr) for cnstr in self.adjustment_constraints]))
+        print('')
 
 class Stage(Enum):
     validation        = auto()

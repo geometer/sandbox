@@ -15,7 +15,7 @@ para = scene.parallel_line(A.line_through(B), D)
 A1 = para.intersection_point(A.line_through(C), label='A1')
 B1 = para.intersection_point(B.line_through(C), label='B1')
 
-#print(scene)
+#scene.dump()
 
 #hunt(scene, 'similar_triangles')
 hunt(scene, 'all')

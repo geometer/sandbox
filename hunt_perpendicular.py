@@ -10,6 +10,6 @@ B = scene.free_point(label='B')
 C = scene.free_point(label='C')
 A1 = scene.perpendicular_foot_point(A, B.line_through(C), label='A1')
 
-print(scene)
+scene.dump()
 
 hunt(scene, 'all')

@@ -332,13 +332,15 @@ class Placement:
         return vec0.angle(vec1)
 
     def dump(self):
-        print('Parameters:')
-        if self.params.coords:
-            print('\n'.join([('%s => %.5f' % (label, self.params.coords[label])) for label in self.params.coords]))
-        if self.params.angles:
-            print('\n'.join([('%s => %.5f' % (label, self.params.angles[label])) for label in self.params.angles]))
-        print('\nCoordinates:')
-        print('\n'.join([('%s => %s' % (pt.label, self.location(pt))) for pt in self.scene.points()]))
+        if self.params.coords or self.params.angles:
+            print('Parameters:')
+            if self.params.coords:
+                print('\n'.join([('\t%s => %.5f' % (label, self.params.coords[label])) for label in self.params.coords]))
+            if self.params.angles:
+                print('\n'.join([('\t%s => %.5f' % (label, self.params.angles[label])) for label in self.params.angles]))
+            print('')
+        print('Coordinates:')
+        print('\n'.join([('\t%s => %s' % (pt.label, self.location(pt))) for pt in self.scene.points()]))
         print('\nDeviation: %.5f' % self.deviation())
 
     def deviation(self):

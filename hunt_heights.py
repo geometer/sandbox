@@ -15,6 +15,6 @@ O = A.line_through(A1).intersection_point(B.line_through(B1), label='O')
 P = A.line_through(A1).intersection_point(C.line_through(C1), label='P')
 Q = B.line_through(B1).intersection_point(C.line_through(C1), label='Q')
 
-print(scene)
+scene.dump()
 
 hunt(scene, ('coincidences', 'collinears'))

@@ -11,6 +11,6 @@ C = scene.gravity_centre_point(A, B, label='C')
 D = scene.gravity_centre_point(A, C, label='D')
 E = scene.gravity_centre_point(A, D, label='E')
 
-print(scene)
+scene.dump()
 
 hunt(scene, 'collinears')

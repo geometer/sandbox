@@ -22,6 +22,8 @@ X1 = line.intersection_point(circle, label='X1')
 X1.constraint(Constraint.Kind.not_equal, X0)
 scene.constraint(Constraint.Kind.distance, X0, X1, 18)
 
+scene.dump()
+
 while True:
     try:
         placement = Placement(scene)

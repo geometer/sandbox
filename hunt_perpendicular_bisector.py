@@ -11,6 +11,6 @@ perp = scene.perpendicular_bisector_line(A, B)
 C = perp.intersection_point(A.line_through(B), label='C')
 D = perp.free_point(label='D')
 
-print(scene)
+scene.dump()
 
 hunt(scene, 'all')

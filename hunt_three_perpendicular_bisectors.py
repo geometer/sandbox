@@ -15,6 +15,6 @@ O = perp_AB.intersection_point(perp_AC, label='O')
 P = perp_AB.intersection_point(perp_BC, label='P')
 Q = perp_AC.intersection_point(perp_BC, label='Q')
 
-print(scene)
+scene.dump()
 
 hunt(scene, 'coincidences')

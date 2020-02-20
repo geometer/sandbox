@@ -25,7 +25,7 @@ napoleonic(A, B, C)
 napoleonic(C, A, B)
 napoleonic(B, C, A)
 
-print(scene)
+scene.dump()
 
 placement = Placement(scene)
 #placement.dump()
