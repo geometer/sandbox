@@ -333,27 +333,37 @@ class Placement:
         return mpmath.sqrt(square)
 
     def iterate(self):
-        keys = list(self.params.coords.keys())
+        keys = list(self.params.coords.keys()) + list(self.params.angles.keys())
 
         gradient = []
-        for index in range(0, len(keys)):
+        for index in range(0, len(self.params.coords)):
             key = keys[index]
             params = Placement.Parameters(self.params)
             params.coords[key] = self.params.coords[key] + mpf(1e-10)
             test = Placement(self.scene, params)
             gradient.append(test.deviation() - self.deviation())
+        for index in range(len(self.params.coords), len(keys)):
+            key = keys[index]
+            params = Placement.Parameters(self.params)
+            params.angles[key] = self.params.angles[key] + mpf(1e-10)
+            test = Placement(self.scene, params)
+            gradient.append(test.deviation() - self.deviation())
         #length = mpmath.sqrt(mpmath.nsum((lambda x: x ** 2), *gradient))
         length = mpmath.sqrt(reduce((lambda s, x : s + x ** 2), gradient, 0))
-        gradient = [d * mpf('1.e-10') / length for d in gradient]
+        if length > 0:
+            gradient = [d * mpf('1.e-10') / length for d in gradient]
 
         deg = 0
         previous = self
         while True:
             coef = 2 ** deg
             params = Placement.Parameters(self.params)
-            for index in range(0, len(keys)):
+            for index in range(0, len(self.params.coords)):
                 key = keys[index]
                 params.coords[key] = self.params.coords[key] - gradient[index] * coef
+            for index in range(len(self.params.coords), len(keys)):
+                key = keys[index]
+                params.angles[key] = self.params.angles[key] - gradient[index] * coef
             test = Placement(self.scene, params)
             if test.deviation() > previous.deviation():
                 return previous
