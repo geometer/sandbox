@@ -32,7 +32,7 @@ class CoreScene:
             scene.add(self)
 
         def constraint(self, kind, *args, **kwargs):
-            self.scene.constraint(kind, self, *args, **kwargs);
+            self.scene.constraint(kind, self, *args, **kwargs)
 
         def __str__(self):
             dct = {}
@@ -57,7 +57,7 @@ class CoreScene:
         class Origin(Enum):
             free              = auto()
             ratio             = auto()
-            line              = auto() 
+            line              = auto()
             circle            = auto()
             line_x_line       = auto()
             circle_x_line     = auto()
@@ -77,7 +77,11 @@ class CoreScene:
             assert coef0 + coef1 != 0
             if self == point:
                 return self
-            return CoreScene.Point(self.scene, CoreScene.Point.Origin.ratio, point0=self, point1=point, coef0=coef0, coef1=coef1, **kwargs)
+            return CoreScene.Point(
+                self.scene,
+                CoreScene.Point.Origin.ratio,
+                point0=self, point1=point, coef0=coef0, coef1=coef1, **kwargs
+            )
 
         def line_through(self, point, **kwargs):
             self.scene.assert_point(point)
@@ -87,13 +91,17 @@ class CoreScene:
         def circle_through(self, point, **kwargs):
             self.scene.assert_point(point)
             assert self != point, 'Cannot create a circle of zero radius'
-            return CoreScene.Circle(self.scene, centre=self, radius_start=self, radius_end=point, **kwargs)
+            return CoreScene.Circle(
+                self.scene, centre=self, radius_start=self, radius_end=point, **kwargs
+            )
 
         def circle_with_radius(self, start, end, **kwargs):
             self.scene.assert_point(start)
             self.scene.assert_point(end)
             assert start != end, 'Cannot create a circle of zero radius'
-            return CoreScene.Circle(self.scene, centre=self, radius_start=start, radius_end=end, **kwargs)
+            return CoreScene.Circle(
+                self.scene, centre=self, radius_start=start, radius_end=end, **kwargs
+            )
 
     class Line(Object):
         def __init__(self, scene, **kwargs):
@@ -110,9 +118,17 @@ class CoreScene:
             self.scene.assert_line_or_circle(obj)
             assert self != obj, 'The line does not cross itself'
             if isinstance(obj, CoreScene.Circle):
-                return CoreScene.Point(self.scene, CoreScene.Point.Origin.circle_x_line, circle=obj, line=self, **kwargs)
+                return CoreScene.Point(
+                    self.scene,
+                    CoreScene.Point.Origin.circle_x_line,
+                    circle=obj, line=self, **kwargs
+                )
             else:
-                return CoreScene.Point(self.scene, CoreScene.Point.Origin.line_x_line, line0=self, line1=obj, **kwargs)
+                return CoreScene.Point(
+                    self.scene,
+                    CoreScene.Point.Origin.line_x_line,
+                    line0=self, line1=obj, **kwargs
+                )
 
     class Circle(Object):
         def __init__(self, scene, **kwargs):
@@ -129,9 +145,17 @@ class CoreScene:
             self.scene.assert_line_or_circle(obj)
             assert self != obj, 'The circle does not cross itself'
             if isinstance(obj, CoreScene.Circle):
-                return CoreScene.Point(self.scene, CoreScene.Point.Origin.circle_x_circle, circle0=self, circle1=obj, **kwargs)
+                return CoreScene.Point(
+                    self.scene,
+                    CoreScene.Point.Origin.circle_x_circle,
+                    circle0=self, circle1=obj, **kwargs
+                )
             else:
-                return CoreScene.Point(self.scene, CoreScene.Point.Origin.circle_x_line, circle=self, line=obj, **kwargs)
+                return CoreScene.Point(
+                    self.scene,
+                    CoreScene.Point.Origin.circle_x_line,
+                    circle=self, line=obj, **kwargs
+                )
 
     def __init__(self):
         self.__objects = []
@@ -221,4 +245,7 @@ class Constraint:
         self.__dict__.update(kwargs)
 
     def __str__(self):
-        return 'Constraint(%s) %s' % (self.kind.name, [para.label if isinstance(para, CoreScene.Object) else para for para in self.params])
+        return 'Constraint(%s) %s' % (
+            self.kind.name,
+            [para.label if isinstance(para, CoreScene.Object) else para for para in self.params]
+        )

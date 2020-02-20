@@ -130,9 +130,9 @@ def __triangles(placement: Placement):
                 loc2 = placement.location(pt2)
                 area = loc0.x * (loc1.y - loc2.y) + loc1.x * (loc2.y - loc0.y) + loc2.x * (loc0.y - loc1.y)
                 if mpmath.fabs(area) > ERROR:
-                    side0 = loc1.distanceTo(loc2)
-                    side1 = loc2.distanceTo(loc0)
-                    side2 = loc0.distanceTo(loc1)
+                    side0 = loc1.distance_to(loc2)
+                    side1 = loc2.distance_to(loc0)
+                    side2 = loc0.distance_to(loc1)
                     yield Triangle(pt0, pt1, pt2, side0, side1, side2)
 
 class LengthFamily:
@@ -280,7 +280,7 @@ def hunt_coincidences(placement: Placement):
         for index1 in range(index0 + 1, len(points)):
             pt1 = points[index1]
             loc1 = placement.location(pt1)
-            if loc1.distanceTo(loc0) < ERROR:
+            if loc1.distance_to(loc0) < ERROR:
                 same_points.append(pt1)
                 used_points.add(pt1)
         if len(same_points) > 1:

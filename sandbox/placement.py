@@ -16,10 +16,10 @@ class TwoDCoordinates:
     def __eq__(self, other):
         return mpmath.fabs(self.x - other.x) < 5e-6 and mpmath.fabs(self.y - other.y) < 5e-6
 
-    def distanceTo(self, other) -> mpf:
+    def distance_to(self, other) -> mpf:
         return TwoDVector(other, self).length
 
-    def distance2To(self, other) -> mpf:
+    def distance2_to(self, other) -> mpf:
         return TwoDVector(other, self).length2
 
 class TwoDVector:
@@ -58,7 +58,7 @@ class PlacementFailedError(Exception):
 
 class Placement:
     class Parameters:
-        def __init__(self, params = None):
+        def __init__(self, params=None):
             self.coords = dict(params.coords) if params else {}
             self.angles = dict(params.angles) if params else {}
 
@@ -115,7 +115,7 @@ class Placement:
             else:
                 assert False, 'Constraint `%s` not supported in placement' % constraint.kind
 
-    def __init__(self, scene: CoreScene, params = None):
+    def __init__(self, scene: CoreScene, params=None):
         self.scene = scene
         self._coordinates = {}
         self.params = params if params else Placement.Parameters()
@@ -151,7 +151,7 @@ class Placement:
                         ))
                     elif p.origin == CoreScene.Point.Origin.circle:
                         o = self.location(p.circle.centre)
-                        r = self.location(p.circle.radius_start).distanceTo(self.location(p.circle.radius_end))
+                        r = self.location(p.circle.radius_start).distance_to(self.location(p.circle.radius_end))
                         angle = self.params.get_angle(p.label + '.angle')
                         add(p, TwoDCoordinates(
                             o.x + mpmath.sin(angle) * r,
@@ -201,7 +201,7 @@ class Placement:
                         ))
                     elif p.origin == CoreScene.Point.Origin.circle_x_line:
                         c = self.location(p.circle.centre)
-                        r2 = self.location(p.circle.radius_start).distance2To(self.location(p.circle.radius_end))
+                        r2 = self.location(p.circle.radius_start).distance2_to(self.location(p.circle.radius_end))
                         p0 = self.location(p.line.point0)
                         p1 = self.location(p.line.point1)
                         # (x - c.x)^2 + (y - c.y)^2 == r2
@@ -245,8 +245,8 @@ class Placement:
                     elif p.origin == CoreScene.Point.Origin.circle_x_circle:
                         c0 = self.location(p.circle0.centre)
                         c1 = self.location(p.circle1.centre)
-                        r02 = self.location(p.circle0.radius_start).distance2To(self.location(p.circle0.radius_end))
-                        r12 = self.location(p.circle1.radius_start).distance2To(self.location(p.circle1.radius_end))
+                        r02 = self.location(p.circle0.radius_start).distance2_to(self.location(p.circle0.radius_end))
+                        r12 = self.location(p.circle1.radius_start).distance2_to(self.location(p.circle1.radius_end))
                         # (x - c0.x)^2 + (y - c0.y)^2 == r02
                         # (x - c1.x)^2 + (y - c1.y)^2 == r12
                         # 2x(c1.x - c0.x) + c0.x^2 - c1.x^2 + 2y(c1.y - c0.y) + c0.y^2 - c1.y^2 = r02 - r12
@@ -309,7 +309,7 @@ class Placement:
         assert isinstance(point0, CoreScene.Point), 'Parameter is not a point'
         assert isinstance(point1, CoreScene.Point), 'Parameter is not a point'
 
-        return self.location(point0).distanceTo(self.location(point1))
+        return self.location(point0).distance_to(self.location(point1))
 
     def angle(self, pt0, pt1, pt2, pt3):
         """Angle between vectors (pt0, pt1) and (pt2, pt3)"""
@@ -349,7 +349,7 @@ class Placement:
             if cnstr.kind == Constraint.Kind.distance:
                 pt0 = self.location(cnstr.params[0])
                 pt1 = self.location(cnstr.params[1])
-                square += (pt0.distanceTo(pt1) - cnstr.params[2]) ** 2
+                square += (pt0.distance_to(pt1) - cnstr.params[2]) ** 2
             else:
                 assert False, 'Constraint `%s` not supported in adjustment' % cnstr.kind
         return mpmath.sqrt(square)
@@ -370,8 +370,7 @@ class Placement:
             params.angles[key] = self.params.angles[key] + mpf(1e-10)
             test = Placement(self.scene, params)
             gradient.append(test.deviation() - self.deviation())
-        #length = mpmath.sqrt(mpmath.nsum((lambda x: x ** 2), *gradient))
-        length = mpmath.sqrt(reduce((lambda s, x : s + x ** 2), gradient, 0))
+        length = mpmath.sqrt(reduce((lambda s, x: s + x ** 2), gradient, 0))
         if length > 0:
             gradient = [d * mpf('1.e-10') / length for d in gradient]
 
