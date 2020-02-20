@@ -119,7 +119,7 @@ class Placement:
                     self._coordinates[p] = candidate
                     not_placed.remove(p)
                     return
-            raise PlacementFailedError
+            raise PlacementFailedError('Cannot meet the constraints')
 
         while len(not_placed) > 0:
             for p in list(not_placed):
@@ -196,7 +196,7 @@ class Placement:
                             # (x - c.x)^2 + (coef_x * x + coef - c.y)^2 = r2
                             # (1 + coef_x^2) * x^2 + 2 * (coef_x * (coef - c.y) - c.x) * x + c.x^2 + (coef - c.y)^2 - r2 = 0
                             qa = 1 + coef_x * coef_x
-                            qb = coef_x * (coef - c.y) - c.x 
+                            qb = coef_x * (coef - c.y) - c.x
                             qc = c.x ** 2 + (coef - c.y) ** 2 - r2
                             discr = qb * qb - qa * qc
                             if discr < 0:
@@ -210,7 +210,7 @@ class Placement:
                             coef_y = (p0.x - p1.x) / (p0.y - p1.y)
                             coef = (p1.y * p0.x - p1.x * p0.y) / (p1.y - p0.y)
                             qa = 1 + coef_y * coef_y
-                            qb = coef_y * (coef - c.x) - c.y 
+                            qb = coef_y * (coef - c.x) - c.y
                             qc = c.y * c.y + (coef - c.x) * (coef - c.x) - r2
                             discr = qb * qb - qa * qc
                             if discr < 0:
