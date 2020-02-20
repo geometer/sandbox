@@ -173,7 +173,8 @@ class Placement:
                         s0 = p1.x * p0.y - p1.y * p0.x
                         s1 = p3.x * p2.y - p3.y * p2.x
                         discr = cx0 * cy1 - cx1 * cy0
-                        assert mpmath.fabs(discr) > 1e-6, 'Lines have no intersection points'
+                        if mpmath.fabs(discr) < 1e-8:
+                            raise PlacementFailedError('Lines have no intersection points')
                         add(p, TwoDCoordinates(
                             (s0 * cy1 - s1 * cy0) / discr,
                             (s1 * cx0 - s0 * cx1) / discr,
@@ -198,7 +199,8 @@ class Placement:
                             qb = coef_x * (coef - c.y) - c.x 
                             qc = c.x ** 2 + (coef - c.y) ** 2 - r2
                             discr = qb * qb - qa * qc
-                            assert discr >= 0, 'Circles have no intersection points'
+                            if discr < 0:
+                                raise PlacementFailedError('The line and the circle have no intersection points')
                             # y = (-qb +- sqrt(discr)) / qa
                             x_1 = (-qb + mpmath.sqrt(discr)) / qa
                             x_2 = (-qb - mpmath.sqrt(discr)) / qa
@@ -211,7 +213,8 @@ class Placement:
                             qb = coef_y * (coef - c.x) - c.y 
                             qc = c.y * c.y + (coef - c.x) * (coef - c.x) - r2
                             discr = qb * qb - qa * qc
-                            assert discr >= 0, 'Circles have no intersection points'
+                            if discr < 0:
+                                raise PlacementFailedError('The line and the circle have no intersection points')
                             y_1 = (-qb + mpmath.sqrt(discr)) / qa
                             y_2 = (-qb - mpmath.sqrt(discr)) / qa
                             x_1 = coef + coef_y * y_1
@@ -240,7 +243,8 @@ class Placement:
                             c = (const - c0.x) * (const - c0.x) + c0.y * c0.y - r02
                             # a y^2 + 2b y + c = 0
                             discr = b * b - a * c
-                            assert discr >= 0, 'Circles have no intersection points'
+                            if discr < 0:
+                                raise PlacementFailedError('The circles have no intersection points')
                             # y = (-b +- sqrt(discr)) / a
                             #print("%.3f y^2 + %.3f y + %.3f = 0" % (a, 2 * b, c))
                             y_1 = (-b + mpmath.sqrt(discr)) / a
@@ -255,7 +259,8 @@ class Placement:
                             b = ((const - c0.y) * x_coef - c0.x)
                             c = (const - c0.y) * (const - c0.y) + c0.x * c0.x - r02
                             discr = b * b - a * c
-                            assert discr >= 0, 'Circles have no intersection points'
+                            if discr < 0:
+                                raise PlacementFailedError('The circles have no intersection points')
                             #print("%.3f x^2 + %.3f x + %.3f = 0" % (a, 2 * b, c))
                             x_1 = -b + mpmath.sqrt(discr) / a
                             x_2 = -b - mpmath.sqrt(discr) / a
