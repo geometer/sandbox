@@ -87,6 +87,9 @@ class Placement:
                 raise IncompletePlacementError
             return loca
 
+        def clockwise(self, p0: TwoDCoordinates, p1: TwoDCoordinates, p2: TwoDCoordinates) -> bool:
+            return TwoDVector(p1, p0).vector_product(TwoDVector(p2, p0)) < 0
+
         def validate(self, constraint):
             if constraint.kind == Constraint.Kind.not_equal:
                 pt0 = self.location(constraint.params[0])
@@ -98,13 +101,19 @@ class Placement:
                 line = constraint.params[2]
                 start = self.location(line.point0)
                 end = self.location(line.point1)
-
-                def clockwise(p0: TwoDCoordinates, p1: TwoDCoordinates, p2: TwoDCoordinates) -> bool:
-                    return TwoDVector(p1, p0).vector_product(TwoDVector(p2, p0)) < 0
-
-                return clockwise(start, end, pt0) != clockwise(start, end, pt1)
+                return self.clockwise(start, end, pt0) != self.clockwise(start, end, pt1)
+            elif constraint.kind == Constraint.Kind.quadrilateral:
+                pt0 = self.location(constraint.params[0])
+                pt1 = self.location(constraint.params[1])
+                pt2 = self.location(constraint.params[2])
+                pt3 = self.location(constraint.params[3])
+                count = 0
+                for (x, y, z) in [(pt0, pt1, pt2), (pt1, pt2, pt3), (pt2, pt3, pt0), (pt3, pt0, pt1)]:
+                    if self.clockwise(x, y, z) > 0:
+                        count += 1
+                return count != 2
             else:
-                raise PlacementFailedError('Constraint `%s` not supported in placement' % constraint.kind)
+                assert False, 'Constraint `%s` not supported in placement' % constraint.kind
 
     def __init__(self, scene: CoreScene, params = None):
         self.scene = scene
@@ -270,7 +279,7 @@ class Placement:
                             raise PlacementFailedError
                         add(p, TwoDCoordinates(x_1, y_1), TwoDCoordinates(x_2, y_2))
                     else:
-                        raise PlacementFailedError('Origin `%s` not supported in placement' % p.origin)
+                        assert False, 'Origin `%s` not supported in placement' % p.origin
                 except IncompletePlacementError:
                     pass
 

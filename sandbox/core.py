@@ -182,6 +182,7 @@ class Constraint:
     class Kind(Enum):
         not_equal         = (CoreScene.Point, CoreScene.Point)
         opposite_side     = (CoreScene.Point, CoreScene.Point, CoreScene.Line)
+        quadrilateral     = (CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         distance          = (CoreScene.Point, CoreScene.Point, int)
 
         def __init__(self, *params):
