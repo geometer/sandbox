@@ -216,13 +216,28 @@ class CoreScene:
         """
         self.constraint(Constraint.Kind.quadrilateral, A, B, C, D, **kwargs)
 
+    def distances_ratio_constraint(self, AB, CD, ratio, **kwargs):
+        """
+        |AB| == |CD| * ratio
+        AB and CD are tuples or lists of two points, ratio is an integer
+        """
+        assert len(AB) == 2 and len(CD) == 2
+        self.constraint(Constraint.Kind.distances_ratio, AB[0], AB[1], CD[0], CD[1], ratio, **kwargs)
+
     def equal_distances_constraint(self, AB, CD, **kwargs):
         """
         |AB| == |CD|
         AB and CD are tuples or lists of two points
         """
+        self.distances_ratio_constraint(AB, CD, 1, **kwargs)
+
+    def right_angle_constraint(self, AB, CD, **kwargs):
+        """
+        AB ⟂ CD
+        AB and CD are tuples or lists of two points
+        """
         assert len(AB) == 2 and len(CD) == 2
-        self.constraint(Constraint.Kind.equal_distances, AB[0], AB[1], CD[0], CD[1], **kwargs)
+        self.constraint(Constraint.Kind.right_angle, AB[0], AB[1], CD[0], CD[1], **kwargs)
 
     def points(self, skip_auxiliary=False):
         if skip_auxiliary:
@@ -283,7 +298,8 @@ class Constraint:
         quadrilateral     = ('quadrilateral', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         inside_triangle   = ('inside_triangle', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         distance          = ('distance', Stage.adjustment, CoreScene.Point, CoreScene.Point, int)
-        equal_distances   = ('equal_distances', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
+        distances_ratio   = ('distances_ratio', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, int)
+        right_angle       = ('right_angle', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
 
         def __init__(self, name, stage, *params):
             self.stage = stage

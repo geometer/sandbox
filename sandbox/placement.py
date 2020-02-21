@@ -361,10 +361,10 @@ class Placement:
         if isinstance(pt3, str):
             pt3 = self.scene.get(pt3)
 
-        assert isinstance(pt0, CoreScene.Point), 'Parameter is not a pt'
-        assert isinstance(pt1, CoreScene.Point), 'Parameter is not a pt'
-        assert isinstance(pt2, CoreScene.Point), 'Parameter is not a pt'
-        assert isinstance(pt3, CoreScene.Point), 'Parameter is not a pt'
+        assert isinstance(pt0, CoreScene.Point), 'Parameter is not a point'
+        assert isinstance(pt1, CoreScene.Point), 'Parameter is not a point'
+        assert isinstance(pt2, CoreScene.Point), 'Parameter is not a point'
+        assert isinstance(pt3, CoreScene.Point), 'Parameter is not a point'
 
         vec0 = TwoDVector(self.location(pt0), self.location(pt1))
         vec1 = TwoDVector(self.location(pt2), self.location(pt3))
@@ -389,12 +389,21 @@ class Placement:
                 pt0 = self.location(cnstr.params[0])
                 pt1 = self.location(cnstr.params[1])
                 square += (pt0.distance_to(pt1) - cnstr.params[2]) ** 2
-            elif cnstr.kind == Constraint.Kind.equal_distances:
+            elif cnstr.kind == Constraint.Kind.distances_ratio:
                 pt0 = self.location(cnstr.params[0])
                 pt1 = self.location(cnstr.params[1])
                 pt2 = self.location(cnstr.params[2])
                 pt3 = self.location(cnstr.params[3])
-                square += (pt0.distance_to(pt1) - pt2.distance_to(pt3)) ** 2
+                ratio = cnstr.params[4]
+                square += (pt0.distance_to(pt1) - pt2.distance_to(pt3) * ratio) ** 2
+            elif cnstr.kind == Constraint.Kind.right_angle:
+                pt0 = self.location(cnstr.params[0])
+                pt1 = self.location(cnstr.params[1])
+                pt2 = self.location(cnstr.params[2])
+                pt3 = self.location(cnstr.params[3])
+                vec0 = TwoDVector(pt0, pt1)
+                vec1 = TwoDVector(pt2, pt3)
+                square += vec0.scalar_product(vec1) ** 2 / vec0.length2 / vec1.length2
             else:
                 assert False, 'Constraint `%s` not supported in adjustment' % cnstr.kind
         return mpmath.sqrt(square)
