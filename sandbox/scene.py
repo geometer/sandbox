@@ -72,3 +72,26 @@ class Scene(CoreScene):
         tmp1 = circle0.intersection_point(circle1, auxiliary=True)
         tmp1.constraint(Constraint.Kind.not_equal, tmp0)
         return tmp0.line_through(tmp1, **kwargs)
+
+    def perpendicular_line(self, object0, object1, **kwargs):
+        """
+        Perpendicular to the line through the point
+        """
+        if isinstance(object0, CoreScene.Point):
+            point = object0
+            line = object1
+        else:
+            point = object1
+            line = object0
+        self.assert_point(point)
+        self.assert_line(line)
+        on_line_point = line.free_point(auxiliary=True)
+        circle = point.circle_through(on_line_point, auxiliary=True)
+        on_line_point2 = line.intersection_point(circle, auxiliary=True)
+        on_line_point2.constraint(Constraint.Kind.not_equal, on_line_point)
+        circle1 = on_line_point.circle_through(on_line_point2, auxiliary=True)
+        circle2 = on_line_point2.circle_through(on_line_point, auxiliary=True)
+        x_0 = circle1.intersection_point(circle2, auxiliary= True)
+        x_1 = circle2.intersection_point(circle1, auxiliary= True)
+        x_1.constraint(Constraint.Kind.not_equal, x_0)
+        return x_0.line_through(x_1)

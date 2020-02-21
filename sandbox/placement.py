@@ -112,6 +112,14 @@ class Placement:
                 start = self.location(line.point0)
                 end = self.location(line.point1)
                 return self.clockwise(start, end, pt0) != self.clockwise(start, end, pt1)
+            if constraint.kind == Constraint.Kind.same_side:
+                # TODO: negation for opposite_side; introduce constraint negations?
+                pt0 = self.location(constraint.params[0])
+                pt1 = self.location(constraint.params[1])
+                line = constraint.params[2]
+                start = self.location(line.point0)
+                end = self.location(line.point1)
+                return self.clockwise(start, end, pt0) == self.clockwise(start, end, pt1)
             if constraint.kind == Constraint.Kind.quadrilateral:
                 pt0 = self.location(constraint.params[0])
                 pt1 = self.location(constraint.params[1])
