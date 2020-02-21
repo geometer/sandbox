@@ -1,7 +1,6 @@
 from functools import reduce
 import mpmath
 from mpmath import mpf
-from typing import Set
 from sys import stdout
 
 from .core import CoreScene, Constraint
@@ -134,14 +133,13 @@ class Placement:
                     [(pt0, pt1, pt2), (pt0, pt2, pt3), (pt0, pt3, pt1)]]
                 return 0 not in clockwise and abs(sum(clockwise)) == 3
 
-            print('DEBUG: assertion failed')
             assert False, 'Constraint `%s` not supported in placement' % constraint.kind
 
     def __init__(self, scene: CoreScene, params=None):
         self.scene = scene
         self._coordinates = {}
         self.params = params if params else Placement.Parameters()
-        not_placed: Set[CoreScene.Point] = set(scene.points())
+        not_placed = list(scene.points())
         passed_constraints = set()
 
         def add(p: CoreScene.Point, *coords):
