@@ -103,6 +103,9 @@ class CoreScene:
                 self.scene, centre=self, radius_start=start, radius_end=end, **kwargs
             )
 
+        def distance_constraint(self, point, distance):
+            self.scene.constraint(Constraint.Kind.distance, self, point, distance)
+
     class Line(Object):
         def __init__(self, scene, **kwargs):
             CoreScene.Object.__init__(self, scene, **kwargs)

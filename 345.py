@@ -5,12 +5,12 @@ from sandbox.hunter import hunt
 
 scene = Scene()
 
-scene.free_point(label='A')
-scene.free_point(label='B')
-scene.free_point(label='C')
-scene.constraint(Constraint.Kind.distance, 'A', 'B', 5)
-scene.constraint(Constraint.Kind.distance, 'C', 'B', 4)
-scene.constraint(Constraint.Kind.distance, 'C', 'A', 3)
+A = scene.free_point(label='A')
+B = scene.free_point(label='B')
+C = scene.free_point(label='C')
+A.distance_constraint('B', 5)
+C.distance_constraint('B', 4)
+C.distance_constraint('A', 3)
 
 scene.dump()
 
