@@ -1,5 +1,6 @@
 import unittest
 
+from tests.intersection import *
 from tests.napoleon import *
 from tests.triangle345 import *
 from tests.rog4578 import *

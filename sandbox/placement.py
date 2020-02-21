@@ -314,7 +314,11 @@ class Placement:
                 except IncompletePlacementError:
                     pass
 
-    def location(self, point: CoreScene.Point) -> TwoDCoordinates:
+    def location(self, point) -> TwoDCoordinates:
+        if isinstance(point, str):
+            point = self.scene.get(point)
+        assert isinstance(point, CoreScene.Point), 'Parameter is not a point'
+
         loca = self._coordinates.get(point)
         if loca is None:
             raise IncompletePlacementError

@@ -2,6 +2,14 @@ import unittest
 import mpmath
 
 class PlacementTest(unittest.TestCase):
+    def assertCoordinates(self, pt, x, y):
+        loc = self.placement.location(pt)
+        self.assertLess(
+            mpmath.fabs(loc.x - x) + mpmath.fabs(loc.y - y),
+            1e-6,
+            '%s != (%s,%s)' % (loc, x, y)
+        )
+
     def assertDistance(self, pt0, pt1, distance):
         self.assertLess(
             mpmath.fabs(self.placement.distance(pt0, pt1) - distance),
@@ -36,7 +44,3 @@ class PlacementTest(unittest.TestCase):
             1e-6,
             '∠(%s,%s),(%s,%s) != ∠(%s,%s),(%s,%s)' % (pt0, pt1, pt2, pt3, pt4, pt5, pt6, pt7)
         )
-
-#    def test7(self):
-#        print('∠A C A1 = %.5f' % self.placement.angle('C', 'A', 'C', 'A1'))
-#        print('∠B2 C A2 = %.5f' % self.placement.angle('C', 'B2', 'C', 'A2'))
