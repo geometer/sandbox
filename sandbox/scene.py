@@ -73,14 +73,28 @@ class Scene(CoreScene):
         tmp1.not_equal_constraint(tmp0)
         return tmp0.line_through(tmp1, **kwargs)
 
+    def angle_bisector_line(self, A, B, C, **kwargs):
+        """
+        The bisector of ∠ BAC
+        """
+        self.assert_point(A)
+        self.assert_point(B)
+        self.assert_point(C)
+        A.not_equal_constraint(B)
+        A.not_equal_constraint(C)
+        circle = A.circle_through(B, auxiliary=True)
+        line = A.line_through(C, auxiliary=True)
+        X = circle.intersection_point(line, auxiliary=True)
+        X.same_side_constraint(C, A.line_through(B, auxiliary=True))
+        Y = X.ratio_point(B, 1, 1, auxiliary=True)
+        return A.line_through(Y, **kwargs)
+
     def perpendicular_line(self, point, line, **kwargs):
         """
         Perpendicular to the line through the point
         """
         if isinstance(point, CoreScene.Line) and isinstance(line, CoreScene.Point):
-            swap = point
-            point = line
-            line = swap
+            point, line = line, point
         self.assert_point(point)
         self.assert_line(line)
         on_line_point = line.free_point(auxiliary=True)
@@ -89,7 +103,28 @@ class Scene(CoreScene):
         on_line_point2.not_equal_constraint(on_line_point)
         circle1 = on_line_point.circle_through(on_line_point2, auxiliary=True)
         circle2 = on_line_point2.circle_through(on_line_point, auxiliary=True)
-        x_0 = circle1.intersection_point(circle2, auxiliary= True)
-        x_1 = circle2.intersection_point(circle1, auxiliary= True)
+        x_0 = circle1.intersection_point(circle2, auxiliary=True)
+        x_1 = circle2.intersection_point(circle1, auxiliary=True)
         x_1.not_equal_constraint(x_0)
-        return x_0.line_through(x_1)
+        return x_0.line_through(x_1, **kwargs)
+
+    def incentre_point(self, A, B, C, **kwargs):
+        """
+        Centre of the inscribed circle of △ABC
+        """
+        self.assert_point(A)
+        self.assert_point(B)
+        self.assert_point(C)
+        A.not_collinear_constraint(B, C)
+        bisectorA = self.angle_bisector_line(A, B, C, auxiliary=True)
+        bisectorB = self.angle_bisector_line(B, A, C, auxiliary=True)
+        return bisectorA.intersection_point(bisectorB, **kwargs)
+
+    def incircle(self, A, B, C, **kwargs):
+        """
+        Inscribed circle of △ABC
+        """
+        centre = self.incentre_point(A, B, C, auxiliary=True)
+        side = A.line_through(B, auxiliary=True)
+        foot = self.perpendicular_foot_point(centre, side, auxiliary=True)
+        return centre.circle_through(foot, **kwargs)

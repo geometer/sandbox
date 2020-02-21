@@ -98,6 +98,11 @@ class Placement:
                 pt0 = self.location(constraint.params[0])
                 pt1 = self.location(constraint.params[1])
                 return mpmath.fabs(pt0.x - pt1.x) >= 5e-6 or mpmath.fabs(pt0.y - pt1.y) >= 5e-6
+            if constraint.kind == Constraint.Kind.not_collinear:
+                pt0 = self.location(constraint.params[0])
+                pt1 = self.location(constraint.params[1])
+                pt2 = self.location(constraint.params[2])
+                return self.clockwise(pt0, pt1, pt2) != 0
             if constraint.kind == Constraint.Kind.opposite_side:
                 pt0 = self.location(constraint.params[0])
                 pt1 = self.location(constraint.params[1])
@@ -171,7 +176,7 @@ class Placement:
                         ))
                     elif p.origin == CoreScene.Point.Origin.circle:
                         o = self.location(p.circle.centre)
-                        r = self.location(p.circle.radius_start).distance_to(self.location(p.circle.radius_end))
+                        r = self.radius(p.circle)
                         angle = self.params.get_angle(p.label + '.angle')
                         add(p, TwoDCoordinates(
                             o.x + mpmath.sin(angle) * r,
@@ -221,7 +226,7 @@ class Placement:
                         ))
                     elif p.origin == CoreScene.Point.Origin.circle_x_line:
                         c = self.location(p.circle.centre)
-                        r2 = self.location(p.circle.radius_start).distance2_to(self.location(p.circle.radius_end))
+                        r2 = self.radius2(p.circle)
                         p0 = self.location(p.line.point0)
                         p1 = self.location(p.line.point1)
                         # (x - c.x)^2 + (y - c.y)^2 == r2
@@ -265,8 +270,8 @@ class Placement:
                     elif p.origin == CoreScene.Point.Origin.circle_x_circle:
                         c0 = self.location(p.circle0.centre)
                         c1 = self.location(p.circle1.centre)
-                        r02 = self.location(p.circle0.radius_start).distance2_to(self.location(p.circle0.radius_end))
-                        r12 = self.location(p.circle1.radius_start).distance2_to(self.location(p.circle1.radius_end))
+                        r02 = self.radius2(p.circle0)
+                        r12 = self.radius2(p.circle1)
                         # (x - c0.x)^2 + (y - c0.y)^2 == r02
                         # (x - c1.x)^2 + (y - c1.y)^2 == r12
                         # 2x(c1.x - c0.x) + c0.x^2 - c1.x^2 + 2y(c1.y - c0.y) + c0.y^2 - c1.y^2 = r02 - r12
@@ -323,6 +328,16 @@ class Placement:
         if loca is None:
             raise IncompletePlacementError
         return loca
+
+    def radius(self, circle) -> mpf:
+        if isinstance(circle, str):
+            circle = self.scene.get(circle)
+        return self.location(circle.radius_start).distance_to(self.location(circle.radius_end))
+
+    def radius2(self, circle) -> mpf:
+        if isinstance(circle, str):
+            circle = self.scene.get(circle)
+        return self.location(circle.radius_start).distance2_to(self.location(circle.radius_end))
 
     def distance(self, point0, point1):
         if isinstance(point0, str):
@@ -401,8 +416,9 @@ class Placement:
             test = Placement(self.scene, params)
             gradient.append(test.deviation() - self.deviation())
         length = mpmath.sqrt(reduce((lambda s, x: s + x ** 2), gradient, 0))
-        if length > 0:
-            gradient = [d * mpf('1.e-10') / length for d in gradient]
+        if length == 0:
+            return self
+        gradient = [d * mpf('1.e-10') / length for d in gradient]
 
         deg = 0
         previous = self

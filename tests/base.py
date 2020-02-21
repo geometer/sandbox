@@ -44,3 +44,10 @@ class PlacementTest(unittest.TestCase):
             1e-6,
             '∠(%s,%s),(%s,%s) != ∠(%s,%s),(%s,%s)' % (pt0, pt1, pt2, pt3, pt4, pt5, pt6, pt7)
         )
+
+    def assertRadius(self, circle, radius):
+        self.assertLess(
+            mpmath.fabs(self.placement.radius(circle) - radius),
+            1e-6,
+            'radius(%s) != %s' % (circle, radius)
+        )

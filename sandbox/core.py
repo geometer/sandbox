@@ -106,6 +106,12 @@ class CoreScene:
             """
             self.scene.constraint(Constraint.Kind.not_equal, self, A, **kwargs)
 
+        def not_collinear_constraint(self, A, B, **kwargs):
+            """
+            The current point does not collinear with A and B.
+            """
+            self.scene.constraint(Constraint.Kind.not_collinear, self, A, B, **kwargs)
+
         def distance_constraint(self, A, distance, **kwargs):
             """
             Distance to the point A equals to the given distance.
@@ -120,9 +126,7 @@ class CoreScene:
             The current point lies on the opposite side to the line than the given point.
             """
             if isinstance(point, CoreScene.Line) and isinstance(line, CoreScene.Point):
-                swap = point
-                point = line
-                line = swap
+                point, line = line, point
             self.scene.constraint(Constraint.Kind.opposite_side, self, point, line, **kwargs)
 
         def same_side_constraint(self, point, line, **kwargs):
@@ -130,9 +134,7 @@ class CoreScene:
             The current point lies on the same side to the line as the given point.
             """
             if isinstance(point, CoreScene.Line) and isinstance(line, CoreScene.Point):
-                swap = point
-                point = line
-                line = swap
+                point, line = line, point
             self.scene.constraint(Constraint.Kind.same_side, self, point, line, **kwargs)
 
         def inside_triangle_constraint(self, A, B, C, **kwargs):
@@ -275,6 +277,7 @@ class Constraint:
     @unique
     class Kind(Enum):
         not_equal         = ('not_equal', Stage.validation, CoreScene.Point, CoreScene.Point)
+        not_collinear     = ('not_collinear', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         opposite_side     = ('opposite_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
         same_side         = ('same_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
         quadrilateral     = ('quadrilateral', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
