@@ -3,7 +3,7 @@ from sandbox import Scene, Placement
 from .base import PlacementTest
 
 class TestIntersection(PlacementTest):
-    def setUp(self):
+    def createPlacement(self):
         scene = Scene()
 
         A = scene.free_point(label='A', x=1, y=1)
@@ -14,7 +14,7 @@ class TestIntersection(PlacementTest):
         CD = C.line_through(D)
         AB.intersection_point(CD, label='E')
 
-        self.placement = Placement(scene)
+        return Placement(scene)
 
     def test1(self):
         self.assertCoordinates('E', -2.5, 4.5)

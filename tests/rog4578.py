@@ -7,7 +7,7 @@ from sandbox import Scene, iterative_placement
 from .base import PlacementTest
 
 class TestRoG4578_orthocenter_inside(PlacementTest):
-    def setUp(self):
+    def createPlacement(self):
         scene = Scene()
 
         A = scene.free_point(label='A')
@@ -19,13 +19,13 @@ class TestRoG4578_orthocenter_inside(PlacementTest):
         D.inside_triangle_constraint(A, B, C)
         scene.equal_distances_constraint((A, B), (C, D))
 
-        self.placement = iterative_placement(scene)
+        return iterative_placement(scene)
 
     def testACB(self):
         self.assertAngle('C', 'A', 'C', 'B', math.pi / 4)
 
 class TestRoG4578_orthocenter_outside(PlacementTest):
-    def setUp(self):
+    def createPlacement(self):
         scene = Scene()
 
         A = scene.free_point(label='A')
@@ -38,7 +38,7 @@ class TestRoG4578_orthocenter_outside(PlacementTest):
         D.opposite_side_constraint(A.line_through(C), B)
         scene.equal_distances_constraint((A, B), (C, D))
 
-        self.placement = iterative_placement(scene)
+        return iterative_placement(scene)
 
     def testACB(self):
         self.assertAngle('C', 'A', 'C', 'B', 3 * math.pi / 4)

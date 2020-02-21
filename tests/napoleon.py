@@ -5,7 +5,7 @@ from sandbox import Scene, Placement
 from .base import PlacementTest
 
 class TestNapoleon(PlacementTest):
-    def setUp(self):
+    def createPlacement(self):
         scene = Scene()
 
         A = scene.free_point(label='A')
@@ -24,7 +24,7 @@ class TestNapoleon(PlacementTest):
         napoleonic(C, A, B)
         napoleonic(B, C, A)
 
-        self.placement = Placement(scene)
+        return Placement(scene)
 
     def test1(self):
         self.assertEqualDistances('A2', 'B2', 'A2', 'C2')

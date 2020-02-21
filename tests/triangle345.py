@@ -3,7 +3,7 @@ from sandbox import Scene, iterative_placement
 from .base import PlacementTest
 
 class TestTriangle345(PlacementTest):
-    def setUp(self):
+    def createPlacement(self):
         scene = Scene()
 
         A = scene.free_point(label='A')
@@ -14,7 +14,7 @@ class TestTriangle345(PlacementTest):
         C.distance_constraint('A', 3)
         circle = scene.incircle(A, B, C, label='incircle')
 
-        self.placement = iterative_placement(scene)
+        return iterative_placement(scene)
 
     def test_ab(self):
         self.assertDistance('A', 'B', 5)

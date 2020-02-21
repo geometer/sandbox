@@ -7,7 +7,7 @@ from sandbox import Scene, iterative_placement
 from .base import PlacementTest
 
 class TestMCCME7_long(PlacementTest):
-    def setUp(self):
+    def createPlacement(self):
         scene = Scene()
 
         O = scene.free_point(label='O')
@@ -22,13 +22,13 @@ class TestMCCME7_long(PlacementTest):
         C.distance_constraint(D, 5)
         A.distance_constraint(D, 2)
 
-        self.placement = iterative_placement(scene)
+        return iterative_placement(scene)
 
     def test1(self):
         self.assertDistance('A', 'C', math.sqrt(299.0 / 11))
 
 class TestMCCME7_quick(PlacementTest):
-    def setUp(self):
+    def createPlacement(self):
         scene = Scene()
 
         O = scene.free_point(label='O', x=0, y=0)
@@ -43,7 +43,7 @@ class TestMCCME7_quick(PlacementTest):
         C.distance_constraint(D, 5)
         A.distance_constraint(D, 2)
 
-        self.placement = iterative_placement(scene)
+        return iterative_placement(scene)
 
     def test1(self):
         self.assertDistance('A', 'C', math.sqrt(299.0 / 11))

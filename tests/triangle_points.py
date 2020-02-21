@@ -3,7 +3,7 @@ from sandbox import Scene, iterative_placement
 from .base import PlacementTest
 
 class TestTrianglePoints(PlacementTest):
-    def setUp(self):
+    def createPlacement(self):
         scene = Scene()
 
         A = scene.free_point(label='A')
@@ -34,7 +34,7 @@ class TestTrianglePoints(PlacementTest):
         X_median = medianA.intersection_point(medianB, label='X_median')
         Y_median = medianA.intersection_point(medianC, label='Y_median')
 
-        self.placement = iterative_placement(scene)
+        return iterative_placement(scene)
 
     def testBisectors(self):
         self.assertDistance('X_bisector', 'Y_bisector', 0)

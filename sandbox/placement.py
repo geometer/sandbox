@@ -383,6 +383,19 @@ class Placement:
         print('\nDeviation: %.5f' % self.deviation())
 
     def deviation(self):
+        self.cached_average_distance2 = None
+        def average_distance2():
+            if self.cached_average_distance2 is None:
+                sqr = 0
+                points = self.scene.points(skip_auxiliary=True)
+                for index0 in range(1, len(points)):
+                    pt0 = self.location(points[index0])
+                    for index1 in range(0, index0):
+                        pt1 = self.location(points[index1])
+                        sqr += pt0.distance2_to(pt1)
+                self.cached_average_distance2 = sqr / len(points) / (len(points) - 1) * 2
+            return self.cached_average_distance2
+
         square = 0.0
         for cnstr in self.scene.adjustment_constraints:
             if cnstr.kind == Constraint.Kind.distance:
@@ -403,10 +416,10 @@ class Placement:
                 pt3 = self.location(cnstr.params[3])
                 vec0 = TwoDVector(pt0, pt1)
                 vec1 = TwoDVector(pt2, pt3)
-                square += vec0.scalar_product(vec1) ** 2 / vec0.length2 / vec1.length2
+                square += vec0.scalar_product(vec1) ** 2 / vec0.length2 / vec1.length2 * average_distance2()
             else:
                 assert False, 'Constraint `%s` not supported in adjustment' % cnstr.kind
-        return mpmath.sqrt(square)
+        return square
 
     def iterate(self):
         keys = list(self.params.coords.keys()) + list(self.params.angles.keys())

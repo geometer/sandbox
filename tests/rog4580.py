@@ -7,7 +7,7 @@ from sandbox import Scene, iterative_placement
 from .base import PlacementTest
 
 class TestRoG4580(PlacementTest):
-    def setUp(self):
+    def createPlacement(self):
         scene = Scene()
 
         A = scene.free_point(label='A')
@@ -18,7 +18,7 @@ class TestRoG4580(PlacementTest):
         F = scene.incentre_point(A, B, C, label='F')
         E = scene.perpendicular_foot_point(B, A.line_through(F), label='E')
 
-        self.placement = iterative_placement(scene)
+        return iterative_placement(scene)
 
     def testRightTriangle(self):
         self.assertAngle('B', 'A', 'B', 'C', math.pi / 2)

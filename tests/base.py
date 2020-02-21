@@ -1,7 +1,15 @@
+import time
 import unittest
 import mpmath
 
 class PlacementTest(unittest.TestCase):
+    def setUp(self):
+        self.startTime = time.time()
+        self.placement = self.createPlacement()
+
+    def tearDown(self):
+        print('%s took %.3f' % (self.id(), time.time() - self.startTime))
+
     def assertCoordinates(self, pt, x, y):
         loc = self.placement.location(pt)
         self.assertLess(
