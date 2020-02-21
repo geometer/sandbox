@@ -1,6 +1,7 @@
 import unittest
 
-from tests import *
+from tests.napoleon import *
+from tests.triangle345 import *
 
 if __name__ == '__main__':
     unittest.main()
