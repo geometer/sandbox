@@ -4,9 +4,9 @@ import math
 
 from sandbox import Scene, iterative_placement
 
-from .base import SandboxTest
+from .base import PlacementTest
 
-class TestMCCME7_long(SandboxTest):
+class TestMCCME7_long(PlacementTest):
     def setUp(self):
         scene = Scene()
 
@@ -27,7 +27,7 @@ class TestMCCME7_long(SandboxTest):
     def test1(self):
         self.assertDistance('A', 'C', math.sqrt(299.0 / 11))
 
-class TestMCCME7_quick(SandboxTest):
+class TestMCCME7_quick(PlacementTest):
     def setUp(self):
         scene = Scene()
 

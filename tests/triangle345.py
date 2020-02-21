@@ -1,8 +1,8 @@
 from sandbox import Scene, iterative_placement
 
-from .base import SandboxTest
+from .base import PlacementTest
 
-class TestTriangle345(SandboxTest):
+class TestTriangle345(PlacementTest):
     def setUp(self):
         scene = Scene()
 

@@ -1,7 +1,7 @@
 import unittest
 import mpmath
 
-class SandboxTest(unittest.TestCase):
+class PlacementTest(unittest.TestCase):
     def assertDistance(self, pt0, pt1, distance):
         self.assertLess(
             mpmath.fabs(self.placement.distance(pt0, pt1) - distance),

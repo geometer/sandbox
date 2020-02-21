@@ -4,9 +4,9 @@ import math
 
 from sandbox import Scene, iterative_placement
 
-from .base import SandboxTest
+from .base import PlacementTest
 
-class TestRoG4578_orthocenter_inside(SandboxTest):
+class TestRoG4578_orthocenter_inside(PlacementTest):
     def setUp(self):
         scene = Scene()
 
@@ -24,7 +24,7 @@ class TestRoG4578_orthocenter_inside(SandboxTest):
     def testACB(self):
         self.assertAngle('C', 'A', 'C', 'B', math.pi / 4)
 
-class TestRoG4578_orthocenter_outside(SandboxTest):
+class TestRoG4578_orthocenter_outside(PlacementTest):
     def setUp(self):
         scene = Scene()
 

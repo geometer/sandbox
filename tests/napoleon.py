@@ -2,9 +2,9 @@ import math
 
 from sandbox import Scene, Placement
 
-from .base import SandboxTest
+from .base import PlacementTest
 
-class TestNapoleon(SandboxTest):
+class TestNapoleon(PlacementTest):
     def setUp(self):
         scene = Scene()
 

@@ -2,9 +2,9 @@ import math
 
 from sandbox import Scene, Placement
 
-from .base import SandboxTest
+from .base import PlacementTest
 
-class TestMedian(SandboxTest):
+class TestMedian(PlacementTest):
     def setUp(self):
         scene = Scene()
 
