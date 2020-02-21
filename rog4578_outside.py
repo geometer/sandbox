@@ -15,9 +15,9 @@ C = scene.free_point(label='C')
 A1 = scene.perpendicular_foot_point(A, B.line_through(C), label='A1')
 B1 = scene.perpendicular_foot_point(B, C.line_through(A), label='B1')
 D = A.line_through(A1).intersection_point(B.line_through(B1), label='D')
-D.constraint(Constraint.Kind.opposite_side, A, B.line_through(C))
-D.constraint(Constraint.Kind.opposite_side, B, A.line_through(C))
-scene.constraint(Constraint.Kind.equal_distances, A, B, C, D)
+D.opposite_side_constraint(B.line_through(C), A)
+D.opposite_side_constraint(A.line_through(C), B)
+scene.equal_distances_constraint((A, B), (C, D))
 
 scene.dump()
 

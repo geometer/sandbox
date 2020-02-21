@@ -15,8 +15,7 @@ O.distance_constraint(P, 7)
 line = scene.line_through(P)
 X0 = line.intersection_point(circle, label='X0')
 X1 = line.intersection_point(circle, label='X1')
-X1.constraint(Constraint.Kind.not_equal, X0)
-scene.constraint(Constraint.Kind.distance, X0, X1, 18)
+X0.distance_constraint(X1, 18)
 
 scene.dump()
 

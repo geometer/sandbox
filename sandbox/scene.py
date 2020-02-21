@@ -2,7 +2,7 @@
 This module is to be extended in the future to add more construction methods.
 """
 
-from .core import CoreScene, Constraint
+from .core import CoreScene
 
 class Scene(CoreScene):
     """
@@ -50,7 +50,7 @@ class Scene(CoreScene):
         tmp = line.free_point(auxiliary=True)
         circle = point.circle_through(tmp, auxiliary=True)
         tmp2 = line.intersection_point(circle, auxiliary=True)
-        tmp2.constraint(Constraint.Kind.not_equal, tmp)
+        tmp2.not_equal_constraint(tmp)
         return tmp.ratio_point(tmp2, 1, 1, **kwargs)
 
     def line_through(self, point, **kwargs):
@@ -70,28 +70,26 @@ class Scene(CoreScene):
         circle1 = point1.circle_through(point0, auxiliary=True)
         tmp0 = circle0.intersection_point(circle1, auxiliary=True)
         tmp1 = circle0.intersection_point(circle1, auxiliary=True)
-        tmp1.constraint(Constraint.Kind.not_equal, tmp0)
+        tmp1.not_equal_constraint(tmp0)
         return tmp0.line_through(tmp1, **kwargs)
 
-    def perpendicular_line(self, object0, object1, **kwargs):
+    def perpendicular_line(self, point, line, **kwargs):
         """
         Perpendicular to the line through the point
         """
-        if isinstance(object0, CoreScene.Point):
-            point = object0
-            line = object1
-        else:
-            point = object1
-            line = object0
+        if isinstance(point, CoreScene.Line) and isinstance(line, CoreScene.Point):
+            swap = point
+            point = line
+            line = swap
         self.assert_point(point)
         self.assert_line(line)
         on_line_point = line.free_point(auxiliary=True)
         circle = point.circle_through(on_line_point, auxiliary=True)
         on_line_point2 = line.intersection_point(circle, auxiliary=True)
-        on_line_point2.constraint(Constraint.Kind.not_equal, on_line_point)
+        on_line_point2.not_equal_constraint(on_line_point)
         circle1 = on_line_point.circle_through(on_line_point2, auxiliary=True)
         circle2 = on_line_point2.circle_through(on_line_point, auxiliary=True)
         x_0 = circle1.intersection_point(circle2, auxiliary= True)
         x_1 = circle2.intersection_point(circle1, auxiliary= True)
-        x_1.constraint(Constraint.Kind.not_equal, x_0)
+        x_1.not_equal_constraint(x_0)
         return x_0.line_through(x_1)

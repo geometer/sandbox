@@ -15,7 +15,7 @@ C = scene.free_point(label='C')
 heightA = scene.perpendicular_line(A, B.line_through(C))
 heightB = scene.perpendicular_line(B, C.line_through(A))
 D = heightA.intersection_point(heightB, label='D')
-scene.constraint(Constraint.Kind.equal_distances, A, B, C, D)
+scene.equal_distances_constraint((A, B), (C, D))
 
 scene.dump()
 

@@ -15,8 +15,8 @@ C = scene.free_point(label='C')
 A1 = scene.perpendicular_foot_point(A, B.line_through(C), label='A1')
 B1 = scene.perpendicular_foot_point(B, C.line_through(A), label='B1')
 D = A.line_through(A1).intersection_point(B.line_through(B1), label='D')
-D.constraint(Constraint.Kind.inside_triangle, A, B, C)
-scene.constraint(Constraint.Kind.equal_distances, A, B, C, D)
+D.inside_triangle_constraint(A, B, C)
+scene.equal_distances_constraint((A, B), (C, D))
 
 scene.dump()
 

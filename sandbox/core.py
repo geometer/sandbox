@@ -31,9 +31,6 @@ class CoreScene:
             self.__dict__.update(kwargs)
             scene.add(self)
 
-        def constraint(self, kind, *args, **kwargs):
-            self.scene.constraint(kind, self, *args, **kwargs)
-
         def __str__(self):
             dct = {}
             for key in self.__dict__:
@@ -103,8 +100,46 @@ class CoreScene:
                 self.scene, centre=self, radius_start=start, radius_end=end, **kwargs
             )
 
-        def distance_constraint(self, point, distance):
-            self.scene.constraint(Constraint.Kind.distance, self, point, distance)
+        def not_equal_constraint(self, A, **kwargs):
+            """
+            The current point does not coincide with A.
+            """
+            self.scene.constraint(Constraint.Kind.not_equal, self, A, **kwargs)
+
+        def distance_constraint(self, A, distance, **kwargs):
+            """
+            Distance to the point A equals to the given distance.
+            The given distance must be an integer.
+            """
+            if distance > 0:
+                self.not_equal_constraint(A)
+            self.scene.constraint(Constraint.Kind.distance, self, A, distance, **kwargs)
+
+        def opposite_side_constraint(self, point, line, **kwargs):
+            """
+            The current point lies on the opposite side to the line than the given point.
+            """
+            if isinstance(point, CoreScene.Line) and isinstance(line, CoreScene.Point):
+                swap = point
+                point = line
+                line = swap
+            self.scene.constraint(Constraint.Kind.opposite_side, self, point, line, **kwargs)
+
+        def same_side_constraint(self, point, line, **kwargs):
+            """
+            The current point lies on the same side to the line as the given point.
+            """
+            if isinstance(point, CoreScene.Line) and isinstance(line, CoreScene.Point):
+                swap = point
+                point = line
+                line = swap
+            self.scene.constraint(Constraint.Kind.same_side, self, point, line, **kwargs)
+
+        def inside_triangle_constraint(self, A, B, C, **kwargs):
+            """
+            The current point is inside the △ABC
+            """
+            self.scene.constraint(Constraint.Kind.inside_triangle, self, A, B, C, **kwargs)
 
     class Line(Object):
         def __init__(self, scene, **kwargs):
@@ -172,6 +207,21 @@ class CoreScene:
         else:
             self.adjustment_constraints.append(cns)
 
+    def quadrilateral_constraint(self, A, B, C, D, **kwargs):
+        """
+        ABDC is a quadrilateral.
+        I.e., the polygonal chain ABCD does not cross itself and contains no 180º angles.
+        """
+        self.constraint(Constraint.Kind.quadrilateral, A, B, C, D, **kwargs)
+
+    def equal_distances_constraint(self, AB, CD, **kwargs):
+        """
+        |AB| == |CD|
+        AB and CD are tuples or lists of two points
+        """
+        assert len(AB) == 2 and len(CD) == 2
+        self.constraint(Constraint.Kind.equal_distances, AB[0], AB[1], CD[0], CD[1], **kwargs)
+
     def points(self, skip_auxiliary=False):
         if skip_auxiliary:
             return [p for p in self.__objects if isinstance(p, CoreScene.Point) and not p.auxiliary]
@@ -229,7 +279,6 @@ class Constraint:
         same_side         = ('same_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
         quadrilateral     = ('quadrilateral', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         inside_triangle   = ('inside_triangle', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
-        outside_triangle  = ('outside_triangle', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         distance          = ('distance', Stage.adjustment, CoreScene.Point, CoreScene.Point, int)
         equal_distances   = ('equal_distances', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
 
