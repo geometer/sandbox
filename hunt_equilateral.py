@@ -1,7 +1,7 @@
 #!/var/www/sandbox/virtualenv/bin/python
 
-from sandbox import *
-from sandbox.hunter import hunt
+from sandbox import Scene
+from sandbox.hunter import Hunter
 
 scene = Scene()
 
@@ -13,4 +13,4 @@ C = c0.intersection_point(c1, label='C')
 scene.gravity_centre_point(A, B, C, label='D')
 scene.gravity_centre_point(A, B, label='E')
 
-hunt(scene)
+Hunter(scene).hunt()

@@ -1,7 +1,7 @@
 #!/var/www/sandbox/virtualenv/bin/python
 
-from sandbox import *
-from sandbox.hunter import hunt
+from sandbox import Scene
+from sandbox.hunter import Hunter
 
 scene = Scene()
 
@@ -13,4 +13,4 @@ E = scene.gravity_centre_point(A, D, label='E')
 
 scene.dump()
 
-hunt(scene, 'collinears')
+Hunter(scene).hunt('collinears')

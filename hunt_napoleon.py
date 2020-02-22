@@ -1,7 +1,7 @@
 #!/var/www/sandbox/virtualenv/bin/python
 
-from sandbox import *
-from sandbox.hunter import hunt
+from sandbox import Scene
+from sandbox.hunter import Hunter
 
 scene = Scene()
 
@@ -21,4 +21,4 @@ napoleonic(A, B, C)
 napoleonic(C, A, B)
 napoleonic(B, C, A)
 
-hunt(scene)
+Hunter(scene).hunt()
