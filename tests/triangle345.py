@@ -12,7 +12,8 @@ class TestTriangle345(PlacementTest):
         A.distance_constraint('B', 5)
         C.distance_constraint('B', 4)
         C.distance_constraint('A', 3)
-        circle = scene.incircle(A, B, C, label='incircle')
+        scene.incircle(A, B, C, label='incircle')
+        scene.circumcircle(A, B, C, label='circumcircle')
 
         return iterative_placement(scene)
 
@@ -27,3 +28,6 @@ class TestTriangle345(PlacementTest):
 
     def test_incircle(self):
         self.assertRadius('incircle', 1)
+
+    def test_circumcircle(self):
+        self.assertRadius('circumcircle', 2.5)

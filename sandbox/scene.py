@@ -152,3 +152,10 @@ class Scene(CoreScene):
         side = A.line_through(B, auxiliary=True)
         foot = self.perpendicular_foot_point(centre, side, auxiliary=True)
         return centre.circle_through(foot, **kwargs)
+
+    def circumcircle(self, A, B, C, **kwargs):
+        """
+        Circumscribed circle of △ABC
+        """
+        centre = self.circumcentre_point(A, B, C, auxiliary=True)
+        return centre.circle_through(A, **kwargs)
