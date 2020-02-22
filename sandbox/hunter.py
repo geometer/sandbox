@@ -233,11 +233,6 @@ def hunt_coincidences(placement: Placement):
         if len(same_points) > 1:
             print('same point: %s' % [pt.label for pt in same_points])
 
-def hunt_collinears(lines):
-    for line in lines:
-        if len(line) > 2:
-            print('collinear: %s' % [pt.label for pt in line])
-
 class Hunter:
     def __init__(self, scene):
         if isinstance(scene, Placement):
@@ -247,11 +242,20 @@ class Hunter:
         self.properties = []
 
     @staticmethod
-    def iterate_pairs(lst):
+    def __iterate_pairs(lst):
         for index in range(0, len(lst)):
             elt0 = lst[index]
             for elt1 in lst[index + 1:]:
                 yield (elt0, elt1)
+
+    @staticmethod
+    def __iterate_triples(lst):
+        for index0 in range(0, len(lst)):
+            elt0 = lst[index0]
+            for index1 in range(index0 + 1, len(lst)):
+                elt1 = lst[index1]
+                for elt2 in lst[index1 + 1:]:
+                    yield (elt0, elt1, elt2)
 
     def __vectors(self):
         points = self.placement.scene.points(skip_auxiliary=True)
@@ -322,6 +326,13 @@ class Hunter:
                     vec1 = Vector(line1[0], line1[1], self.placement)
                 yield Angle(vec0, vec1)
 
+    def __hunt_collinears(self, lines, verbose):
+        for line in lines:
+            for triple in Hunter.__iterate_triples(line):
+                self.properties.append(CollinearProperty(triple[0], triple[1], triple[2]))
+            if len(line) > 2 and verbose:
+                print('collinear: %s' % [pt.label for pt in line])
+
     def __hunt_equal_segments(self, verbose):
         vectors = self.__vectors()
         families = []
@@ -334,7 +345,7 @@ class Hunter:
                 families.append([vec])
 
         for fam in families:
-            for pair in Hunter.iterate_pairs(fam):
+            for pair in Hunter.__iterate_pairs(fam):
                 self.properties.append(EqualDistancesProperty((pair[0].start, pair[0].end), (pair[1].start, pair[1].end)))
             if len(fam) > 1 and verbose:
                 print(' = '.join(['|' + str(vec) + '|' for vec in fam]))
@@ -371,7 +382,7 @@ class Hunter:
                 families.append([ngl if ngl.arc() > 0 else ngl.reversed()])
 
         for fam in families:
-            for pair in Hunter.iterate_pairs(fam):
+            for pair in Hunter.__iterate_pairs(fam):
                 self.properties.append(EqualAnglesProperty(
                     (pair[0].vector0.start, pair[0].vector0.end,
                      pair[0].vector1.start, pair[0].vector1.end),
@@ -398,7 +409,7 @@ class Hunter:
                 families.append([trn])
 
         for fam in families:
-            for pair in Hunter.iterate_pairs(fam):
+            for pair in Hunter.__iterate_pairs(fam):
                 self.properties.append(EqualTrianglesProperty(pair[0].pts, pair[1].pts))
             if len(fam) > 1 and verbose:
                 print(" = ".join([str(trn) for trn in fam]))
@@ -435,7 +446,7 @@ class Hunter:
                 families.append([trn])
 
         for fam in families:
-            for pair in Hunter.iterate_pairs(fam):
+            for pair in Hunter.__iterate_pairs(fam):
                 self.properties.append(SimilarTrianglesProperty(pair[0].pts, pair[1].pts))
             if len(fam) > 1 and verbose:
                 print(" ~ ".join([str(trn) for trn in fam]))
@@ -444,16 +455,19 @@ class Hunter:
         all_vectors = list(self.__vectors())
         all_vectors.sort(key=Vector.length)
 
+        all_lines = list(self.__lines())
+
+        all_angles = list(self.__angles(all_lines))
+        all_angles.sort(key=Angle.abs_arc)
+
+        if 'collinears' in options or 'all' in options:
+            self.__hunt_collinears(all_lines, 'verbose' in options)
+
         if 'equal_segments' in options or 'all' in options:
             self.__hunt_equal_segments('verbose' in options)
 
         if 'proportional_segments' in options or 'all' in options:
             hunt_proportional_segments(all_vectors)
-
-        all_lines = list(self.__lines())
-
-        all_angles = list(self.__angles(all_lines))
-        all_angles.sort(key=Angle.abs_arc)
 
         if 'rational_angles' in options or 'all' in options:
             hunt_rational_angles(all_angles)
@@ -476,11 +490,8 @@ class Hunter:
         if 'coincidences' in options or 'all' in options:
             hunt_coincidences(self.placement)
 
-        if 'collinears' in options or 'all' in options:
-            hunt_collinears(all_lines)
-
     def dump(self):
-        print('Properties:')
+        print('Properties:\n')
         for prop in self.properties:
             print('\t%s' % prop)
         print('\nTotal properties: %d' % len(self.properties))
