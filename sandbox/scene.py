@@ -55,7 +55,7 @@ class Scene(CoreScene):
 
     def orthocentre_point(self, A, B, C, **kwargs):
         """
-        Orthocentre of △ABC
+        Orthocentre of △ABC (heights intersection point)
         """
         self.assert_point(A)
         self.assert_point(B)
@@ -64,6 +64,18 @@ class Scene(CoreScene):
         height_A = self.perpendicular_line(A, B.line_through(C, auxiliary=True), auxiliary=True)
         height_B = self.perpendicular_line(B, C.line_through(A, auxiliary=True), auxiliary=True)
         return height_A.intersection_point(height_B, **kwargs)
+
+    def circumcentre_point(self, A, B, C, **kwargs):
+        """
+        Circumcentre of △ABC (perpendicular bisectors intersection point)
+        """
+        self.assert_point(A)
+        self.assert_point(B)
+        self.assert_point(C)
+        A.not_collinear_constraint(B, C)
+        bisector_AB = self.perpendicular_bisector_line(A, B, auxiliary=True)
+        bisector_AC = self.perpendicular_bisector_line(A, C, auxiliary=True)
+        return bisector_AB.intersection_point(bisector_AC, **kwargs)
 
     def line_through(self, point, **kwargs):
         """

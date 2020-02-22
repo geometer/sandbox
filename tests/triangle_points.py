@@ -47,3 +47,24 @@ class TestTrianglePoints(PlacementTest):
 
     def testMedians(self):
         self.assertDistance('X_median', 'Y_median', 0)
+
+class TestCircumcentre(PlacementTest):
+    def createPlacement(self):
+        scene = Scene()
+
+        A = scene.free_point(label='A')
+        B = scene.free_point(label='B')
+        C = scene.free_point(label='C')
+
+        O = scene.circumcentre_point(A, B, C, label='O')
+
+        return iterative_placement(scene)
+
+    def testOAOB(self):
+        self.assertEqualDistances('O', 'A', 'O', 'B')
+
+    def testOAOC(self):
+        self.assertEqualDistances('O', 'A', 'O', 'C')
+
+    def testOBOC(self):
+        self.assertEqualDistances('O', 'B', 'O', 'C')
