@@ -1,7 +1,7 @@
 #!/var/www/sandbox/virtualenv/bin/python
 
 from sandbox import *
-from sandbox.hunter import hunt
+from sandbox.hunter import Hunter
 
 scene = Scene()
 
@@ -12,7 +12,9 @@ c1 = B.circle_through(A)
 C = c0.intersection_point(c1, label='C')
 
 print('\n*** Equilateral ABC ***\n')
-hunt(scene)
+hunter = Hunter(scene)
+hunter.hunt('all')
+hunter.dump()
 
 scene2 = Scene()
 
@@ -21,4 +23,6 @@ B = scene2.free_point(label='B')
 C = B.circle_through(A).free_point(label='C')
 
 print('\n*** Isosceles ABC (AB = BC) ***\n')
-hunt(scene2)
+hunter = Hunter(scene2)
+hunter.hunt('all')
+hunter.dump()

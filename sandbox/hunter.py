@@ -1,7 +1,8 @@
 import mpmath
 from typing import List
 
-from sandbox import Scene, Placement
+from . import Scene, Placement
+from .property import *
 
 ERROR = mpmath.mpf(5e-6)
 
@@ -58,59 +59,31 @@ class Angle:
             return "∠ %s %s %s" % (self.vector0.end.label, self.vector0.start.label, self.vector1.end.label)
         return "∠(%s, %s)" % (self.vector0, self.vector1)
 
-def __vectors(placement: Placement):
-    points = placement.scene.points(skip_auxiliary=True)
-    for index in range(0, len(points)):
-        point0 = points[index]
-        for point1 in points[index + 1:]:
-            vec = Vector(point0, point1, placement)
-            if mpmath.fabs(vec.length()) >= ERROR:
-                yield vec
-
-def __angles(lines, placement):
-    for index in range(0, len(lines)):
-        line0 = lines[index]
-        for line1 in lines[index + 1:]:
-            common = None
-            for pt in line0:
-                if pt in line1:
-                    common = pt
-                    break
-            if common:
-                vec0 = Vector(common, line0[1] if line0[0] == common else line0[0], placement)
-                vec1 = Vector(common, line1[1] if line1[0] == common else line1[0], placement)
-            else:
-                vec0 = Vector(line0[0], line0[1], placement)
-                vec1 = Vector(line1[0], line1[1], placement)
-            yield Angle(vec0, vec1)
-
 class Triangle:
-    def __init__(self, pt0: Scene.Point, pt1: Scene.Point, pt2: Scene.Point, side0: float, side1: float, side2: float):
-        self.pt0 = pt0
-        self.pt1 = pt1
-        self.pt2 = pt2
+    def __init__(self, pts, side0: float, side1: float, side2: float):
+        self.pts = list(pts)
         self.side0 = side0
         self.side1 = side1
         self.side2 = side2
 
     def variation(self, index):
         if index == 1:
-            return Triangle(self.pt0, self.pt2, self.pt1, self.side0, self.side2, self.side1)
+            return Triangle((self.pts[0], self.pts[2], self.pts[1]), self.side0, self.side2, self.side1)
         if index == 2:
-            return Triangle(self.pt1, self.pt0, self.pt2, self.side1, self.side0, self.side2)
+            return Triangle((self.pts[1], self.pts[0], self.pts[2]), self.side1, self.side0, self.side2)
         if index == 3:
-            return Triangle(self.pt1, self.pt2, self.pt0, self.side1, self.side2, self.side0)
+            return Triangle((self.pts[1], self.pts[2], self.pts[0]), self.side1, self.side2, self.side0)
         if index == 4:
-            return Triangle(self.pt2, self.pt0, self.pt1, self.side2, self.side0, self.side1)
+            return Triangle((self.pts[2], self.pts[0], self.pts[1]), self.side2, self.side0, self.side1)
         if index == 5:
-            return Triangle(self.pt2, self.pt1, self.pt0, self.side2, self.side1, self.side0)
+            return Triangle((self.pts[2], self.pts[1], self.pts[0]), self.side2, self.side1, self.side0)
         return self
 
     def __eq__(self, other) -> bool:
-        return self.pt0 == other.pt0 and self.pt1 == other.pt1 and self.pt2 == other.pt2
+        return self.pts[0] == other.pts[0] and self.pts[1] == other.pts[1] and self.pts[2] == other.pts[2]
 
     def __str__(self):
-        return "△ %s %s %s" % (self.pt0.label, self.pt1.label, self.pt2.label)
+        return "△ %s %s %s" % (self.pts[0].label, self.pts[1].label, self.pts[2].label)
 
     def equilateral(self):
         return mpmath.fabs(self.side0 - self.side1) < ERROR and \
@@ -137,24 +110,6 @@ class Triangle:
         if mpmath.fabs(self.side1 - other.side1) >= ERROR:
             return False
         return mpmath.fabs(self.side2 - other.side2) < ERROR
-
-def __triangles(placement: Placement):
-    points = placement.scene.points(skip_auxiliary=True)
-    for index0 in range(0, len(points)):
-        pt0 = points[index0]
-        loc0 = placement.location(pt0)
-        for index1 in range(index0 + 1, len(points)):
-            pt1 = points[index1]
-            loc1 = placement.location(pt1)
-            for index2 in range(index1 + 1, len(points)):
-                pt2 = points[index2]
-                loc2 = placement.location(pt2)
-                area = loc0.x * (loc1.y - loc2.y) + loc1.x * (loc2.y - loc0.y) + loc2.x * (loc0.y - loc1.y)
-                if mpmath.fabs(area) > ERROR:
-                    side0 = loc1.distance_to(loc2)
-                    side1 = loc2.distance_to(loc0)
-                    side2 = loc0.distance_to(loc1)
-                    yield Triangle(pt0, pt1, pt2, side0, side1, side2)
 
 class LengthFamily:
     def __init__(self, vector: Vector):
@@ -205,20 +160,6 @@ class AngleFamily:
         self.angles.append({'angle': angle, 'comment': test})
         return True
 
-def hunt_equal_segments(vectors):
-    families = []
-    for vec in vectors:
-        for fam in families:
-            if mpmath.fabs(vec.length() - fam[0].length()) < ERROR:
-                fam.append(vec)
-                break
-        else:
-            families.append([vec])
-
-    for fam in families:
-        if len(fam) > 1:
-            print(' = '.join(['|' + str(vec) + '|' for vec in fam]))
-
 def hunt_proportional_segments(vectors):
     families = []
     for vec in vectors:
@@ -254,16 +195,6 @@ def hunt_rational_angles(angles):
                         print("%s = %d %s" % (ngl, round(candidate), pi))
                     break
 
-def hunt_right_angles(angles):
-    rights = []
-    for ngl in angles:
-        arc = ngl.arc()
-        if mpmath.fabs(arc - mpmath.pi / 2) < ERROR:
-            rights.append(ngl)
-        elif mpmath.fabs(arc + mpmath.pi / 2) < ERROR:
-            rights.append(ngl.reversed())
-    print('90º: ' + ', '.join([str(ngl) for ngl in rights]))
-
 def hunt_proportional_angles(angles):
     families = []
     zero_count = 0
@@ -284,73 +215,6 @@ def hunt_proportional_angles(angles):
             for pair in fam.angles:
                 print("\t%s (%s)" % (pair['angle'], pair['comment']))
 
-def hunt_equal_angles(angles):
-    families = []
-    for ngl in angles:
-        if ngl.abs_arc() < ERROR or mpmath.fabs(ngl.abs_arc() - mpmath.pi) < ERROR:
-            continue
-        for fam in families:
-            if mpmath.fabs(ngl.arc() - fam[0].arc()) < ERROR:
-                fam.append(ngl)
-                break
-            if mpmath.fabs(ngl.arc() + fam[0].arc()) < ERROR:
-                fam.append(ngl.reversed())
-                break
-        else:
-            families.append([ngl if ngl.arc() > 0 else ngl.reversed()])
-
-    for fam in families:
-        if len(fam) > 1:
-            print(' = '.join([str(ngl) for ngl in fam]))
-
-def hunt_equal_triangles(triangles):
-    families = []
-    for trn in triangles:
-        for fam in families:
-            for variation in range(0, 6):
-                var = trn.variation(variation)
-                if fam[0].equal(var):
-                    fam.append(var)
-                    break
-            else:
-                continue
-            break
-        else:
-            families.append([trn])
-
-    for fam in families:
-        if len(fam) > 1:
-            print(" = ".join([str(trn) for trn in fam]))
-
-def hunt_similar_triangles(triangles):
-    equilaterals = [trn for trn in triangles if trn.equilateral()]
-    if equilaterals:
-        print('Equilateral triangles: ' + ', '.join([str(trn) for trn in equilaterals]))
-
-    triangles = [trn for trn in triangles if not trn.equilateral()]
-
-    isosceles = list(filter(None, [trn.isosceles() for trn in triangles]))
-    if isosceles:
-        print('Isosceles triangles: ' + ', '.join([str(trn) for trn in isosceles]))
-
-    families = []
-    for trn in triangles:
-        for fam in families:
-            for variation in range(0, 6):
-                var = trn.variation(variation)
-                if fam[0].similar(var):
-                    fam.append(var)
-                    break
-            else:
-                continue
-            break
-        else:
-            families.append([trn])
-
-    for fam in families:
-        if len(fam) > 1:
-            print(" ∼ ".join([str(trn) for trn in fam]))
-
 def hunt_coincidences(placement: Placement):
     used_points = set()
     points = placement.scene.points(skip_auxiliary=True)
@@ -369,76 +233,254 @@ def hunt_coincidences(placement: Placement):
         if len(same_points) > 1:
             print('same point: %s' % [pt.label for pt in same_points])
 
-def __lines(placement: Placement):
-    lines = []
-    used_pairs = set()
-    points = placement.scene.points(skip_auxiliary=True)
-    for index0 in range(0, len(points)):
-        pt0 = points[index0]
-        loc0 = placement.location(pt0)
-        for index1 in range(index0 + 1, len(points)):
-            pt1 = points[index1]
-            if (pt0, pt1) in used_pairs:
-                continue
-            loc1 = placement.location(pt1)
-            collinear = [pt0, pt1]
-            for index2 in range(index1 + 1, len(points)):
-                pt2 = points[index2]
-                loc2 = placement.location(pt2)
-                area = loc0.x * (loc1.y - loc2.y) + loc1.x * (loc2.y - loc0.y) + loc2.x * (loc0.y - loc1.y)
-                if mpmath.fabs(area) < ERROR:
-                    for pt in collinear:
-                        used_pairs.add((pt, pt2))
-                    collinear.append(pt2)
-            lines.append(collinear)
-
-    return lines
-
 def hunt_collinears(lines):
     for line in lines:
         if len(line) > 2:
             print('collinear: %s' % [pt.label for pt in line])
 
-def hunt(scene, options=('all')):
-    if isinstance(scene, Placement):
-        placement = scene
-    else:
-        placement = Placement(scene)
+class Hunter:
+    def __init__(self, scene):
+        if isinstance(scene, Placement):
+            self.placement = scene
+        else:
+            self.placement = Placement(scene)
+        self.properties = []
 
-    all_vectors = list(__vectors(placement))
-    all_vectors.sort(key=Vector.length)
+    @staticmethod
+    def iterate_pairs(lst):
+        for index in range(0, len(lst)):
+            elt0 = lst[index]
+            for elt1 in lst[index + 1:]:
+                yield (elt0, elt1)
 
-    if 'equal_segments' in options:
-        hunt_equal_segments(all_vectors)
+    def __vectors(self):
+        points = self.placement.scene.points(skip_auxiliary=True)
+        for index in range(0, len(points)):
+            point0 = points[index]
+            for point1 in points[index + 1:]:
+                vec = Vector(point0, point1, self.placement)
+                if mpmath.fabs(vec.length()) >= ERROR:
+                    yield vec
 
-    if 'proportional_segments' in options or 'all' in options:
-        hunt_proportional_segments(all_vectors)
+    def __triangles(self):
+        points = self.placement.scene.points(skip_auxiliary=True)
+        for index0 in range(0, len(points)):
+            pt0 = points[index0]
+            loc0 = self.placement.location(pt0)
+            for index1 in range(index0 + 1, len(points)):
+                pt1 = points[index1]
+                loc1 = self.placement.location(pt1)
+                for index2 in range(index1 + 1, len(points)):
+                    pt2 = points[index2]
+                    loc2 = self.placement.location(pt2)
+                    area = loc0.x * (loc1.y - loc2.y) + loc1.x * (loc2.y - loc0.y) + loc2.x * (loc0.y - loc1.y)
+                    if mpmath.fabs(area) > ERROR:
+                        side0 = loc1.distance_to(loc2)
+                        side1 = loc2.distance_to(loc0)
+                        side2 = loc0.distance_to(loc1)
+                        yield Triangle((pt0, pt1, pt2), side0, side1, side2)
 
-    all_lines = list(__lines(placement))
+    def __lines(self):
+        lines = []
+        used_pairs = set()
+        points = self.placement.scene.points(skip_auxiliary=True)
+        for index0 in range(0, len(points)):
+            pt0 = points[index0]
+            loc0 = self.placement.location(pt0)
+            for index1 in range(index0 + 1, len(points)):
+                pt1 = points[index1]
+                if (pt0, pt1) in used_pairs:
+                    continue
+                loc1 = self.placement.location(pt1)
+                collinear = [pt0, pt1]
+                for index2 in range(index1 + 1, len(points)):
+                    pt2 = points[index2]
+                    loc2 = self.placement.location(pt2)
+                    area = loc0.x * (loc1.y - loc2.y) + loc1.x * (loc2.y - loc0.y) + loc2.x * (loc0.y - loc1.y)
+                    if mpmath.fabs(area) < ERROR:
+                        for pt in collinear:
+                            used_pairs.add((pt, pt2))
+                        collinear.append(pt2)
+                lines.append(collinear)
 
-    all_angles = list(__angles(all_lines, placement))
-    all_angles.sort(key=Angle.abs_arc)
+        return lines
 
-    if 'rational_angles' in options or 'all' in options:
-        hunt_rational_angles(all_angles)
+    def __angles(self, lines):
+        for index in range(0, len(lines)):
+            line0 = lines[index]
+            for line1 in lines[index + 1:]:
+                common = None
+                for pt in line0:
+                    if pt in line1:
+                        common = pt
+                        break
+                if common:
+                    vec0 = Vector(common, line0[1] if line0[0] == common else line0[0], self.placement)
+                    vec1 = Vector(common, line1[1] if line1[0] == common else line1[0], self.placement)
+                else:
+                    vec0 = Vector(line0[0], line0[1], self.placement)
+                    vec1 = Vector(line1[0], line1[1], self.placement)
+                yield Angle(vec0, vec1)
 
-    if 'equal_angles' in options or 'all' in options:
-        hunt_equal_angles(all_angles)
+    def __hunt_equal_segments(self, verbose):
+        vectors = self.__vectors()
+        families = []
+        for vec in vectors:
+            for fam in families:
+                if mpmath.fabs(vec.length() - fam[0].length()) < ERROR:
+                    fam.append(vec)
+                    break
+            else:
+                families.append([vec])
 
-    if 'right_angles' in options:
-        hunt_right_angles(all_angles)
+        for fam in families:
+            for pair in Hunter.iterate_pairs(fam):
+                self.properties.append(EqualDistancesProperty((pair[0].start, pair[0].end), (pair[1].start, pair[1].end)))
+            if len(fam) > 1 and verbose:
+                print(' = '.join(['|' + str(vec) + '|' for vec in fam]))
 
-    if 'proportional_angles' in options: # or 'all' in options:
-        hunt_proportional_angles(all_angles)
+    def __hunt_right_angles(self, angles, verbose):
+        rights = []
+        for ngl in angles:
+            arc = ngl.arc()
+            if mpmath.fabs(arc - mpmath.pi / 2) < ERROR:
+                rights.append(ngl)
+            elif mpmath.fabs(arc + mpmath.pi / 2) < ERROR:
+                rights.append(ngl.reversed())
+        for ngl in rights:
+            self.properties.append(RightAngleProperty(
+                (ngl.vector0.start, ngl.vector0.end),
+                (ngl.vector1.start, ngl.vector1.end)
+            ))
+        if rights and verbose:
+            print('90º: ' + ', '.join([str(ngl) for ngl in rights]))
 
-    if 'equal_triangles' in options:
-        hunt_equal_triangles(list(__triangles(placement)))
+    def __hunt_equal_angles(self, angles, verbose):
+        families = []
+        for ngl in angles:
+            if ngl.abs_arc() < ERROR or mpmath.fabs(ngl.abs_arc() - mpmath.pi) < ERROR:
+                continue
+            for fam in families:
+                if mpmath.fabs(ngl.arc() - fam[0].arc()) < ERROR:
+                    fam.append(ngl)
+                    break
+                if mpmath.fabs(ngl.arc() + fam[0].arc()) < ERROR:
+                    fam.append(ngl.reversed())
+                    break
+            else:
+                families.append([ngl if ngl.arc() > 0 else ngl.reversed()])
 
-    if 'similar_triangles' in options or 'all' in options:
-        hunt_similar_triangles(list(__triangles(placement)))
+        for fam in families:
+            for pair in Hunter.iterate_pairs(fam):
+                self.properties.append(EqualAnglesProperty(
+                    (pair[0].vector0.start, pair[0].vector0.end,
+                     pair[0].vector1.start, pair[0].vector1.end),
+                    (pair[1].vector0.start, pair[1].vector0.end,
+                     pair[1].vector1.start, pair[1].vector1.end)
+                ))
+            if len(fam) > 1 and verbose:
+                print(' = '.join([str(ngl) for ngl in fam]))
 
-    if 'coincidences' in options or 'all' in options:
-        hunt_coincidences(placement)
+    def __hunt_equal_triangles(self, verbose):
+        triangles = list(self.__triangles())
+        families = []
+        for trn in triangles:
+            for fam in families:
+                for variation in range(0, 6):
+                    var = trn.variation(variation)
+                    if fam[0].equal(var):
+                        fam.append(var)
+                        break
+                else:
+                    continue
+                break
+            else:
+                families.append([trn])
 
-    if 'collinears' in options or 'all' in options:
-        hunt_collinears(all_lines)
+        for fam in families:
+            for pair in Hunter.iterate_pairs(fam):
+                self.properties.append(EqualTrianglesProperty(pair[0].pts, pair[1].pts))
+            if len(fam) > 1 and verbose:
+                print(" = ".join([str(trn) for trn in fam]))
+
+    def __hunt_similar_triangles(self, verbose):
+        triangles = list(self.__triangles())
+
+        equilaterals = [trn for trn in triangles if trn.equilateral()]
+        for trn in equilaterals:
+            self.properties.append(EquilateralTriangleProperty(trn.pts))
+        if equilaterals and verbose:
+            print('Equilateral triangles: ' + ', '.join([str(trn) for trn in equilaterals]))
+
+        triangles = [trn for trn in triangles if not trn.equilateral()]
+
+        isosceles = list(filter(None, [trn.isosceles() for trn in triangles]))
+        for trn in isosceles:
+            self.properties.append(IsoscelesTriangleProperty(trn.pts[0], trn.pts[1:]))
+        if isosceles and verbose:
+            print('Isosceles triangles: ' + ', '.join([str(trn) for trn in isosceles]))
+
+        families = []
+        for trn in triangles:
+            for fam in families:
+                for variation in range(0, 6):
+                    var = trn.variation(variation)
+                    if fam[0].similar(var):
+                        fam.append(var)
+                        break
+                else:
+                    continue
+                break
+            else:
+                families.append([trn])
+
+        for fam in families:
+            for pair in Hunter.iterate_pairs(fam):
+                self.properties.append(SimilarTrianglesProperty(pair[0].pts, pair[1].pts))
+            if len(fam) > 1 and verbose:
+                print(" ~ ".join([str(trn) for trn in fam]))
+
+    def hunt(self, options=('all')):
+        all_vectors = list(self.__vectors())
+        all_vectors.sort(key=Vector.length)
+
+        if 'equal_segments' in options or 'all' in options:
+            self.__hunt_equal_segments('verbose' in options)
+
+        if 'proportional_segments' in options or 'all' in options:
+            hunt_proportional_segments(all_vectors)
+
+        all_lines = list(self.__lines())
+
+        all_angles = list(self.__angles(all_lines))
+        all_angles.sort(key=Angle.abs_arc)
+
+        if 'rational_angles' in options or 'all' in options:
+            hunt_rational_angles(all_angles)
+
+        if 'equal_angles' in options or 'all' in options:
+            self.__hunt_equal_angles(all_angles, 'verbose' in options)
+
+        if 'right_angles' in options or 'all' in options:
+            self.__hunt_right_angles(all_angles, 'verbose' in options)
+
+        if 'proportional_angles' in options or 'all' in options:
+            hunt_proportional_angles(all_angles)
+
+        if 'equal_triangles' in options or 'all' in options:
+            self.__hunt_equal_triangles('verbose' in options)
+
+        if 'similar_triangles' in options or 'all' in options:
+            self.__hunt_similar_triangles('verbose' in options)
+
+        if 'coincidences' in options or 'all' in options:
+            hunt_coincidences(self.placement)
+
+        if 'collinears' in options or 'all' in options:
+            hunt_collinears(all_lines)
+
+    def dump(self):
+        print('Properties:')
+        for prop in self.properties:
+            print('\t%s' % prop)
+        print('\nTotal properties: %d' % len(self.properties))

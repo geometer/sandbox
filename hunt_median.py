@@ -1,7 +1,7 @@
 #!/var/www/sandbox/virtualenv/bin/python
 
 from sandbox import *
-from sandbox.hunter import hunt
+from sandbox.hunter import Hunter
 
 scene = Scene()
 
@@ -15,7 +15,7 @@ para = scene.parallel_line(A.line_through(B), D)
 A1 = para.intersection_point(A.line_through(C), label='A1')
 B1 = para.intersection_point(B.line_through(C), label='B1')
 
-#scene.dump()
-
-#hunt(scene, 'similar_triangles')
-hunt(scene, 'all')
+hunter = Hunter(scene)
+hunter.hunt('all')
+print('')
+hunter.dump()

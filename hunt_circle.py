@@ -1,7 +1,7 @@
 #!/var/www/sandbox/virtualenv/bin/python
 
 from sandbox import *
-from sandbox.hunter import hunt
+from sandbox.hunter import Hunter
 
 scene = Scene()
 
@@ -11,4 +11,7 @@ c = O.circle_through(A)
 B = c.free_point(label='B')
 C = c.free_point(label='C')
 
-hunt(scene)
+hunter = Hunter(scene)
+hunter.hunt('all')
+print('')
+hunter.dump()

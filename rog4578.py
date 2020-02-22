@@ -5,7 +5,7 @@
 import mpmath
 
 from sandbox import *
-from sandbox.hunter import hunt
+from sandbox.hunter import Hunter
 
 scene = Scene()
 
@@ -20,8 +20,6 @@ D.inside_triangle_constraint(A, B, C)
 H = heightA.intersection_point(B.line_through(C), label='H')
 G = heightC.intersection_point(A.line_through(B), label='G')
 scene.equal_distances_constraint((A, B), (C, D))
-
-scene.dump()
 
 #Proof
 # * 1* |AB| = |CD|                                *given
@@ -51,4 +49,7 @@ placement = iterative_placement(scene)
 
 print(placement.angle(C, A, C, B) / mpmath.pi * 180)
 
-hunt(placement, ['collinears', 'equal_triangles', 'right_angles', 'equal_segments', 'equal_angles', 'similar_triangles'])
+hunter = Hunter(placement)
+hunter.hunt(['collinears', 'equal_triangles', 'right_angles', 'equal_segments', 'equal_angles', 'similar_triangles'])
+print('')
+hunter.dump()
