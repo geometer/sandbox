@@ -83,6 +83,7 @@ class CoreScene:
         def line_through(self, point, **kwargs):
             self.scene.assert_point(point)
             assert self != point, 'Cannot create a line by a single point'
+            self.not_equal_constraint(point)
             return CoreScene.Line(self.scene, point0=self, point1=point, **kwargs)
 
         def circle_through(self, point, **kwargs):

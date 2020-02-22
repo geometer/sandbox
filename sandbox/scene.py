@@ -53,6 +53,18 @@ class Scene(CoreScene):
         tmp2.not_equal_constraint(tmp)
         return tmp.ratio_point(tmp2, 1, 1, **kwargs)
 
+    def orthocentre_point(self, A, B, C, **kwargs):
+        """
+        Orthocentre of △ABC
+        """
+        self.assert_point(A)
+        self.assert_point(B)
+        self.assert_point(C)
+        A.not_collinear_constraint(B, C)
+        height_A = self.perpendicular_line(A, B.line_through(C, auxiliary=True), auxiliary=True)
+        height_B = self.perpendicular_line(B, C.line_through(A, auxiliary=True), auxiliary=True)
+        return height_A.intersection_point(height_B, **kwargs)
+
     def line_through(self, point, **kwargs):
         """
         A line through the point
