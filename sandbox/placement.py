@@ -420,6 +420,21 @@ class Placement:
                 vec0 = TwoDVector(pt0, pt1)
                 vec1 = TwoDVector(pt2, pt3)
                 square += vec0.scalar_product(vec1) ** 2 / vec0.length2 / vec1.length2 * average_distance2()
+            elif cnstr.kind == Constraint.Kind.angles_ratio:
+                pt0 = self.location(cnstr.params[0])
+                pt1 = self.location(cnstr.params[1])
+                pt2 = self.location(cnstr.params[2])
+                pt3 = self.location(cnstr.params[3])
+                pt4 = self.location(cnstr.params[4])
+                pt5 = self.location(cnstr.params[5])
+                pt6 = self.location(cnstr.params[6])
+                pt7 = self.location(cnstr.params[7])
+                ratio = cnstr.params[8]
+                vec0 = TwoDVector(pt0, pt1)
+                vec1 = TwoDVector(pt2, pt3)
+                vec2 = TwoDVector(pt4, pt5)
+                vec3 = TwoDVector(pt6, pt7)
+                square += (vec0.angle(vec1) - vec2.angle(vec3) * ratio) ** 2 * average_distance2()
             else:
                 assert False, 'Constraint `%s` not supported in adjustment' % cnstr.kind
 

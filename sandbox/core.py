@@ -293,6 +293,15 @@ class CoreScene:
         assert len(AB) == 2 and len(CD) == 2
         self.constraint(Constraint.Kind.right_angle, AB[0], AB[1], CD[0], CD[1], **kwargs)
 
+    def angles_ratio_constraint(self, ABCD, EFGH, ratio, **kwargs):
+        self.constraint(
+            Constraint.Kind.angles_ratio,
+            ABCD[0][0], ABCD[0][1], ABCD[1][0], ABCD[1][1],
+            EFGH[0][0], EFGH[0][1], EFGH[1][0], EFGH[1][1],
+            ratio,
+            **kwargs
+        )
+
     def points(self, skip_auxiliary=False):
         if skip_auxiliary:
             return [p for p in self.__objects if isinstance(p, CoreScene.Point) and not p.auxiliary]
@@ -360,6 +369,7 @@ class Constraint:
         distance          = ('distance', Stage.adjustment, CoreScene.Point, CoreScene.Point, int)
         distances_ratio   = ('distances_ratio', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, int)
         right_angle       = ('right_angle', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
+        angles_ratio      = ('angles_ratio', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, int)
 
         def __init__(self, name, stage, *params):
             self.stage = stage
