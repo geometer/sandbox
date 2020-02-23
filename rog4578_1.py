@@ -6,6 +6,7 @@ import mpmath
 
 from sandbox import *
 from sandbox.hunter import Hunter
+from sandbox.explainer import Explainer
 
 scene = Scene()
 
@@ -49,6 +50,9 @@ placement = iterative_placement(scene)
 hunter = Hunter(placement)
 hunter.hunt(['collinears', 'equal_triangles', 'right_angles', 'equal_segments', 'equal_angles', 'similar_triangles'])
 print('')
-hunter.dump()
+
+explainer = Explainer(scene, hunter.properties)
+explainer.explain()
+explainer.dump()
 
 print('\n%.5f' % (placement.angle(C, A, C, B) / mpmath.pi * 180))
