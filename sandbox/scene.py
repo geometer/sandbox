@@ -85,7 +85,7 @@ class Scene(CoreScene):
         bisector_AC = self.perpendicular_bisector_line(A, C, auxiliary=True)
         return bisector_AB.intersection_point(bisector_AC, **kwargs)
 
-    def line_through(self, point, **kwargs):
+    def free_line_through(self, point, **kwargs):
         """
         A line through the point
         """
