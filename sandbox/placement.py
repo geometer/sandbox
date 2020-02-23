@@ -459,7 +459,8 @@ class Placement:
         length = mpmath.sqrt(reduce((lambda s, x: s + x ** 2), gradient, 0))
         if length == 0:
             return self
-        gradient = [d * 1.e-10 / length for d in gradient]
+        mult = 1e-10 / length
+        gradient = [d * mult for d in gradient]
 
         def test_placement(coef):
             params = Placement.Parameters(self.params)
@@ -477,7 +478,7 @@ class Placement:
         deg = 0
         previous = self
         while True:
-            coef = 8** deg
+            coef = 8 ** deg
             test = test_placement(coef)
             if not test or test.deviation() > previous.deviation():
                 for _ in range(0, 2):
@@ -489,8 +490,8 @@ class Placement:
             previous = test
             deg += 1
 
-def iterative_placement(scene, max_attempts=100, max_iterations=400, print_progress=False):
-    for _ in range(0, max_attempts):
+def iterative_placement(scene, max_attempts=10000, max_iterations=400, print_progress=False):
+    for attempt in range(0, max_attempts):
         try:
             placement = Placement(scene)
             for index in range(0, max_iterations):
@@ -509,5 +510,5 @@ def iterative_placement(scene, max_attempts=100, max_iterations=400, print_progr
                 return placement
         except PlacementFailedError as e:
             if print_progress:
-                print(e)
+                print('Attempt %d failed: %s\r' % (attempt, e))
     return None
