@@ -8,6 +8,7 @@ from tests.rog4580 import *
 from tests.median import *
 from tests.mccme7 import *
 from tests.triangle_points import *
+from tests.trisectors import *
 
 if __name__ == '__main__':
     unittest.main()
