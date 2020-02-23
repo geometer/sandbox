@@ -192,9 +192,10 @@ class Placement:
                     elif p.origin == CoreScene.Point.Origin.ratio:
                         p0 = self.location(p.point0)
                         p1 = self.location(p.point1)
+                        denom = p.coef0 + p.coef1
                         add(p, TwoDCoordinates(
-                            (p.coef0 * p0.x + p.coef1 * p1.x) / (p.coef0 + p.coef1),
-                            (p.coef0 * p0.y + p.coef1 * p1.y) / (p.coef0 + p.coef1)
+                            (p.coef0 * p0.x + p.coef1 * p1.x) / denom,
+                            (p.coef0 * p0.y + p.coef1 * p1.y) / denom
                         ))
                     elif p.origin == CoreScene.Point.Origin.line_x_line:
                         p0 = self.location(p.line0.point0)
@@ -255,7 +256,7 @@ class Placement:
                             coef = (p1.y * p0.x - p1.x * p0.y) / (p1.y - p0.y)
                             qa = 1 + coef_y * coef_y
                             qb = coef_y * (coef - c.x) - c.y
-                            qc = c.y * c.y + (coef - c.x) * (coef - c.x) - r2
+                            qc = c.y ** 2 + (coef - c.x) ** 2 - r2
                             discr = qb * qb - qa * qc
                             if discr < 0:
                                 raise PlacementFailedError('The line and the circle have no intersection points')
@@ -284,7 +285,7 @@ class Placement:
                             # (1 + y_coef^2) * y^2 + 2 (const * y_coef - c0.x * y_coef - c0.y) * y + (const - c0.x)^2 + c0.y^2 - r02
                             a = 1 + y_coef * y_coef
                             b = ((const - c0.x) * y_coef - c0.y)
-                            c = (const - c0.x) * (const - c0.x) + c0.y * c0.y - r02
+                            c = (const - c0.x) ** 2 + c0.y ** 2 - r02
                             # a y^2 + 2b y + c = 0
                             discr = b * b - a * c
                             if discr < 0:
@@ -301,7 +302,7 @@ class Placement:
                             const = (r02 - r12 - c0.y * c0.y - c0.x * c0.x + c1.y * c1.y + c1.x * c1.x) / y_coef
                             a = 1 + x_coef * x_coef
                             b = ((const - c0.y) * x_coef - c0.x)
-                            c = (const - c0.y) * (const - c0.y) + c0.x * c0.x - r02
+                            c = (const - c0.y) ** 2 + c0.x ** 2 - r02
                             discr = b * b - a * c
                             if discr < 0:
                                 raise PlacementFailedError('The circles have no intersection points')
