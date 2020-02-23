@@ -27,9 +27,15 @@ class CoreScene:
             if 'auxiliary' not in kwargs:
                 self.auxiliary = None
 
+            self.extra_labels = set()
             self.scene = scene
             self.__dict__.update(kwargs)
             scene.add(self)
+
+        def with_extra_label(self, label):
+            if label and label != self.label:
+                self.extra_labels.add(label)
+            return self
 
         def __str__(self):
             dct = {}
@@ -43,7 +49,7 @@ class CoreScene:
                     dct[key] = value.name
                 elif isinstance(value, CoreScene.Object):
                     dct[key] = value.label
-                elif isinstance(value, (list, tuple)):
+                elif isinstance(value, (list, tuple, set)):
                     if value:
                         dct[key] = [elt.label if isinstance(elt, CoreScene.Object) else str(elt) for elt in value]
                 else:
@@ -74,16 +80,23 @@ class CoreScene:
             assert coef0 + coef1 != 0
             if self == point:
                 return self
-            return CoreScene.Point(
+            new_point = CoreScene.Point(
                 self.scene,
                 CoreScene.Point.Origin.ratio,
                 point0=self, point1=point, coef0=coef0, coef1=coef1, **kwargs
             )
+            new_point.belongs_to(self.line_through(point, auxiliary=True))
+            return new_point
 
         def line_through(self, point, **kwargs):
             self.scene.assert_point(point)
             assert self != point, 'Cannot create a line by a single point'
             self.not_equal_constraint(point)
+
+            for existing in self.scene.lines():
+                if self in existing.all_points and point in existing.all_points:
+                    return existing.with_extra_label(kwargs.get('label'))
+
             return CoreScene.Line(self.scene, point0=self, point1=point, **kwargs)
 
         def circle_through(self, point, **kwargs):
@@ -100,6 +113,10 @@ class CoreScene:
             return CoreScene.Circle(
                 self.scene, centre=self, radius_start=start, radius_end=end, **kwargs
             )
+
+        def belongs_to(self, line_or_circle):
+            self.scene.assert_line_or_circle(line_or_circle)
+            line_or_circle.all_points.add(self)
 
         def not_equal_constraint(self, A, **kwargs):
             """
@@ -147,9 +164,12 @@ class CoreScene:
     class Line(Object):
         def __init__(self, scene, **kwargs):
             CoreScene.Object.__init__(self, scene, **kwargs)
+            self.all_points = set([self.point0, self.point1])
 
         def free_point(self, **kwargs):
-            return CoreScene.Point(self.scene, CoreScene.Point.Origin.line, line=self, **kwargs)
+            point = CoreScene.Point(self.scene, CoreScene.Point.Origin.line, line=self, **kwargs)
+            point.belongs_to(self)
+            return point
 
         def intersection_point(self, obj, **kwargs):
             """
@@ -159,24 +179,39 @@ class CoreScene:
             self.scene.assert_line_or_circle(obj)
             assert self != obj, 'The line does not cross itself'
             if isinstance(obj, CoreScene.Circle):
-                return CoreScene.Point(
+                crossing = CoreScene.Point(
                     self.scene,
                     CoreScene.Point.Origin.circle_x_line,
                     circle=obj, line=self, **kwargs
                 )
             else:
-                return CoreScene.Point(
+                existing_points = [pt for pt in self.all_points if pt in obj.all_points]
+                if len(existing_points) == 1:
+                    return existing_points[0].with_extra_label(kwargs.get('label'))
+                assert len(existing_points) == 0
+
+                crossing = CoreScene.Point(
                     self.scene,
                     CoreScene.Point.Origin.line_x_line,
                     line0=self, line1=obj, **kwargs
                 )
+            crossing.belongs_to(self)
+            crossing.belongs_to(obj)
+            return crossing
 
     class Circle(Object):
         def __init__(self, scene, **kwargs):
             CoreScene.Object.__init__(self, scene, **kwargs)
+            self.all_points = set()
+            if self.centre == self.radius_start:
+                self.all_points.add(self.radius_end)
+            elif self.centre == self.radius_end:
+                self.all_points.add(self.radius_start)
 
         def free_point(self, **kwargs):
-            return CoreScene.Point(self.scene, CoreScene.Point.Origin.circle, circle=self, **kwargs)
+            point = CoreScene.Point(self.scene, CoreScene.Point.Origin.circle, circle=self, **kwargs)
+            point.belongs_to(self)
+            return point
 
         def intersection_point(self, obj, **kwargs):
             """
@@ -186,17 +221,21 @@ class CoreScene:
             self.scene.assert_line_or_circle(obj)
             assert self != obj, 'The circle does not cross itself'
             if isinstance(obj, CoreScene.Circle):
-                return CoreScene.Point(
+                crossing = CoreScene.Point(
                     self.scene,
                     CoreScene.Point.Origin.circle_x_circle,
                     circle0=self, circle1=obj, **kwargs
                 )
             else:
-                return CoreScene.Point(
+                crossing = CoreScene.Point(
                     self.scene,
                     CoreScene.Point.Origin.circle_x_line,
                     circle=self, line=obj, **kwargs
                 )
+
+            crossing.belongs_to(self)
+            crossing.belongs_to(obj)
+            return crossing
 
     def __init__(self):
         self.__objects = []
@@ -246,6 +285,12 @@ class CoreScene:
         else:
             return [p for p in self.__objects if isinstance(p, CoreScene.Point)]
 
+    def lines(self, skip_auxiliary=False):
+        if skip_auxiliary:
+            return [l for l in self.__objects if isinstance(l, CoreScene.Line) and not l.auxiliary]
+        else:
+            return [l for l in self.__objects if isinstance(l, CoreScene.Line)]
+
     def assert_type(self, obj, *args):
         assert isinstance(obj, args), 'Unexpected type %s' % type(obj)
         assert obj.scene == self
@@ -265,9 +310,9 @@ class CoreScene:
     def add(self, obj: Object):
         self.__objects.append(obj)
 
-    def get(self, key: str):
+    def get(self, label: str):
         for obj in self.__objects:
-            if obj.label == key:
+            if obj.label == label or label in obj.extra_labels:
                 return obj
         return None
 
