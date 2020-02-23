@@ -297,8 +297,7 @@ class Hunter:
                     continue
                 loc1 = self.placement.location(pt1)
                 collinear = [pt0, pt1]
-                for index2 in range(index1 + 1, len(points)):
-                    pt2 = points[index2]
+                for pt2 in points[index1 + 1:]:
                     loc2 = self.placement.location(pt2)
                     area = loc0.x * (loc1.y - loc2.y) + loc1.x * (loc2.y - loc0.y) + loc2.x * (loc0.y - loc1.y)
                     if mpmath.fabs(area) < ERROR:
