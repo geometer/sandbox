@@ -6,7 +6,7 @@ from sys import stdout
 from .core import CoreScene, Constraint
 
 class TwoDCoordinates:
-    def __init__(self, x: mpf, y: mpf):
+    def __init__(self, x, y):
         self.x = x
         self.y = y
 
@@ -16,10 +16,10 @@ class TwoDCoordinates:
     def __eq__(self, other):
         return mpmath.fabs(self.x - other.x) < 5e-6 and mpmath.fabs(self.y - other.y) < 5e-6
 
-    def distance_to(self, other) -> mpf:
+    def distance_to(self, other):
         return TwoDVector(other, self).length
 
-    def distance2_to(self, other) -> mpf:
+    def distance2_to(self, other):
         return TwoDVector(other, self).length2
 
 class TwoDVector:
@@ -28,20 +28,20 @@ class TwoDVector:
         self.y = end.y - start.y
 
     @property
-    def length(self) -> mpf:
+    def length(self):
         return mpmath.hypot(self.x, self.y)
 
     @property
-    def length2(self) -> mpf:
+    def length2(self):
         return self.x ** 2 + self.y ** 2
 
-    def scalar_product(self, other) -> mpf:
+    def scalar_product(self, other):
         return self.x * other.x + self.y * other.y
 
-    def vector_product(self, other) -> mpf:
+    def vector_product(self, other):
         return self.x * other.y - self.y * other.x
 
-    def angle(self, other) -> mpf:
+    def angle(self, other):
         cos = self.scalar_product(other) / self.length / other.length
         if cos >= 1:
             return 0
@@ -329,12 +329,12 @@ class Placement:
             raise IncompletePlacementError
         return loca
 
-    def radius(self, circle) -> mpf:
+    def radius(self, circle):
         if isinstance(circle, str):
             circle = self.scene.get(circle)
         return self.location(circle.radius_start).distance_to(self.location(circle.radius_end))
 
-    def radius2(self, circle) -> mpf:
+    def radius2(self, circle):
         if isinstance(circle, str):
             circle = self.scene.get(circle)
         return self.location(circle.radius_start).distance2_to(self.location(circle.radius_end))
