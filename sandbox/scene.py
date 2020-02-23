@@ -14,6 +14,8 @@ class Scene(CoreScene):
         """
         Constructs middle point of the segment AB.
         """
+        self.assert_point(A)
+        self.assert_point(B)
         return A.ratio_point(B, 1, 1, **kwargs)
 
     def gravity_centre_point(self, *points, **kwargs):
