@@ -505,7 +505,7 @@ def iterative_placement(scene, max_attempts=100, max_iterations=400, print_progr
                     break
             if print_progress:
                 print('Deviation on step %d: %.7f' % (index, placement.deviation()))
-            if placement.deviation() < 1e-6:
+            if placement.deviation() < 1e-12:
                 return placement
         except PlacementFailedError as e:
             if print_progress:
