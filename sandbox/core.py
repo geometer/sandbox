@@ -208,6 +208,7 @@ class CoreScene:
                     CoreScene.Point.Origin.line_x_line,
                     line0=self, line1=obj, **kwargs
                 )
+
             crossing.belongs_to(self)
             crossing.belongs_to(obj)
             return crossing
