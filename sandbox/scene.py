@@ -57,7 +57,7 @@ class Scene(CoreScene):
         circle = point.circle_through(tmp, auxiliary=True)
         tmp2 = line.intersection_point(circle, auxiliary=True)
         tmp2.not_equal_constraint(tmp)
-        return tmp.ratio_point(tmp2, 1, 1, **kwargs)
+        return self.middle_point(tmp, tmp2, **kwargs)
 
     def orthocentre_point(self, A, B, C, **kwargs):
         """
@@ -88,7 +88,9 @@ class Scene(CoreScene):
         A line through the point
         """
         self.assert_point(point)
-        return point.line_through(self.free_point(auxiliary=True), **kwargs)
+        extra = self.free_point(auxiliary=True)
+        extra.not_equal_constraint(point)
+        return point.line_through(extra, **kwargs)
 
     def perpendicular_bisector_line(self, point0, point1, **kwargs):
         """
@@ -96,12 +98,15 @@ class Scene(CoreScene):
         """
         self.assert_point(point0)
         self.assert_point(point1)
+        point0.not_equal_constraint(point1)
         circle0 = point0.circle_through(point1, auxiliary=True)
         circle1 = point1.circle_through(point0, auxiliary=True)
         tmp0 = circle0.intersection_point(circle1, auxiliary=True)
         tmp1 = circle0.intersection_point(circle1, auxiliary=True)
         tmp1.not_equal_constraint(tmp0)
-        return tmp0.line_through(tmp1, **kwargs)
+        bisector = tmp0.line_through(tmp1, **kwargs)
+        self.middle_point(point0, point1, auxiliary=True).belongs_to(bisector)
+        return bisector
 
     def angle_bisector_line(self, A, B, C, **kwargs):
         """
@@ -136,7 +141,9 @@ class Scene(CoreScene):
         x_0 = circle1.intersection_point(circle2, auxiliary=True)
         x_1 = circle2.intersection_point(circle1, auxiliary=True)
         x_1.not_equal_constraint(x_0)
-        return x_0.line_through(x_1, **kwargs)
+        perpendicular = x_0.line_through(x_1, **kwargs)
+        point.belongs_to(perpendicular)
+        return perpendicular
 
     def incentre_point(self, A, B, C, **kwargs):
         """
