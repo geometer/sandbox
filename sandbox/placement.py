@@ -383,6 +383,9 @@ class Placement:
         print('\nDeviation: %.5f' % self.deviation())
 
     def deviation(self):
+        if hasattr(self, 'cached_deviation'):
+            return self.cached_deviation
+
         self.cached_average_distance2 = None
         def average_distance2():
             if self.cached_average_distance2 is None:
@@ -419,6 +422,8 @@ class Placement:
                 square += vec0.scalar_product(vec1) ** 2 / vec0.length2 / vec1.length2 * average_distance2()
             else:
                 assert False, 'Constraint `%s` not supported in adjustment' % cnstr.kind
+
+        self.cached_deviation = square
         return square
 
     def iterate(self):
@@ -428,13 +433,13 @@ class Placement:
         for index in range(0, len(self.params.coords)):
             key = keys[index]
             params = Placement.Parameters(self.params)
-            params.coords[key] = self.params.coords[key] + mpf(1e-10)
+            params.coords[key] = self.params.coords[key] + mpf('1e-10')
             test = Placement(self.scene, params)
             gradient.append(test.deviation() - self.deviation())
         for index in range(len(self.params.coords), len(keys)):
             key = keys[index]
             params = Placement.Parameters(self.params)
-            params.angles[key] = self.params.angles[key] + mpf(1e-10)
+            params.angles[key] = self.params.angles[key] + mpf('1e-10')
             test = Placement(self.scene, params)
             gradient.append(test.deviation() - self.deviation())
         length = mpmath.sqrt(reduce((lambda s, x: s + x ** 2), gradient, 0))
@@ -442,10 +447,7 @@ class Placement:
             return self
         gradient = [d * mpf('1.e-10') / length for d in gradient]
 
-        deg = 0
-        previous = self
-        while True:
-            coef = 2 ** deg
+        def test_placement(coef):
             params = Placement.Parameters(self.params)
             for index in range(0, len(self.params.coords)):
                 key = keys[index]
@@ -453,8 +455,22 @@ class Placement:
             for index in range(len(self.params.coords), len(keys)):
                 key = keys[index]
                 params.angles[key] = self.params.angles[key] - gradient[index] * coef
-            test = Placement(self.scene, params)
-            if test.deviation() > previous.deviation():
+            try:
+                return Placement(self.scene, params)
+            except:
+                return None
+
+        deg = 0
+        previous = self
+        while True:
+            coef = mpf(8) ** deg
+            test = test_placement(coef)
+            if not test or test.deviation() > previous.deviation():
+                for _ in range(0, 2):
+                    coef /= 2
+                    test = test_placement(coef)
+                    if test and test.deviation() < previous.deviation():
+                        return test
                 return previous
             previous = test
             deg += 1
@@ -471,6 +487,8 @@ def iterative_placement(scene, max_attempts=100, max_iterations=400, print_progr
                 if new_placement == placement:
                     break
                 placement = new_placement
+                if placement.deviation() < mpf('1e-12'):
+                    break
             if print_progress:
                 print('Deviation on step %d: %.7f' % (index, placement.deviation()))
             if placement.deviation() < 1e-6:
