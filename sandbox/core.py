@@ -23,6 +23,7 @@ class CoreScene:
                     label = pattern % index
                     if scene.get(label) is None:
                         self.label = label
+                        self.auto_label = True
                         break
             if 'auxiliary' not in kwargs:
                 self.auxiliary = None
@@ -32,9 +33,21 @@ class CoreScene:
             self.__dict__.update(kwargs)
             scene.add(self)
 
-        def with_extra_label(self, label):
-            if label and label != self.label:
-                self.extra_labels.add(label)
+        def with_extra_args(self, **kwargs):
+            if not kwargs.get('auxiliary'):
+                self.auxiliary = None
+            for key in kwargs:
+                if key == 'auxiliary':
+                    continue
+                value = kwargs[key]
+                if key == 'label' and value and value != self.label:
+                    if hasattr(self, 'auto_label'):
+                        self.label = value
+                        delattr(self, 'auto_label')
+                    else:
+                        self.extra_labels.add(value)
+                elif not hasattr(self, key):
+                    self.__dict__[key] = value
             return self
 
         def __str__(self):
@@ -95,7 +108,7 @@ class CoreScene:
 
             for existing in self.scene.lines():
                 if self in existing.all_points and point in existing.all_points:
-                    return existing.with_extra_label(kwargs.get('label'))
+                    return existing.with_extra_args(**kwargs)
 
             return CoreScene.Line(self.scene, point0=self, point1=point, **kwargs)
 
@@ -187,7 +200,7 @@ class CoreScene:
             else:
                 existing_points = [pt for pt in self.all_points if pt in obj.all_points]
                 if len(existing_points) == 1:
-                    return existing_points[0].with_extra_label(kwargs.get('label'))
+                    return existing_points[0].with_extra_args(**kwargs)
                 assert len(existing_points) == 0
 
                 crossing = CoreScene.Point(
