@@ -1,6 +1,5 @@
 from functools import reduce
 import mpmath
-from mpmath import mpf
 from sys import stdout
 
 from .core import CoreScene, Constraint
@@ -448,19 +447,19 @@ class Placement:
         for index in range(0, len(self.params.coords)):
             key = keys[index]
             params = Placement.Parameters(self.params)
-            params.coords[key] = self.params.coords[key] + mpf('1e-10')
+            params.coords[key] = self.params.coords[key] + 1e-10
             test = Placement(self.scene, params)
             gradient.append(test.deviation() - self.deviation())
         for index in range(len(self.params.coords), len(keys)):
             key = keys[index]
             params = Placement.Parameters(self.params)
-            params.angles[key] = self.params.angles[key] + mpf('1e-10')
+            params.angles[key] = self.params.angles[key] + 1e-10
             test = Placement(self.scene, params)
             gradient.append(test.deviation() - self.deviation())
         length = mpmath.sqrt(reduce((lambda s, x: s + x ** 2), gradient, 0))
         if length == 0:
             return self
-        gradient = [d * mpf('1.e-10') / length for d in gradient]
+        gradient = [d * 1.e-10 / length for d in gradient]
 
         def test_placement(coef):
             params = Placement.Parameters(self.params)
@@ -478,7 +477,7 @@ class Placement:
         deg = 0
         previous = self
         while True:
-            coef = mpf(8) ** deg
+            coef = 8** deg
             test = test_placement(coef)
             if not test or test.deviation() > previous.deviation():
                 for _ in range(0, 2):
@@ -502,7 +501,7 @@ def iterative_placement(scene, max_attempts=100, max_iterations=400, print_progr
                 if new_placement == placement:
                     break
                 placement = new_placement
-                if placement.deviation() < mpf('1e-12'):
+                if placement.deviation() < 1e-12:
                     break
             if print_progress:
                 print('Deviation on step %d: %.7f' % (index, placement.deviation()))
