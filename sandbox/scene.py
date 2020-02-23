@@ -10,6 +10,12 @@ class Scene(CoreScene):
     Adds composite construction methods to CoreScene.
     """
 
+    def middle_point(self, A, B, **kwargs):
+        """
+        Constructs middle point of the segment AB.
+        """
+        return A.ratio_point(B, 1, 1, **kwargs)
+
     def gravity_centre_point(self, *points, **kwargs):
         """
         Constructs the gravity centre of the points, with equal weghts.
