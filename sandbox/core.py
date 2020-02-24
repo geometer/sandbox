@@ -135,6 +135,13 @@ class CoreScene:
             """
             The current point does not coincide with A.
             """
+            for cnstr in self.scene.constraints(Constraint.Kind.not_equal):
+                if set(cnstr.params) == set([self, A]):
+                    return
+#                if cnstr.params[0] == self and cnstr.params[1] == A:
+#                    return
+#                if cnstr.params[0] == A and cnstr.params[1] == self:
+#                    return
             self.scene.constraint(Constraint.Kind.not_equal, self, A, **kwargs)
 
         def not_collinear_constraint(self, A, B, **kwargs):
@@ -313,6 +320,12 @@ class CoreScene:
             return [l for l in self.__objects if isinstance(l, CoreScene.Line) and not l.auxiliary]
         else:
             return [l for l in self.__objects if isinstance(l, CoreScene.Line)]
+
+    def constraints(self, kind):
+        if kind.stage == Stage.validation:
+            return [cnstr for cnstr in self.validation_constraints if cnstr.kind == kind]
+        else:
+            return [cnstr for cnstr in self.adjustment_constraints if cnstr.kind == kind]
 
     def assert_type(self, obj, *args):
         assert isinstance(obj, args), 'Unexpected type %s' % type(obj)
