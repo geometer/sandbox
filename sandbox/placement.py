@@ -506,6 +506,10 @@ def iterative_placement(scene, max_attempts=10000, max_iterations=400, print_pro
                 if print_progress and index % 10 == 0:
                     stdout.write('Deviation on step %d: %.7f\r' % (index, placement.deviation()))
                     stdout.flush()
+                if index >= max_iterations / 10 and index % 10 == 0:
+                    expected = 0.1 ** ((10 * index - max_iterations) / max_iterations * 4 / 3)
+                    if placement.deviation() > expected:
+                        break
                 new_placement = placement.iterate()
                 if not new_placement or new_placement == placement:
                     break
