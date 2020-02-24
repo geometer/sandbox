@@ -485,8 +485,8 @@ class Placement:
 
         deg = 0
         previous = self
-        while True:
-            coef = 8 ** deg
+        while deg < 20:
+            coef = 8.0 ** deg
             test = test_placement(coef)
             if not test or test.deviation() > previous.deviation():
                 for _ in range(0, 2):
@@ -507,7 +507,7 @@ def iterative_placement(scene, max_attempts=10000, max_iterations=400, print_pro
                     stdout.write('Deviation on step %d: %.7f\r' % (index, placement.deviation()))
                     stdout.flush()
                 new_placement = placement.iterate()
-                if new_placement == placement:
+                if not new_placement or new_placement == placement:
                     break
                 placement = new_placement
                 if placement.deviation() < 1e-12:
