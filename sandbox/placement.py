@@ -64,7 +64,7 @@ class Placement:
         def get_coord(self, label):
             value = self.coords.get(label)
             if value is None:
-                value = mpmath.tan(mpmath.rand() * mpmath.pi - mpmath.pi / 2)
+                value = mpmath.tan((mpmath.rand() - 0.5) * mpmath.pi)
                 self.coords[label] = value
             return value
 
@@ -390,32 +390,22 @@ class Placement:
         if hasattr(self, 'cached_deviation'):
             return self.cached_deviation
 
-        self.cached_average_distance2 = None
-        def average_distance2():
-            if self.cached_average_distance2 is None:
-                sqr = 0
-                points = self.scene.points(skip_auxiliary=True)
-                for index0 in range(1, len(points)):
-                    pt0 = self.location(points[index0])
-                    for index1 in range(0, index0):
-                        pt1 = self.location(points[index1])
-                        sqr += pt0.distance2_to(pt1)
-                self.cached_average_distance2 = sqr / len(points) / (len(points) - 1) * 2
-            return self.cached_average_distance2
-
-        square = 0.0
+        has_distance_constraint = False
+        dist_square = 0.0
+        numb_square = 0.0
         for cnstr in self.scene.adjustment_constraints:
             if cnstr.kind == Constraint.Kind.distance:
+                has_distance_constraint = True
                 pt0 = self.location(cnstr.params[0])
                 pt1 = self.location(cnstr.params[1])
-                square += (pt0.distance_to(pt1) - cnstr.params[2]) ** 2
+                dist_square += (pt0.distance_to(pt1) - cnstr.params[2]) ** 2
             elif cnstr.kind == Constraint.Kind.distances_ratio:
                 pt0 = self.location(cnstr.params[0])
                 pt1 = self.location(cnstr.params[1])
                 pt2 = self.location(cnstr.params[2])
                 pt3 = self.location(cnstr.params[3])
                 ratio = cnstr.params[4]
-                square += (pt0.distance_to(pt1) / pt2.distance_to(pt3) - ratio) ** 2 * average_distance2()
+                numb_square += (pt0.distance_to(pt1) / pt2.distance_to(pt3) - ratio) ** 2
             elif cnstr.kind == Constraint.Kind.right_angle:
                 pt0 = self.location(cnstr.params[0])
                 pt1 = self.location(cnstr.params[1])
@@ -423,7 +413,7 @@ class Placement:
                 pt3 = self.location(cnstr.params[3])
                 vec0 = TwoDVector(pt0, pt1)
                 vec1 = TwoDVector(pt2, pt3)
-                square += vec0.scalar_product(vec1) ** 2 / vec0.length2 / vec1.length2 * average_distance2()
+                numb_square += vec0.scalar_product(vec1) ** 2 / vec0.length2 / vec1.length2
             elif cnstr.kind == Constraint.Kind.angles_ratio:
                 pt0 = self.location(cnstr.params[0])
                 pt1 = self.location(cnstr.params[1])
@@ -438,12 +428,25 @@ class Placement:
                 vec1 = TwoDVector(pt2, pt3)
                 vec2 = TwoDVector(pt4, pt5)
                 vec3 = TwoDVector(pt6, pt7)
-                square += (vec0.angle(vec1) - vec2.angle(vec3) * ratio) ** 2 * average_distance2()
+                numb_square += (vec0.angle(vec1) - vec2.angle(vec3) * ratio) ** 2
             else:
                 assert False, 'Constraint `%s` not supported in adjustment' % cnstr.kind
 
-        self.cached_deviation = square
-        return square
+        if not has_distance_constraint:
+            self.cached_deviation = numb_square
+        else:
+            self.cached_deviation = dist_square
+            if numb_square > 0:
+                average2 = 0.0
+                points = [self.location(pt) for pt in self.scene.points(skip_auxiliary=True)]
+                for index in range(0, len(points)):
+                    pt0 = points[index]
+                    for pt1 in points[index + 1:]:
+                        average2 += pt0.distance2_to(pt1)
+                average2 /= len(points) * (len(points) - 1) / 2
+                self.cached_deviation += numb_square * average2
+
+        return self.cached_deviation
 
     def iterate(self):
         keys = list(self.params.coords.keys()) + list(self.params.angles.keys())
