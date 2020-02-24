@@ -415,7 +415,7 @@ class Placement:
                 pt2 = self.location(cnstr.params[2])
                 pt3 = self.location(cnstr.params[3])
                 ratio = cnstr.params[4]
-                square += (pt0.distance_to(pt1) - pt2.distance_to(pt3) * ratio) ** 2
+                square += (pt0.distance_to(pt1) / pt2.distance_to(pt3) - ratio) ** 2 * average_distance2()
             elif cnstr.kind == Constraint.Kind.right_angle:
                 pt0 = self.location(cnstr.params[0])
                 pt1 = self.location(cnstr.params[1])

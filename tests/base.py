@@ -3,7 +3,7 @@ import unittest
 import mpmath
 
 class PlacementTest(unittest.TestCase):
-    ERROR = 1e-6
+    ERROR = 1e-5
 
     def setUp(self):
         self.startTime = time.time()
@@ -29,14 +29,14 @@ class PlacementTest(unittest.TestCase):
 
     def assertEqualDistances(self, pt0, pt1, pt2, pt3):
         self.assertLess(
-            mpmath.fabs(self.placement.distance(pt0, pt1) - self.placement.distance(pt2, pt3)),
+            mpmath.fabs(self.placement.distance(pt0, pt1) / self.placement.distance(pt2, pt3) - 1),
             PlacementTest.ERROR,
             '|%s,%s| != |%s,%s|' % (pt0, pt1, pt2, pt3)
         )
 
     def assertDistanceRatio(self, pt0, pt1, pt2, pt3, ratio):
         self.assertLess(
-            mpmath.fabs(self.placement.distance(pt0, pt1) - self.placement.distance(pt2, pt3) * ratio),
+            mpmath.fabs(self.placement.distance(pt0, pt1) / self.placement.distance(pt2, pt3) - ratio),
             PlacementTest.ERROR,
             '|%s,%s| != |%s,%s| * %s' % (pt0, pt1, pt2, pt3, ratio)
         )
