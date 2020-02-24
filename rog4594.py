@@ -2,8 +2,6 @@
 
 # https://www.facebook.com/groups/parmenides52/, problem 4594
 
-import mpmath
-
 from sandbox import Scene, iterative_placement
 from sandbox.hunter import Hunter
 

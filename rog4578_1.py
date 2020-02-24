@@ -2,7 +2,7 @@
 
 # https://www.facebook.com/groups/parmenides52/, problem 4578
 
-import mpmath
+import math
 
 from sandbox import *
 from sandbox.hunter import Hunter
@@ -55,4 +55,4 @@ explainer = Explainer(scene, hunter.properties)
 explainer.explain()
 explainer.dump()
 
-print('\n%.5f' % (placement.angle(C, A, C, B) / mpmath.pi * 180))
+print('\n%.5f' % (placement.angle(C, A, C, B) / math.pi * 180))
