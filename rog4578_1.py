@@ -1,5 +1,3 @@
-#!/var/www/sandbox/virtualenv/bin/python
-
 # https://www.facebook.com/groups/parmenides52/, problem 4578
 
 import math

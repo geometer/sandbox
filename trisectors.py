@@ -1,5 +1,3 @@
-#!/var/www/sandbox/virtualenv/bin/python
-
 from sandbox import Scene, iterative_placement
 from sandbox.hunter import Hunter
 

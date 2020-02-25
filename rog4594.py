@@ -1,5 +1,3 @@
-#!/var/www/sandbox/virtualenv/bin/python
-
 # https://www.facebook.com/groups/parmenides52/, problem 4594
 
 from sandbox import Scene, iterative_placement

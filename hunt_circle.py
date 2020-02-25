@@ -1,5 +1,3 @@
-#!/var/www/sandbox/virtualenv/bin/python
-
 from sandbox import *
 from sandbox.hunter import Hunter
 

@@ -1,5 +1,3 @@
-#!/var/www/sandbox/virtualenv/bin/python
-
 # Problem 4 from http://zadachi.mccme.ru/2012/
 
 from sandbox import *
