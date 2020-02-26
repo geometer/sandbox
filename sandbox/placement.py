@@ -64,14 +64,14 @@ class Placement:
         def get_coord(self, label):
             value = self.coords.get(label)
             if value is None:
-                value = np.float64(np.tan((np.random.random() - 0.5) * np.pi))
+                value = np.float128(np.tan((np.random.random() - 0.5) * np.pi))
                 self.coords[label] = value
             return value
 
         def get_angle(self, label):
             value = self.angles.get(label)
             if value is None:
-                value = np.float64(np.random.random() * 2 * np.pi)
+                value = np.float128(np.random.random() * 2 * np.pi)
                 self.angles[label] = value
             return value
 
@@ -170,8 +170,8 @@ class Placement:
                 try:
                     if p.origin == CoreScene.Point.Origin.free:
                         add(p, TwoDCoordinates(
-                            np.float64(p.x) if hasattr(p, 'x') else self.params.get_coord(p.label + '.x'),
-                            np.float64(p.y) if hasattr(p, 'y') else self.params.get_coord(p.label + '.y')
+                            np.float128(p.x) if hasattr(p, 'x') else self.params.get_coord(p.label + '.x'),
+                            np.float128(p.y) if hasattr(p, 'y') else self.params.get_coord(p.label + '.y')
                         ))
                     elif p.origin == CoreScene.Point.Origin.circle:
                         o = self.location(p.circle.centre)

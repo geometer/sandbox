@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 
 class PlacementTest(unittest.TestCase):
-    ERROR = np.float64(1e-5)
+    ERROR = np.float128(1e-5)
 
     def setUp(self):
         self.startTime = time.time()

@@ -4,7 +4,7 @@ from typing import List
 from . import Scene, Placement
 from .property import *
 
-ERROR = np.float64(5e-6)
+ERROR = np.float128(5e-6)
 
 class Vector:
     def __init__(self, start: Scene.Point, end: Scene.Point, placement: Placement):
