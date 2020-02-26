@@ -1,10 +1,10 @@
-import mpmath
+import numpy as np
 from typing import List
 
 from . import Scene, Placement
 from .property import *
 
-ERROR = mpmath.mpf(5e-6)
+ERROR = np.float64(5e-6)
 
 class Vector:
     def __init__(self, start: Scene.Point, end: Scene.Point, placement: Placement):
@@ -52,7 +52,7 @@ class Angle:
         return self.__arc
 
     def abs_arc(self):
-        return mpmath.fabs(self.__arc)
+        return np.fabs(self.__arc)
 
     def __str__(self):
         if self.vector0.start == self.vector1.start:
@@ -60,7 +60,7 @@ class Angle:
         return "∠(%s, %s)" % (self.vector0, self.vector1)
 
 class Triangle:
-    def __init__(self, pts, side0: float, side1: float, side2: float):
+    def __init__(self, pts, side0, side1, side2):
         self.pts = list(pts)
         self.side0 = side0
         self.side1 = side1
@@ -86,30 +86,30 @@ class Triangle:
         return "△ %s %s %s" % (self.pts[0].label, self.pts[1].label, self.pts[2].label)
 
     def equilateral(self):
-        return mpmath.fabs(self.side0 - self.side1) < ERROR and \
-               mpmath.fabs(self.side0 - self.side2) < ERROR and \
-               mpmath.fabs(self.side1 - self.side2) < ERROR
+        return np.fabs(self.side0 - self.side1) < ERROR and \
+               np.fabs(self.side0 - self.side2) < ERROR and \
+               np.fabs(self.side1 - self.side2) < ERROR
 
     def isosceles(self):
-        if mpmath.fabs(self.side0 - self.side1) < ERROR:
+        if np.fabs(self.side0 - self.side1) < ERROR:
             return self.variation(4)
-        if mpmath.fabs(self.side0 - self.side2) < ERROR:
+        if np.fabs(self.side0 - self.side2) < ERROR:
             return self.variation(2)
-        if mpmath.fabs(self.side1 - self.side2) < ERROR:
+        if np.fabs(self.side1 - self.side2) < ERROR:
             return self
 
     def similar(self, other) -> bool:
         ratio = self.side0 / other.side0
-        if mpmath.fabs(ratio / self.side1 * other.side1 - 1) >= ERROR:
+        if np.fabs(ratio / self.side1 * other.side1 - 1) >= ERROR:
             return False
-        return mpmath.fabs(ratio / self.side2 * other.side2 - 1) < ERROR
+        return np.fabs(ratio / self.side2 * other.side2 - 1) < ERROR
 
     def equal(self, other) -> bool:
-        if mpmath.fabs(self.side0 - other.side0) >= ERROR:
+        if np.fabs(self.side0 - other.side0) >= ERROR:
             return False
-        if mpmath.fabs(self.side1 - other.side1) >= ERROR:
+        if np.fabs(self.side1 - other.side1) >= ERROR:
             return False
-        return mpmath.fabs(self.side2 - other.side2) < ERROR
+        return np.fabs(self.side2 - other.side2) < ERROR
 
 class LengthFamily:
     def __init__(self, vector: Vector):
@@ -120,12 +120,12 @@ class LengthFamily:
         ratio = vector.length() / self.base.length()
         for i in range(1, 10):
             candidate = ratio * i
-            if mpmath.fabs(candidate - round(candidate)) < ERROR:
+            if np.fabs(candidate - round(candidate)) < ERROR:
                 return "%d/%d" % (round(candidate), i) if i > 1 else "%d" % round(candidate)
         ratio = ratio * ratio
         for i in range(1, 100):
             candidate = ratio * i
-            if mpmath.fabs(candidate - round(candidate)) < ERROR:
+            if np.fabs(candidate - round(candidate)) < ERROR:
                 if i == 1:
                     return "SQRT(%d)" % round(candidate)
                 return "SQRT(%d/%d)" % (round(candidate), i)
@@ -144,12 +144,12 @@ class AngleFamily:
         self.angles = []
 
     def __test(self, angle: Angle) -> str:
-        for addition0 in (0, 2 * mpmath.pi, -2 * mpmath.pi):
-            for addition1 in (0, 2 * mpmath.pi, -2 * mpmath.pi):
+        for addition0 in (0, 2 * np.pi, -2 * np.pi):
+            for addition1 in (0, 2 * np.pi, -2 * np.pi):
                 ratio = (angle.arc() + addition0) / (self.base.arc() + addition1)
                 for i in range(1, 10):
                     candidate = ratio * i
-                    if mpmath.fabs(candidate - round(candidate)) < ERROR:
+                    if np.fabs(candidate - round(candidate)) < ERROR:
                         return "%d/%d" % (round(candidate), i) if i > 1 else "%d" % round(candidate)
         return None
 
@@ -179,13 +179,13 @@ def hunt_proportional_segments(vectors):
 def hunt_rational_angles(angles):
     for ngl in angles:
         arc = ngl.arc()
-        if mpmath.fabs(arc) < ERROR:
+        if np.fabs(arc) < ERROR:
             print("%s = 0" % ngl)
         else:
-            ratio = arc / mpmath.pi
+            ratio = arc / np.pi
             for i in range(1, 60):
                 candidate = i * ratio
-                if mpmath.fabs(candidate - round(candidate)) < ERROR:
+                if np.fabs(candidate - round(candidate)) < ERROR:
                     pi = "PI" if i == 1 else ("PI / %d" % i)
                     if round(candidate) == 1:
                         print("%s = %s" % (ngl, pi))
@@ -263,7 +263,7 @@ class Hunter:
             point0 = points[index]
             for point1 in points[index + 1:]:
                 vec = Vector(point0, point1, self.placement)
-                if mpmath.fabs(vec.length()) >= ERROR:
+                if np.fabs(vec.length()) >= ERROR:
                     yield vec
 
     def __triangles(self):
@@ -278,7 +278,7 @@ class Hunter:
                     pt2 = points[index2]
                     loc2 = self.placement.location(pt2)
                     area = loc0.x * (loc1.y - loc2.y) + loc1.x * (loc2.y - loc0.y) + loc2.x * (loc0.y - loc1.y)
-                    if mpmath.fabs(area) > ERROR:
+                    if np.fabs(area) > ERROR:
                         side0 = loc1.distance_to(loc2)
                         side1 = loc2.distance_to(loc0)
                         side2 = loc0.distance_to(loc1)
@@ -300,7 +300,7 @@ class Hunter:
                 for pt2 in points[index1 + 1:]:
                     loc2 = self.placement.location(pt2)
                     area = loc0.x * (loc1.y - loc2.y) + loc1.x * (loc2.y - loc0.y) + loc2.x * (loc0.y - loc1.y)
-                    if mpmath.fabs(area) < ERROR:
+                    if np.fabs(area) < ERROR:
                         for pt in collinear:
                             used_pairs.add((pt, pt2))
                         collinear.append(pt2)
@@ -337,7 +337,7 @@ class Hunter:
         families = []
         for vec in vectors:
             for fam in families:
-                if mpmath.fabs(vec.length() - fam[0].length()) < ERROR:
+                if np.fabs(vec.length() - fam[0].length()) < ERROR:
                     fam.append(vec)
                     break
             else:
@@ -353,9 +353,9 @@ class Hunter:
         rights = []
         for ngl in angles:
             arc = ngl.arc()
-            if mpmath.fabs(arc - mpmath.pi / 2) < ERROR:
+            if np.fabs(arc - np.pi / 2) < ERROR:
                 rights.append(ngl)
-            elif mpmath.fabs(arc + mpmath.pi / 2) < ERROR:
+            elif np.fabs(arc + np.pi / 2) < ERROR:
                 rights.append(ngl.reversed())
         for ngl in rights:
             self.properties.append(RightAngleProperty(
@@ -368,13 +368,13 @@ class Hunter:
     def __hunt_equal_angles(self, angles, verbose):
         families = []
         for ngl in angles:
-            if ngl.abs_arc() < ERROR or mpmath.fabs(ngl.abs_arc() - mpmath.pi) < ERROR:
+            if ngl.abs_arc() < ERROR or np.fabs(ngl.abs_arc() - np.pi) < ERROR:
                 continue
             for fam in families:
-                if mpmath.fabs(ngl.arc() - fam[0].arc()) < ERROR:
+                if np.fabs(ngl.arc() - fam[0].arc()) < ERROR:
                     fam.append(ngl)
                     break
-                if mpmath.fabs(ngl.arc() + fam[0].arc()) < ERROR:
+                if np.fabs(ngl.arc() + fam[0].arc()) < ERROR:
                     fam.append(ngl.reversed())
                     break
             else:

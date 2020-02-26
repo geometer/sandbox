@@ -21,4 +21,6 @@ napoleonic(A, B, C)
 napoleonic(C, A, B)
 napoleonic(B, C, A)
 
-Hunter(scene).hunt()
+hunter = Hunter(scene)
+hunter.hunt()
+hunter.dump()

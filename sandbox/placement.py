@@ -1,5 +1,5 @@
 from functools import reduce
-import mpmath
+import numpy as np
 from sys import stdout
 
 from .core import CoreScene, Constraint
@@ -13,7 +13,7 @@ class TwoDCoordinates:
         return '(%.5f, %.5f)' % (self.x, self.y)
 
     def __eq__(self, other):
-        return mpmath.fabs(self.x - other.x) < 5e-6 and mpmath.fabs(self.y - other.y) < 5e-6
+        return np.fabs(self.x - other.x) < 5e-6 and np.fabs(self.y - other.y) < 5e-6
 
     def distance_to(self, other):
         return TwoDVector(other, self).length
@@ -28,7 +28,7 @@ class TwoDVector:
 
     @property
     def length(self):
-        return mpmath.hypot(self.x, self.y)
+        return np.hypot(self.x, self.y)
 
     @property
     def length2(self):
@@ -45,9 +45,9 @@ class TwoDVector:
         if cos >= 1:
             return 0
         elif cos <= -1:
-            return mpmath.pi
+            return np.pi
         else:
-            return mpmath.acos(cos) if self.vector_product(other) > 0 else -mpmath.acos(cos)
+            return np.arccos(cos) if self.vector_product(other) > 0 else -np.arccos(cos)
 
 class IncompletePlacementError(Exception):
     """Internal error, should never be thrown to public"""
@@ -64,14 +64,14 @@ class Placement:
         def get_coord(self, label):
             value = self.coords.get(label)
             if value is None:
-                value = mpmath.tan((mpmath.rand() - 0.5) * mpmath.pi)
+                value = np.float64(np.tan((np.random.random() - 0.5) * np.pi))
                 self.coords[label] = value
             return value
 
         def get_angle(self, label):
             value = self.angles.get(label)
             if value is None:
-                value = mpmath.rand() * 2 * mpmath.pi
+                value = np.float64(np.random.random() * 2 * np.pi)
                 self.angles[label] = value
             return value
 
@@ -96,7 +96,7 @@ class Placement:
             if constraint.kind == Constraint.Kind.not_equal:
                 pt0 = self.location(constraint.params[0])
                 pt1 = self.location(constraint.params[1])
-                return mpmath.fabs(pt0.x - pt1.x) >= 5e-6 or mpmath.fabs(pt0.y - pt1.y) >= 5e-6
+                return np.fabs(pt0.x - pt1.x) >= 5e-6 or np.fabs(pt0.y - pt1.y) >= 5e-6
             if constraint.kind == Constraint.Kind.not_collinear:
                 pt0 = self.location(constraint.params[0])
                 pt1 = self.location(constraint.params[1])
@@ -170,16 +170,16 @@ class Placement:
                 try:
                     if p.origin == CoreScene.Point.Origin.free:
                         add(p, TwoDCoordinates(
-                            p.x if hasattr(p, 'x') else self.params.get_coord(p.label + '.x'),
-                            p.y if hasattr(p, 'y') else self.params.get_coord(p.label + '.y')
+                            np.float64(p.x) if hasattr(p, 'x') else self.params.get_coord(p.label + '.x'),
+                            np.float64(p.y) if hasattr(p, 'y') else self.params.get_coord(p.label + '.y')
                         ))
                     elif p.origin == CoreScene.Point.Origin.circle:
                         o = self.location(p.circle.centre)
                         r = self.radius(p.circle)
                         angle = self.params.get_angle(p.label + '.angle')
                         add(p, TwoDCoordinates(
-                            o.x + mpmath.sin(angle) * r,
-                            o.y + mpmath.cos(angle) * r
+                            o.x + np.sin(angle) * r,
+                            o.y + np.cos(angle) * r
                         ))
                     elif p.origin == CoreScene.Point.Origin.line:
                         loc0 = self.location(p.line.point0)
@@ -216,7 +216,7 @@ class Placement:
                         cx1 = p2.y - p3.y
                         cy1 = p3.x - p2.x
                         discr = cx0 * cy1 - cx1 * cy0
-                        if mpmath.fabs(discr) < 1e-8:
+                        if np.fabs(discr) < 1e-8:
                             raise PlacementFailedError('Lines have no intersection points')
                         s0 = p1.x * p0.y - p1.y * p0.x
                         s1 = p3.x * p2.y - p3.y * p2.x
@@ -233,7 +233,7 @@ class Placement:
                         # x = a * p0.x + (1-a) * p1.x
                         # y = a * p0.y + (1-a) * p1.y
                         # (p0.y - p1.y) * x + (p1.x - p0.x) * y = p1.x * p0.y - p1.y * p0.x
-                        if mpmath.fabs(p1.x - p0.x) >= 5e-6:
+                        if np.fabs(p1.x - p0.x) >= 5e-6:
                             # y = ((p0.y - p1.y) * x - (p1.x * p0.y - p1.y * p0.x)) / (p0.x - p1.x)
                             coef_x = (p0.y - p1.y) / (p0.x - p1.x)
                             coef = (p1.x * p0.y - p1.y * p0.x) / (p1.x - p0.x)
@@ -247,12 +247,12 @@ class Placement:
                             if discr < 0:
                                 raise PlacementFailedError('The line and the circle have no intersection points')
                             # y = (-qb +- sqrt(discr)) / qa
-                            sqrt = mpmath.sqrt(discr)
+                            sqrt = np.sqrt(discr)
                             x_1 = (-qb + sqrt) / qa
                             x_2 = (-qb - sqrt) / qa
                             y_1 = coef + coef_x * x_1
                             y_2 = coef + coef_x * x_2
-                        elif mpmath.fabs(p1.y - p0.y) >= 5e-6:
+                        elif np.fabs(p1.y - p0.y) >= 5e-6:
                             coef_y = (p0.x - p1.x) / (p0.y - p1.y)
                             coef = (p1.y * p0.x - p1.x * p0.y) / (p1.y - p0.y)
                             qa = 1 + coef_y ** 2
@@ -261,7 +261,7 @@ class Placement:
                             discr = qb * qb - qa * qc
                             if discr < 0:
                                 raise PlacementFailedError('The line and the circle have no intersection points')
-                            sqrt = mpmath.sqrt(discr)
+                            sqrt = np.sqrt(discr)
                             y_1 = (-qb + discr) / qa
                             y_2 = (-qb - discr) / qa
                             x_1 = coef + coef_y * y_1
@@ -277,7 +277,7 @@ class Placement:
                         # (x - c0.x)^2 + (y - c0.y)^2 == r02
                         # (x - c1.x)^2 + (y - c1.y)^2 == r12
                         # 2x(c1.x - c0.x) + c0.x^2 - c1.x^2 + 2y(c1.y - c0.y) + c0.y^2 - c1.y^2 = r02 - r12
-                        if mpmath.fabs(c1.x - c0.x) > 5e-6:
+                        if np.fabs(c1.x - c0.x) > 5e-6:
                             # 2x(c1.x - c0.x) = r02 - r12 - c0.x^2 - c0.y^2 + c1.x^2 + c1.y^2 + 2y(c0.y - c1.y)
                             x_coef = 2 * (c1.x - c0.x)
                             y_coef = 2 * (c0.y - c1.y) / x_coef
@@ -294,12 +294,12 @@ class Placement:
                                 raise PlacementFailedError('The circles have no intersection points')
                             # y = (-b +- sqrt(discr)) / a
                             #print("%.3f y^2 + %.3f y + %.3f = 0" % (a, 2 * b, c))
-                            sqrt = mpmath.sqrt(discr)
+                            sqrt = np.sqrt(discr)
                             y_1 = (-b + sqrt) / a
                             y_2 = (-b - sqrt) / a
                             x_1 = const + y_coef * y_1
                             x_2 = const + y_coef * y_2
-                        elif mpmath.fabs(c1.y - c0.y) > 5e-6:
+                        elif np.fabs(c1.y - c0.y) > 5e-6:
                             y_coef = 2 * (c1.y - c0.y)
                             x_coef = 2 * (c0.x - c1.x) / y_coef
                             const = (r02 - r12 - c0.y * c0.y - c0.x * c0.x + c1.y * c1.y + c1.x * c1.x) / y_coef
@@ -310,7 +310,7 @@ class Placement:
                             if discr < 0:
                                 raise PlacementFailedError('The circles have no intersection points')
                             #print("%.3f x^2 + %.3f x + %.3f = 0" % (a, 2 * b, c))
-                            sqrt = mpmath.sqrt(discr)
+                            sqrt = np.sqrt(discr)
                             x_1 = (-b + sqrt) / a
                             x_2 = (-b - sqrt) / a
                             y_1 = const + x_coef * x_1
@@ -464,7 +464,7 @@ class Placement:
             params.angles[key] = self.params.angles[key] + 1e-10
             test = Placement(self.scene, params)
             gradient.append(test.deviation() - self.deviation())
-        length = mpmath.sqrt(reduce((lambda s, x: s + x ** 2), gradient, 0))
+        length = np.sqrt(reduce((lambda s, x: s + x ** 2), gradient, 0))
         if length == 0:
             return self
         mult = 1e-10 / length
