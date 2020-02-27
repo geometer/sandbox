@@ -32,3 +32,27 @@ class TestPentagon(PlacementTest):
 
     def testGoldenRatio(self):
         self.assertDistanceRatio('A', 'C', 'A', 'B', (1 + math.sqrt(5)) / 2)
+
+class TestPentagonInCircle(PlacementTest):
+    def createPlacement(self):
+        scene = Scene()
+
+        circle = scene.free_point().circle_through(scene.free_point())
+        A = circle.free_point(label='A')
+        B = circle.free_point(label='B')
+        C = circle.free_point(label='C')
+        D = circle.free_point(label='D')
+        E = circle.free_point(label='E')
+        scene.convex_polygon_constraint(A, B, C, D, E)
+        scene.equal_distances_constraint((A, B), (B, C))
+        scene.equal_distances_constraint((A, B), (C, D))
+        scene.equal_distances_constraint((A, B), (D, E))
+        scene.equal_distances_constraint((A, B), (E, A))
+
+        return iterative_placement(scene)
+
+    def testAngle(self):
+        self.assertAngle('B', 'A', 'B', 'C', math.pi * 3 / 5)
+
+    def testGoldenRatio(self):
+        self.assertDistanceRatio('A', 'C', 'A', 'B', (1 + math.sqrt(5)) / 2)
