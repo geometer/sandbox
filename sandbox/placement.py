@@ -136,6 +136,22 @@ class Placement:
                 clockwise = [self.clockwise(x, y, z) for (x, y, z) in
                     [(pt0, pt1, pt2), (pt0, pt2, pt3), (pt0, pt3, pt1)]]
                 return 0 not in clockwise and abs(sum(clockwise)) == 3
+            if constraint.kind == Constraint.Kind.convex_polygon:
+                points = [self.location(pt) for pt in constraint.params[0]]
+                orientation = None
+                for index0 in range(0, len(points)):
+                    pt0 = points[index0]
+                    for index1 in range(index0 + 1, len(points)):
+                        pt1 = points[index1]
+                        for pt2 in points[index1 + 1:]:
+                            clockwise = self.clockwise(pt0, pt1, pt2)
+                            if clockwise == 0:
+                                return False
+                            if orientation is None:
+                                orientation = clockwise
+                            elif orientation != clockwise:
+                                return False
+                return True
 
             assert False, 'Constraint `%s` not supported in placement' % constraint.kind
 
@@ -514,11 +530,11 @@ def iterative_placement(scene, max_attempts=10000, max_iterations=400, print_pro
                 if not new_placement or new_placement == placement:
                     break
                 placement = new_placement
-                if placement.deviation() < 1e-12:
+                if placement.deviation() < 1e-14:
                     break
             if print_progress:
                 print('Deviation on step %d: %.7f' % (index, placement.deviation()))
-            if placement.deviation() < 1e-12:
+            if placement.deviation() < 1e-14:
                 return placement
         except PlacementFailedError as e:
             if print_progress:

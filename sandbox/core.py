@@ -5,6 +5,7 @@ Normally, do not add new construction methods here, do this in scene.py instead.
 
 from enum import Enum, auto, unique
 import itertools
+from typing import List
 
 class CoreScene:
     class Object:
@@ -277,6 +278,13 @@ class CoreScene:
         """
         self.constraint(Constraint.Kind.quadrilateral, A, B, C, D, **kwargs)
 
+    def convex_polygon_constraint(self, *points, **kwargs):
+        """
+        *points (in given order) is a convex polygon.
+        """
+        assert len(points) > 3
+        self.constraint(Constraint.Kind.convex_polygon, points, **kwargs)
+
     def distances_ratio_constraint(self, AB, CD, ratio, **kwargs):
         """
         |AB| == |CD| * ratio
@@ -378,6 +386,7 @@ class Constraint:
         opposite_side     = ('opposite_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
         same_side         = ('same_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
         quadrilateral     = ('quadrilateral', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
+        convex_polygon    = ('convex_polygon', Stage.validation, List[CoreScene.Point])
         inside_triangle   = ('inside_triangle', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         distance          = ('distance', Stage.adjustment, CoreScene.Point, CoreScene.Point, int)
         distances_ratio   = ('distances_ratio', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, int)
@@ -397,6 +406,9 @@ class Constraint:
                 if isinstance(arg, str):
                     arg = scene.get(arg)
                 scene.assert_type(arg, knd)
+            elif issubclass(knd, List):
+                # TODO: check element types
+                assert isinstance(arg, list) or isinstance(arg, tuple)
             else:
                 assert isinstance(arg, knd)
             self.params.append(arg)
