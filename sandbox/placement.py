@@ -243,7 +243,10 @@ class Placement:
                             qc = c.x ** 2 + (coef - c.y) ** 2 - r2
                             discr = qb * qb - qa * qc
                             if discr < 0:
-                                raise PlacementFailedError('The line and the circle have no intersection points')
+                                if discr > -1e-8:
+                                    discr = 0
+                                else:
+                                    raise PlacementFailedError('The line and the circle have no intersection points')
                             # y = (-qb +- sqrt(discr)) / qa
                             sqrt = np.sqrt(discr)
                             x_1 = (-qb + sqrt) / qa
@@ -258,7 +261,10 @@ class Placement:
                             qc = c.y ** 2 + (coef - c.x) ** 2 - r2
                             discr = qb * qb - qa * qc
                             if discr < 0:
-                                raise PlacementFailedError('The line and the circle have no intersection points')
+                                if discr > -1e-8:
+                                    discr = 0
+                                else:
+                                    raise PlacementFailedError('The line and the circle have no intersection points')
                             sqrt = np.sqrt(discr)
                             y_1 = (-qb + discr) / qa
                             y_2 = (-qb - discr) / qa
@@ -289,7 +295,10 @@ class Placement:
                             # a y^2 + 2b y + c = 0
                             discr = b * b - a * c
                             if discr < 0:
-                                raise PlacementFailedError('The circles have no intersection points')
+                                if discr > -1e-8:
+                                    discr = 0
+                                else:
+                                    raise PlacementFailedError('The circles have no intersection points')
                             # y = (-b +- sqrt(discr)) / a
                             #print("%.3f y^2 + %.3f y + %.3f = 0" % (a, 2 * b, c))
                             sqrt = np.sqrt(discr)
@@ -306,7 +315,10 @@ class Placement:
                             c = (const - c0.y) ** 2 + c0.x ** 2 - r02
                             discr = b * b - a * c
                             if discr < 0:
-                                raise PlacementFailedError('The circles have no intersection points')
+                                if discr > -1e-8:
+                                    discr = 0
+                                else:
+                                    raise PlacementFailedError('The circles have no intersection points')
                             #print("%.3f x^2 + %.3f x + %.3f = 0" % (a, 2 * b, c))
                             sqrt = np.sqrt(discr)
                             x_1 = (-b + sqrt) / a
