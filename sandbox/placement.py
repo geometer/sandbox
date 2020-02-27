@@ -57,24 +57,6 @@ class PlacementFailedError(Exception):
     """Cannot place to meet all the conditions"""
 
 class Placement:
-    class Parameters:
-        def __init__(self, params=None):
-            self.coords = dict(params.coords) if params else {}
-
-        def get_coord(self, label):
-            value = self.coords.get(label)
-            if value is None:
-                value = np.float128(np.tan((np.random.random() - 0.5) * np.pi))
-                self.coords[label] = value
-            return value
-
-        def get_angle(self, label):
-            value = self.coords.get(label)
-            if value is None:
-                value = np.float128(np.random.random() * 2 * np.pi)
-                self.coords[label] = value
-            return value
-
     class TempPlacement:
         def __init__(self, placement, point, coords):
             self._coordinates = dict(placement._coordinates)
@@ -158,7 +140,7 @@ class Placement:
     def __init__(self, scene: CoreScene, params=None):
         self.scene = scene
         self._coordinates = {}
-        self.params = params if params else Placement.Parameters()
+        self.params = params if params else {}
         not_placed = list(scene.points())
         passed_constraints = set()
 
@@ -186,13 +168,13 @@ class Placement:
                 try:
                     if p.origin == CoreScene.Point.Origin.free:
                         add(p, TwoDCoordinates(
-                            np.float128(p.x) if hasattr(p, 'x') else self.params.get_coord(p.label + '.x'),
-                            np.float128(p.y) if hasattr(p, 'y') else self.params.get_coord(p.label + '.y')
+                            np.float128(p.x) if hasattr(p, 'x') else self.__get_coord(p.label + '.x'),
+                            np.float128(p.y) if hasattr(p, 'y') else self.__get_coord(p.label + '.y')
                         ))
                     elif p.origin == CoreScene.Point.Origin.circle:
                         o = self.location(p.circle.centre)
                         r = self.radius(p.circle)
-                        angle = self.params.get_angle(p.label + '.angle')
+                        angle = self.__get_angle(p.label + '.angle')
                         add(p, TwoDCoordinates(
                             o.x + np.sin(angle) * r,
                             o.y + np.cos(angle) * r
@@ -200,7 +182,7 @@ class Placement:
                     elif p.origin == CoreScene.Point.Origin.line:
                         loc0 = self.location(p.line.point0)
                         loc1 = self.location(p.line.point1)
-                        coef = self.params.get_coord(p.label + '.coef')
+                        coef = self.__get_coord(p.label + '.coef')
                         add(p, TwoDCoordinates(
                             0.5 * (loc0.x + loc1.x) + coef * (loc0.x - loc1.x),
                             0.5 * (loc0.y + loc1.y) + coef * (loc0.y - loc1.y)
@@ -339,6 +321,20 @@ class Placement:
                 except IncompletePlacementError:
                     pass
 
+    def __get_coord(self, label):
+        value = self.params.get(label)
+        if value is None:
+            value = np.float128(np.tan((np.random.random() - 0.5) * np.pi))
+            self.params[label] = value
+        return value
+
+    def __get_angle(self, label):
+        value = self.params.get(label)
+        if value is None:
+            value = np.float128(np.random.random() * 2 * np.pi)
+            self.params[label] = value
+        return value
+
     def location(self, point) -> TwoDCoordinates:
         if isinstance(point, str):
             point = self.scene.get(point)
@@ -391,9 +387,9 @@ class Placement:
         return vec0.angle(vec1)
 
     def dump(self):
-        if self.params.coords:
+        if self.params:
             print('Parameters:')
-            print('\n'.join([('\t%s => %.5f' % (label, self.params.coords[label])) for label in self.params.coords]))
+            print('\n'.join([('\t%s => %.5f' % (label, self.params[label])) for label in self.params]))
             print('')
         print('Coordinates:')
         print('\n'.join([('\t%s => %s' % (pt.label, self.location(pt))) for pt in self.scene.points()]))
@@ -465,13 +461,10 @@ def iterative_placement(scene, max_attempts=10000, max_iterations=400, print_pro
     for attempt in range(0, max_attempts):
         try:
             placement = Placement(scene)
-            keys = list(placement.params.coords.keys())
-            data = np.array([placement.params.coords[k] for k in keys])
+            keys = list(placement.params.keys())
+            data = np.array([placement.params[k] for k in keys])
             def placement_for_data(data):
-                params = Placement.Parameters()
-                for k, v in zip(keys, data):
-                    params.coords[k] = v
-                return Placement(scene, params)
+                return Placement(scene, {k : v for (k, v) in zip(keys, data)})
 
             def numpy_fun(data):
                 return placement_for_data(data).deviation()
