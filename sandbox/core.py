@@ -402,6 +402,8 @@ class Constraint:
         assert len(args) == len(kind.params)
         self.params = []
         for (arg, knd) in zip(args, kind.params):
+            if knd == List[CoreScene.Point]:
+                knd = knd.__origin__
             if issubclass(knd, CoreScene.Object):
                 if isinstance(arg, str):
                     arg = scene.get(arg)
