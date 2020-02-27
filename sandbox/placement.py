@@ -1,5 +1,6 @@
 from functools import reduce
 import numpy as np
+from scipy.optimize import minimize
 from sys import stdout
 
 from .core import CoreScene, Constraint
@@ -59,7 +60,6 @@ class Placement:
     class Parameters:
         def __init__(self, params=None):
             self.coords = dict(params.coords) if params else {}
-            self.angles = dict(params.angles) if params else {}
 
         def get_coord(self, label):
             value = self.coords.get(label)
@@ -69,10 +69,10 @@ class Placement:
             return value
 
         def get_angle(self, label):
-            value = self.angles.get(label)
+            value = self.coords.get(label)
             if value is None:
                 value = np.float128(np.random.random() * 2 * np.pi)
-                self.angles[label] = value
+                self.coords[label] = value
             return value
 
     class TempPlacement:
@@ -391,16 +391,13 @@ class Placement:
         return vec0.angle(vec1)
 
     def dump(self):
-        if self.params.coords or self.params.angles:
+        if self.params.coords:
             print('Parameters:')
-            if self.params.coords:
-                print('\n'.join([('\t%s => %.5f' % (label, self.params.coords[label])) for label in self.params.coords]))
-            if self.params.angles:
-                print('\n'.join([('\t%s => %.5f' % (label, self.params.angles[label])) for label in self.params.angles]))
+            print('\n'.join([('\t%s => %.5f' % (label, self.params.coords[label])) for label in self.params.coords]))
             print('')
         print('Coordinates:')
         print('\n'.join([('\t%s => %s' % (pt.label, self.location(pt))) for pt in self.scene.points()]))
-        print('\nDeviation: %.5f' % self.deviation())
+        print('\nDeviation: %.15f' % self.deviation())
 
     def deviation(self):
         if hasattr(self, 'cached_deviation'):
@@ -464,78 +461,25 @@ class Placement:
 
         return self.cached_deviation
 
-    def iterate(self):
-        keys = list(self.params.coords.keys()) + list(self.params.angles.keys())
-
-        gradient = []
-        for index in range(0, len(self.params.coords)):
-            key = keys[index]
-            params = Placement.Parameters(self.params)
-            params.coords[key] = self.params.coords[key] + 1e-10
-            test = Placement(self.scene, params)
-            gradient.append(test.deviation() - self.deviation())
-        for index in range(len(self.params.coords), len(keys)):
-            key = keys[index]
-            params = Placement.Parameters(self.params)
-            params.angles[key] = self.params.angles[key] + 1e-10
-            test = Placement(self.scene, params)
-            gradient.append(test.deviation() - self.deviation())
-        length = np.sqrt(reduce((lambda s, x: s + x ** 2), gradient, 0))
-        if length == 0:
-            return self
-        mult = 1e-10 / length
-        gradient = [d * mult for d in gradient]
-
-        def test_placement(coef):
-            params = Placement.Parameters(self.params)
-            for index in range(0, len(self.params.coords)):
-                key = keys[index]
-                params.coords[key] = self.params.coords[key] - gradient[index] * coef
-            for index in range(len(self.params.coords), len(keys)):
-                key = keys[index]
-                params.angles[key] = self.params.angles[key] - gradient[index] * coef
-            try:
-                return Placement(self.scene, params)
-            except:
-                return None
-
-        deg = 0
-        previous = self
-        while deg < 20:
-            coef = 8.0 ** deg
-            test = test_placement(coef)
-            if not test or test.deviation() > previous.deviation():
-                for _ in range(0, 2):
-                    coef /= 2
-                    test = test_placement(coef)
-                    if test and test.deviation() < previous.deviation():
-                        return test
-                return previous
-            previous = test
-            deg += 1
-
 def iterative_placement(scene, max_attempts=10000, max_iterations=400, print_progress=False):
     for attempt in range(0, max_attempts):
         try:
             placement = Placement(scene)
-            for index in range(0, max_iterations):
-                if print_progress and index % 10 == 0:
-                    stdout.write('Deviation on step %d: %.7f\r' % (index, placement.deviation()))
-                    stdout.flush()
-                if index >= max_iterations / 10 and index % 10 == 0:
-                    expected = 0.1 ** ((10 * index - max_iterations) / max_iterations * 4 / 3)
-                    if placement.deviation() > expected:
-                        break
-                new_placement = placement.iterate()
-                if not new_placement or new_placement == placement:
-                    break
-                placement = new_placement
-                if placement.deviation() < 1e-14:
-                    break
-            if print_progress:
-                print('Deviation on step %d: %.7f' % (index, placement.deviation()))
-            if placement.deviation() < 1e-14:
-                return placement
+            keys = list(placement.params.coords.keys())
+            data = np.array([placement.params.coords[k] for k in keys])
+            def placement_for_data(data):
+                params = Placement.Parameters()
+                for k, v in zip(keys, data):
+                    params.coords[k] = v
+                return Placement(scene, params)
+
+            def numpy_fun(data):
+                return placement_for_data(data).deviation()
+
+            res = minimize(numpy_fun, data, method='BFGS', options={'gtol': 1e-7, 'maxiter': max_iterations, 'disp': print_progress})
+            pl = placement_for_data(res.x)
+            if pl.deviation() < 1e-14:
+                return pl
         except PlacementFailedError as e:
             if print_progress:
                 print('Attempt %d failed: %s\r' % (attempt, e))
