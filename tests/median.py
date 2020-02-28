@@ -1,6 +1,6 @@
 import math
 
-from sandbox import Scene, Placement
+from sandbox import Scene, iterative_placement
 
 from .base import PlacementTest
 
@@ -18,7 +18,7 @@ class TestMedian(PlacementTest):
         A1 = para.intersection_point(A.line_through(C), label='A1')
         B1 = para.intersection_point(B.line_through(C), label='B1')
 
-        return Placement(scene)
+        return iterative_placement(scene)
 
     def test1(self):
         self.assertEqualDistances('D', 'A1', 'D', 'B1')
