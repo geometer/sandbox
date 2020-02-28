@@ -29,7 +29,9 @@ class Vector:
         return "%s %s" % (self.start.label, self.end.label)
 
 class Angle:
-    def __init__(self, vector0: Vector, vector1: Vector):
+    def __init__(self, line0, line1, vector0: Vector, vector1: Vector):
+        self.line0 = line0
+        self.line1 = line1
         if vector0.end == vector1.end:
             self.vector0 = vector0.reversed
             self.vector1 = vector1.reversed
@@ -45,7 +47,7 @@ class Angle:
         self.__arc = self.vector0.angle(self.vector1)
 
     def reversed(self):
-        return Angle(self.vector1, self.vector0)
+        return Angle(self.line1, self.line0, self.vector1, self.vector0)
 
     def arc(self):
         return self.__arc
@@ -325,7 +327,7 @@ class Hunter:
                 else:
                     vec0 = Vector(line0[0], line0[1], self.placement)
                     vec1 = Vector(line1[0], line1[1], self.placement)
-                yield Angle(vec0, vec1)
+                yield Angle(line0, line1, vec0, vec1)
 
     def __hunt_collinears(self, lines, verbose):
         for line in lines:

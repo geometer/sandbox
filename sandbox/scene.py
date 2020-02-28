@@ -69,9 +69,12 @@ class Scene(CoreScene):
         self.assert_point(B)
         self.assert_point(C)
         A.not_collinear_constraint(B, C)
-        height_A = self.perpendicular_line(A, B.line_through(C, auxiliary=True), auxiliary=True)
-        height_B = self.perpendicular_line(B, C.line_through(A, auxiliary=True), auxiliary=True)
-        return height_A.intersection_point(height_B, **kwargs)
+        height_A = self.height((A, B, C), A, auxiliary = True)
+        height_B = self.height((A, B, C), B, auxiliary = True)
+        point = height_A.intersection_point(height_B, **kwargs)
+        height_C = self.height((A, B, C), C, auxiliary = True)
+        point.belongs_to(height_C)
+        return point
 
     def circumcentre_point(self, A, B, C, **kwargs):
         """
@@ -194,6 +197,17 @@ class Scene(CoreScene):
         points = (point(0), point(1), point(2))
         points[0].not_collinear_constraint(points[1], points[2])
         return points
+
+    def height(self, triangle, vertex, **kwargs):
+        """
+        Height from the vertex in the triangle
+        """
+        assert len(triangle) == 3
+        assert vertex in triangle
+        points = list(triangle)
+        points.remove(vertex)
+        side = points[0].line_through(points[1], auxiliary=True)
+        return self.perpendicular_line(side, vertex, **kwargs)
 
     def parallelogram(self, labels=None, auxiliary=False):
         """

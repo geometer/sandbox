@@ -30,10 +30,8 @@ class Explainer:
                             self.explanations[prop] = '%s ⟂ %s' % (line0.label, line1.label)
 
         right_angles = [p.angle for p in self.explanations if isinstance(p, RightAngleProperty)]
-        print('DEBUG: right_angles = %s' % [str(a) for a in right_angles])
         for prop in self.properties:
             if isinstance(prop, EqualAnglesProperty):
-                print('DEBUG: testing %s, %s' % (prop.angle0, prop.angle1))
                 if prop.angle0 in right_angles and prop.angle1 in right_angles:
                      self.explanations[prop] = 'both 90º'
 

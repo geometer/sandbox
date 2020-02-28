@@ -8,11 +8,9 @@ from sandbox.explainer import Explainer
 
 scene = Scene()
 
-A = scene.free_point(label='A')
-B = scene.free_point(label='B')
-C = scene.free_point(label='C')
-heightA = scene.perpendicular_line(A, B.line_through(C), label='heightA')
-heightC = scene.perpendicular_line(C, A.line_through(B), label='heightC')
+A, B, C = scene.triangle(labels=('A', 'B', 'C'))
+heightA = scene.height((A, B, C), A, label='heightA')
+heightC = scene.height((A, B, C), C, label='heightC')
 D = heightA.intersection_point(heightC, label='D')
 D.inside_triangle_constraint(A, B, C)
 H = heightA.intersection_point(B.line_through(C, label='BC'), label='H')
