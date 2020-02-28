@@ -26,37 +26,49 @@ class Explainer:
         self.scene = scene
         self.properties = properties
         self.explained = []
+        self.unexplained = list(properties)
 
     def reason(self, prop, comments, roots=None):
         self.explained.append(Explainer.Reason(len(self.explained), prop, comments, roots))
+        self.unexplained.remove(prop)
 
     def explain(self):
-        for prop in self.properties:
-            if isinstance(prop, CollinearProperty):
-                for line in self.scene.lines():
-                    if prop.A in line.all_points and prop.B in line.all_points and prop.C in line.all_points:
-                        self.reason(prop, 'Given')
-                        break
-            if isinstance(prop, RightAngleProperty):
-                for cnst in self.scene.constraints(Constraint.Kind.perpendicular):
-                    line0 = cnst.params[0]
-                    line1 = cnst.params[1]
-                    def vector_on_line(vector, line):
-                        return vector.start in line.all_points and vector.end in line.all_points
+        def step0():
+            for prop in list(self.unexplained):
+                if isinstance(prop, CollinearProperty):
+                    for line in self.scene.lines():
+                        if prop.A in line.all_points and prop.B in line.all_points and prop.C in line.all_points:
+                            self.reason(prop, 'Given')
+                            break
+                if isinstance(prop, RightAngleProperty):
+                    for cnst in self.scene.constraints(Constraint.Kind.perpendicular):
+                        line0 = cnst.params[0]
+                        line1 = cnst.params[1]
+                        def vector_on_line(vector, line):
+                            return vector.start in line.all_points and vector.end in line.all_points
 
-                    if vector_on_line(prop.angle.vector0, line0):
-                        if vector_on_line(prop.angle.vector1, line1):
-                            self.reason(prop, '%s ⟂ %s' % (line0.label, line1.label))
-                    elif vector_on_line(prop.angle.vector0, line1):
-                        if vector_on_line(prop.angle.vector1, line0):
-                            self.reason(prop, '%s ⟂ %s' % (line0.label, line1.label))
+                        if vector_on_line(prop.angle.vector0, line0):
+                            if vector_on_line(prop.angle.vector1, line1):
+                                self.reason(prop, ['%s ⟂ %s' % (line0.label, line1.label)] + cnst.comments)
+                        elif vector_on_line(prop.angle.vector0, line1):
+                            if vector_on_line(prop.angle.vector1, line0):
+                                self.reason(prop, ['%s ⟂ %s' % (line0.label, line1.label)] + cnst.comments)
 
-        right_angles = [exp for exp in self.explained if isinstance(exp.property, RightAngleProperty)]
-        for prop in self.properties:
-            if isinstance(prop, EqualAnglesProperty):
-                roots = [exp for exp in right_angles if exp.property.angle in [prop.angle0, prop.angle1]]
-                if len(roots) == 2:
-                    self.reason(prop, 'both 90º', roots=roots)
+        def iteration():
+            right_angles = [exp for exp in self.explained if isinstance(exp.property, RightAngleProperty)]
+            for prop in list(self.unexplained):
+                if isinstance(prop, EqualAnglesProperty):
+                    roots = [exp for exp in right_angles if exp.property.angle in [prop.angle0, prop.angle1]]
+                    if len(roots) == 2:
+                        self.reason(prop, 'both 90º', roots=roots)
+
+        step0()
+        unexplained_size = len(self.unexplained)
+        while unexplained_size > 0:
+            iteration()
+            if len(self.unexplained) == unexplained_size:
+                break
+            unexplained_size = len(self.unexplained)
 
     def dump(self):
         print('Explained:')
