@@ -174,3 +174,49 @@ class Scene(CoreScene):
         """
         centre = self.circumcentre_point(A, B, C, auxiliary=True)
         return centre.circle_through(A, **kwargs)
+
+    def triangle(self, labels=None, auxiliary=False):
+        """
+        Free triangle
+        Pass array of three strings as 'labels' to use as point labels
+        Returns tuple of three points
+        """
+        assert not labels or len(labels) == 3
+        def point(index):
+            args = {}
+            if auxiliary:
+                args['auxiliary'] = True
+            if labels and labels[index]:
+                args['label'] = labels[index]
+            return self.free_point(**args)
+
+        points = (point(0), point(1), point(2))
+        points[0].not_collinear_constraint(points[1], points[2])
+        return points
+
+    def parallelogram(self, labels=None, auxiliary=False):
+        """
+        Free parallelogram
+        Pass array of four strings as 'labels' to use as point labels
+        Returns tuple of four points, in cyclic order
+        """
+        assert not labels or len(labels) == 4
+        def point(index):
+            args = {}
+            if auxiliary:
+                args['auxiliary'] = True
+            if labels and labels[index]:
+                args['label'] = labels[index]
+            return self.free_point(**args)
+
+        pt0 = point(0)
+        pt1 = point(1)
+        pt2 = point(2)
+        pt0.not_collinear_constraint(pt1, pt2)
+        args = {}
+        if auxiliary:
+            args['auxiliary'] = True
+        if labels and labels[3]:
+            args['label'] = labels[3]
+        pt3 = self.opposite_parallelogram_point(pt1, pt0, pt2, **args)
+        return (pt0, pt1, pt2, pt3)

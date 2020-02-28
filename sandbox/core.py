@@ -99,6 +99,7 @@ class CoreScene:
                 CoreScene.Point.Origin.ratio,
                 point0=self, point1=point, coef0=coef0, coef1=coef1, **kwargs
             )
+            # TODO: FIX: implies not_equal constraint
             new_point.belongs_to(self.line_through(point, auxiliary=True))
             return new_point
 
