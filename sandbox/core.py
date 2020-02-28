@@ -111,7 +111,13 @@ class CoreScene:
                 if self in existing.all_points and point in existing.all_points:
                     return existing.with_extra_args(**kwargs)
 
-            return CoreScene.Line(self.scene, point0=self, point1=point, **kwargs)
+            line = CoreScene.Line(self.scene, point0=self, point1=point, **kwargs)
+            for cnstr in self.scene.reasoning_constraints:
+                if cnstr.kind == Constraint.Kind.collinear:
+                    if len(line.all_points.intersection(set(cnstr.params))) == 2:
+                        line.all_points.update(cnstr.params)
+
+            return line
 
         def circle_through(self, point, **kwargs):
             self.scene.assert_point(point)
@@ -139,10 +145,6 @@ class CoreScene:
             for cnstr in self.scene.constraints(Constraint.Kind.not_equal):
                 if set(cnstr.params) == set([self, A]):
                     return
-#                if cnstr.params[0] == self and cnstr.params[1] == A:
-#                    return
-#                if cnstr.params[0] == A and cnstr.params[1] == self:
-#                    return
             self.scene.constraint(Constraint.Kind.not_equal, self, A, **kwargs)
 
         def not_collinear_constraint(self, A, B, **kwargs):
@@ -158,7 +160,10 @@ class CoreScene:
             """
             The current point is collinear with A and B.
             """
-            self.scene.constraint(Constraint.Kind.collinear, self, A, B, **kwargs)
+            cnstr = self.scene.constraint(Constraint.Kind.collinear, self, A, B, **kwargs)
+            for line in self.scene.lines():
+                if len(line.all_points.intersection(set(cnstr.params))) == 2:
+                    line.all_points.update(cnstr.params)
 
         def distance_constraint(self, A, distance, **kwargs):
             """
@@ -282,6 +287,7 @@ class CoreScene:
             self.adjustment_constraints.append(cns)
         else:
             self.reasoning_constraints.append(cns)
+        return cns
 
     def quadrilateral_constraint(self, A, B, C, D, **kwargs):
         """
