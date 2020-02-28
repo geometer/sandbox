@@ -99,8 +99,7 @@ class CoreScene:
                 CoreScene.Point.Origin.ratio,
                 point0=self, point1=point, coef0=coef0, coef1=coef1, **kwargs
             )
-            # TODO: FIX: implies not_equal constraint
-            new_point.belongs_to(self.line_through(point, auxiliary=True))
+            new_point.collinear_constraint(self, point)
             return new_point
 
         def line_through(self, point, **kwargs):
@@ -148,9 +147,18 @@ class CoreScene:
 
         def not_collinear_constraint(self, A, B, **kwargs):
             """
-            The current point does not collinear with A and B.
+            The current point is not collinear with A and B.
             """
+            self.not_equal_constraint(A)
+            self.not_equal_constraint(B)
+            A.not_equal_constraint(B)
             self.scene.constraint(Constraint.Kind.not_collinear, self, A, B, **kwargs)
+
+        def collinear_constraint(self, A, B, **kwargs):
+            """
+            The current point is collinear with A and B.
+            """
+            self.scene.constraint(Constraint.Kind.collinear, self, A, B, **kwargs)
 
         def distance_constraint(self, A, distance, **kwargs):
             """
@@ -264,13 +272,16 @@ class CoreScene:
         self.__objects = []
         self.validation_constraints = []
         self.adjustment_constraints = []
+        self.reasoning_constraints = []
 
     def constraint(self, kind, *args, **kwargs):
         cns = Constraint(kind, self, *args, **kwargs)
         if kind.stage == Stage.validation:
             self.validation_constraints.append(cns)
-        else:
+        elif kind.stage == Stage.adjustment:
             self.adjustment_constraints.append(cns)
+        else:
+            self.reasoning_constraints.append(cns)
 
     def quadrilateral_constraint(self, A, B, C, D, **kwargs):
         """
@@ -333,8 +344,10 @@ class CoreScene:
     def constraints(self, kind):
         if kind.stage == Stage.validation:
             return [cnstr for cnstr in self.validation_constraints if cnstr.kind == kind]
-        else:
+        elif kind.stage == Stage.adjustment:
             return [cnstr for cnstr in self.adjustment_constraints if cnstr.kind == kind]
+        else:
+            return [cnstr for cnstr in self.reasoning_constraints if cnstr.kind == kind]
 
     def assert_type(self, obj, *args):
         assert isinstance(obj, args), 'Unexpected type %s' % type(obj)
@@ -373,17 +386,22 @@ class CoreScene:
         if self.adjustment_constraints:
             print('\nAdjustment constraints:')
             print('\n'.join(['\t' + str(cnstr) for cnstr in self.adjustment_constraints]))
+        if self.reasoning_constraints:
+            print('\nReasoning constraints:')
+            print('\n'.join(['\t' + str(cnstr) for cnstr in self.reasoning_constraints]))
         print('')
 
 class Stage(Enum):
     validation        = auto()
     adjustment        = auto()
+    reasoning         = auto()
 
 class Constraint:
     @unique
     class Kind(Enum):
         not_equal         = ('not_equal', Stage.validation, CoreScene.Point, CoreScene.Point)
         not_collinear     = ('not_collinear', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point)
+        collinear         = ('collinear', Stage.reasoning, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         opposite_side     = ('opposite_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
         same_side         = ('same_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
         quadrilateral     = ('quadrilateral', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
