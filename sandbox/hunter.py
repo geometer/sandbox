@@ -58,6 +58,9 @@ class Angle:
             return "∠ %s %s %s" % (self.vector0.end.label, self.vector0.start.label, self.vector1.end.label)
         return "∠(%s, %s)" % (self.vector0, self.vector1)
 
+    def __eq__(self, other):
+        return self.vector0 == other.vector0 and self.vector1 == other.vector1
+
 class Triangle:
     def __init__(self, pts, side0, side1, side2):
         self.pts = list(pts)
@@ -357,10 +360,7 @@ class Hunter:
             elif np.fabs(arc + np.pi / 2) < ERROR:
                 rights.append(ngl.reversed())
         for ngl in rights:
-            self.properties.append(RightAngleProperty(
-                (ngl.vector0.start, ngl.vector0.end),
-                (ngl.vector1.start, ngl.vector1.end)
-            ))
+            self.properties.append(RightAngleProperty(ngl))
         if rights and verbose:
             print('90º: ' + ', '.join([str(ngl) for ngl in rights]))
 
@@ -381,12 +381,7 @@ class Hunter:
 
         for fam in families:
             for pair in Hunter.__iterate_pairs(fam):
-                self.properties.append(EqualAnglesProperty(
-                    (pair[0].vector0.start, pair[0].vector0.end,
-                     pair[0].vector1.start, pair[0].vector1.end),
-                    (pair[1].vector0.start, pair[1].vector0.end,
-                     pair[1].vector1.start, pair[1].vector1.end)
-                ))
+                self.properties.append(EqualAnglesProperty(pair[0], pair[1]))
             if len(fam) > 1 and verbose:
                 print(' = '.join([str(ngl) for ngl in fam]))
 
@@ -493,3 +488,18 @@ class Hunter:
         for prop in self.properties:
             print('\t%s' % prop)
         print('\nTotal properties: %d' % len(self.properties))
+
+class RightAngleProperty(Property):
+    def __init__(self, angle):
+        self.angle = angle
+
+    def __str__(self):
+        return '%s = 90º' % self.angle
+
+class EqualAnglesProperty(Property):
+    def __init__(self, angle0, angle1):
+        self.angle0 = angle0
+        self.angle1 = angle1
+
+    def __str__(self):
+        return '%s = %s' % (self.angle0, self.angle1)

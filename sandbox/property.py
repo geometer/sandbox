@@ -22,38 +22,6 @@ class CollinearProperty(Property):
     def __str__(self):
         return 'collinear %s, %s, %s' % (self.A.label, self.B.label, self.C.label)
 
-class RightAngleProperty(Property):
-    def __init__(self, AB, CD):
-        assert len(AB) == 2 and len(CD) == 2
-        for point in AB:
-            assert isinstance(point, Scene.Point)
-        for point in CD:
-            assert isinstance(point, Scene.Point)
-        self.AB = AB
-        self.CD = CD
-
-    def __str__(self):
-        if self.AB[0] == self.CD[0]:
-            return '∠ %s %s %s = 90º' % (self.AB[1].label, self.CD[0].label, self.CD[1].label)
-        return '∠ (%s %s), (%s %s) = 90º' % (self.AB[0].label, self.AB[1].label, self.CD[0].label, self.CD[1].label)
-
-class EqualAnglesProperty(Property):
-    def __init__(self, ABCD, EFGH):
-        assert len(ABCD) == 4 and len(EFGH) == 4
-        for point in ABCD:
-            assert isinstance(point, Scene.Point)
-        for point in EFGH:
-            assert isinstance(point, Scene.Point)
-        self.ABCD = ABCD
-        self.EFGH = EFGH
-
-    def __str__(self):
-        def angle_str(four):
-            if four[0] == four[2]:
-                return '∠ %s %s %s' % (four[1].label, four[2].label, four[3].label)
-            return '∠ (%s %s), (%s %s)' % (four[0].label, four[1].label, four[2].label, four[3].label)
-        return '%s = %s' % (angle_str(self.ABCD), angle_str(self.EFGH))
-
 class EqualDistancesProperty(Property):
     def __init__(self, AB, CD):
         assert len(AB) == 2

@@ -235,6 +235,12 @@ class CoreScene:
             crossing.belongs_to(obj)
             return crossing
 
+        def perpendicular_constraint(self, other, **kwargs):
+            """
+            self ⟂ other
+            """
+            self.scene.constraint(Constraint.Kind.perpendicular, self, other, **kwargs)
+
     class Circle(Object):
         def __init__(self, scene, **kwargs):
             CoreScene.Object.__init__(self, scene, **kwargs)
@@ -417,6 +423,7 @@ class Constraint:
         distances_ratio   = ('distances_ratio', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, int)
         right_angle       = ('right_angle', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         angles_ratio      = ('angles_ratio', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, int)
+        perpendicular     = ('perpendicular', Stage.reasoning, CoreScene.Line, CoreScene.Line)
 
         def __init__(self, name, stage, *params):
             self.stage = stage

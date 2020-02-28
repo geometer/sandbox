@@ -145,6 +145,7 @@ class Scene(CoreScene):
         x_1.not_equal_constraint(x_0)
         perpendicular = x_0.line_through(x_1, **kwargs)
         point.belongs_to(perpendicular)
+        perpendicular.perpendicular_constraint(line)
         return perpendicular
 
     def incentre_point(self, A, B, C, **kwargs):
