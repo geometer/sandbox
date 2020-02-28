@@ -74,6 +74,7 @@ class CoreScene:
         class Origin(Enum):
             free              = auto()
             ratio             = auto()
+            perp              = auto()
             line              = auto()
             circle            = auto()
             line_x_line       = auto()
@@ -101,6 +102,21 @@ class CoreScene:
             )
             new_point.collinear_constraint(self, point)
             return new_point
+
+        def perpendicular_line(self, line, **kwargs):
+            """
+            Constructs a line through the point, perpendicular to the given line.
+            """
+            self.scene.assert_line(line)
+            new_point = CoreScene.Point(
+                self.scene,
+                CoreScene.Point.Origin.perp,
+                point=self, line=line,
+                auxiliary=True
+            )
+            new_line = self.line_through(new_point, **kwargs)
+            line.perpendicular_constraint(new_line)
+            return new_line
 
         def line_through(self, point, **kwargs):
             self.scene.assert_point(point)

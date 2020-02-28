@@ -195,6 +195,14 @@ class Placement:
                             (p.coef0 * p0.x + p.coef1 * p1.x) / denom,
                             (p.coef0 * p0.y + p.coef1 * p1.y) / denom
                         ))
+                    elif p.origin == CoreScene.Point.Origin.perp:
+                        p0 = self.location(p.point)
+                        p1 = self.location(p.line.point0)
+                        p2 = self.location(p.line.point1)
+                        add(p, TwoDCoordinates(
+                            p0.x + p1.y - p2.y,
+                            p0.y + p2.x - p1.x
+                        ))
                     elif p.origin == CoreScene.Point.Origin.line_x_line:
                         p0 = self.location(p.line0.point0)
                         p1 = self.location(p.line0.point1)

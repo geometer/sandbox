@@ -103,15 +103,9 @@ class Scene(CoreScene):
         """
         self.assert_point(point0)
         self.assert_point(point1)
-        point0.not_equal_constraint(point1)
-        circle0 = point0.circle_through(point1, auxiliary=True)
-        circle1 = point1.circle_through(point0, auxiliary=True)
-        tmp0 = circle0.intersection_point(circle1, auxiliary=True)
-        tmp1 = circle0.intersection_point(circle1, auxiliary=True)
-        tmp1.not_equal_constraint(tmp0)
-        bisector = tmp0.line_through(tmp1, **kwargs)
-        self.middle_point(point0, point1, auxiliary=True).belongs_to(bisector)
-        return bisector
+        middle = self.middle_point(point0, point1, auxiliary=True)
+        line = point0.line_through(point1, auxiliary=True)
+        return middle.perpendicular_line(line, **kwargs)
 
     def angle_bisector_line(self, A, B, C, **kwargs):
         """
@@ -128,28 +122,6 @@ class Scene(CoreScene):
         X.same_side_constraint(C, A.line_through(B, auxiliary=True))
         Y = X.ratio_point(B, 1, 1, auxiliary=True)
         return A.line_through(Y, **kwargs)
-
-    def perpendicular_line(self, point, line, **kwargs):
-        """
-        Perpendicular to the line through the point
-        """
-        if isinstance(point, CoreScene.Line) and isinstance(line, CoreScene.Point):
-            point, line = line, point
-        self.assert_point(point)
-        self.assert_line(line)
-        on_line_point = line.free_point(auxiliary=True)
-        circle = point.circle_through(on_line_point, auxiliary=True)
-        on_line_point2 = line.intersection_point(circle, auxiliary=True)
-        on_line_point2.not_equal_constraint(on_line_point)
-        circle1 = on_line_point.circle_through(on_line_point2, auxiliary=True)
-        circle2 = on_line_point2.circle_through(on_line_point, auxiliary=True)
-        x_0 = circle1.intersection_point(circle2, auxiliary=True)
-        x_1 = circle2.intersection_point(circle1, auxiliary=True)
-        x_1.not_equal_constraint(x_0)
-        perpendicular = x_0.line_through(x_1, **kwargs)
-        point.belongs_to(perpendicular)
-        perpendicular.perpendicular_constraint(line)
-        return perpendicular
 
     def incentre_point(self, A, B, C, **kwargs):
         """
@@ -209,7 +181,7 @@ class Scene(CoreScene):
         points = list(triangle)
         points.remove(vertex)
         base = points[0].line_through(points[1], auxiliary=True)
-        altitude = self.perpendicular_line(base, vertex, **kwargs)
+        altitude = vertex.perpendicular_line(base, **kwargs)
         altitude.perpendicular_constraint(base, comment='Altitude is perpendicular to the base')
         return altitude
 
