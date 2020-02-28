@@ -63,17 +63,17 @@ class Scene(CoreScene):
 
     def orthocentre_point(self, A, B, C, **kwargs):
         """
-        Orthocentre of △ABC (heights intersection point)
+        Orthocentre of △ABC (intersection point the altitudes)
         """
         self.assert_point(A)
         self.assert_point(B)
         self.assert_point(C)
         A.not_collinear_constraint(B, C)
-        height_A = self.height((A, B, C), A, auxiliary = True)
-        height_B = self.height((A, B, C), B, auxiliary = True)
-        point = height_A.intersection_point(height_B, **kwargs)
-        height_C = self.height((A, B, C), C, auxiliary = True)
-        point.belongs_to(height_C)
+        altitude_A = self.altitude((A, B, C), A, auxiliary = True)
+        altitude_B = self.altitude((A, B, C), B, auxiliary = True)
+        point = altitude_A.intersection_point(altitude_B, **kwargs)
+        altitude_C = self.altitude((A, B, C), C, auxiliary = True)
+        point.belongs_to(altitude_C)
         return point
 
     def circumcentre_point(self, A, B, C, **kwargs):
@@ -198,16 +198,20 @@ class Scene(CoreScene):
         points[0].not_collinear_constraint(points[1], points[2])
         return points
 
-    def height(self, triangle, vertex, **kwargs):
+    def altitude(self, triangle, vertex, **kwargs):
         """
         Height from the vertex in the triangle
         """
+        if isinstance(triangle, CoreScene.Point):
+            triangle, vertex = vertex, triangle
         assert len(triangle) == 3
         assert vertex in triangle
         points = list(triangle)
         points.remove(vertex)
-        side = points[0].line_through(points[1], auxiliary=True)
-        return self.perpendicular_line(side, vertex, **kwargs)
+        base = points[0].line_through(points[1], auxiliary=True)
+        altitude = self.perpendicular_line(base, vertex, **kwargs)
+        altitude.perpendicular_constraint(base, comment='Altitude is perpendicular to the base')
+        return altitude
 
     def parallelogram(self, labels=None, auxiliary=False):
         """

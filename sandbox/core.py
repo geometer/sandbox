@@ -144,6 +144,7 @@ class CoreScene:
             """
             for cnstr in self.scene.constraints(Constraint.Kind.not_equal):
                 if set(cnstr.params) == set([self, A]):
+                    cnstr.update(kwargs)
                     return
             self.scene.constraint(Constraint.Kind.not_equal, self, A, **kwargs)
 
@@ -239,6 +240,10 @@ class CoreScene:
             """
             self ⟂ other
             """
+            for cnstr in self.scene.constraints(Constraint.Kind.perpendicular):
+                if set(cnstr.params) == set([self, other]):
+                    cnstr.update(kwargs)
+                    return
             self.scene.constraint(Constraint.Kind.perpendicular, self, other, **kwargs)
 
     class Circle(Object):
@@ -447,10 +452,18 @@ class Constraint:
                 assert isinstance(arg, knd)
             self.params.append(arg)
         self.kind = kind
+        self.comments = []
+        self.update(kwargs)
+
+    def update(self, kwargs):
+        if 'comment' in kwargs:
+            self.comments.append(kwargs['comment'])
+            del kwargs['comment']
         self.__dict__.update(kwargs)
 
     def __str__(self):
-        return 'Constraint(%s) %s' % (
-            self.kind.name,
-            [para.label if isinstance(para, CoreScene.Object) else para for para in self.params]
-        )
+        params = [para.label if isinstance(para, CoreScene.Object) else para for para in self.params]
+        if self.comments:
+            return 'Constraint(%s) %s %s' % (self.kind.name, params, self.comments)
+        else:
+            return 'Constraint(%s) %s' % (self.kind.name, params)

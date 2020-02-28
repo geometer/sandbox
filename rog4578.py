@@ -9,21 +9,21 @@ from sandbox.explainer import Explainer
 scene = Scene()
 
 A, B, C = scene.triangle(labels=('A', 'B', 'C'))
-heightA = scene.height((A, B, C), A, label='heightA')
-heightC = scene.height((A, B, C), C, label='heightC')
-D = heightA.intersection_point(heightC, label='D')
+altitudeA = scene.altitude((A, B, C), A, label='altitudeA')
+altitudeC = scene.altitude((A, B, C), C, label='altitudeC')
+D = altitudeA.intersection_point(altitudeC, label='D')
 D.inside_triangle_constraint(A, B, C)
-H = heightA.intersection_point(B.line_through(C, label='BC'), label='H')
-G = heightC.intersection_point(A.line_through(B, label='AB'), label='G')
+H = altitudeA.intersection_point(B.line_through(C, label='BC'), label='H')
+G = altitudeC.intersection_point(A.line_through(B, label='AB'), label='G')
 scene.equal_distances_constraint((A, B), (C, D))
 
 scene.dump()
 
 #Proof
 # * 1* |AB| = |CD|                                *given
-# * 2* ∠ A H B = 90º                              *given (height)
-# * 3* ∠ A H C = 90º                              *given (height)
-# * 4* ∠ C G B = 90º                              *given (height)
+# * 2* ∠ A H B = 90º                              *given (altitude)
+# * 3* ∠ A H C = 90º                              *given (altitude)
+# * 4* ∠ C G B = 90º                              *given (altitude)
 # * 5* ∠ A H B = ∠ A H C (a.k.a ∠ D H C) = 90º    *2, *3             same arcs => equal angles
 # * 6* ∠ A H B = ∠ C G B                          *2, *4             same arcs => equal angles
 # * 7* ∠ A B H = ∠ C B G                          *same angle

@@ -21,9 +21,9 @@ scene.dump()
 
 #Proof
 # * 1* |AB| = |CD|                                *given
-# * 2* ∠ A H B = 90º                              *given (height)
-# * 3* ∠ A H C = 90º                              *given (height)
-# * 4* ∠ C G B = 90º                              *given (height)
+# * 2* ∠ A H B = 90º                              *given (altitude)
+# * 3* ∠ A H C = 90º                              *given (altitude)
+# * 4* ∠ C G B = 90º                              *given (altitude)
 # * 5* ∠ A H B = ∠ A H C (a.k.a ∠ D H C) = 90º    *2, *3             same arcs => equal angles
 # * 6* ∠ A H B = ∠ C G B                          *2, *4             same arcs => equal angles
 # * 7* ∠ A B H = ∠ C B G                          *same angle

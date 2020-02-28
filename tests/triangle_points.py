@@ -16,11 +16,11 @@ class TestTrianglePoints(PlacementTest):
         X_bisector = bisectorA.intersection_point(bisectorB, label='X_bisector')
         Y_bisector = bisectorA.intersection_point(bisectorC, label='Y_bisector')
 
-        heightA = A.line_through(scene.perpendicular_foot_point(A, B.line_through(C)))
-        heightB = B.line_through(scene.perpendicular_foot_point(A, B.line_through(C)))
-        heightC = C.line_through(scene.perpendicular_foot_point(A, B.line_through(C)))
-        X_height = heightA.intersection_point(heightB, label='X_height')
-        Y_height = heightA.intersection_point(heightC, label='Y_height')
+        altitudeA = A.line_through(scene.perpendicular_foot_point(A, B.line_through(C)))
+        altitudeB = B.line_through(scene.perpendicular_foot_point(A, B.line_through(C)))
+        altitudeC = C.line_through(scene.perpendicular_foot_point(A, B.line_through(C)))
+        X_altitude = altitudeA.intersection_point(altitudeB, label='X_altitude')
+        Y_altitude = altitudeA.intersection_point(altitudeC, label='Y_altitude')
 
         perpA = scene.perpendicular_bisector_line(B, C)
         perpB = scene.perpendicular_bisector_line(A, C)
@@ -40,7 +40,7 @@ class TestTrianglePoints(PlacementTest):
         self.assertDistance('X_bisector', 'Y_bisector', 0)
 
     def testHeights(self):
-        self.assertDistance('X_height', 'Y_height', 0)
+        self.assertDistance('X_altitude', 'Y_altitude', 0)
 
     def testPerpendicularBisectors(self):
         self.assertDistance('X_perp', 'Y_perp', 0)
