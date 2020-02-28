@@ -470,9 +470,12 @@ class Placement:
         return self.cached_deviation
 
 def iterative_placement(scene, max_attempts=10000, max_iterations=400, print_progress=False):
+    scene.flush()
     for attempt in range(0, max_attempts):
         try:
             placement = Placement(scene)
+            if placement.deviation() < 1e-14:
+                return placement
             keys = list(placement.params.keys())
             data = np.array([placement.params[k] for k in keys])
             def placement_for_data(data):

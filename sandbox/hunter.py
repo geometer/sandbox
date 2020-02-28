@@ -1,6 +1,7 @@
 import numpy as np
 
-from . import Scene, Placement
+from . import Scene, iterative_placement
+from .placement import Placement
 from .property import *
 
 ERROR = np.float128(5e-6)
@@ -242,7 +243,7 @@ class Hunter:
         if isinstance(scene, Placement):
             self.placement = scene
         else:
-            self.placement = Placement(scene)
+            self.placement = iterative_placement(scene)
         self.properties = []
 
     @staticmethod

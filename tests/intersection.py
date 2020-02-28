@@ -1,4 +1,4 @@
-from sandbox import Scene, Placement
+from sandbox import Scene, iterative_placement
 
 from .base import PlacementTest
 
@@ -14,7 +14,7 @@ class TestIntersection(PlacementTest):
         CD = C.line_through(D)
         AB.intersection_point(CD, label='E')
 
-        return Placement(scene)
+        return iterative_placement(scene)
 
     def test1(self):
         self.assertCoordinates('E', -2.5, 4.5)

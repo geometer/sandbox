@@ -152,9 +152,10 @@ class CoreScene:
             """
             The current point is not collinear with A and B.
             """
-            self.not_equal_constraint(A)
-            self.not_equal_constraint(B)
-            A.not_equal_constraint(B)
+            for cnstr in self.scene.constraints(Constraint.Kind.not_collinear):
+                if set(cnstr.params) == set([self, A, B]):
+                    cnstr.update(kwargs)
+                    return
             self.scene.constraint(Constraint.Kind.not_collinear, self, A, B, **kwargs)
 
         def collinear_constraint(self, A, B, **kwargs):
@@ -181,6 +182,10 @@ class CoreScene:
             """
             if isinstance(point, CoreScene.Line) and isinstance(line, CoreScene.Point):
                 point, line = line, point
+            self.not_collinear_constraint(point, line.point0)
+            self.not_collinear_constraint(point, line.point1)
+            self.not_collinear_constraint(line.point0, line.point1)
+            point.not_collinear_constraint(line.point0, line.point1)
             self.scene.constraint(Constraint.Kind.opposite_side, self, point, line, **kwargs)
 
         def same_side_constraint(self, point, line, **kwargs):
@@ -195,6 +200,10 @@ class CoreScene:
             """
             The current point is inside the △ABC
             """
+            self.not_collinear_constraint(A, B)
+            self.not_collinear_constraint(A, C)
+            self.not_collinear_constraint(B, C)
+            A.not_collinear_constraint(B, C)
             self.scene.constraint(Constraint.Kind.inside_triangle, self, A, B, C, **kwargs)
 
     class Line(Object):
@@ -300,6 +309,18 @@ class CoreScene:
             self.reasoning_constraints.append(cns)
         return cns
 
+    def flush(self):
+        for cnstr in self.constraints(Constraint.Kind.not_collinear):
+            for line in self.lines():
+                def adjust(pt0, pt1, pt2):
+                    if pt0 in line.all_points and pt1 in line.all_points:
+                        for pt in line.all_points:
+                            pt.not_equal_constraint(pt2)
+
+                adjust(cnstr.params[0], cnstr.params[1], cnstr.params[2])
+                adjust(cnstr.params[1], cnstr.params[2], cnstr.params[0])
+                adjust(cnstr.params[2], cnstr.params[0], cnstr.params[1])
+
     def quadrilateral_constraint(self, A, B, C, D, **kwargs):
         """
         ABDC is a quadrilateral.
@@ -392,6 +413,7 @@ class CoreScene:
         return None
 
     def dump(self):
+        self.flush()
         print('Objects:')
         print('\n'.join(['\t' + str(obj) for obj in self.__objects]))
         count = len(self.__objects)

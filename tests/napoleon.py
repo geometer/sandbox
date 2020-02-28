@@ -1,6 +1,6 @@
 import math
 
-from sandbox import Scene, Placement
+from sandbox import Scene, iterative_placement
 
 from .base import PlacementTest
 
@@ -24,7 +24,7 @@ class TestNapoleon(PlacementTest):
         napoleonic(C, A, B)
         napoleonic(B, C, A)
 
-        return Placement(scene)
+        return iterative_placement(scene)
 
     def test1(self):
         self.assertEqualDistances('A2', 'B2', 'A2', 'C2')

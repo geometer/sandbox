@@ -1,2 +1,2 @@
 from .scene import Scene
-from .placement import Placement, iterative_placement
+from .placement import iterative_placement
