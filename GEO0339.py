@@ -8,10 +8,10 @@ from sandbox.explainer import Explainer
 scene = Scene()
 
 A, B, C = scene.triangle(labels=('A', 'B', 'C'))
-H = scene.orthocentre_point(A, B, C, label='H')
-A1 = scene.circumcentre_point(H, B, C, label='A1')
-B1 = scene.circumcentre_point(H, A, C, label='B1')
-C1 = scene.circumcentre_point(H, A, B, label='C1')
+H = scene.orthocentre_point((A, B, C), label='H')
+A1 = scene.circumcentre_point((H, B, C), label='A1')
+B1 = scene.circumcentre_point((H, A, C), label='B1')
+C1 = scene.circumcentre_point((H, A, B), label='C1')
 
 placement = iterative_placement(scene, print_progress=True)
 

@@ -5,11 +5,9 @@ from sandbox.hunter import Hunter
 
 scene = Scene()
 
-A = scene.free_point(label='A')
-B = scene.free_point(label='B')
-C = scene.free_point(label='C')
-I = scene.incentre_point(A, B, C, label='I')
-J = scene.orthocentre_point(A, B, I, label='J')
+A, B, C = scene.triangle(labels=('A', 'B', 'C'))
+I = scene.incentre_point((A, B, C), label='I')
+J = scene.orthocentre_point((A, B, I), label='J')
 scene.right_angle_constraint((A, B), (A, C))
 
 placement = iterative_placement(scene)

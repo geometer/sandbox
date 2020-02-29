@@ -6,9 +6,7 @@ class TestTrianglePoints(PlacementTest):
     def createPlacement(self):
         scene = Scene()
 
-        A = scene.free_point(label='A')
-        B = scene.free_point(label='B')
-        C = scene.free_point(label='C')
+        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
 
         bisectorA = scene.angle_bisector_line(A, B, C)
         bisectorB = scene.angle_bisector_line(B, A, C)
@@ -52,11 +50,8 @@ class TestCircumcentre(PlacementTest):
     def createPlacement(self):
         scene = Scene()
 
-        A = scene.free_point(label='A')
-        B = scene.free_point(label='B')
-        C = scene.free_point(label='C')
-
-        O = scene.circumcentre_point(A, B, C, label='O')
+        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
+        O = scene.circumcentre_point((A, B, C), label='O')
 
         return iterative_placement(scene)
 

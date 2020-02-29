@@ -61,32 +61,29 @@ class Scene(CoreScene):
         tmp2.not_equal_constraint(tmp)
         return self.middle_point(tmp, tmp2, **kwargs)
 
-    def orthocentre_point(self, A, B, C, **kwargs):
+    def orthocentre_point(self, triangle, **kwargs):
         """
-        Orthocentre of △ABC (intersection point the altitudes)
+        Orthocentre of the triangle (intersection of the altitudes)
         """
-        self.assert_point(A)
-        self.assert_point(B)
-        self.assert_point(C)
-        A.not_collinear_constraint(B, C)
-        altitude_A = self.altitude((A, B, C), A, auxiliary = True)
-        altitude_B = self.altitude((A, B, C), B, auxiliary = True)
-        point = altitude_A.intersection_point(altitude_B, **kwargs)
-        altitude_C = self.altitude((A, B, C), C, auxiliary = True)
-        point.belongs_to(altitude_C)
-        return point
+        self.__is_triangle(triangle)
+        altitude0 = self.altitude(triangle, triangle[0], auxiliary = True)
+        altitude1 = self.altitude(triangle, triangle[1], auxiliary = True)
+        centre = altitude0.intersection_point(altitude1, **kwargs)
+        altitude2 = self.altitude(triangle, triangle[2], auxiliary = True)
+        centre.belongs_to(altitude2)
+        return centre
 
-    def circumcentre_point(self, A, B, C, **kwargs):
+    def circumcentre_point(self, triangle, **kwargs):
         """
-        Circumcentre of △ABC (perpendicular bisectors intersection point)
+        Circumcentre of the triangle (perpendicular bisectors intersection point)
         """
-        self.assert_point(A)
-        self.assert_point(B)
-        self.assert_point(C)
-        A.not_collinear_constraint(B, C)
-        bisector_AB = self.perpendicular_bisector_line(A, B, auxiliary=True)
-        bisector_AC = self.perpendicular_bisector_line(A, C, auxiliary=True)
-        return bisector_AB.intersection_point(bisector_AC, **kwargs)
+        self.__is_triangle(triangle)
+        bisector0 = self.perpendicular_bisector_line(triangle[1], triangle[2], auxiliary=True)
+        bisector1 = self.perpendicular_bisector_line(triangle[0], triangle[2], auxiliary=True)
+        centre = bisector0.intersection_point(bisector1, **kwargs)
+        bisector2 = self.perpendicular_bisector_line(triangle[0], triangle[1], auxiliary=True)
+        centre.belongs_to(bisector2)
+        return centre
 
     def free_line_through(self, point, **kwargs):
         """
@@ -119,37 +116,37 @@ class Scene(CoreScene):
         circle = A.circle_through(B, auxiliary=True)
         line = A.line_through(C, auxiliary=True)
         X = circle.intersection_point(line, auxiliary=True)
-        X.same_side_constraint(C, A.line_through(B, auxiliary=True))
+        A.same_direction_constraint(X, C)
         Y = X.ratio_point(B, 1, 1, auxiliary=True)
         return A.line_through(Y, **kwargs)
 
-    def incentre_point(self, A, B, C, **kwargs):
+    def incentre_point(self, triangle, **kwargs):
         """
-        Centre of the inscribed circle of △ABC
+        Centre of the inscribed circle of the triangle
         """
-        self.assert_point(A)
-        self.assert_point(B)
-        self.assert_point(C)
-        A.not_collinear_constraint(B, C)
-        bisectorA = self.angle_bisector_line(A, B, C, auxiliary=True)
-        bisectorB = self.angle_bisector_line(B, A, C, auxiliary=True)
-        return bisectorA.intersection_point(bisectorB, **kwargs)
+        self.__is_triangle(triangle)
+        bisector0 = self.angle_bisector_line(triangle[0], triangle[1], triangle[2], auxiliary=True)
+        bisector1 = self.angle_bisector_line(triangle[1], triangle[0], triangle[2], auxiliary=True)
+        centre = bisector0.intersection_point(bisector1, **kwargs)
+        bisector2 = self.angle_bisector_line(triangle[2], triangle[0], triangle[1], auxiliary=True)
+        centre.belongs_to(bisector2)
+        return centre
 
-    def incircle(self, A, B, C, **kwargs):
+    def incircle(self, triangle, **kwargs):
         """
         Inscribed circle of △ABC
         """
-        centre = self.incentre_point(A, B, C, auxiliary=True)
-        side = A.line_through(B, auxiliary=True)
+        centre = self.incentre_point(triangle, auxiliary=True)
+        side = triangle[0].line_through(triangle[1], auxiliary=True)
         foot = self.perpendicular_foot_point(centre, side, auxiliary=True)
         return centre.circle_through(foot, **kwargs)
 
-    def circumcircle(self, A, B, C, **kwargs):
+    def circumcircle(self, triangle, **kwargs):
         """
-        Circumscribed circle of △ABC
+        Circumscribed circle of the triangle
         """
-        centre = self.circumcentre_point(A, B, C, auxiliary=True)
-        return centre.circle_through(A, **kwargs)
+        centre = self.circumcentre_point(triangle, auxiliary=True)
+        return centre.circle_through(triangle[0], **kwargs)
 
     def triangle(self, labels=None, auxiliary=False):
         """
@@ -170,13 +167,19 @@ class Scene(CoreScene):
         points[0].not_collinear_constraint(points[1], points[2])
         return points
 
+    def __is_triangle(self, triangle):
+        assert len(triangle) == 3
+        for pt in triangle:
+            self.assert_point(pt)
+        triangle[0].not_collinear_constraint(triangle[1], triangle[2])
+
     def altitude(self, triangle, vertex, **kwargs):
         """
         Height from the vertex in the triangle
         """
         if isinstance(triangle, CoreScene.Point):
             triangle, vertex = vertex, triangle
-        assert len(triangle) == 3
+        self.__is_triangle(triangle)
         assert vertex in triangle
         points = list(triangle)
         points.remove(vertex)

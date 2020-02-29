@@ -10,12 +10,10 @@ class TestRoG4580(PlacementTest):
     def createPlacement(self):
         scene = Scene()
 
-        A = scene.free_point(label='A')
-        B = scene.free_point(label='B')
-        C = scene.free_point(label='C')
+        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
         scene.distances_ratio_constraint((A, B), (B, C), 2)
         scene.right_angle_constraint((A, B), (B, C))
-        F = scene.incentre_point(A, B, C, label='F')
+        F = scene.incentre_point((A, B, C), label='F')
         E = scene.perpendicular_foot_point(B, A.line_through(F), label='E')
 
         return iterative_placement(scene)

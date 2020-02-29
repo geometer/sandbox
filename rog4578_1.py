@@ -8,10 +8,8 @@ from sandbox.explainer import Explainer
 
 scene = Scene()
 
-A = scene.free_point(label='A')
-B = scene.free_point(label='B')
-C = scene.free_point(label='C')
-D = scene.orthocentre_point(A, B, C, label='D')
+A, B, C = scene.triangle(labels=('A', 'B', 'C'))
+D = scene.orthocentre_point((A, B, C), label='D')
 D.inside_triangle_constraint(A, B, C)
 H = A.line_through(D, label='altitudeA').intersection_point(B.line_through(C, label='BC'), label='H')
 G = C.line_through(D, label='altitudeC').intersection_point(A.line_through(B, label='AB'), label='G')
