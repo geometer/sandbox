@@ -37,7 +37,7 @@ class Explainer:
             for prop in list(self.unexplained):
                 if isinstance(prop, CollinearProperty):
                     for line in self.scene.lines():
-                        if prop.A in line and prop.B in line and prop.C in line:
+                        if all(p in line for p in prop.points):
                             self.reason(prop, 'Given')
                             break
                 if isinstance(prop, RightAngleProperty):

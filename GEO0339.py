@@ -16,7 +16,7 @@ C1 = scene.circumcentre_point((H, A, B), label='C1')
 placement = iterative_placement(scene, print_progress=True)
 
 hunter = Hunter(placement)
-hunter.hunt(['collinears', 'equal_triangles', 'right_angles', 'equal_segments', 'equal_angles', 'similar_triangles'])
+hunter.hunt()
 print('')
 
 explainer = Explainer(scene, hunter.properties)
