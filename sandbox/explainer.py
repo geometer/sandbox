@@ -40,6 +40,21 @@ class Explainer:
 
     def explain(self):
         def base():
+            def not_equal(pt0, pt1, cnst):
+                if not pt0.auxiliary and not pt1.auxiliary:
+                    self.__add(NotEqualProperty(pt0, pt1), ['Given'] + cnst.comments)
+            for cnst in self.scene.constraints(Constraint.Kind.not_equal):
+                not_equal(cnst.params[0], cnst.params[1], cnst)
+            for cnst in self.scene.constraints(Constraint.Kind.not_collinear):
+                def adjust(pt0, pt1, pt2):
+                    line = self.scene.get_line(pt0, pt1)
+                    if line:
+                        for pt in line.all_points:
+                            not_equal(pt, pt2, cnst)
+                adjust(cnst.params[0], cnst.params[1], cnst.params[2])
+                adjust(cnst.params[1], cnst.params[2], cnst.params[0])
+                adjust(cnst.params[2], cnst.params[0], cnst.params[1])
+
             for cnst in self.scene.constraints(Constraint.Kind.same_direction):
                 self.__add(
                     SameDirectionProperty(cnst.params[0], cnst.params[1], cnst.params[2]),
@@ -152,6 +167,16 @@ class Explainer:
             if not prop in explained:
                 print('\t%s' % prop)
         print('\nTotal properties: %d, explained: %d' % (len(self.properties), len(self.explained)))
+
+class NotEqualProperty(Property):
+    def __init__(self, point0, point1):
+        self.points = [point0, point1]
+
+    def __str__(self):
+        return '%s != %s' % tuple(p.label for p in self.points)
+
+    def __eq__(self, other):
+        return isinstance(other, NotEqualProperty) and set(self.points) == set(other.points)
 
 class SameDirectionProperty(Property):
     def __init__(self, start, point0, point1):

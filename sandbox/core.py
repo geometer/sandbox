@@ -362,18 +362,6 @@ class CoreScene:
             self.adjustment_constraints.append(cns)
         return cns
 
-    def flush(self):
-        for cnstr in self.constraints(Constraint.Kind.not_collinear):
-            def adjust(pt0, pt1, pt2):
-                line = self.get_line(pt0, pt1)
-                if line:
-                    for pt in line.all_points:
-                        pt.not_equal_constraint(pt2)
-
-            adjust(cnstr.params[0], cnstr.params[1], cnstr.params[2])
-            adjust(cnstr.params[1], cnstr.params[2], cnstr.params[0])
-            adjust(cnstr.params[2], cnstr.params[0], cnstr.params[1])
-
     def quadrilateral_constraint(self, A, B, C, D, **kwargs):
         """
         ABDC is a quadrilateral.
@@ -483,7 +471,6 @@ class CoreScene:
         return intr.pop() if len(intr) > 0 else None
 
     def dump(self):
-        self.flush()
         print('Objects:')
         print('\n'.join(['\t' + str(obj) for obj in self.__objects]))
         count = len(self.__objects)

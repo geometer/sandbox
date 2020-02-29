@@ -483,7 +483,6 @@ class Placement:
         return self.__deviation
 
 def iterative_placement(scene, max_attempts=10000, max_iterations=400, print_progress=False):
-    scene.flush()
     for attempt in range(0, max_attempts):
         try:
             placement = Placement(scene)
