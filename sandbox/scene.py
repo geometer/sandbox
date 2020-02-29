@@ -53,13 +53,7 @@ class Scene(CoreScene):
         """
         The foot of the perpendicular from the point to the line
         """
-        self.assert_point(point)
-        self.assert_line(line)
-        tmp = line.free_point(auxiliary=True)
-        circle = point.circle_through(tmp, auxiliary=True)
-        tmp2 = line.intersection_point(circle, auxiliary=True)
-        tmp2.not_equal_constraint(tmp)
-        return self.middle_point(tmp, tmp2, **kwargs)
+        return line.intersection_point(point.perpendicular_line(line, auxiliary=True), **kwargs)
 
     def orthocentre_point(self, triangle, **kwargs):
         """
