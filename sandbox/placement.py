@@ -418,6 +418,9 @@ class Placement:
         dist_square = 0.0
         numb_square = 0.0
         for cnstr in self.scene.adjustment_constraints:
+            if hasattr(cnstr, 'guaranteed') and cnstr.guaranteed:
+                continue
+
             if cnstr.kind == Constraint.Kind.distance:
                 has_distance_constraint = True
                 pt0 = self.location(cnstr.params[0])

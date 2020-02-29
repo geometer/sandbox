@@ -104,7 +104,7 @@ class CoreScene:
                 CoreScene.Point.Origin.ratio,
                 point0=self, point1=point, coef0=coef0, coef1=coef1, **kwargs
             )
-            new_point.collinear_constraint(self, point)
+            new_point.collinear_constraint(self, point, guaranteed=True)
             return new_point
 
         def perpendicular_line(self, line, **kwargs):
@@ -119,7 +119,7 @@ class CoreScene:
                 auxiliary=True
             )
             new_line = self.line_through(new_point, **kwargs)
-            line.perpendicular_constraint(new_line)
+            line.perpendicular_constraint(new_line, guaranteed=True)
             return new_line
 
         def line_through(self, point, **kwargs):
