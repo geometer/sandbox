@@ -204,12 +204,19 @@ class CoreScene:
             point.not_collinear_constraint(line.point0, line.point1)
             self.scene.constraint(Constraint.Kind.same_side, self, point, line, **kwargs)
 
-        def inside_angle_constraint(self, A, B, C, **kwargs):
+        def same_direction_constraint(self, A, B, **kwargs):
             """
-            The point is inside the ∠ BAC
+            Vectors (self, A) and (self, B) have the same direction
             """
-            self.same_side_constraint(B, A.line_through(C), **kwargs)
-            self.same_side_constraint(C, A.line_through(B), **kwargs)
+            self.collinear_constraint(A, B, **kwargs)
+            self.scene.constraint(Constraint.Kind.same_direction, self, A, B, **kwargs)
+
+        def inside_angle_constraint(self, vertex, B, C, **kwargs):
+            """
+            The point is inside the ∠ B vertex C
+            """
+            self.same_side_constraint(B, vertex.line_through(C), **kwargs)
+            self.same_side_constraint(C, vertex.line_through(B), **kwargs)
 
         def inside_triangle_constraint(self, A, B, C, **kwargs):
             """
@@ -457,6 +464,7 @@ class Constraint:
         collinear         = ('collinear', Stage.reasoning, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         opposite_side     = ('opposite_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
         same_side         = ('same_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
+        same_direction    = ('same_direction', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         quadrilateral     = ('quadrilateral', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         convex_polygon    = ('convex_polygon', Stage.validation, List[CoreScene.Point])
         distance          = ('distance', Stage.adjustment, CoreScene.Point, CoreScene.Point, int)

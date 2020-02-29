@@ -126,6 +126,11 @@ class Placement:
                             elif orientation != clockwise:
                                 return False
                 return True
+            if constraint.kind == Constraint.Kind.same_direction:
+                pt0 = self.location(constraint.params[0])
+                pt1 = self.location(constraint.params[1])
+                pt2 = self.location(constraint.params[2])
+                return TwoDVector(pt0, pt1).scalar_product(TwoDVector(pt0, pt2)) > 0
 
             assert False, 'Constraint `%s` not supported in placement' % constraint.kind
 

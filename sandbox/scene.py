@@ -122,7 +122,7 @@ class Scene(CoreScene):
         circle = A.circle_through(B, auxiliary=True)
         line = A.line_through(C, auxiliary=True)
         X = circle.intersection_point(line, auxiliary=True)
-        X.same_side_constraint(C, A.line_through(B, auxiliary=True))
+        A.same_direction_constraint(X, C)
         Y = X.ratio_point(B, 1, 1, auxiliary=True)
         return A.line_through(Y, **kwargs)
 
