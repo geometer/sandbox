@@ -66,10 +66,10 @@ class Scene(CoreScene):
         Orthocentre of the triangle (intersection of the altitudes)
         """
         self.__is_triangle(triangle)
-        altitude0 = self.altitude(triangle, triangle[0], auxiliary = True)
-        altitude1 = self.altitude(triangle, triangle[1], auxiliary = True)
+        altitude0 = self.altitude(triangle, triangle[0], auxiliary=True)
+        altitude1 = self.altitude(triangle, triangle[1], auxiliary=True)
         centre = altitude0.intersection_point(altitude1, **kwargs)
-        altitude2 = self.altitude(triangle, triangle[2], auxiliary = True)
+        altitude2 = self.altitude(triangle, triangle[2], auxiliary=True)
         centre.belongs_to(altitude2)
         return centre
 
@@ -104,21 +104,21 @@ class Scene(CoreScene):
         line = point0.line_through(point1, auxiliary=True)
         return middle.perpendicular_line(line, **kwargs)
 
-    def angle_bisector_line(self, A, B, C, **kwargs):
+    def angle_bisector_line(self, vertex, B, C, **kwargs):
         """
-        The bisector of ∠ BAC
+        The bisector of ∠ B vertex C
         """
-        self.assert_point(A)
+        self.assert_point(vertex)
         self.assert_point(B)
         self.assert_point(C)
-        A.not_equal_constraint(B)
-        A.not_equal_constraint(C)
-        circle = A.circle_through(B, auxiliary=True)
-        line = A.line_through(C, auxiliary=True)
+        vertex.not_equal_constraint(B)
+        vertex.not_equal_constraint(C)
+        circle = vertex.circle_through(B, auxiliary=True)
+        line = vertex.line_through(C, auxiliary=True)
         X = circle.intersection_point(line, auxiliary=True)
-        A.same_direction_constraint(X, C)
+        vertex.same_direction_constraint(X, C)
         Y = X.ratio_point(B, 1, 1, auxiliary=True)
-        return A.line_through(Y, **kwargs)
+        return vertex.line_through(Y, **kwargs)
 
     def incentre_point(self, triangle, **kwargs):
         """

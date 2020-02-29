@@ -13,7 +13,7 @@ scene.right_angle_constraint((A, B), (A, C))
 placement = iterative_placement(scene)
 
 hunter = Hunter(placement)
-hunter.hunt(['collinears', 'equal_triangles', 'right_angles', 'equal_segments', 'equal_angles', 'similar_triangles'])
+hunter.hunt()
 print('')
 hunter.dump()
 

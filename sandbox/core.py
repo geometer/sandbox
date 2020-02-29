@@ -95,6 +95,10 @@ class CoreScene:
             assert coef0 + coef1 != 0
             if self == point:
                 return self
+            if coef0 == 0:
+                return point
+            if coef1 == 0:
+                return self
             new_point = CoreScene.Point(
                 self.scene,
                 CoreScene.Point.Origin.ratio,
@@ -123,9 +127,9 @@ class CoreScene:
             assert self != point, 'Cannot create a line by a single point'
             self.not_equal_constraint(point)
 
-            for existing in self.scene.lines():
-                if self in existing.all_points and point in existing.all_points:
-                    return existing.with_extra_args(**kwargs)
+            existing = self.scene.get_line(self, point)
+            if existing:
+                return existing.with_extra_args(**kwargs)
 
             line = CoreScene.Line(self.scene, point0=self, point1=point, **kwargs)
             for cnstr in self.scene.reasoning_constraints:
@@ -224,7 +228,13 @@ class CoreScene:
             """
             Vectors (self, A) and (self, B) have the same direction
             """
-            self.collinear_constraint(A, B, **kwargs)
+            for cnstr in self.scene.constraints(Constraint.Kind.same_direction):
+                if self == cnstr.params[0] and set(cnstr.params[1:3]) == set([A, B]):
+                    cnstr.update(kwargs)
+                    return
+            self.not_equal_constraint(A)
+            self.not_equal_constraint(B)
+            A.belongs_to(self.line_through(B, auxiliary=True))
             self.scene.constraint(Constraint.Kind.same_direction, self, A, B, **kwargs)
 
         def inside_angle_constraint(self, vertex, B, C, **kwargs):
@@ -239,6 +249,11 @@ class CoreScene:
             The point is inside the △ ABC
             """
             A.not_collinear_constraint(B, C)
+            if 'comment' not in kwargs:
+                kwargs = dict(kwargs)
+                kwargs['comment'] = ParametrizedString(
+                    'Point %s is inside △ %s %s %s', self, A, B, C
+                )
             self.inside_angle_constraint(A, B, C, **kwargs)
             self.inside_angle_constraint(B, A, C, **kwargs)
             self.inside_angle_constraint(C, B, A, **kwargs)
@@ -252,6 +267,12 @@ class CoreScene:
             point = CoreScene.Point(self.scene, CoreScene.Point.Origin.line, line=self, **kwargs)
             point.belongs_to(self)
             return point
+
+        def __contains__(self, point):
+            if point is None:
+                return False
+            self.scene.assert_point(point)
+            return point in self.all_points
 
         def intersection_point(self, obj, **kwargs):
             """
@@ -267,10 +288,9 @@ class CoreScene:
                     circle=obj, line=self, **kwargs
                 )
             else:
-                existing_points = [pt for pt in self.all_points if pt in obj.all_points]
-                if len(existing_points) == 1:
-                    return existing_points[0].with_extra_args(**kwargs)
-                assert len(existing_points) == 0
+                existing = self.scene.get_intersection(self, obj)
+                if existing:
+                    return existing.with_extra_args(**kwargs)
 
                 crossing = CoreScene.Point(
                     self.scene,
@@ -348,15 +368,15 @@ class CoreScene:
 
     def flush(self):
         for cnstr in self.constraints(Constraint.Kind.not_collinear):
-            for line in self.lines():
-                def adjust(pt0, pt1, pt2):
-                    if pt0 in line.all_points and pt1 in line.all_points:
-                        for pt in line.all_points:
-                            pt.not_equal_constraint(pt2)
+            def adjust(pt0, pt1, pt2):
+                line = self.get_line(pt0, pt1)
+                if line:
+                    for pt in line.all_points:
+                        pt.not_equal_constraint(pt2)
 
-                adjust(cnstr.params[0], cnstr.params[1], cnstr.params[2])
-                adjust(cnstr.params[1], cnstr.params[2], cnstr.params[0])
-                adjust(cnstr.params[2], cnstr.params[0], cnstr.params[1])
+            adjust(cnstr.params[0], cnstr.params[1], cnstr.params[2])
+            adjust(cnstr.params[1], cnstr.params[2], cnstr.params[0])
+            adjust(cnstr.params[2], cnstr.params[0], cnstr.params[1])
 
     def quadrilateral_constraint(self, A, B, C, D, **kwargs):
         """
@@ -449,6 +469,23 @@ class CoreScene:
                 return obj
         return None
 
+    def get_line(self, point0, point1):
+        """
+        Returns *existing* line through point0 and point1.
+        Does not require point0 != point1, returns first found line that meets the condition.
+        """
+        for line in self.lines():
+            if point0 in line and point1 in line:
+                return line
+        return None
+
+    def get_intersection(self, line0, line1):
+        """
+        Returns *existing* intersection point of line0 and line1.
+        """
+        intr = line0.all_points.intersection(line1.all_points)
+        return intr.pop() if len(intr) > 0 else None
+
     def dump(self):
         self.flush()
         print('Objects:')
@@ -506,7 +543,7 @@ class Constraint:
                 scene.assert_type(arg, knd)
             elif issubclass(knd, List):
                 # TODO: check element types
-                assert isinstance(arg, list) or isinstance(arg, tuple)
+                assert isinstance(arg, (list, tuple))
             else:
                 assert isinstance(arg, knd)
             self.params.append(arg)
@@ -516,7 +553,8 @@ class Constraint:
 
     def update(self, kwargs):
         if 'comment' in kwargs:
-            self.comments.append(kwargs['comment'])
+            if kwargs['comment'] not in self.comments:
+                self.comments.append(kwargs['comment'])
             del kwargs['comment']
         self.__dict__.update(kwargs)
 
@@ -526,3 +564,14 @@ class Constraint:
             return 'Constraint(%s) %s %s' % (self.kind.name, params, self.comments)
         else:
             return 'Constraint(%s) %s' % (self.kind.name, params)
+
+class ParametrizedString:
+    def __init__(self, format_string, *params):
+        self.format_string = format_string
+        self.params = params
+
+    def __eq__(self, other):
+        return isinstance(other, ParametrizedString) and self.format_string == other.format_string and self.params == other.params
+
+    def __str__(self):
+        return self.format_string % tuple(p.label if isinstance(p, CoreScene.Object) else p for p in self.params)

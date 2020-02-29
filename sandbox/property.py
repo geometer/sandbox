@@ -1,26 +1,7 @@
 from . import Scene
 
-class Line:
-    def __init__(self, points):
-        assert len(points) >= 2
-        for point in points:
-            assert isinstance(point, Scene.Point)
-        self.points = points
-
 class Property:
     pass
-
-class CollinearProperty(Property):
-    def __init__(self, A, B, C):
-        assert isinstance(A, Scene.Point)
-        assert isinstance(B, Scene.Point)
-        assert isinstance(C, Scene.Point)
-        self.A = A
-        self.B = B
-        self.C = C
-
-    def __str__(self):
-        return 'collinear %s, %s, %s' % (self.A.label, self.B.label, self.C.label)
 
 class EqualDistancesProperty(Property):
     def __init__(self, AB, CD):

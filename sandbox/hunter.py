@@ -330,14 +330,12 @@ class Hunter:
                     vec1 = Vector(line1[0], line1[1], self.placement)
                 yield Angle(line0, line1, vec0, vec1)
 
-    def __hunt_collinears(self, lines, verbose):
-        for line in lines:
+    def __hunt_collinears(self):
+        for line in self.__lines():
             for triple in Hunter.__iterate_triples(line):
                 self.properties.append(CollinearProperty(triple[0], triple[1], triple[2]))
-            if len(line) > 2 and verbose:
-                print('collinear: %s' % [pt.label for pt in line])
 
-    def __hunt_equal_segments(self, verbose):
+    def __hunt_equal_segments(self):
         vectors = self.__vectors()
         families = []
         for vec in vectors:
@@ -351,10 +349,8 @@ class Hunter:
         for fam in families:
             for pair in Hunter.__iterate_pairs(fam):
                 self.properties.append(EqualDistancesProperty((pair[0].start, pair[0].end), (pair[1].start, pair[1].end)))
-            if len(fam) > 1 and verbose:
-                print(' = '.join(['|' + str(vec) + '|' for vec in fam]))
 
-    def __hunt_right_angles(self, angles, verbose):
+    def __hunt_right_angles(self, angles):
         rights = []
         for ngl in angles:
             arc = ngl.arc()
@@ -364,10 +360,8 @@ class Hunter:
                 rights.append(ngl.reversed())
         for ngl in rights:
             self.properties.append(RightAngleProperty(ngl))
-        if rights and verbose:
-            print('90º: ' + ', '.join([str(ngl) for ngl in rights]))
 
-    def __hunt_equal_angles(self, angles, verbose):
+    def __hunt_equal_angles(self, angles):
         families = []
         for ngl in angles:
             if ngl.abs_arc() < ERROR or np.fabs(ngl.abs_arc() - np.pi) < ERROR:
@@ -385,10 +379,8 @@ class Hunter:
         for fam in families:
             for pair in Hunter.__iterate_pairs(fam):
                 self.properties.append(EqualAnglesProperty(pair[0], pair[1]))
-            if len(fam) > 1 and verbose:
-                print(' = '.join([str(ngl) for ngl in fam]))
 
-    def __hunt_equal_triangles(self, verbose):
+    def __hunt_equal_triangles(self):
         triangles = list(self.__triangles())
         families = []
         for trn in triangles:
@@ -407,25 +399,19 @@ class Hunter:
         for fam in families:
             for pair in Hunter.__iterate_pairs(fam):
                 self.properties.append(EqualTrianglesProperty(pair[0].pts, pair[1].pts))
-            if len(fam) > 1 and verbose:
-                print(" = ".join([str(trn) for trn in fam]))
 
-    def __hunt_similar_triangles(self, verbose):
+    def __hunt_similar_triangles(self):
         triangles = list(self.__triangles())
 
         equilaterals = [trn for trn in triangles if trn.equilateral()]
         for trn in equilaterals:
             self.properties.append(EquilateralTriangleProperty(trn.pts))
-        if equilaterals and verbose:
-            print('Equilateral triangles: ' + ', '.join([str(trn) for trn in equilaterals]))
 
         triangles = [trn for trn in triangles if not trn.equilateral()]
 
         isosceles = list(filter(None, [trn.isosceles() for trn in triangles]))
         for trn in isosceles:
             self.properties.append(IsoscelesTriangleProperty(trn.pts[0], trn.pts[1:]))
-        if isosceles and verbose:
-            print('Isosceles triangles: ' + ', '.join([str(trn) for trn in isosceles]))
 
         families = []
         for trn in triangles:
@@ -444,10 +430,8 @@ class Hunter:
         for fam in families:
             for pair in Hunter.__iterate_pairs(fam):
                 self.properties.append(SimilarTrianglesProperty(pair[0].pts, pair[1].pts))
-            if len(fam) > 1 and verbose:
-                print(" ~ ".join([str(trn) for trn in fam]))
 
-    def hunt(self, options=('all')):
+    def hunt(self, options=('default')):
         all_vectors = list(self.__vectors())
         all_vectors.sort(key=Vector.length)
 
@@ -456,11 +440,23 @@ class Hunter:
         all_angles = list(self.__angles(all_lines))
         all_angles.sort(key=Angle.abs_arc)
 
-        if 'collinears' in options or 'all' in options:
-            self.__hunt_collinears(all_lines, 'verbose' in options)
+        if 'collinears' in options or 'default' in options:
+            self.__hunt_collinears()
 
-        if 'equal_segments' in options or 'all' in options:
-            self.__hunt_equal_segments('verbose' in options)
+        if 'equal_segments' in options or 'default' in options:
+            self.__hunt_equal_segments()
+
+        if 'equal_angles' in options or 'default' in options:
+            self.__hunt_equal_angles(all_angles)
+
+        if 'right_angles' in options or 'default' in options:
+            self.__hunt_right_angles(all_angles)
+
+        if 'equal_triangles' in options or 'default' in options:
+            self.__hunt_equal_triangles()
+
+        if 'similar_triangles' in options or 'default' in options:
+            self.__hunt_similar_triangles()
 
         if 'proportional_segments' in options or 'all' in options:
             hunt_proportional_segments(all_vectors)
@@ -468,20 +464,8 @@ class Hunter:
         if 'rational_angles' in options or 'all' in options:
             hunt_rational_angles(all_angles)
 
-        if 'equal_angles' in options or 'all' in options:
-            self.__hunt_equal_angles(all_angles, 'verbose' in options)
-
-        if 'right_angles' in options or 'all' in options:
-            self.__hunt_right_angles(all_angles, 'verbose' in options)
-
         if 'proportional_angles' in options or 'all' in options:
             hunt_proportional_angles(all_angles)
-
-        if 'equal_triangles' in options or 'all' in options:
-            self.__hunt_equal_triangles('verbose' in options)
-
-        if 'similar_triangles' in options or 'all' in options:
-            self.__hunt_similar_triangles('verbose' in options)
 
         if 'coincidences' in options or 'all' in options:
             hunt_coincidences(self.placement)
@@ -491,6 +475,13 @@ class Hunter:
         for prop in self.properties:
             print('\t%s' % prop)
         print('\nTotal properties: %d' % len(self.properties))
+
+class CollinearProperty(Property):
+    def __init__(self, A, B, C):
+        self.points = (A, B, C)
+
+    def __str__(self):
+        return 'collinear %s, %s, %s' % tuple(p.label for p in self.points)
 
 class RightAngleProperty(Property):
     def __init__(self, angle):
