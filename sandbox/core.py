@@ -103,7 +103,7 @@ class CoreScene:
                 CoreScene.Point.Origin.ratio,
                 point0=self, point1=point, coef0=coef0, coef1=coef1, **kwargs
             )
-            new_point.collinear_constraint(self, point)
+            new_point.collinear_constraint(self, point, guaranteed=True)
             return new_point
 
         def line_through(self, point, **kwargs):

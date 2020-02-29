@@ -145,7 +145,7 @@ class Scene(CoreScene):
         x_1.not_equal_constraint(x_0)
         perpendicular = x_0.line_through(x_1, **kwargs)
         point.belongs_to(perpendicular)
-        perpendicular.perpendicular_constraint(line)
+        perpendicular.perpendicular_constraint(line, guaranteed=True)
         return perpendicular
 
     def incentre_point(self, triangle, **kwargs):
@@ -213,7 +213,7 @@ class Scene(CoreScene):
         points.remove(vertex)
         base = points[0].line_through(points[1], auxiliary=True)
         altitude = self.perpendicular_line(base, vertex, **kwargs)
-        altitude.perpendicular_constraint(base, comment='Altitude is perpendicular to the base')
+        altitude.perpendicular_constraint(base, comment='Altitude is perpendicular to the base', guaranteed=True)
         return altitude
 
     def parallelogram(self, labels=None, auxiliary=False):
