@@ -7,7 +7,7 @@ class Explainer:
         def __init__(self, index, prop, comments, roots):
             self.index = index
             self.property = prop
-            if isinstance(comments, str):
+            if not isinstance(comments, (list, tuple)):
                 self.comments = [comments]
             else:
                 self.comments = list(comments)
@@ -20,7 +20,7 @@ class Explainer:
                     ', '.join(['*%d' % rsn.index for rsn in self.roots])
                 )
             else:
-                return ', '.join(self.comments)
+                return ', '.join([str(com) for com in self.comments])
 
     def __init__(self, scene, properties):
         self.scene = scene

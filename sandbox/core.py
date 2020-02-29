@@ -235,7 +235,9 @@ class CoreScene:
             A.not_collinear_constraint(B, C)
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = 'The point is inside the triangle'
+                kwargs['comment'] = ParametrizedString(
+                    'Point %s is inside △ %s %s %s', self, A, B, C
+                )
             self.inside_angle_constraint(A, B, C, **kwargs)
             self.inside_angle_constraint(B, A, C, **kwargs)
             self.inside_angle_constraint(C, B, A, **kwargs)
@@ -254,7 +256,7 @@ class CoreScene:
             if point is None:
                 return False
             self.scene.assert_point(point)
-            return point in self.all_points 
+            return point in self.all_points
 
         def intersection_point(self, obj, **kwargs):
             """
@@ -546,3 +548,14 @@ class Constraint:
             return 'Constraint(%s) %s %s' % (self.kind.name, params, self.comments)
         else:
             return 'Constraint(%s) %s' % (self.kind.name, params)
+
+class ParametrizedString:
+    def __init__(self, format_string, *params):
+        self.format_string = format_string
+        self.params = params
+
+    def __eq__(self, other):
+        return isinstance(other, ParametrizedString) and self.format_string == other.format_string and self.params == other.params
+
+    def __str__(self):
+        return self.format_string % tuple(p.label if isinstance(p, CoreScene.Object) else p for p in self.params)
