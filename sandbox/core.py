@@ -116,10 +116,9 @@ class CoreScene:
                 return existing.with_extra_args(**kwargs)
 
             line = CoreScene.Line(self.scene, point0=self, point1=point, **kwargs)
-            for cnstr in self.scene.reasoning_constraints:
-                if cnstr.kind == Constraint.Kind.collinear:
-                    if len(line.all_points.intersection(set(cnstr.params))) == 2:
-                        line.all_points.update(cnstr.params)
+            for cnstr in self.scene.constraints(Constraint.Kind.collinear):
+                if len(line.all_points.intersection(set(cnstr.params))) == 2:
+                    line.all_points.update(cnstr.params)
 
             return line
 
@@ -338,16 +337,13 @@ class CoreScene:
         self.__objects = []
         self.validation_constraints = []
         self.adjustment_constraints = []
-        self.reasoning_constraints = []
 
     def constraint(self, kind, *args, **kwargs):
         cns = Constraint(kind, self, *args, **kwargs)
         if kind.stage == Stage.validation:
             self.validation_constraints.append(cns)
-        elif kind.stage == Stage.adjustment:
-            self.adjustment_constraints.append(cns)
         else:
-            self.reasoning_constraints.append(cns)
+            self.adjustment_constraints.append(cns)
         return cns
 
     def flush(self):
@@ -425,10 +421,8 @@ class CoreScene:
     def constraints(self, kind):
         if kind.stage == Stage.validation:
             return [cnstr for cnstr in self.validation_constraints if cnstr.kind == kind]
-        elif kind.stage == Stage.adjustment:
-            return [cnstr for cnstr in self.adjustment_constraints if cnstr.kind == kind]
         else:
-            return [cnstr for cnstr in self.reasoning_constraints if cnstr.kind == kind]
+            return [cnstr for cnstr in self.adjustment_constraints if cnstr.kind == kind]
 
     def assert_type(self, obj, *args):
         assert isinstance(obj, args), 'Unexpected type %s' % type(obj)
@@ -485,22 +479,18 @@ class CoreScene:
         if self.adjustment_constraints:
             print('\nAdjustment constraints:')
             print('\n'.join(['\t' + str(cnstr) for cnstr in self.adjustment_constraints]))
-        if self.reasoning_constraints:
-            print('\nReasoning constraints:')
-            print('\n'.join(['\t' + str(cnstr) for cnstr in self.reasoning_constraints]))
         print('')
 
 class Stage(Enum):
     validation        = auto()
     adjustment        = auto()
-    reasoning         = auto()
 
 class Constraint:
     @unique
     class Kind(Enum):
         not_equal         = ('not_equal', Stage.validation, CoreScene.Point, CoreScene.Point)
         not_collinear     = ('not_collinear', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point)
-        collinear         = ('collinear', Stage.reasoning, CoreScene.Point, CoreScene.Point, CoreScene.Point)
+        collinear         = ('collinear', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         opposite_side     = ('opposite_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
         same_side         = ('same_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
         same_direction    = ('same_direction', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point)
