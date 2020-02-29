@@ -1,4 +1,4 @@
-from .core import Constraint
+from .core import Constraint, ParametrizedString
 from .hunter import *
 from .property import *
 
@@ -40,17 +40,20 @@ class Explainer:
 
     def explain(self):
         def base():
-            def not_equal(pt0, pt1, cnst):
+            def not_equal(pt0, pt1, comments):
                 if not pt0.auxiliary and not pt1.auxiliary:
-                    self.__add(NotEqualProperty(pt0, pt1), ['Given'] + cnst.comments)
+                    self.__add(NotEqualProperty(pt0, pt1), comments)
             for cnst in self.scene.constraints(Constraint.Kind.not_equal):
-                not_equal(cnst.params[0], cnst.params[1], cnst)
+                not_equal(cnst.params[0], cnst.params[1], cnst.comments)
             for cnst in self.scene.constraints(Constraint.Kind.not_collinear):
                 def adjust(pt0, pt1, pt2):
                     line = self.scene.get_line(pt0, pt1)
                     if line:
                         for pt in line.all_points:
-                            not_equal(pt, pt2, cnst)
+                            if pt == pt0 or pt == pt1:
+                                not_equal(pt, pt2, cnst.comments)
+                            else:
+                                not_equal(pt, pt2, cnst.comments + [ParametrizedString('%s lies on the line %s %s', pt, pt0, pt1)])
                 adjust(cnst.params[0], cnst.params[1], cnst.params[2])
                 adjust(cnst.params[1], cnst.params[2], cnst.params[0])
                 adjust(cnst.params[2], cnst.params[0], cnst.params[1])
@@ -58,18 +61,18 @@ class Explainer:
             for cnst in self.scene.constraints(Constraint.Kind.same_direction):
                 self.__add(
                     SameDirectionProperty(cnst.params[0], cnst.params[1], cnst.params[2]),
-                    ['Given'] + cnst.comments
+                    cnst.comments
                 )
 
             for cnst in self.scene.constraints(Constraint.Kind.opposite_side):
                 self.__add(
                     OppositeSideProperty(cnst.params[2], cnst.params[0], cnst.params[1]),
-                    ['Given'] + cnst.comments
+                    cnst.comments
                 )
             for cnst in self.scene.constraints(Constraint.Kind.same_side):
                 self.__add(
                     SameSideProperty(cnst.params[2], cnst.params[0], cnst.params[1]),
-                    ['Given'] + cnst.comments
+                    cnst.comments
                 )
 
             for prop in list(self.unexplained):

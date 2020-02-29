@@ -2,7 +2,7 @@
 This module is to be extended in the future to add more construction methods.
 """
 
-from .core import CoreScene
+from .core import CoreScene, ParametrizedString
 
 class Scene(CoreScene):
     """
@@ -158,17 +158,20 @@ class Scene(CoreScene):
             return self.free_point(**args)
 
         points = (point(0), point(1), point(2))
-        points[0].not_collinear_constraint(points[1], points[2])
+        self.triangle_constraint(points)
         return points
 
-    def triangle_constraint(self, triangle):
+    def triangle_constraint(self, triangle, **kwargs):
         """
         Parameter triangle is triple of non-collinear points
         """
         assert len(triangle) == 3
         for pt in triangle:
             self.assert_point(pt)
-        triangle[0].not_collinear_constraint(triangle[1], triangle[2])
+        if 'comment' not in kwargs:
+            kwargs = dict(kwargs)
+            kwargs['comment'] = ParametrizedString('(%s, %s, %s) is a triangle', *triangle)
+        triangle[0].not_collinear_constraint(triangle[1], triangle[2], **kwargs)
 
     def altitude(self, triangle, vertex, **kwargs):
         """
