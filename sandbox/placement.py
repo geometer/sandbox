@@ -1,7 +1,5 @@
-from functools import reduce
 import numpy as np
 from scipy.optimize import minimize
-from sys import stdout
 
 from .core import CoreScene, Constraint
 
@@ -45,10 +43,9 @@ class TwoDVector:
         cos = self.scalar_product(other) / self.length / other.length
         if cos >= 1:
             return 0
-        elif cos <= -1:
+        if cos <= -1:
             return np.pi
-        else:
-            return np.arccos(cos) if self.vector_product(other) > 0 else -np.arccos(cos)
+        return np.arccos(cos) if self.vector_product(other) > 0 else -np.arccos(cos)
 
 class IncompletePlacementError(Exception):
     """Internal error, should never be thrown to public"""
@@ -108,7 +105,7 @@ class Placement:
                 pt2 = self.location(constraint.params[2])
                 pt3 = self.location(constraint.params[3])
                 clockwise = [self.clockwise(x, y, z) for (x, y, z) in
-                    [(pt0, pt1, pt2), (pt1, pt2, pt3), (pt2, pt3, pt0), (pt3, pt0, pt1)]]
+                             [(pt0, pt1, pt2), (pt1, pt2, pt3), (pt2, pt3, pt0), (pt3, pt0, pt1)]]
                 return 0 not in clockwise and sum(clockwise) != 0
             if constraint.kind == Constraint.Kind.convex_polygon:
                 points = [self.location(pt) for pt in constraint.params[0]]
@@ -138,6 +135,7 @@ class Placement:
         self.scene = scene
         self._coordinates = {}
         self.params = params if params else {}
+        self.__deviation = None
         not_placed = list(scene.points())
         passed_constraints = set()
 
@@ -405,8 +403,8 @@ class Placement:
         print('\nDeviation: %.15f' % self.deviation())
 
     def deviation(self):
-        if hasattr(self, 'cached_deviation'):
-            return self.cached_deviation
+        if self.__deviation:
+            return self.__deviation
 
         has_distance_constraint = False
         dist_square = 0.0
@@ -451,9 +449,9 @@ class Placement:
                 assert False, 'Constraint `%s` not supported in adjustment' % cnstr.kind
 
         if not has_distance_constraint:
-            self.cached_deviation = numb_square
+            self.__deviation = numb_square
         else:
-            self.cached_deviation = dist_square
+            self.__deviation = dist_square
             if numb_square > 0:
                 average2 = 0.0
                 points = [self.location(pt) for pt in self.scene.points(skip_auxiliary=True)]
@@ -462,9 +460,9 @@ class Placement:
                     for pt1 in points[index + 1:]:
                         average2 += pt0.distance2_to(pt1)
                 average2 /= len(points) * (len(points) - 1) / 2
-                self.cached_deviation += numb_square * average2
+                self.__deviation += numb_square * average2
 
-        return self.cached_deviation
+        return self.__deviation
 
 def iterative_placement(scene, max_attempts=10000, max_iterations=400, print_progress=False):
     scene.flush()
@@ -474,13 +472,13 @@ def iterative_placement(scene, max_attempts=10000, max_iterations=400, print_pro
             if placement.deviation() < 1e-14:
                 return placement
             keys = list(placement.params.keys())
-            data = np.array([placement.params[k] for k in keys])
             def placement_for_data(data):
-                return Placement(scene, {k : v for (k, v) in zip(keys, data)})
+                return Placement(scene, dict(zip(keys, data)))
 
             def numpy_fun(data):
                 return placement_for_data(data).deviation()
 
+            data = np.array([placement.params[k] for k in keys])
             res = minimize(numpy_fun, data, method='BFGS', options={'gtol': 1e-7, 'maxiter': max_iterations, 'disp': print_progress})
             pl = placement_for_data(res.x)
             if pl.deviation() < 1e-14:

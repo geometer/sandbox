@@ -512,7 +512,7 @@ class Constraint:
                 scene.assert_type(arg, knd)
             elif issubclass(knd, List):
                 # TODO: check element types
-                assert isinstance(arg, list) or isinstance(arg, tuple)
+                assert isinstance(arg, (list, tuple))
             else:
                 assert isinstance(arg, knd)
             self.params.append(arg)
