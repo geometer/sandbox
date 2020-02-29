@@ -6,14 +6,12 @@ class TestTriangle345(PlacementTest):
     def createPlacement(self):
         scene = Scene()
 
-        A = scene.free_point(label='A')
-        B = scene.free_point(label='B')
-        C = scene.free_point(label='C')
+        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
         A.distance_constraint('B', 5)
         C.distance_constraint('B', 4)
         C.distance_constraint('A', 3)
-        scene.incircle(A, B, C, label='incircle')
-        scene.circumcircle(A, B, C, label='circumcircle')
+        scene.incircle((A, B, C), label='incircle')
+        scene.circumcircle((A, B, C), label='circumcircle')
 
         return iterative_placement(scene)
 
