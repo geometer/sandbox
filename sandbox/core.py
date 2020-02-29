@@ -223,6 +223,9 @@ class CoreScene:
             The point is inside the △ ABC
             """
             A.not_collinear_constraint(B, C)
+            if 'comment' not in kwargs:
+                kwargs = dict(kwargs)
+                kwargs['comment'] = 'The point is inside the triangle'
             self.inside_angle_constraint(A, B, C, **kwargs)
             self.inside_angle_constraint(B, A, C, **kwargs)
             self.inside_angle_constraint(C, B, A, **kwargs)
@@ -341,6 +344,18 @@ class CoreScene:
                 adjust(cnstr.params[0], cnstr.params[1], cnstr.params[2])
                 adjust(cnstr.params[1], cnstr.params[2], cnstr.params[0])
                 adjust(cnstr.params[2], cnstr.params[0], cnstr.params[1])
+        for cnstr in self.constraints(Constraint.Kind.same_side):
+            pt0 = cnstr.params[0]
+            pt1 = cnstr.params[1]
+            line = cnstr.params[2]
+            for line2 in self.lines():
+                if pt0 in line2.all_points and pt1 in line2.all_points:
+                    break
+            else:
+                continue
+            for pt in line.all_points:
+                if pt in line2.all_points:
+                    pt.same_direction_constraint(pt0, pt1)
 
     def quadrilateral_constraint(self, A, B, C, D, **kwargs):
         """
@@ -500,7 +515,8 @@ class Constraint:
 
     def update(self, kwargs):
         if 'comment' in kwargs:
-            self.comments.append(kwargs['comment'])
+            if kwargs['comment'] not in self.comments:
+                self.comments.append(kwargs['comment'])
             del kwargs['comment']
         self.__dict__.update(kwargs)
 
