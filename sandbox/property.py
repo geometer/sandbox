@@ -1,12 +1,5 @@
 from . import Scene
 
-class Line:
-    def __init__(self, points):
-        assert len(points) >= 2
-        for point in points:
-            assert isinstance(point, Scene.Point)
-        self.points = points
-
 class Property:
     pass
 
