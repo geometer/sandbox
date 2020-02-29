@@ -107,9 +107,9 @@ class CoreScene:
             assert self != point, 'Cannot create a line by a single point'
             self.not_equal_constraint(point)
 
-            for existing in self.scene.lines():
-                if self in existing.all_points and point in existing.all_points:
-                    return existing.with_extra_args(**kwargs)
+            existing = self.scene.get_line(self, point)
+            if existing:
+                return existing.with_extra_args(**kwargs)
 
             line = CoreScene.Line(self.scene, point0=self, point1=point, **kwargs)
             for cnstr in self.scene.reasoning_constraints:
@@ -335,27 +335,24 @@ class CoreScene:
 
     def flush(self):
         for cnstr in self.constraints(Constraint.Kind.not_collinear):
-            for line in self.lines():
-                def adjust(pt0, pt1, pt2):
-                    if pt0 in line.all_points and pt1 in line.all_points:
-                        for pt in line.all_points:
-                            pt.not_equal_constraint(pt2)
+            def adjust(pt0, pt1, pt2):
+                line = self.get_line(pt0, pt1)
+                if line:
+                    for pt in line.all_points:
+                        pt.not_equal_constraint(pt2)
 
-                adjust(cnstr.params[0], cnstr.params[1], cnstr.params[2])
-                adjust(cnstr.params[1], cnstr.params[2], cnstr.params[0])
-                adjust(cnstr.params[2], cnstr.params[0], cnstr.params[1])
+            adjust(cnstr.params[0], cnstr.params[1], cnstr.params[2])
+            adjust(cnstr.params[1], cnstr.params[2], cnstr.params[0])
+            adjust(cnstr.params[2], cnstr.params[0], cnstr.params[1])
         for cnstr in self.constraints(Constraint.Kind.same_side):
             pt0 = cnstr.params[0]
             pt1 = cnstr.params[1]
             line = cnstr.params[2]
-            for line2 in self.lines():
-                if pt0 in line2.all_points and pt1 in line2.all_points:
-                    break
-            else:
-                continue
-            for pt in line.all_points:
-                if pt in line2.all_points:
-                    pt.same_direction_constraint(pt0, pt1)
+            line2 = self.get_line(pt0, pt1)
+            if line2:
+                for pt in line.all_points:
+                    if pt in line2.all_points:
+                        pt.same_direction_constraint(pt0, pt1)
 
     def quadrilateral_constraint(self, A, B, C, D, **kwargs):
         """
@@ -446,6 +443,16 @@ class CoreScene:
         for obj in self.__objects:
             if obj.label == label or label in obj.extra_labels:
                 return obj
+        return None
+
+    def get_line(self, point0, point1):
+        """
+        Returns *existing* line through point0 and point1.
+        Does not require point0 != point1, returns first found line that meets the condition.
+        """
+        for line in self.lines():
+            if point0 in line.all_points and point1 in line.all_points:
+                return line
         return None
 
     def dump(self):
