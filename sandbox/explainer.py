@@ -37,7 +37,7 @@ class Explainer:
             for prop in list(self.unexplained):
                 if isinstance(prop, CollinearProperty):
                     for line in self.scene.lines():
-                        if prop.A in line.all_points and prop.B in line.all_points and prop.C in line.all_points:
+                        if prop.A in line and prop.B in line and prop.C in line:
                             self.reason(prop, 'Given')
                             break
                 if isinstance(prop, RightAngleProperty):
@@ -45,7 +45,7 @@ class Explainer:
                         line0 = cnst.params[0]
                         line1 = cnst.params[1]
                         def vector_on_line(vector, line):
-                            return vector.start in line.all_points and vector.end in line.all_points
+                            return vector.start in line and vector.end in line
 
                         if vector_on_line(prop.angle.vector0, line0):
                             if vector_on_line(prop.angle.vector1, line1):

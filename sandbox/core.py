@@ -208,7 +208,13 @@ class CoreScene:
             """
             Vectors (self, A) and (self, B) have the same direction
             """
+            for cnstr in self.scene.constraints(Constraint.Kind.same_direction):
+                if self == cnstr.params[0] and set(cnstr.params[1:3]) == set([A, B]):
+                    cnstr.update(kwargs)
+                    return
             self.collinear_constraint(A, B, **kwargs)
+            self.not_equal_constraint(A)
+            self.not_equal_constraint(B)
             self.scene.constraint(Constraint.Kind.same_direction, self, A, B, **kwargs)
 
         def inside_angle_constraint(self, vertex, B, C, **kwargs):
@@ -240,6 +246,12 @@ class CoreScene:
             point.belongs_to(self)
             return point
 
+        def __contains__(self, point):
+            if point is None:
+                return False
+            self.scene.assert_point(point)
+            return point in self.all_points 
+
         def intersection_point(self, obj, **kwargs):
             """
             Creates an intersection point of the line and given object (line or circle).
@@ -254,10 +266,9 @@ class CoreScene:
                     circle=obj, line=self, **kwargs
                 )
             else:
-                existing_points = [pt for pt in self.all_points if pt in obj.all_points]
-                if len(existing_points) == 1:
-                    return existing_points[0].with_extra_args(**kwargs)
-                assert len(existing_points) == 0
+                existing = self.scene.get_intersection(self, obj)
+                if existing:
+                    return existing.with_extra_args(**kwargs)
 
                 crossing = CoreScene.Point(
                     self.scene,
@@ -344,15 +355,47 @@ class CoreScene:
             adjust(cnstr.params[0], cnstr.params[1], cnstr.params[2])
             adjust(cnstr.params[1], cnstr.params[2], cnstr.params[0])
             adjust(cnstr.params[2], cnstr.params[0], cnstr.params[1])
-        for cnstr in self.constraints(Constraint.Kind.same_side):
+
+        same_side_constraints = self.constraints(Constraint.Kind.same_side)
+        for cnstr in same_side_constraints:
             pt0 = cnstr.params[0]
             pt1 = cnstr.params[1]
             line = cnstr.params[2]
             line2 = self.get_line(pt0, pt1)
             if line2:
                 for pt in line.all_points:
-                    if pt in line2.all_points:
+                    if pt in line2:
                         pt.same_direction_constraint(pt0, pt1)
+        for index in range(0, len(same_side_constraints)):
+            cnstr0 = same_side_constraints[index]
+            for cnstr1 in same_side_constraints[index + 1:]:
+                AB = cnstr0.params[2]
+                AC = cnstr1.params[2]
+                A = self.get_intersection(AB, AC)
+                if A is None:
+                    continue
+                if cnstr0.params[0] == cnstr1.params[0]:
+                    B, C, D = cnstr1.params[1], cnstr0.params[1], cnstr0.params[0]
+                elif cnstr0.params[1] == cnstr1.params[0]:
+                    B, C, D = cnstr1.params[1], cnstr0.params[0], cnstr0.params[1]
+                elif cnstr0.params[0] == cnstr1.params[1]:
+                    B, C, D = cnstr1.params[0], cnstr0.params[1], cnstr0.params[0]
+                elif cnstr0.params[1] == cnstr1.params[1]:
+                    B, C, D = cnstr1.params[0], cnstr0.params[0], cnstr0.params[1]
+                else:
+                    continue
+                if B == C or B not in AB or C not in AC:
+                    continue
+                AD = self.get_line(A, D)
+                BC = self.get_line(B, C)
+                if AD is None or BC is None:
+                    continue
+                X = self.get_intersection(AD, BC)
+                if X:
+                    X.same_direction_constraint(A, D)
+                    A.same_direction_constraint(D, X)
+                    B.same_direction_constraint(X, C)
+                    C.same_direction_constraint(X, B)
 
     def quadrilateral_constraint(self, A, B, C, D, **kwargs):
         """
@@ -451,9 +494,16 @@ class CoreScene:
         Does not require point0 != point1, returns first found line that meets the condition.
         """
         for line in self.lines():
-            if point0 in line.all_points and point1 in line.all_points:
+            if point0 in line and point1 in line:
                 return line
         return None
+
+    def get_intersection(self, line0, line1):
+        """
+        Returns *existing* intersection point of line0 and line1.
+        """
+        intr = line0.all_points.intersection(line1.all_points)
+        return intr.pop() if len(intr) > 0 else None
 
     def dump(self):
         self.flush()
