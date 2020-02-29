@@ -59,7 +59,7 @@ class Scene(CoreScene):
         """
         Orthocentre of the triangle (intersection of the altitudes)
         """
-        self.__is_triangle(triangle)
+        self.triangle_constraint(triangle)
         altitude0 = self.altitude(triangle, triangle[0], auxiliary=True)
         altitude1 = self.altitude(triangle, triangle[1], auxiliary=True)
         centre = altitude0.intersection_point(altitude1, **kwargs)
@@ -71,7 +71,7 @@ class Scene(CoreScene):
         """
         Circumcentre of the triangle (perpendicular bisectors intersection point)
         """
-        self.__is_triangle(triangle)
+        self.triangle_constraint(triangle)
         bisector0 = self.perpendicular_bisector_line(triangle[1], triangle[2], auxiliary=True)
         bisector1 = self.perpendicular_bisector_line(triangle[0], triangle[2], auxiliary=True)
         centre = bisector0.intersection_point(bisector1, **kwargs)
@@ -118,7 +118,7 @@ class Scene(CoreScene):
         """
         Centre of the inscribed circle of the triangle
         """
-        self.__is_triangle(triangle)
+        self.triangle_constraint(triangle)
         bisector0 = self.angle_bisector_line(triangle[0], triangle[1], triangle[2], auxiliary=True)
         bisector1 = self.angle_bisector_line(triangle[1], triangle[0], triangle[2], auxiliary=True)
         centre = bisector0.intersection_point(bisector1, **kwargs)
@@ -161,7 +161,10 @@ class Scene(CoreScene):
         points[0].not_collinear_constraint(points[1], points[2])
         return points
 
-    def __is_triangle(self, triangle):
+    def triangle_constraint(self, triangle):
+        """
+        Parameter triangle is triple of non-collinear points
+        """
         assert len(triangle) == 3
         for pt in triangle:
             self.assert_point(pt)
@@ -173,7 +176,7 @@ class Scene(CoreScene):
         """
         if isinstance(triangle, CoreScene.Point):
             triangle, vertex = vertex, triangle
-        self.__is_triangle(triangle)
+        self.triangle_constraint(triangle)
         assert vertex in triangle
         points = list(triangle)
         points.remove(vertex)
