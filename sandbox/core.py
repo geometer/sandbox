@@ -391,13 +391,15 @@ class CoreScene:
         """
         self.distances_ratio_constraint(AB, CD, 1, **kwargs)
 
-    def right_angle_constraint(self, AB, CD, **kwargs):
+    def perpendicular_constraint(self, AB, CD, **kwargs):
         """
         AB ⟂ CD
         AB and CD are tuples or lists of two points
         """
         assert len(AB) == 2 and len(CD) == 2
-        self.constraint(Constraint.Kind.right_angle, AB[0], AB[1], CD[0], CD[1], **kwargs)
+        lineAB = AB[0].line_through(AB[1], auxiliary=True)
+        lineCD = CD[0].line_through(CD[1], auxiliary=True)
+        lineAB.perpendicular_constraint(lineCD, *kwargs)
 
     def angles_ratio_constraint(self, ABCD, EFGH, ratio, **kwargs):
         self.constraint(
@@ -506,9 +508,8 @@ class Constraint:
         convex_polygon    = ('convex_polygon', Stage.validation, List[CoreScene.Point])
         distance          = ('distance', Stage.adjustment, CoreScene.Point, CoreScene.Point, int)
         distances_ratio   = ('distances_ratio', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, int)
-        right_angle       = ('right_angle', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         angles_ratio      = ('angles_ratio', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, int)
-        perpendicular     = ('perpendicular', Stage.reasoning, CoreScene.Line, CoreScene.Line)
+        perpendicular     = ('perpendicular', Stage.adjustment, CoreScene.Line, CoreScene.Line)
 
         def __init__(self, name, stage, *params):
             self.stage = stage

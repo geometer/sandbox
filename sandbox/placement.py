@@ -422,11 +422,11 @@ class Placement:
                 pt3 = self.location(cnstr.params[3])
                 ratio = cnstr.params[4]
                 numb_square += (pt0.distance_to(pt1) / pt2.distance_to(pt3) - ratio) ** 2
-            elif cnstr.kind == Constraint.Kind.right_angle:
-                pt0 = self.location(cnstr.params[0])
-                pt1 = self.location(cnstr.params[1])
-                pt2 = self.location(cnstr.params[2])
-                pt3 = self.location(cnstr.params[3])
+            elif cnstr.kind == Constraint.Kind.perpendicular:
+                pt0 = self.location(cnstr.params[0].point0)
+                pt1 = self.location(cnstr.params[0].point1)
+                pt2 = self.location(cnstr.params[1].point0)
+                pt3 = self.location(cnstr.params[1].point1)
                 vec0 = TwoDVector(pt0, pt1)
                 vec1 = TwoDVector(pt2, pt3)
                 numb_square += vec0.scalar_product(vec1) ** 2 / vec0.length2 / vec1.length2
