@@ -94,6 +94,10 @@ class CoreScene:
             assert coef0 + coef1 != 0
             if self == point:
                 return self
+            if coef0 == 0:
+                return point
+            if coef1 == 0:
+                return self
             new_point = CoreScene.Point(
                 self.scene,
                 CoreScene.Point.Origin.ratio,
@@ -212,9 +216,9 @@ class CoreScene:
                 if self == cnstr.params[0] and set(cnstr.params[1:3]) == set([A, B]):
                     cnstr.update(kwargs)
                     return
-            self.collinear_constraint(A, B, **kwargs)
             self.not_equal_constraint(A)
             self.not_equal_constraint(B)
+            A.belongs_to(self.line_through(B, auxiliary=True))
             self.scene.constraint(Constraint.Kind.same_direction, self, A, B, **kwargs)
 
         def inside_angle_constraint(self, vertex, B, C, **kwargs):
