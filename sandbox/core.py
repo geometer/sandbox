@@ -182,29 +182,43 @@ class CoreScene:
             """
             if isinstance(point, CoreScene.Line) and isinstance(line, CoreScene.Point):
                 point, line = line, point
-            self.not_collinear_constraint(point, line.point0)
-            self.not_collinear_constraint(point, line.point1)
+            for cnstr in self.scene.constraints(Constraint.Kind.opposite_side):
+                if line == cnstr.params[2] and set(cnstr.params[0:2]) == set([self, point]):
+                    cnstr.update(kwargs)
+                    return
             self.not_collinear_constraint(line.point0, line.point1)
             point.not_collinear_constraint(line.point0, line.point1)
             self.scene.constraint(Constraint.Kind.opposite_side, self, point, line, **kwargs)
 
         def same_side_constraint(self, point, line, **kwargs):
             """
-            The current point lies on the same side to the line as the given point.
+            The point lies on the same side to the line as the given point.
             """
             if isinstance(point, CoreScene.Line) and isinstance(line, CoreScene.Point):
                 point, line = line, point
+            for cnstr in self.scene.constraints(Constraint.Kind.same_side):
+                if line == cnstr.params[2] and set(cnstr.params[0:2]) == set([self, point]):
+                    cnstr.update(kwargs)
+                    return
+            self.not_collinear_constraint(line.point0, line.point1)
+            point.not_collinear_constraint(line.point0, line.point1)
             self.scene.constraint(Constraint.Kind.same_side, self, point, line, **kwargs)
+
+        def inside_angle_constraint(self, A, B, C, **kwargs):
+            """
+            The point is inside the ∠ BAC
+            """
+            self.same_side_constraint(B, A.line_through(C), **kwargs)
+            self.same_side_constraint(C, A.line_through(B), **kwargs)
 
         def inside_triangle_constraint(self, A, B, C, **kwargs):
             """
-            The current point is inside the △ABC
+            The point is inside the △ ABC
             """
-            self.not_collinear_constraint(A, B)
-            self.not_collinear_constraint(A, C)
-            self.not_collinear_constraint(B, C)
             A.not_collinear_constraint(B, C)
-            self.scene.constraint(Constraint.Kind.inside_triangle, self, A, B, C, **kwargs)
+            self.inside_angle_constraint(A, B, C, **kwargs)
+            self.inside_angle_constraint(B, A, C, **kwargs)
+            self.inside_angle_constraint(C, B, A, **kwargs)
 
     class Line(Object):
         def __init__(self, scene, **kwargs):
@@ -445,7 +459,6 @@ class Constraint:
         same_side         = ('same_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
         quadrilateral     = ('quadrilateral', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         convex_polygon    = ('convex_polygon', Stage.validation, List[CoreScene.Point])
-        inside_triangle   = ('inside_triangle', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         distance          = ('distance', Stage.adjustment, CoreScene.Point, CoreScene.Point, int)
         distances_ratio   = ('distances_ratio', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, int)
         right_angle       = ('right_angle', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)

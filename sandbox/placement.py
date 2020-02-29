@@ -110,14 +110,6 @@ class Placement:
                 clockwise = [self.clockwise(x, y, z) for (x, y, z) in
                     [(pt0, pt1, pt2), (pt1, pt2, pt3), (pt2, pt3, pt0), (pt3, pt0, pt1)]]
                 return 0 not in clockwise and sum(clockwise) != 0
-            if constraint.kind == Constraint.Kind.inside_triangle:
-                pt0 = self.location(constraint.params[0])
-                pt1 = self.location(constraint.params[1])
-                pt2 = self.location(constraint.params[2])
-                pt3 = self.location(constraint.params[3])
-                clockwise = [self.clockwise(x, y, z) for (x, y, z) in
-                    [(pt0, pt1, pt2), (pt0, pt2, pt3), (pt0, pt3, pt1)]]
-                return 0 not in clockwise and abs(sum(clockwise)) == 3
             if constraint.kind == Constraint.Kind.convex_polygon:
                 points = [self.location(pt) for pt in constraint.params[0]]
                 orientation = None
