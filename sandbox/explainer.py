@@ -39,10 +39,21 @@ class Explainer:
             self.__reason(prop, comments, roots)
 
     def explain(self):
-        def step0():
+        def base():
             for cnst in self.scene.constraints(Constraint.Kind.same_direction):
                 self.__add(
                     SameDirectionProperty(cnst.params[0], cnst.params[1], cnst.params[2]),
+                    ['Given'] + cnst.comments
+                )
+
+            for cnst in self.scene.constraints(Constraint.Kind.opposite_side):
+                self.__add(
+                    OppositeSideProperty(cnst.params[2], cnst.params[0], cnst.params[1]),
+                    ['Given'] + cnst.comments
+                )
+            for cnst in self.scene.constraints(Constraint.Kind.same_side):
+                self.__add(
+                    SameSideProperty(cnst.params[2], cnst.params[0], cnst.params[1]),
                     ['Given'] + cnst.comments
                 )
 
@@ -67,34 +78,37 @@ class Explainer:
                                 self.__reason(prop, ['%s ⟂ %s' % (line0.label, line1.label)] + cnst.comments)
 
         def iteration():
-            same_side_constraints = self.scene.constraints(Constraint.Kind.same_side)
-            for cnst in same_side_constraints:
-                pt0 = cnst.params[0]
-                pt1 = cnst.params[1]
-                line = cnst.params[2]
+            same_side_reasons = [rsn for rsn in self.explained if isinstance(rsn.property, SameSideProperty)]
+            for rsn in same_side_reasons:
+                pt0 = rsn.property.points[0]
+                pt1 = rsn.property.points[1]
                 line2 = self.scene.get_line(pt0, pt1)
                 if line2 is None:
                     continue
-                crossing = self.scene.get_intersection(line, line2)
+                crossing = self.scene.get_intersection(rsn.property.line, line2)
                 if crossing:
-                    self.__add(SameDirectionProperty(crossing, pt0, pt1), cnst.comments)
+                    self.__add(SameDirectionProperty(crossing, pt0, pt1), rsn.comments)
 
-            for index in range(0, len(same_side_constraints)):
-                cnst0 = same_side_constraints[index]
-                for cnst1 in same_side_constraints[index + 1:]:
-                    AB = cnst0.params[2]
-                    AC = cnst1.params[2]
+            for index in range(0, len(same_side_reasons)):
+                rsn0 = same_side_reasons[index]
+                for rsn1 in same_side_reasons[index + 1:]:
+                    AB = rsn0.property.line
+                    AC = rsn1.property.line
                     A = self.scene.get_intersection(AB, AC)
                     if A is None:
                         continue
-                    if cnst0.params[0] == cnst1.params[0]:
-                        B, C, D = cnst1.params[1], cnst0.params[1], cnst0.params[0]
-                    elif cnst0.params[1] == cnst1.params[0]:
-                        B, C, D = cnst1.params[1], cnst0.params[0], cnst0.params[1]
-                    elif cnst0.params[0] == cnst1.params[1]:
-                        B, C, D = cnst1.params[0], cnst0.params[1], cnst0.params[0]
-                    elif cnst0.params[1] == cnst1.params[1]:
-                        B, C, D = cnst1.params[0], cnst0.params[0], cnst0.params[1]
+                    pt00 = rsn0.property.points[0]
+                    pt01 = rsn0.property.points[1]
+                    pt10 = rsn1.property.points[0]
+                    pt11 = rsn1.property.points[1]
+                    if pt00 == pt10:
+                        B, C, D = pt11, pt01, pt00
+                    elif pt01 == pt10:
+                        B, C, D = pt11, pt00, pt01
+                    elif pt00 == pt11:
+                        B, C, D = pt10, pt01, pt00
+                    elif pt01 == pt11:
+                        B, C, D = pt10, pt00, pt01
                     else:
                         continue
                     if B == C or B not in AB or C not in AC:
@@ -105,8 +119,8 @@ class Explainer:
                         continue
                     X = self.scene.get_intersection(AD, BC)
                     if X:
-                        comments = cnst0.comments
-                        for com in cnst1.comments:
+                        comments = rsn0.comments
+                        for com in rsn1.comments:
                             if not com in comments:
                                 comments.append(com)
                         self.__add(SameDirectionProperty(X, A, D), comments)
@@ -121,7 +135,7 @@ class Explainer:
                     if len(roots) == 2:
                         self.__reason(prop, 'both 90º', roots=roots)
 
-        step0()
+        base()
         while len(self.unexplained) > 0:
             explained_size = len(self.explained)
             iteration()
@@ -151,3 +165,29 @@ class SameDirectionProperty(Property):
         if not isinstance(other, SameDirectionProperty):
             return False
         return self.start == other.start and set(self.points) == set(other.points)
+
+class OppositeSideProperty(Property):
+    def __init__(self, line, point0, point1):
+        self.line = line
+        self.points = [point0, point1]
+
+    def __str__(self):
+        return '%s, %s located on opposite sides of %s' % tuple(p.label for p in self.points + [self.line])
+
+    def __eq__(self, other):
+        if not isinstance(other, OppositeSideProperty):
+            return False
+        return self.line == other.line and set(self.points) == set(other.points)
+
+class SameSideProperty(Property):
+    def __init__(self, line, point0, point1):
+        self.line = line
+        self.points = [point0, point1]
+
+    def __str__(self):
+        return '%s, %s located on the same side of %s' % tuple(p.label for p in self.points + [self.line])
+
+    def __eq__(self, other):
+        if not isinstance(other, SameSideProperty):
+            return False
+        return self.line == other.line and set(self.points) == set(other.points)
