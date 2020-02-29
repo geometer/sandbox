@@ -360,47 +360,6 @@ class CoreScene:
             adjust(cnstr.params[1], cnstr.params[2], cnstr.params[0])
             adjust(cnstr.params[2], cnstr.params[0], cnstr.params[1])
 
-        same_side_constraints = self.constraints(Constraint.Kind.same_side)
-        for cnstr in same_side_constraints:
-            pt0 = cnstr.params[0]
-            pt1 = cnstr.params[1]
-            line = cnstr.params[2]
-            line2 = self.get_line(pt0, pt1)
-            if line2:
-                for pt in line.all_points:
-                    if pt in line2:
-                        pt.same_direction_constraint(pt0, pt1)
-        for index in range(0, len(same_side_constraints)):
-            cnstr0 = same_side_constraints[index]
-            for cnstr1 in same_side_constraints[index + 1:]:
-                AB = cnstr0.params[2]
-                AC = cnstr1.params[2]
-                A = self.get_intersection(AB, AC)
-                if A is None:
-                    continue
-                if cnstr0.params[0] == cnstr1.params[0]:
-                    B, C, D = cnstr1.params[1], cnstr0.params[1], cnstr0.params[0]
-                elif cnstr0.params[1] == cnstr1.params[0]:
-                    B, C, D = cnstr1.params[1], cnstr0.params[0], cnstr0.params[1]
-                elif cnstr0.params[0] == cnstr1.params[1]:
-                    B, C, D = cnstr1.params[0], cnstr0.params[1], cnstr0.params[0]
-                elif cnstr0.params[1] == cnstr1.params[1]:
-                    B, C, D = cnstr1.params[0], cnstr0.params[0], cnstr0.params[1]
-                else:
-                    continue
-                if B == C or B not in AB or C not in AC:
-                    continue
-                AD = self.get_line(A, D)
-                BC = self.get_line(B, C)
-                if AD is None or BC is None:
-                    continue
-                X = self.get_intersection(AD, BC)
-                if X:
-                    X.same_direction_constraint(A, D)
-                    A.same_direction_constraint(D, X)
-                    B.same_direction_constraint(X, C)
-                    C.same_direction_constraint(X, B)
-
     def quadrilateral_constraint(self, A, B, C, D, **kwargs):
         """
         ABDC is a quadrilateral.
