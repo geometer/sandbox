@@ -497,3 +497,11 @@ class SimilarTrianglesProperty(Property):
 
     def __str__(self):
         return '△ %s %s %s ~ △ %s %s %s' % tuple(p.label for p in self.ABC + self.DEF)
+
+class EqualTrianglesProperty(Property):
+    def __init__(self, ABC, DEF):
+        self.ABC = list(ABC)
+        self.DEF = list(DEF)
+
+    def __str__(self):
+        return '△ %s %s %s = △ %s %s %s' % tuple(p.label for p in self.ABC + self.DEF)

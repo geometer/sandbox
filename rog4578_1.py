@@ -29,7 +29,7 @@ scene.dump()
 # +* 9* ∠ H A B = ∠ G C B (a.k.a. ∠ D C H)         *8                 similar triangles => equal angles
 # +*10* ∠ H A B = ∠ D C H                          *9                 similar triangles => equal angles
 # +*11* △ A B H ∼ △ C D H                          *5, *10            two anlges
-# *12* △ A B H = △ C D H                          *1, *11            similarity, side
+# +*12* △ A B H = △ C D H                          *1, *11            similarity, side
 # *13* |AH| = |CH|                                *12                equal triangles => equal sides
 # *14* isosceles △ A H C                          *13                equal sides => isosceles
 # *15* ∠ A C H = (180º - ∠ A H C) / 2             *14                isocseles

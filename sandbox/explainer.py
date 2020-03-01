@@ -272,6 +272,30 @@ class Explainer:
                         self.__reason(prop, 'three angles', roots=roots)
                     elif len(roots) == 2:
                         self.__reason(prop, 'two angles', roots=roots)
+                elif isinstance(prop, EqualTrianglesProperty):
+                    similar_triangles = [exp for exp in self.explained if isinstance(exp.property, SimilarTrianglesProperty)]
+                    equal_distances = [exp for exp in self.explained if isinstance(exp.property, EqualDistancesProperty)]
+                    for st in similar_triangles:
+                        if (st.property.ABC == prop.ABC and st.property.DEF == prop.DEF) or \
+                           (st.property.ABC == prop.DEF and st.property.DEF == prop.ABC):
+                            break
+                    else:
+                        continue
+                    for ed in equal_distances:
+                        def index(two, three):
+                            if set(two).issubset(set(three)):
+                                for i in range(0, 3):
+                                    if three[i] not in two:
+                                        return i
+                            return None
+
+                        ind = index(ed.property.AB, prop.ABC)
+                        if ind is not None and ind == index(ed.property.CD, prop.DEF):
+                            self.__reason(prop, 'Similar triangles with equal side', roots=[st, ed])
+                            break
+                        ind = index(ed.property.AB, prop.DEF)
+                        if ind is not None and ind == index(ed.property.CD, prop.ABC):
+                            self.__reason(prop, 'Similar triangles with equal side', roots=[st, ed])
 
         base()
         while len(self.unexplained) > 0:
