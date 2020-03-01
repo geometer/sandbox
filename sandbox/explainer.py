@@ -90,10 +90,10 @@ class Explainer:
 
                         if vector_on_line(prop.angle.vector0, line0):
                             if vector_on_line(prop.angle.vector1, line1):
-                                self.__reason(prop, ['%s ⟂ %s' % (line0.label, line1.label)] + cnst.comments)
+                                self.__reason(prop, [ParametrizedString('%s ⟂ %s', line0.label, line1.label)] + cnst.comments)
                         elif vector_on_line(prop.angle.vector0, line1):
                             if vector_on_line(prop.angle.vector1, line0):
-                                self.__reason(prop, ['%s ⟂ %s' % (line0.label, line1.label)] + cnst.comments)
+                                self.__reason(prop, [ParametrizedString('%s ⟂ %s', line0.label, line1.label)] + cnst.comments)
 
         def iteration():
             same_side_reasons = [rsn for rsn in self.explained if isinstance(rsn.property, SameSideProperty)]
