@@ -50,6 +50,34 @@ class Angle:
     def reversed(self):
         return Angle(self.line1, self.line0, self.vector1, self.vector0)
 
+    def same_angles(self):
+        vecs0 = [Vector(p[0], p[1], self.vector0.placement) for p in iterate_pairs(self.line0)]
+        vecs1 = [Vector(p[0], p[1], self.vector0.placement) for p in iterate_pairs(self.line1)]
+        filtered0 = [v for v in vecs0 if v.length() > 1e-6 and np.fabs(v.angle(self.vector0)) < np.pi / 2]
+        filtered1 = [v for v in vecs1 if v.length() > 1e-6 and np.fabs(v.angle(self.vector0)) < np.pi / 2]
+        for v0 in filtered0:
+            for v1 in filtered1:
+                yield Angle(self.line0, self.line1, v0, v1)
+        filtered0 = [v for v in vecs0 if v.length() > 1e-6 and np.fabs(v.angle(self.vector0)) > np.pi / 2]
+        filtered1 = [v for v in vecs1 if v.length() > 1e-6 and np.fabs(v.angle(self.vector0)) > np.pi / 2]
+        for v0 in filtered0:
+            for v1 in filtered1:
+                yield Angle(self.line0, self.line1, v0, v1)
+
+    def adjacent_angles(self):
+        vecs0 = [Vector(p[0], p[1], self.vector0.placement) for p in iterate_pairs(self.line0)]
+        vecs1 = [Vector(p[0], p[1], self.vector0.placement) for p in iterate_pairs(self.line1)]
+        filtered0 = [v for v in vecs0 if v.length() > 1e-6 and np.fabs(v.angle(self.vector0)) > np.pi / 2]
+        filtered1 = [v for v in vecs1 if v.length() > 1e-6 and np.fabs(v.angle(self.vector0)) < np.pi / 2]
+        for v0 in filtered0:
+            for v1 in filtered1:
+                yield Angle(self.line0, self.line1, v0, v1)
+        filtered0 = [v for v in vecs0 if v.length() > 1e-6 and np.fabs(v.angle(self.vector0)) < np.pi / 2]
+        filtered1 = [v for v in vecs1 if v.length() > 1e-6 and np.fabs(v.angle(self.vector0)) > np.pi / 2]
+        for v0 in filtered0:
+            for v1 in filtered1:
+                yield Angle(self.line0, self.line1, v0, v1)
+
     def arc(self):
         return self.__arc
 
@@ -236,6 +264,11 @@ def hunt_coincidences(placement: Placement):
         if len(same_points) > 1:
             print('same point: %s' % [pt.label for pt in same_points])
 
+def iterate_pairs(lst):
+    for index, elt0 in enumerate(lst):
+        for elt1 in lst[index + 1:]:
+            yield (elt0, elt1)
+
 class Hunter:
     def __init__(self, scene):
         if isinstance(scene, Placement):
@@ -243,12 +276,6 @@ class Hunter:
         else:
             self.placement = iterative_placement(scene)
         self.properties = []
-
-    @staticmethod
-    def __iterate_pairs(lst):
-        for index, elt0 in enumerate(lst):
-            for elt1 in lst[index + 1:]:
-                yield (elt0, elt1)
 
     @staticmethod
     def __iterate_triples(lst):
@@ -335,7 +362,7 @@ class Hunter:
                 families.append([vec])
 
         for fam in families:
-            for pair in Hunter.__iterate_pairs(fam):
+            for pair in iterate_pairs(fam):
                 self.properties.append(EqualDistancesProperty((pair[0].start, pair[0].end), (pair[1].start, pair[1].end)))
 
     def __hunt_right_angles(self, angles):
@@ -347,7 +374,10 @@ class Hunter:
             elif np.fabs(arc + np.pi / 2) < ERROR:
                 rights.append(ngl.reversed())
         for ngl in rights:
-            self.properties.append(RightAngleProperty(ngl))
+            for ngl1 in ngl.same_angles():
+                self.properties.append(RightAngleProperty(ngl1))
+            for ngl1 in ngl.adjacent_angles():
+                self.properties.append(RightAngleProperty(ngl1))
 
     def __hunt_equal_angles(self, angles):
         families = []
@@ -365,7 +395,7 @@ class Hunter:
                 families.append([ngl if ngl.arc() > 0 else ngl.reversed()])
 
         for fam in families:
-            for pair in Hunter.__iterate_pairs(fam):
+            for pair in iterate_pairs(fam):
                 self.properties.append(EqualAnglesProperty(pair[0], pair[1]))
 
     def __hunt_equal_triangles(self):
@@ -385,7 +415,7 @@ class Hunter:
                 families.append([trn])
 
         for fam in families:
-            for pair in Hunter.__iterate_pairs(fam):
+            for pair in iterate_pairs(fam):
                 self.properties.append(EqualTrianglesProperty(pair[0].pts, pair[1].pts))
 
     def __hunt_similar_triangles(self):
@@ -416,7 +446,7 @@ class Hunter:
                 families.append([trn])
 
         for fam in families:
-            for pair in Hunter.__iterate_pairs(fam):
+            for pair in iterate_pairs(fam):
                 self.properties.append(SimilarTrianglesProperty(pair[0].pts, pair[1].pts))
 
     def hunt(self, options=('default')):
