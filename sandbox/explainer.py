@@ -215,6 +215,31 @@ class Explainer:
                             found = True
                             break
 
+                    if found:
+                        continue
+
+                    equal_angles = [exp for exp in self.explained if isinstance(exp.property, EqualAnglesProperty)]
+                    for index, ea0 in enumerate(equal_angles):
+                        if prop.angle0 == ea0.property.angle0:
+                            look_for = [prop.angle1, ea0.property.angle1]
+                        elif prop.angle1 == ea0.property.angle0:
+                            look_for = [prop.angle0, ea0.property.angle1]
+                        elif prop.angle0 == ea0.property.angle1:
+                            look_for = [prop.angle1, ea0.property.angle0]
+                        elif prop.angle1 == ea0.property.angle1:
+                            look_for = [prop.angle0, ea0.property.angle0]
+                        else:
+                            continue
+
+                        for ea1 in equal_angles[index + 1:]:
+                            if ea1.property.angle0 in look_for and ea1.property.angle1 in look_for:
+                                self.__reason(prop, 'transitivity', roots=[ea0, ea1])
+                                found = True
+                                break
+
+                        if found:
+                            break
+
                 elif isinstance(prop, SimilarTrianglesProperty):
                     equal_angles = [exp for exp in self.explained if isinstance(exp.property, EqualAnglesProperty)]
                     def match(angle, triangle):
