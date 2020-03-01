@@ -105,6 +105,7 @@ class CoreScene:
                 point0=self, point1=point, coef0=coef0, coef1=coef1, **kwargs
             )
             new_point.collinear_constraint(self, point, guaranteed=True)
+            self.scene.distances_ratio_constraint((self, new_point), (new_point, point), coef1, coef0, guaranteed=True)
             return new_point
 
         def perpendicular_line(self, line, **kwargs):
@@ -376,20 +377,21 @@ class CoreScene:
         assert len(points) > 3
         self.constraint(Constraint.Kind.convex_polygon, points, **kwargs)
 
-    def distances_ratio_constraint(self, AB, CD, ratio, **kwargs):
+    def distances_ratio_constraint(self, AB, CD, coefAB, coefCD, **kwargs):
         """
-        |AB| == |CD| * ratio
-        AB and CD are tuples or lists of two points, ratio is an integer
+        |AB| * coef AB == |CD| * coefCD
+        AB and CD are tuples or lists of two points, coefAB and coefCD are non-zero integers
         """
         assert len(AB) == 2 and len(CD) == 2
-        self.constraint(Constraint.Kind.distances_ratio, AB[0], AB[1], CD[0], CD[1], ratio, **kwargs)
+        assert coefAB != 0 and coefCD != 0
+        self.constraint(Constraint.Kind.distances_ratio, AB[0], AB[1], CD[0], CD[1], coefAB, coefCD, **kwargs)
 
     def equal_distances_constraint(self, AB, CD, **kwargs):
         """
         |AB| == |CD|
         AB and CD are tuples or lists of two points
         """
-        self.distances_ratio_constraint(AB, CD, 1, **kwargs)
+        self.distances_ratio_constraint(AB, CD, 1, 1, **kwargs)
 
     def perpendicular_constraint(self, AB, CD, **kwargs):
         """
@@ -500,7 +502,7 @@ class Constraint:
         quadrilateral     = ('quadrilateral', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         convex_polygon    = ('convex_polygon', Stage.validation, List[CoreScene.Point])
         distance          = ('distance', Stage.adjustment, CoreScene.Point, CoreScene.Point, int)
-        distances_ratio   = ('distances_ratio', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, int)
+        distances_ratio   = ('distances_ratio', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, int, int)
         angles_ratio      = ('angles_ratio', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, int)
         perpendicular     = ('perpendicular', Stage.adjustment, CoreScene.Line, CoreScene.Line)
 
@@ -538,10 +540,14 @@ class Constraint:
 
     def __str__(self):
         params = [para.label if isinstance(para, CoreScene.Object) else para for para in self.params]
+        extras = dict(self.__dict__)
+        del extras['kind']
+        del extras['params']
+        del extras['comments']
         if self.comments:
-            return 'Constraint(%s) %s %s' % (self.kind.name, params, self.comments)
+            return 'Constraint(%s) %s %s (%s)' % (self.kind.name, params, self.comments, extras)
         else:
-            return 'Constraint(%s) %s' % (self.kind.name, params)
+            return 'Constraint(%s) %s (%s)' % (self.kind.name, params, extras)
 
 class ParametrizedString:
     def __init__(self, format_string, *params):

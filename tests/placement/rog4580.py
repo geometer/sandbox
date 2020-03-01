@@ -11,7 +11,7 @@ class TestRoG4580(PlacementTest):
         scene = Scene()
 
         A, B, C = scene.triangle(labels=('A', 'B', 'C'))
-        scene.distances_ratio_constraint((A, B), (B, C), 2)
+        scene.distances_ratio_constraint((A, B), (B, C), 1, 2)
         scene.perpendicular_constraint((A, B), (B, C))
         F = scene.incentre_point((A, B, C), label='F')
         E = scene.perpendicular_foot_point(B, A.line_through(F), label='E')
