@@ -345,10 +345,14 @@ class Hunter:
                     vec1 = Vector(line1[0], line1[1], self.placement)
                 yield Angle(line0, line1, vec0, vec1)
 
+    def __add(self, prop):
+        if prop not in self.properties:
+            self.properties.append(prop)
+
     def __hunt_collinears(self):
         for line in self.__lines():
             for triple in Hunter.__iterate_triples(line):
-                self.properties.append(CollinearProperty(triple[0], triple[1], triple[2]))
+                self.__add(CollinearProperty(triple[0], triple[1], triple[2]))
 
     def __hunt_equal_segments(self):
         vectors = self.__vectors()
@@ -363,7 +367,7 @@ class Hunter:
 
         for fam in families:
             for pair in iterate_pairs(fam):
-                self.properties.append(EqualDistancesProperty((pair[0].start, pair[0].end), (pair[1].start, pair[1].end)))
+                self.__add(EqualDistancesProperty((pair[0].start, pair[0].end), (pair[1].start, pair[1].end)))
 
     def __hunt_right_angles(self, angles):
         rights = []
@@ -375,12 +379,23 @@ class Hunter:
                 rights.append(ngl.reversed())
         for ngl in rights:
             for ngl1 in ngl.same_angles():
-                self.properties.append(RightAngleProperty(ngl1))
+                self.__add(RightAngleProperty(ngl1))
             for ngl1 in ngl.adjacent_angles():
-                self.properties.append(RightAngleProperty(ngl1))
+                self.__add(RightAngleProperty(ngl1))
 
     def __hunt_equal_angles(self, angles):
         families = []
+
+        for ngl in angles:
+            for pair in iterate_pairs(list(ngl.same_angles())):
+                self.__add(EqualAnglesProperty(pair[0], pair[1]))
+            for pair in iterate_pairs(list(ngl.adjacent_angles())):
+                self.__add(EqualAnglesProperty(pair[0], pair[1]))
+            if np.fabs(ngl.abs_arc() - np.pi / 2) < ERROR:
+                for ngl1 in ngl.same_angles():
+                    for ngl2 in ngl.adjacent_angles():
+                        self.__add(EqualAnglesProperty(pair[0], pair[1]))
+
         for ngl in angles:
             if ngl.abs_arc() < ERROR or np.fabs(ngl.abs_arc() - np.pi) < ERROR:
                 continue
@@ -396,7 +411,19 @@ class Hunter:
 
         for fam in families:
             for pair in iterate_pairs(fam):
-                self.properties.append(EqualAnglesProperty(pair[0], pair[1]))
+                for ngl0 in pair[0].same_angles():
+                    for ngl1 in pair[1].same_angles():
+                        self.__add(EqualAnglesProperty(ngl0, ngl1))
+                for ngl0 in pair[0].adjacent_angles():
+                    for ngl1 in pair[1].adjacent_angles():
+                        self.__add(EqualAnglesProperty(ngl0, ngl1))
+                if np.fabs(pair[0].abs_arc() - np.pi / 2) < ERROR:
+                    for ngl0 in pair[0].same_angles():
+                        for ngl1 in pair[1].adjacent_angles():
+                            self.__add(EqualAnglesProperty(ngl0, ngl1))
+                    for ngl0 in pair[0].adjacent_angles():
+                        for ngl1 in pair[1].same_angles():
+                            self.__add(EqualAnglesProperty(ngl0, ngl1))
 
     def __hunt_equal_triangles(self):
         triangles = list(self.__triangles())
@@ -416,20 +443,20 @@ class Hunter:
 
         for fam in families:
             for pair in iterate_pairs(fam):
-                self.properties.append(EqualTrianglesProperty(pair[0].pts, pair[1].pts))
+                self.__add(EqualTrianglesProperty(pair[0].pts, pair[1].pts))
 
     def __hunt_similar_triangles(self):
         triangles = list(self.__triangles())
 
         equilaterals = [trn for trn in triangles if trn.equilateral()]
         for trn in equilaterals:
-            self.properties.append(EquilateralTriangleProperty(trn.pts))
+            self.__add(EquilateralTriangleProperty(trn.pts))
 
         triangles = [trn for trn in triangles if not trn.equilateral()]
 
         isosceles = list(filter(None, [trn.isosceles() for trn in triangles]))
         for trn in isosceles:
-            self.properties.append(IsoscelesTriangleProperty(trn.pts[0], trn.pts[1:]))
+            self.__add(IsoscelesTriangleProperty(trn.pts[0], trn.pts[1:]))
 
         families = []
         for trn in triangles:
@@ -447,7 +474,7 @@ class Hunter:
 
         for fam in families:
             for pair in iterate_pairs(fam):
-                self.properties.append(SimilarTrianglesProperty(pair[0].pts, pair[1].pts))
+                self.__add(SimilarTrianglesProperty(pair[0].pts, pair[1].pts))
 
     def hunt(self, options=('default')):
         all_vectors = list(self.__vectors())
@@ -508,6 +535,9 @@ class RightAngleProperty(Property):
     def __str__(self):
         return '%s = 90º' % self.angle
 
+    def __eq__(self, other):
+        return isinstance(other, RightAngleProperty) and self.angle == other.angle
+
 class EqualAnglesProperty(Property):
     def __init__(self, angle0, angle1):
         self.angle0 = angle0
@@ -515,3 +545,9 @@ class EqualAnglesProperty(Property):
 
     def __str__(self):
         return '%s = %s' % (self.angle0, self.angle1)
+
+    def __eq__(self, other):
+        if not isinstance(other, EqualAnglesProperty):
+            return False
+        return (self.angle0 == other.angle0 and self.angle1 == other.angle1) or \
+               (self.angle0 == other.angle1 and self.angle1 == other.angle0)
