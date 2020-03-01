@@ -145,12 +145,37 @@ class Explainer:
                         self.__add(SameDirectionProperty(B, C, X), comments)
                         self.__add(SameDirectionProperty(C, B, X), comments)
 
+            same_direction = [exp.property for exp in self.explained if isinstance(exp.property, SameDirectionProperty)]
+            def same_dir(vector):
+                for sd in same_direction:
+                    if sd.start == vector.start:
+                        if sd.points[0] == vector.end:
+                            yield Vector(sd.start, sd.points[1], vector.placement)
+                        elif sd.points[1] == vector.end:
+                            yield Vector(sd.start, sd.points[0], vector.placement)
+                    if sd.start == vector.end:
+                        if sd.points[0] == vector.start:
+                            yield Vector(sd.points[1], sd.start, vector.placement)
+                        elif sd.points[1] == vector.start:
+                            yield Vector(sd.points[0], sd.start, vector.placement)
+
             right_angles = [exp for exp in self.explained if isinstance(exp.property, RightAngleProperty)]
             for prop in list(self.unexplained):
                 if isinstance(prop, EqualAnglesProperty):
+                    for v0 in same_dir(prop.angle0.vector0):
+                        #TODO: roots
+                        if v0 == prop.angle1.vector0 and prop.angle1.vector1 in same_dir(prop.angle0.vector1):
+                            self.__reason(prop, 'same angle')
+                        elif v0 == prop.angle1.vector1 and prop.angle1.vector0 in same_dir(prop.angle0.vector1):
+                            self.__reason(prop, 'same angle')
+                        elif v0 == prop.angle1.vector0.reversed and prop.angle1.vector1.reversed in same_dir(prop.angle0.vector1):
+                            self.__reason(prop, 'same angle')
+                        elif v0 == prop.angle1.vector1.reversed and prop.angle1.vector0.reversed in same_dir(prop.angle0.vector1):
+                            self.__reason(prop, 'same angle')
                     roots = [exp for exp in right_angles if exp.property.angle in [prop.angle0, prop.angle1]]
                     if len(roots) == 2:
                         self.__reason(prop, 'both 90º', roots=roots)
+                        continue
 
         base()
         while len(self.unexplained) > 0:

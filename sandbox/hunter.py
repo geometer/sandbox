@@ -30,9 +30,7 @@ class Vector:
         return "%s %s" % (self.start.label, self.end.label)
 
 class Angle:
-    def __init__(self, line0, line1, vector0: Vector, vector1: Vector):
-        self.line0 = line0
-        self.line1 = line1
+    def __init__(self, vector0: Vector, vector1: Vector):
         if vector0.end == vector1.end:
             self.vector0 = vector0.reversed
             self.vector1 = vector1.reversed
@@ -48,35 +46,7 @@ class Angle:
         self.__arc = self.vector0.angle(self.vector1)
 
     def reversed(self):
-        return Angle(self.line1, self.line0, self.vector1, self.vector0)
-
-    def same_angles(self):
-        vecs0 = [Vector(p[0], p[1], self.vector0.placement) for p in iterate_pairs(self.line0)]
-        vecs1 = [Vector(p[0], p[1], self.vector0.placement) for p in iterate_pairs(self.line1)]
-        filtered0 = [v for v in vecs0 if v.length() > 1e-6 and np.fabs(v.angle(self.vector0)) < np.pi / 2]
-        filtered1 = [v for v in vecs1 if v.length() > 1e-6 and np.fabs(v.angle(self.vector0)) < np.pi / 2]
-        for v0 in filtered0:
-            for v1 in filtered1:
-                yield Angle(self.line0, self.line1, v0, v1)
-        filtered0 = [v for v in vecs0 if v.length() > 1e-6 and np.fabs(v.angle(self.vector0)) > np.pi / 2]
-        filtered1 = [v for v in vecs1 if v.length() > 1e-6 and np.fabs(v.angle(self.vector0)) > np.pi / 2]
-        for v0 in filtered0:
-            for v1 in filtered1:
-                yield Angle(self.line0, self.line1, v0, v1)
-
-    def adjacent_angles(self):
-        vecs0 = [Vector(p[0], p[1], self.vector0.placement) for p in iterate_pairs(self.line0)]
-        vecs1 = [Vector(p[0], p[1], self.vector0.placement) for p in iterate_pairs(self.line1)]
-        filtered0 = [v for v in vecs0 if v.length() > 1e-6 and np.fabs(v.angle(self.vector0)) > np.pi / 2]
-        filtered1 = [v for v in vecs1 if v.length() > 1e-6 and np.fabs(v.angle(self.vector0)) < np.pi / 2]
-        for v0 in filtered0:
-            for v1 in filtered1:
-                yield Angle(self.line0, self.line1, v0, v1)
-        filtered0 = [v for v in vecs0 if v.length() > 1e-6 and np.fabs(v.angle(self.vector0)) < np.pi / 2]
-        filtered1 = [v for v in vecs1 if v.length() > 1e-6 and np.fabs(v.angle(self.vector0)) > np.pi / 2]
-        for v0 in filtered0:
-            for v1 in filtered1:
-                yield Angle(self.line0, self.line1, v0, v1)
+        return Angle(self.vector1, self.vector0)
 
     def arc(self):
         return self.__arc
@@ -329,21 +299,9 @@ class Hunter:
 
         return lines
 
-    def __angles(self, lines):
-        for index, line0 in enumerate(lines):
-            for line1 in lines[index + 1:]:
-                common = None
-                for pt in line0:
-                    if pt in line1:
-                        common = pt
-                        break
-                if common:
-                    vec0 = Vector(common, line0[1] if line0[0] == common else line0[0], self.placement)
-                    vec1 = Vector(common, line1[1] if line1[0] == common else line1[0], self.placement)
-                else:
-                    vec0 = Vector(line0[0], line0[1], self.placement)
-                    vec1 = Vector(line1[0], line1[1], self.placement)
-                yield Angle(line0, line1, vec0, vec1)
+    def __angles(self, vectors):
+        for pair in iterate_pairs(vectors):
+            yield Angle(pair[0], pair[1])
 
     def __add(self, prop):
         if prop not in self.properties:
@@ -370,31 +328,15 @@ class Hunter:
                 self.__add(EqualDistancesProperty((pair[0].start, pair[0].end), (pair[1].start, pair[1].end)))
 
     def __hunt_right_angles(self, angles):
-        rights = []
         for ngl in angles:
             arc = ngl.arc()
             if np.fabs(arc - np.pi / 2) < ERROR:
-                rights.append(ngl)
+                self.__add(RightAngleProperty(ngl))
             elif np.fabs(arc + np.pi / 2) < ERROR:
-                rights.append(ngl.reversed())
-        for ngl in rights:
-            for ngl1 in ngl.same_angles():
-                self.__add(RightAngleProperty(ngl1))
-            for ngl1 in ngl.adjacent_angles():
-                self.__add(RightAngleProperty(ngl1))
+                self.__add(RightAngleProperty(ngl.reversed()))
 
     def __hunt_equal_angles(self, angles):
         families = []
-
-        for ngl in angles:
-            for pair in iterate_pairs(list(ngl.same_angles())):
-                self.__add(EqualAnglesProperty(pair[0], pair[1]))
-            for pair in iterate_pairs(list(ngl.adjacent_angles())):
-                self.__add(EqualAnglesProperty(pair[0], pair[1]))
-            if np.fabs(ngl.abs_arc() - np.pi / 2) < ERROR:
-                for ngl1 in ngl.same_angles():
-                    for ngl2 in ngl.adjacent_angles():
-                        self.__add(EqualAnglesProperty(pair[0], pair[1]))
 
         for ngl in angles:
             if ngl.abs_arc() < ERROR or np.fabs(ngl.abs_arc() - np.pi) < ERROR:
@@ -411,19 +353,7 @@ class Hunter:
 
         for fam in families:
             for pair in iterate_pairs(fam):
-                for ngl0 in pair[0].same_angles():
-                    for ngl1 in pair[1].same_angles():
-                        self.__add(EqualAnglesProperty(ngl0, ngl1))
-                for ngl0 in pair[0].adjacent_angles():
-                    for ngl1 in pair[1].adjacent_angles():
-                        self.__add(EqualAnglesProperty(ngl0, ngl1))
-                if np.fabs(pair[0].abs_arc() - np.pi / 2) < ERROR:
-                    for ngl0 in pair[0].same_angles():
-                        for ngl1 in pair[1].adjacent_angles():
-                            self.__add(EqualAnglesProperty(ngl0, ngl1))
-                    for ngl0 in pair[0].adjacent_angles():
-                        for ngl1 in pair[1].same_angles():
-                            self.__add(EqualAnglesProperty(ngl0, ngl1))
+                self.__add(EqualAnglesProperty(pair[0], pair[1]))
 
     def __hunt_equal_triangles(self):
         triangles = list(self.__triangles())
@@ -482,7 +412,7 @@ class Hunter:
 
         all_lines = list(self.__lines())
 
-        all_angles = list(self.__angles(all_lines))
+        all_angles = list(self.__angles(all_vectors))
         all_angles.sort(key=Angle.abs_arc)
 
         if 'collinears' in options or 'default' in options:
