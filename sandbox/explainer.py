@@ -297,6 +297,23 @@ class Explainer:
                         if ind is not None and ind == index(ed.property.CD, prop.ABC):
                             self.__reason(prop, 'Similar triangles with equal side', roots=[st, ed])
 
+                elif isinstance(prop, EqualDistancesProperty):
+                    equal_triangles = [exp for exp in self.explained if isinstance(exp.property, EqualTrianglesProperty)]
+                    def index(two, three):
+                        if set(two).issubset(set(three)):
+                            for i in range(0, 3):
+                                if three[i] not in two:
+                                    return i
+                        return None
+                    for et in equal_triangles:
+                        ind = index(prop.AB, et.property.ABC)
+                        if ind is not None and ind == index(prop.CD, et.property.DEF):
+                            self.__reason(prop, 'Corr. sides in equal triangles', roots=[et])
+                            break
+                        ind = index(prop.CD, et.property.ABC)
+                        if ind is not None and ind == index(prop.AB, et.property.DEF):
+                            self.__reason(prop, 'Corr. sides in equal triangles', roots=[et])
+
         base()
         while len(self.unexplained) > 0:
             total = len(self.properties)
