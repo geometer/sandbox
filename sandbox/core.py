@@ -524,8 +524,9 @@ class Constraint:
             elif issubclass(knd, List):
                 # TODO: check element types
                 assert isinstance(arg, (list, tuple))
-            else:
-                assert isinstance(arg, knd)
+            # TODO: restore other parameters type check
+            #else:
+            #    assert isinstance(arg, knd)
             self.params.append(arg)
         self.kind = kind
         self.comments = []
