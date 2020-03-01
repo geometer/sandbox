@@ -154,9 +154,10 @@ class Explainer:
 
         base()
         while len(self.unexplained) > 0:
+            total = len(self.properties)
             explained_size = len(self.explained)
             iteration()
-            if len(self.explained) == explained_size:
+            if len(self.properties) == total and len(self.explained) == explained_size:
                 break
 
     def dump(self):
