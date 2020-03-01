@@ -176,6 +176,29 @@ class Explainer:
                     if len(roots) == 2:
                         self.__reason(prop, 'both 90º', roots=roots)
                         continue
+                elif isinstance(prop, SimilarTrianglesProperty):
+                    equal_angles = [exp for exp in self.explained if isinstance(exp.property, EqualAnglesProperty)]
+                    def match(angle, triangle):
+                        pts = [angle.vector0.start, angle.vector1.start, angle.vector0.end, angle.vector1.end]
+                        if set(pts) == set(triangle):
+                            if angle.vector0.start == angle.vector1.start:
+                                return triangle.index(angle.vector0.start)
+                            elif angle.vector0.end == angle.vector1.end:
+                                return triangle.index(angle.vector0.end)
+                        return None
+
+                    roots = []
+                    for ea in equal_angles:
+                        ind = match(ea.property.angle0, prop.ABC)
+                        if ind is not None and ind == match(ea.property.angle1, prop.DEF):
+                            roots.append(ea)
+                        ind = match(ea.property.angle1, prop.ABC)
+                        if ind is not None and ind == match(ea.property.angle0, prop.DEF):
+                            roots.append(ea)
+                    if len(roots) == 3:
+                        self.__reason(prop, 'three angles', roots=roots)
+                    elif len(roots) == 2:
+                        self.__reason(prop, 'two angles', roots=roots)
 
         base()
         while len(self.unexplained) > 0:

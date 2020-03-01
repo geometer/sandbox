@@ -25,7 +25,7 @@ scene.dump()
 # +* 5* ∠ A H B = ∠ A H C (a.k.a ∠ D H C) = 90º    *2, *3             same arcs => equal angles
 # +* 6* ∠ A H B = ∠ C G B                          *2, *4             same arcs => equal angles
 # +* 7* ∠ A B H = ∠ C B G                          *same angle
-# * 8* △ A B H ∼ △ C B G                          *6, *7             two angles
+# +* 8* △ A B H ∼ △ C B G                          *6, *7             two angles
 # * 9* ∠ H A B = ∠ G C B (a.k.a. ∠ D C H)         *8                 similar triangles => equal angles
 # *10* △ A B H = △ C D H                          *1, *5, *9         two anlges, side
 # *11* |AH| = |CH|                                *10                equal triangles => equal sides

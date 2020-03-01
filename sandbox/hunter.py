@@ -481,3 +481,11 @@ class EqualAnglesProperty(Property):
             return False
         return (self.angle0 == other.angle0 and self.angle1 == other.angle1) or \
                (self.angle0 == other.angle1 and self.angle1 == other.angle0)
+
+class SimilarTrianglesProperty(Property):
+    def __init__(self, ABC, DEF):
+        self.ABC = list(ABC)
+        self.DEF = list(DEF)
+
+    def __str__(self):
+        return '△ %s %s %s ~ △ %s %s %s' % tuple(p.label for p in self.ABC + self.DEF)
