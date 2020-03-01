@@ -162,20 +162,59 @@ class Explainer:
             right_angles = [exp for exp in self.explained if isinstance(exp.property, RightAngleProperty)]
             for prop in list(self.unexplained):
                 if isinstance(prop, EqualAnglesProperty):
+                    found = False
                     for v0 in same_dir(prop.angle0.vector0):
                         #TODO: roots
                         if v0 == prop.angle1.vector0 and prop.angle1.vector1 in same_dir(prop.angle0.vector1):
                             self.__reason(prop, 'same angle')
+                            found = True
+                            break
                         elif v0 == prop.angle1.vector1 and prop.angle1.vector0 in same_dir(prop.angle0.vector1):
                             self.__reason(prop, 'same angle')
+                            found = True
+                            break
                         elif v0 == prop.angle1.vector0.reversed and prop.angle1.vector1.reversed in same_dir(prop.angle0.vector1):
                             self.__reason(prop, 'same angle')
+                            found = True
+                            break
                         elif v0 == prop.angle1.vector1.reversed and prop.angle1.vector0.reversed in same_dir(prop.angle0.vector1):
                             self.__reason(prop, 'same angle')
+                            found = True
+                            break
+
+                    if found:
+                        continue
+
                     roots = [exp for exp in right_angles if exp.property.angle in [prop.angle0, prop.angle1]]
                     if len(roots) == 2:
                         self.__reason(prop, 'both 90º', roots=roots)
+                        found = True
+
+                    if found:
                         continue
+
+                    similar_triangles = [exp for exp in self.explained if isinstance(exp.property, SimilarTrianglesProperty)]
+                    def match(angle, triangle):
+                        pts = [angle.vector0.start, angle.vector1.start, angle.vector0.end, angle.vector1.end]
+                        if set(pts) == set(triangle):
+                            if angle.vector0.start == angle.vector1.start:
+                                return triangle.index(angle.vector0.start)
+                            elif angle.vector0.end == angle.vector1.end:
+                                return triangle.index(angle.vector0.end)
+                        return None
+
+                    for st in similar_triangles:
+                        ind = match(prop.angle0, st.property.ABC)
+                        if ind is not None and ind == match(prop.angle1, st.property.DEF):
+                            self.__reason(prop, 'corr. angles in similar triangles', roots=[st])
+                            found = True
+                            break
+                        ind = match(prop.angle1, st.property.ABC)
+                        if ind is not None and ind == match(prop.angle0, st.property.DEF):
+                            self.__reason(prop, 'corr. angles in similar triangles', roots=[st])
+                            found = True
+                            break
+
                 elif isinstance(prop, SimilarTrianglesProperty):
                     equal_angles = [exp for exp in self.explained if isinstance(exp.property, EqualAnglesProperty)]
                     def match(angle, triangle):

@@ -26,12 +26,13 @@ scene.dump()
 # +* 6* ∠ A H B = ∠ C G B                          *2, *4             same arcs => equal angles
 # +* 7* ∠ A B H = ∠ C B G                          *same angle
 # +* 8* △ A B H ∼ △ C B G                          *6, *7             two angles
-# * 9* ∠ H A B = ∠ G C B (a.k.a. ∠ D C H)         *8                 similar triangles => equal angles
-# *10* △ A B H = △ C D H                          *1, *5, *9         two anlges, side
-# *11* |AH| = |CH|                                *10                equal triangles => equal sides
-# *12* isosceles △ A H C                          *11                equal sides => isosceles
-# *13* ∠ A C H = (180º - ∠ A H C) / 2             *12                isocseles
-# *14* ∠ A C H = 45º                              *3, *13            algebra
+# +* 9* ∠ H A B = ∠ G C B (a.k.a. ∠ D C H)         *8                 similar triangles => equal angles
+# * 10* ∠ H A B = ∠ D C H                         *9                 similar triangles => equal angles
+# *11* △ A B H = △ C D H                          *1, *5, *10         two anlges, side
+# *12* |AH| = |CH|                                *11                equal triangles => equal sides
+# *13* isosceles △ A H C                          *12                equal sides => isosceles
+# *14* ∠ A C H = (180º - ∠ A H C) / 2             *13                isocseles
+# *15* ∠ A C H = 45º                              *3, *14            algebra
 
 #Facts
 # *+ right angles
