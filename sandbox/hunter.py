@@ -482,6 +482,14 @@ class EqualAnglesProperty(Property):
         return (self.angle0 == other.angle0 and self.angle1 == other.angle1) or \
                (self.angle0 == other.angle1 and self.angle1 == other.angle0)
 
+class EqualDistancesProperty(Property):
+    def __init__(self, AB, CD):
+        self.AB = list(AB)
+        self.CD = list(CD)
+
+    def __str__(self):
+        return '|%s %s| = |%s %s|' % tuple(p.label for p in self.AB + self.CD)
+
 class SimilarTrianglesProperty(Property):
     def __init__(self, ABC, DEF):
         self.ABC = list(ABC)

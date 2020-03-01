@@ -18,7 +18,7 @@ scene.equal_distances_constraint((A, B), (C, D))
 scene.dump()
 
 #Proof
-# * 1* |AB| = |CD|                                *given
+# +* 1* |AB| = |CD|                                *given
 # +* 2* ∠ A H B = 90º                              *given (altitude)
 # +* 3* ∠ A H C = 90º                              *given (altitude)
 # +* 4* ∠ C G B = 90º                              *given (altitude)
@@ -27,12 +27,13 @@ scene.dump()
 # +* 7* ∠ A B H = ∠ C B G                          *same angle
 # +* 8* △ A B H ∼ △ C B G                          *6, *7             two angles
 # +* 9* ∠ H A B = ∠ G C B (a.k.a. ∠ D C H)         *8                 similar triangles => equal angles
-# +* 10* ∠ H A B = ∠ D C H                         *9                 similar triangles => equal angles
-# *11* △ A B H = △ C D H                          *1, *5, *10         two anlges, side
-# *12* |AH| = |CH|                                *11                equal triangles => equal sides
-# *13* isosceles △ A H C                          *12                equal sides => isosceles
-# *14* ∠ A C H = (180º - ∠ A H C) / 2             *13                isocseles
-# *15* ∠ A C H = 45º                              *3, *14            algebra
+# +*10* ∠ H A B = ∠ D C H                          *9                 similar triangles => equal angles
+# +*11* △ A B H ∼ △ C D H                          *5, *10            two anlges
+# *12* △ A B H = △ C D H                          *1, *11            similarity, side
+# *13* |AH| = |CH|                                *12                equal triangles => equal sides
+# *14* isosceles △ A H C                          *13                equal sides => isosceles
+# *15* ∠ A C H = (180º - ∠ A H C) / 2             *14                isocseles
+# *16* ∠ A C H = 45º                              *3, *15            algebra
 
 #Facts
 # *+ right angles

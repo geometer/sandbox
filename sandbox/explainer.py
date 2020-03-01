@@ -81,7 +81,7 @@ class Explainer:
                         if all(p in line for p in prop.points):
                             self.__reason(prop, 'Given')
                             break
-                if isinstance(prop, RightAngleProperty):
+                elif isinstance(prop, RightAngleProperty):
                     for cnst in self.scene.constraints(Constraint.Kind.perpendicular):
                         line0 = cnst.params[0]
                         line1 = cnst.params[1]
@@ -94,6 +94,15 @@ class Explainer:
                         elif vector_on_line(prop.angle.vector0, line1):
                             if vector_on_line(prop.angle.vector1, line0):
                                 self.__reason(prop, [ParametrizedString('%s ⟂ %s', line0.label, line1.label)] + cnst.comments)
+                elif isinstance(prop, EqualDistancesProperty):
+                    for cnst in self.scene.constraints(Constraint.Kind.distances_ratio):
+                        if cnst.params[4] == cnst.params[5]:
+                            first = set(cnst.params[0:2])
+                            second = set(cnst.params[2:4])
+                            if first == set(prop.AB) and second == set(prop.CD):
+                                self.__reason(prop, 'Given')
+                            elif first == set(prop.CD) and second == set(prop.AB):
+                                self.__reason(prop, 'Given')
 
         def iteration():
             same_side_reasons = [rsn for rsn in self.explained if isinstance(rsn.property, SameSideProperty)]

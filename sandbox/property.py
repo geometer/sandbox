@@ -3,20 +3,6 @@ from . import Scene
 class Property:
     pass
 
-class EqualDistancesProperty(Property):
-    def __init__(self, AB, CD):
-        assert len(AB) == 2
-        for point in AB:
-            assert isinstance(point, Scene.Point)
-        assert len(CD) == 2
-        for point in CD:
-            assert isinstance(point, Scene.Point)
-        self.AB = AB
-        self.CD = CD
-
-    def __str__(self):
-        return '|%s %s| = |%s %s|' % (self.AB[0].label, self.AB[1].label, self.CD[0].label, self.CD[1].label)
-
 class EquilateralTriangleProperty(Property):
     def __init__(self, ABC):
         assert len(ABC) == 3
