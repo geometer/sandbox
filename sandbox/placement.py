@@ -110,10 +110,8 @@ class Placement:
             if constraint.kind == Constraint.Kind.convex_polygon:
                 points = [self.location(pt) for pt in constraint.params[0]]
                 orientation = None
-                for index0 in range(0, len(points)):
-                    pt0 = points[index0]
-                    for index1 in range(index0 + 1, len(points)):
-                        pt1 = points[index1]
+                for index0, pt0 in enumerate(points):
+                    for index1, pt1 in enumerate(points[index0 + 1:], start=index0 + 1):
                         for pt2 in points[index1 + 1:]:
                             clockwise = self.clockwise(pt0, pt1, pt2)
                             if clockwise == 0:
@@ -473,8 +471,7 @@ class Placement:
             if numb_square > 0:
                 average2 = 0.0
                 points = [self.location(pt) for pt in self.scene.points(skip_auxiliary=True)]
-                for index in range(0, len(points)):
-                    pt0 = points[index]
+                for index, pt0 in enumerate(points):
                     for pt1 in points[index + 1:]:
                         average2 += pt0.distance2_to(pt1)
                 average2 /= len(points) * (len(points) - 1) / 2

@@ -107,8 +107,7 @@ class Explainer:
                 if crossing:
                     self.__add(SameDirectionProperty(crossing, pt0, pt1), rsn.comments)
 
-            for index in range(0, len(same_side_reasons)):
-                rsn0 = same_side_reasons[index]
+            for index, rsn0 in enumerate(same_side_reasons):
                 for rsn1 in same_side_reasons[index + 1:]:
                     AB = rsn0.property.line
                     AC = rsn1.property.line

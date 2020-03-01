@@ -223,14 +223,12 @@ def hunt_proportional_angles(angles):
 def hunt_coincidences(placement: Placement):
     used_points = set()
     points = placement.scene.points(skip_auxiliary=True)
-    for index0 in range(0, len(points)):
-        pt0 = points[index0]
+    for index0, pt0 in enumerate(points):
         if pt0 in used_points:
             continue
         loc0 = placement.location(pt0)
         same_points = [pt0]
-        for index1 in range(index0 + 1, len(points)):
-            pt1 = points[index1]
+        for pt1 in points[index0 + 1:]:
             loc1 = placement.location(pt1)
             if loc1.distance_to(loc0) < ERROR:
                 same_points.append(pt1)
@@ -248,24 +246,20 @@ class Hunter:
 
     @staticmethod
     def __iterate_pairs(lst):
-        for index in range(0, len(lst)):
-            elt0 = lst[index]
+        for index, elt0 in enumerate(lst):
             for elt1 in lst[index + 1:]:
                 yield (elt0, elt1)
 
     @staticmethod
     def __iterate_triples(lst):
-        for index0 in range(0, len(lst)):
-            elt0 = lst[index0]
-            for index1 in range(index0 + 1, len(lst)):
-                elt1 = lst[index1]
+        for index0, elt0 in enumerate(lst):
+            for index1, elt1 in enumerate(lst[index0 + 1:], start=index0 + 1):
                 for elt2 in lst[index1 + 1:]:
                     yield (elt0, elt1, elt2)
 
     def __vectors(self):
         points = self.placement.scene.points(skip_auxiliary=True)
-        for index in range(0, len(points)):
-            point0 = points[index]
+        for index, point0 in enumerate(points):
             for point1 in points[index + 1:]:
                 vec = Vector(point0, point1, self.placement)
                 if np.fabs(vec.length()) >= ERROR:
@@ -273,14 +267,11 @@ class Hunter:
 
     def __triangles(self):
         points = self.placement.scene.points(skip_auxiliary=True)
-        for index0 in range(0, len(points)):
-            pt0 = points[index0]
+        for index0, pt0 in enumerate(points):
             loc0 = self.placement.location(pt0)
-            for index1 in range(index0 + 1, len(points)):
-                pt1 = points[index1]
+            for index1, pt1 in enumerate(points[index0 + 1:], start=index0 + 1):
                 loc1 = self.placement.location(pt1)
-                for index2 in range(index1 + 1, len(points)):
-                    pt2 = points[index2]
+                for pt2 in points[index1 + 1:]:
                     loc2 = self.placement.location(pt2)
                     area = loc0.x * (loc1.y - loc2.y) + loc1.x * (loc2.y - loc0.y) + loc2.x * (loc0.y - loc1.y)
                     if np.fabs(area) > ERROR:
@@ -293,11 +284,9 @@ class Hunter:
         lines = []
         used_pairs = set()
         points = self.placement.scene.points(skip_auxiliary=True)
-        for index0 in range(0, len(points)):
-            pt0 = points[index0]
+        for index0, pt0 in enumerate(points):
             loc0 = self.placement.location(pt0)
-            for index1 in range(index0 + 1, len(points)):
-                pt1 = points[index1]
+            for index1, pt1 in enumerate(points[index0 + 1:], start=index0 + 1):
                 if (pt0, pt1) in used_pairs:
                     continue
                 loc1 = self.placement.location(pt1)
@@ -314,8 +303,7 @@ class Hunter:
         return lines
 
     def __angles(self, lines):
-        for index in range(0, len(lines)):
-            line0 = lines[index]
+        for index, line0 in enumerate(lines):
             for line1 in lines[index + 1:]:
                 common = None
                 for pt in line0:
