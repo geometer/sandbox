@@ -170,7 +170,6 @@ class Explainer:
                         elif sd.points[1] == vector.start:
                             yield Vector(sd.points[0], sd.start, vector.placement)
 
-            right_angles = [exp for exp in self.explained if isinstance(exp.property, AngleValueProperty) and exp.property.degree == 90]
             for prop in list(self.unexplained):
                 if isinstance(prop, EqualAnglesProperty):
                     found = False
@@ -196,10 +195,12 @@ class Explainer:
                     if found:
                         continue
 
-                    roots = [exp for exp in right_angles if exp.property.angle in [prop.angle0, prop.angle1]]
-                    if len(roots) == 2:
-                        self.__reason(prop, 'both 90º', roots=roots)
+                    known_angles = [exp for exp in self.explained if isinstance(exp.property, AngleValueProperty)]
+                    roots = [exp for exp in known_angles if exp.property.angle in [prop.angle0, prop.angle1]]
+                    if len(roots) == 2 and roots[0].property.degree == roots[1].property.degree:
+                        self.__reason(prop, _comment('Both angle values = %sº', roots[0].property.degree), roots=roots)
                         found = True
+                    # TODO: report contradiction, if not angle values are not equal
 
                     if found:
                         continue
