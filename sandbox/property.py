@@ -1,7 +1,8 @@
 from . import Scene
 
 class Property:
-    pass
+    def __str__(self):
+        return str(self.description)
 
 class EquilateralTriangleProperty(Property):
     def __init__(self, ABC):

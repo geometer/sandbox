@@ -390,7 +390,7 @@ class CoreScene:
     def distances_ratio_constraint(self, AB, CD, coefAB, coefCD, **kwargs):
         """
         |AB| * coef AB == |CD| * coefCD
-        AB and CD are tuples or lists of two points, coefAB and coefCD are non-zero integers
+        AB and CD are tuples or lists of two points, coefAB and coefCD are non-zero numbers
         """
         assert len(AB) == 2 and len(CD) == 2
         assert coefAB != 0 and coefCD != 0
@@ -571,3 +571,6 @@ class ParametrizedString:
 
     def __str__(self):
         return self.format_string % tuple(p.name if isinstance(p, CoreScene.Object) else p for p in self.params)
+
+def _comment(*args):
+    return ParametrizedString(*args)
