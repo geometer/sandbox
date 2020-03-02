@@ -51,6 +51,10 @@ class CoreScene:
                     self.__dict__[key] = value
             return self
 
+        @property
+        def name(self):
+            return self.label
+
         def __str__(self):
             dct = {}
             for key in self.__dict__:
@@ -262,6 +266,12 @@ class CoreScene:
         def __init__(self, scene, **kwargs):
             CoreScene.Object.__init__(self, scene, **kwargs)
             self.all_points = set([self.point0, self.point1])
+
+        @property
+        def name(self):
+            if hasattr(self, 'auto_label') and self.auto_label:
+                return '(%s %s)' % (self.point0.name, self.point1.name)
+            return super().name
 
         def free_point(self, **kwargs):
             point = CoreScene.Point(self.scene, CoreScene.Point.Origin.line, line=self, **kwargs)
@@ -546,7 +556,8 @@ class Constraint:
         del extras['params']
         del extras['comments']
         if self.comments:
-            return 'Constraint(%s) %s %s (%s)' % (self.kind.name, params, self.comments, extras)
+            comments = ', '.join([str(com) for com in self.comments])
+            return 'Constraint(%s) %s %s (%s)' % (self.kind.name, params, comments, extras)
         else:
             return 'Constraint(%s) %s (%s)' % (self.kind.name, params, extras)
 
@@ -559,4 +570,4 @@ class ParametrizedString:
         return isinstance(other, ParametrizedString) and self.format_string == other.format_string and self.params == other.params
 
     def __str__(self):
-        return self.format_string % tuple(p.label if isinstance(p, CoreScene.Object) else p for p in self.params)
+        return self.format_string % tuple(p.name if isinstance(p, CoreScene.Object) else p for p in self.params)

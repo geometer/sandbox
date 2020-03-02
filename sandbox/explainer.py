@@ -90,10 +90,10 @@ class Explainer:
 
                         if vector_on_line(prop.angle.vector0, line0):
                             if vector_on_line(prop.angle.vector1, line1):
-                                self.__reason(prop, [ParametrizedString('%s ⟂ %s', line0.label, line1.label)] + cnst.comments)
+                                self.__reason(prop, cnst.comments)
                         elif vector_on_line(prop.angle.vector0, line1):
                             if vector_on_line(prop.angle.vector1, line0):
-                                self.__reason(prop, [ParametrizedString('%s ⟂ %s', line0.label, line1.label)] + cnst.comments)
+                                self.__reason(prop, cnst.comments)
                 elif isinstance(prop, EqualDistancesProperty):
                     for cnst in self.scene.constraints(Constraint.Kind.distances_ratio):
                         if cnst.params[4] == cnst.params[5]:
