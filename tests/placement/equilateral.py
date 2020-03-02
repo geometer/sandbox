@@ -10,9 +10,9 @@ class TestEquilateral(PlacementTest):
 
         A, B, C = scene.triangle(labels=('A', 'B', 'C'))
         scene.equal_distances_constraint((A, B), (A, C))
-        altitude = C.perpendicular_line(A.line_through(B), label='CD')
-        D = altitude.intersection_point(A.line_through(B, label='AB'))
-        scene.distances_ratio_constraint((A, B), (C, D), sp.sqrt(3) / 2, 1)
+        altitude = A.perpendicular_line(B.line_through(C), label='AD')
+        D = altitude.intersection_point(B.line_through(C, label='BC'))
+        scene.distances_ratio_constraint((B, C), (A, D), sp.sqrt(3) / 2, 1)
 
         return iterative_placement(scene)
 
