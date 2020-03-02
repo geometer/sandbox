@@ -332,9 +332,9 @@ class Hunter:
         for ngl in angles:
             arc = ngl.arc()
             if np.fabs(arc - np.pi / 2) < ERROR:
-                self.__add(RightAngleProperty(ngl))
+                self.__add(AngleValueProperty(ngl, 90))
             elif np.fabs(arc + np.pi / 2) < ERROR:
-                self.__add(RightAngleProperty(ngl.reversed()))
+                self.__add(AngleValueProperty(ngl.reversed(), 90))
 
     def __hunt_equal_angles(self, angles):
         families = []
@@ -460,15 +460,16 @@ class CollinearProperty(Property):
     def description(self):
         return _comment('collinear %s, %s, %s', *self.points)
 
-class RightAngleProperty(Property):
-    def __init__(self, angle):
+class AngleValueProperty(Property):
+    def __init__(self, angle, degree):
         self.angle = angle
+        self.degree = degree
 
     def __str__(self):
-        return '%s = 90º' % self.angle
+        return '%s = %dº' % (self.angle, self.degree)
 
     def __eq__(self, other):
-        return isinstance(other, RightAngleProperty) and self.angle == other.angle
+        return isinstance(other, AngleValueProperty) and self.angle == other.angle and self.degree == other.degree
 
 class EqualAnglesProperty(Property):
     def __init__(self, angle0, angle1):

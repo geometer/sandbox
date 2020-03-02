@@ -81,7 +81,7 @@ class Explainer:
                         if all(p in line for p in prop.points):
                             self.__reason(prop, 'Given')
                             break
-                elif isinstance(prop, RightAngleProperty):
+                elif isinstance(prop, AngleValueProperty) and prop.degree == 90:
                     for cnst in self.scene.constraints(Constraint.Kind.perpendicular):
                         line0 = cnst.params[0]
                         line1 = cnst.params[1]
@@ -168,7 +168,7 @@ class Explainer:
                         elif sd.points[1] == vector.start:
                             yield Vector(sd.points[0], sd.start, vector.placement)
 
-            right_angles = [exp for exp in self.explained if isinstance(exp.property, RightAngleProperty)]
+            right_angles = [exp for exp in self.explained if isinstance(exp.property, AngleValueProperty) and exp.property.degree == 90]
             for prop in list(self.unexplained):
                 if isinstance(prop, EqualAnglesProperty):
                     found = False
