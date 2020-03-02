@@ -161,17 +161,18 @@ class Explainer:
 
             same_direction = [exp for exp in self.explained if isinstance(exp.property, SameDirectionProperty)]
             def same_dir(vector):
+                yield (vector, [])
                 for sd in same_direction:
                     if sd.property.start == vector.start:
                         if sd.property.points[0] == vector.end:
-                            yield (sd.property.start.vector(sd.property.points[1]), sd)
+                            yield (sd.property.start.vector(sd.property.points[1]), [sd])
                         elif sd.property.points[1] == vector.end:
-                            yield (sd.property.start.vector(sd.property.points[0]), sd)
+                            yield (sd.property.start.vector(sd.property.points[0]), [sd])
                     if sd.property.start == vector.end:
                         if sd.property.points[0] == vector.start:
-                            yield (sd.property.points[1].vector(sd.property.start), sd)
+                            yield (sd.property.points[1].vector(sd.property.start), [sd])
                         elif sd.property.points[1] == vector.start:
-                            yield (sd.property.points[0].vector(sd.property.start), sd)
+                            yield (sd.property.points[0].vector(sd.property.start), [sd])
 
             for prop in list(self.unexplained):
                 if isinstance(prop, EqualAnglesProperty):
@@ -182,7 +183,7 @@ class Explainer:
                             if v0 == vector0:
                                 try:
                                     found = next(p for p in lst if p[0] == vector1)
-                                    self.__reason(prop, 'Same angle', roots=[sd0, found[1]])
+                                    self.__reason(prop, 'Same angle', roots=sd0 + found[1])
                                     return True
                                 except:
                                     pass
