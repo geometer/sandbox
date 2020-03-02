@@ -270,7 +270,7 @@ class Hunter:
 
         for fam in families:
             for pair in iterate_pairs(fam):
-                self.__add(EqualDistancesProperty((pair[0].start, pair[0].end), (pair[1].start, pair[1].end)))
+                self.__add(CongruentSegmentProperty((pair[0].start, pair[0].end), (pair[1].start, pair[1].end)))
 
     def __hunt_proportional_segments(self, vectors):
         families = []
@@ -317,7 +317,7 @@ class Hunter:
 
         for fam in families:
             for pair in iterate_pairs(fam):
-                self.__add(EqualAnglesProperty(pair[0], pair[1]))
+                self.__add(CongruentAnglesProperty(pair[0], pair[1]))
 
     def __hunt_equal_triangles(self):
         triangles = list(self.__triangles())
@@ -337,7 +337,7 @@ class Hunter:
 
         for fam in families:
             for pair in iterate_pairs(fam):
-                self.__add(EqualTrianglesProperty(pair[0].pts, pair[1].pts))
+                self.__add(CongruentTrianglesProperty(pair[0].pts, pair[1].pts))
 
     def __hunt_similar_triangles(self):
         triangles = list(self.__triangles())
@@ -431,7 +431,7 @@ class AngleValueProperty(Property):
     def __eq__(self, other):
         return isinstance(other, AngleValueProperty) and self.angle == other.angle and self.degree == other.degree
 
-class EqualAnglesProperty(Property):
+class CongruentAnglesProperty(Property):
     def __init__(self, angle0, angle1):
         self.angle0 = angle0
         self.angle1 = angle1
@@ -440,12 +440,12 @@ class EqualAnglesProperty(Property):
         return '%s = %s' % (self.angle0, self.angle1)
 
     def __eq__(self, other):
-        if not isinstance(other, EqualAnglesProperty):
+        if not isinstance(other, CongruentAnglesProperty):
             return False
         return (self.angle0 == other.angle0 and self.angle1 == other.angle1) or \
                (self.angle0 == other.angle1 and self.angle1 == other.angle0)
 
-class EqualDistancesProperty(Property):
+class CongruentSegmentProperty(Property):
     def __init__(self, AB, CD):
         self.AB = list(AB)
         self.CD = list(CD)
@@ -463,7 +463,7 @@ class SimilarTrianglesProperty(Property):
     def description(self):
         return _comment('△ %s %s %s ~ △ %s %s %s', *self.ABC, *self.DEF)
 
-class EqualTrianglesProperty(Property):
+class CongruentTrianglesProperty(Property):
     def __init__(self, ABC, DEF):
         self.ABC = list(ABC)
         self.DEF = list(DEF)

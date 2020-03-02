@@ -99,7 +99,7 @@ class Explainer:
                         elif prop.angle.vector0 in line1:
                             if prop.angle.vector1 in line0:
                                 self.__reason(prop, cnst.comments)
-                elif isinstance(prop, EqualDistancesProperty):
+                elif isinstance(prop, CongruentSegmentProperty):
                     for cnst in self.scene.constraints(Constraint.Kind.distances_ratio):
                         if cnst.params[4] == cnst.params[5]:
                             first = set(cnst.params[0:2])
@@ -175,7 +175,7 @@ class Explainer:
                             yield (sd.property.points[0].vector(sd.property.start), [sd])
 
             for prop in list(self.unexplained):
-                if isinstance(prop, EqualAnglesProperty):
+                if isinstance(prop, CongruentAnglesProperty):
                     found = False
                     for v0, sd0 in same_dir(prop.angle0.vector0):
                         lst = list(same_dir(prop.angle0.vector1))
@@ -237,7 +237,7 @@ class Explainer:
                     if found:
                         continue
 
-                    equal_angles = [exp for exp in self.explained if isinstance(exp.property, EqualAnglesProperty)]
+                    equal_angles = [exp for exp in self.explained if isinstance(exp.property, CongruentAnglesProperty)]
                     for index, ea0 in enumerate(equal_angles):
                         if prop.angle0 == ea0.property.angle0:
                             look_for = [prop.angle1, ea0.property.angle1]
@@ -260,7 +260,7 @@ class Explainer:
                             break
 
                 elif isinstance(prop, SimilarTrianglesProperty):
-                    equal_angles = [exp for exp in self.explained if isinstance(exp.property, EqualAnglesProperty)]
+                    equal_angles = [exp for exp in self.explained if isinstance(exp.property, CongruentAnglesProperty)]
                     def match(angle, triangle):
                         pts = [angle.vector0.start, angle.vector1.start, angle.vector0.end, angle.vector1.end]
                         if set(pts) == set(triangle):
@@ -282,9 +282,9 @@ class Explainer:
                         self.__reason(prop, 'three angles', roots=roots)
                     elif len(roots) == 2:
                         self.__reason(prop, 'two angles', roots=roots)
-                elif isinstance(prop, EqualTrianglesProperty):
+                elif isinstance(prop, CongruentTrianglesProperty):
                     similar_triangles = [exp for exp in self.explained if isinstance(exp.property, SimilarTrianglesProperty)]
-                    equal_distances = [exp for exp in self.explained if isinstance(exp.property, EqualDistancesProperty)]
+                    equal_distances = [exp for exp in self.explained if isinstance(exp.property, CongruentSegmentProperty)]
                     for st in similar_triangles:
                         if (st.property.ABC == prop.ABC and st.property.DEF == prop.DEF) or \
                            (st.property.ABC == prop.DEF and st.property.DEF == prop.ABC):
@@ -307,8 +307,8 @@ class Explainer:
                         if ind is not None and ind == index(ed.property.CD, prop.ABC):
                             self.__reason(prop, 'Similar triangles with equal side', roots=[st, ed])
 
-                elif isinstance(prop, EqualDistancesProperty):
-                    equal_triangles = [exp for exp in self.explained if isinstance(exp.property, EqualTrianglesProperty)]
+                elif isinstance(prop, CongruentSegmentProperty):
+                    equal_triangles = [exp for exp in self.explained if isinstance(exp.property, CongruentTrianglesProperty)]
                     def index(two, three):
                         if set(two).issubset(set(three)):
                             for i in range(0, 3):
@@ -325,7 +325,7 @@ class Explainer:
                             self.__reason(prop, 'Corr. sides in equal triangles', roots=[et])
 
                 elif isinstance(prop, IsoscelesTriangleProperty):
-                    equal_distances = [exp for exp in self.explained if isinstance(exp.property, EqualDistancesProperty)]
+                    equal_distances = [exp for exp in self.explained if isinstance(exp.property, CongruentSegmentProperty)]
                     for ed in equal_distances:
                         pts = ed.property.AB + ed.property.CD
                         if pts.count(prop.A) == 2 and prop.BC[0] in pts and prop.BC[1] in pts:
@@ -344,7 +344,7 @@ class Explainer:
                     if found:
                         continue
 
-                    equal_angles = [exp for exp in self.explained if isinstance(exp.property, EqualAnglesProperty)]
+                    equal_angles = [exp for exp in self.explained if isinstance(exp.property, CongruentAnglesProperty)]
                     angle_values = [exp for exp in self.explained if isinstance(exp.property, AngleValueProperty)]
                     for ea in equal_angles:
                         if ea.property.angle0 == prop.angle:
