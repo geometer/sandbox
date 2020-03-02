@@ -348,6 +348,7 @@ class Explainer:
                     for val in values:
                         if is_angle(val.property.angle, iso.property.A, iso.property.BC):
                             self.__reason(prop, _comment('Base angle of isosceles △ %s %s %s with apex angle %s', iso.property.A, *iso.property.BC, val.property.degree), roots=[iso, val])
+                        # TODO: check sum of angles; report contradiction if found
 
 
         base()
