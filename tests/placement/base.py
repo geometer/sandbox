@@ -22,7 +22,7 @@ class PlacementTest(unittest.TestCase):
 
     def assertDistance(self, pt0, pt1, distance):
         self.assertLess(
-            np.fabs(self.placement.distance(pt0, pt1) - distance),
+            np.fabs(self.placement.distance(pt0, pt1) - np.float128(distance)),
             PlacementTest.ERROR,
             '|%s,%s| != %d' % (pt0, pt1, distance)
         )

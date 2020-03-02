@@ -2,7 +2,7 @@ import unittest
 
 from tests.scene.midpoint import *
 
-from tests.placement.equilateral import *
+from tests.placement.sympy import *
 from tests.placement.intersection import *
 from tests.placement.napoleon import *
 from tests.placement.triangle345 import *
