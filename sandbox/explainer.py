@@ -93,14 +93,11 @@ class Explainer:
                     for cnst in self.scene.constraints(Constraint.Kind.perpendicular):
                         line0 = cnst.params[0]
                         line1 = cnst.params[1]
-                        def vector_on_line(vector, line):
-                            return vector.start in line and vector.end in line
-
-                        if vector_on_line(prop.angle.vector0, line0):
-                            if vector_on_line(prop.angle.vector1, line1):
+                        if prop.angle.vector0 in line0:
+                            if prop.angle.vector1 in line1:
                                 self.__reason(prop, cnst.comments)
-                        elif vector_on_line(prop.angle.vector0, line1):
-                            if vector_on_line(prop.angle.vector1, line0):
+                        elif prop.angle.vector0 in line1:
+                            if prop.angle.vector1 in line0:
                                 self.__reason(prop, cnst.comments)
                 elif isinstance(prop, EqualDistancesProperty):
                     for cnst in self.scene.constraints(Constraint.Kind.distances_ratio):
@@ -167,14 +164,14 @@ class Explainer:
                 for sd in same_direction:
                     if sd.property.start == vector.start:
                         if sd.property.points[0] == vector.end:
-                            yield (Vector(sd.property.start, sd.property.points[1], vector.placement), sd)
+                            yield (sd.property.start.vector(sd.property.points[1]), sd)
                         elif sd.property.points[1] == vector.end:
-                            yield (Vector(sd.property.start, sd.property.points[0], vector.placement), sd)
+                            yield (sd.property.start.vector(sd.property.points[0]), sd)
                     if sd.property.start == vector.end:
                         if sd.property.points[0] == vector.start:
-                            yield (Vector(sd.property.points[1], sd.property.start, vector.placement), sd)
+                            yield (sd.property.points[1].vector(sd.property.start), sd)
                         elif sd.property.points[1] == vector.start:
-                            yield (Vector(sd.property.points[0], sd.property.start, vector.placement), sd)
+                            yield (sd.property.points[0].vector(sd.property.start), sd)
 
             for prop in list(self.unexplained):
                 if isinstance(prop, EqualAnglesProperty):

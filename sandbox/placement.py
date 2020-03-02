@@ -53,8 +53,36 @@ class IncompletePlacementError(Exception):
 class PlacementFailedError(Exception):
     """Cannot place to meet all the conditions"""
 
-class Placement:
-    class TempPlacement:
+class BasePlacement:
+    def length(self, vector):
+        start = self.location(vector.start)
+        end = self.location(vector.end)
+        return np.hypot(end.x - start.x, end.y - start.y)
+
+    def scalar_product(self, vector0, vector1):
+        start0 = self.location(vector0.start)
+        end0 = self.location(vector0.end)
+        start1 = self.location(vector1.start)
+        end1 = self.location(vector1.end)
+        return (end0.x - start0.x) * (end1.x - start1.x) + (end0.y - start0.y) * (end1.y - start1.y)
+        
+    def vector_product(self, vector0, vector1):
+        start0 = self.location(vector0.start)
+        end0 = self.location(vector0.end)
+        start1 = self.location(vector1.start)
+        end1 = self.location(vector1.end)
+        return (end0.x - start0.x) * (end1.y - start1.y) - (end0.y - start0.y) * (end1.x - start1.x)
+        
+    def vec_angle(self, vector0, vector1):
+        cos = self.scalar_product(vector0, vector1) / self.length(vector0) / self.length(vector1)
+        if cos >= 1:
+            return 0
+        if cos <= -1:
+            return np.pi
+        return np.arccos(cos) if self.vector_product(vector0, vector1) > 0 else -np.arccos(cos)
+
+class Placement(BasePlacement):
+    class TempPlacement(BasePlacement):
         def __init__(self, placement, point, coords):
             self._coordinates = dict(placement._coordinates)
             self._coordinates[point] = coords
@@ -122,10 +150,10 @@ class Placement:
                                 return False
                 return True
             if constraint.kind == Constraint.Kind.same_direction:
-                pt0 = self.location(constraint.params[0])
-                pt1 = self.location(constraint.params[1])
-                pt2 = self.location(constraint.params[2])
-                return TwoDVector(pt0, pt1).scalar_product(TwoDVector(pt0, pt2)) > 0
+                pt = constraint.params[0]
+                vec0 = pt.vector(constraint.params[1])
+                vec1 = pt.vector(constraint.params[2])
+                return self.scalar_product(vec0, vec1) > 0
 
             assert False, 'Constraint `%s` not supported in placement' % constraint.kind
 
@@ -361,7 +389,7 @@ class Placement:
     def radius(self, circle):
         if isinstance(circle, str):
             circle = self.scene.get(circle)
-        return self.location(circle.radius_start).distance_to(self.location(circle.radius_end))
+        return self.length(circle.radius_start.vector(circle.radius_end))
 
     def radius2(self, circle):
         if isinstance(circle, str):
@@ -377,7 +405,7 @@ class Placement:
         assert isinstance(point0, CoreScene.Point), 'Parameter is not a point'
         assert isinstance(point1, CoreScene.Point), 'Parameter is not a point'
 
-        return self.location(point0).distance_to(self.location(point1))
+        return self.length(point0.vector(point1))
 
     def angle(self, pt0, pt1, pt2, pt3):
         """Angle between vectors (pt0, pt1) and (pt2, pt3)"""
@@ -395,9 +423,7 @@ class Placement:
         assert isinstance(pt2, CoreScene.Point), 'Parameter is not a point'
         assert isinstance(pt3, CoreScene.Point), 'Parameter is not a point'
 
-        vec0 = TwoDVector(self.location(pt0), self.location(pt1))
-        vec1 = TwoDVector(self.location(pt2), self.location(pt3))
-        return vec0.angle(vec1)
+        return self.vec_angle(pt0.vector(pt1), pt2.vector(pt3))
 
     def dump(self):
         if self.params:
@@ -421,9 +447,9 @@ class Placement:
 
             if cnstr.kind == Constraint.Kind.distance:
                 has_distance_constraint = True
-                pt0 = self.location(cnstr.params[0])
-                pt1 = self.location(cnstr.params[1])
-                dist_square += (pt0.distance_to(pt1) - cnstr.params[2]) ** 2
+                pt0 = cnstr.params[0]
+                pt1 = cnstr.params[1]
+                dist_square += (self.length(pt0.vector(pt1)) - cnstr.params[2]) ** 2
             elif cnstr.kind == Constraint.Kind.distances_ratio:
                 pt0 = self.location(cnstr.params[0])
                 pt1 = self.location(cnstr.params[1])
@@ -433,12 +459,10 @@ class Placement:
                 coef1 = np.float128(cnstr.params[5])
                 numb_square += (pt0.distance_to(pt1) / pt2.distance_to(pt3) - coef1 / coef0) ** 2
             elif cnstr.kind == Constraint.Kind.collinear:
-                pt0 = self.location(cnstr.params[0])
-                pt1 = self.location(cnstr.params[1])
-                pt2 = self.location(cnstr.params[2])
-                vec0 = TwoDVector(pt0, pt1)
-                vec1 = TwoDVector(pt0, pt2)
-                numb_square += vec0.vector_product(vec1) ** 2 / vec0.length2 / vec1.length2
+                pt = cnstr.params[0]
+                vec0 = pt.vector(cnstr.params[1])
+                vec1 = pt.vector(cnstr.params[2])
+                numb_square += (self.vector_product(vec0, vec1) / self.length(vec0) / self.length(vec1)) ** 2
             elif cnstr.kind == Constraint.Kind.perpendicular:
                 pt0 = self.location(cnstr.params[0].point0)
                 pt1 = self.location(cnstr.params[0].point1)
@@ -448,20 +472,12 @@ class Placement:
                 vec1 = TwoDVector(pt2, pt3)
                 numb_square += vec0.scalar_product(vec1) ** 2 / vec0.length2 / vec1.length2
             elif cnstr.kind == Constraint.Kind.angles_ratio:
-                pt0 = self.location(cnstr.params[0])
-                pt1 = self.location(cnstr.params[1])
-                pt2 = self.location(cnstr.params[2])
-                pt3 = self.location(cnstr.params[3])
-                pt4 = self.location(cnstr.params[4])
-                pt5 = self.location(cnstr.params[5])
-                pt6 = self.location(cnstr.params[6])
-                pt7 = self.location(cnstr.params[7])
+                vec0 = cnstr.params[0].vector(cnstr.params[1])
+                vec1 = cnstr.params[2].vector(cnstr.params[3])
+                vec2 = cnstr.params[4].vector(cnstr.params[5])
+                vec3 = cnstr.params[6].vector(cnstr.params[7])
                 ratio = cnstr.params[8]
-                vec0 = TwoDVector(pt0, pt1)
-                vec1 = TwoDVector(pt2, pt3)
-                vec2 = TwoDVector(pt4, pt5)
-                vec3 = TwoDVector(pt6, pt7)
-                numb_square += (vec0.angle(vec1) - vec2.angle(vec3) * ratio) ** 2
+                numb_square += (self.vec_angle(vec0, vec1) - self.vec_angle(vec2, vec3) * ratio) ** 2
             else:
                 assert False, 'Constraint `%s` not supported in adjustment' % cnstr.kind
 

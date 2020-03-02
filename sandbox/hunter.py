@@ -7,31 +7,9 @@ from .core import _comment
 
 ERROR = np.float128(5e-6)
 
-class Vector:
-    def __init__(self, start: Scene.Point, end: Scene.Point, placement: Placement):
-        self.start = start
-        self.end = end
-        self.placement = placement
-        self.__length = placement.distance(start, end)
-
-    def length(self):
-        return self.__length
-
-    def angle(self, other):
-        return self.placement.angle(self.start, self.end, other.start, other.end)
-
-    @property
-    def reversed(self):
-        return Vector(self.end, self.start, self.placement)
-
-    def __eq__(self, other) -> bool:
-        return self.start == other.start and self.end == other.end
-
-    def __str__(self):
-        return str(_comment('%s %s', self.start, self.end))
-
 class Angle:
-    def __init__(self, vector0: Vector, vector1: Vector):
+    def __init__(self, vector0: Scene.Vector, vector1: Scene.Vector, placement: Placement):
+        self.placement = placement
         if vector0.end == vector1.end:
             self.vector0 = vector0.reversed
             self.vector1 = vector1.reversed
@@ -44,10 +22,10 @@ class Angle:
         else:
             self.vector0 = vector0
             self.vector1 = vector1
-        self.__arc = self.vector0.angle(self.vector1)
+        self.__arc = self.placement.vec_angle(self.vector0, self.vector1)
 
     def reversed(self):
-        return Angle(self.vector1, self.vector0)
+        return Angle(self.vector1, self.vector0, self.placement)
 
     def arc(self):
         return self.__arc
@@ -57,7 +35,7 @@ class Angle:
 
     def __str__(self):
         if self.vector0.start == self.vector1.start:
-            return '∠ %s %s %s' % (self.vector0.end.label, self.vector0.start.label, self.vector1.end.label)
+            return str(_comment('∠ %s %s %s', self.vector0.end, self.vector0.start, self.vector1.end))
         return '∠(%s, %s)' % (self.vector0, self.vector1)
 
     def __eq__(self, other):
@@ -116,12 +94,13 @@ class Triangle:
         return np.fabs(self.side2 - other.side2) < ERROR
 
 class LengthFamily:
-    def __init__(self, vector: Vector):
+    def __init__(self, vector: Scene.Vector, placement: Placement):
         self.base = vector
+        self.placement = placement
         self.vectors = []
 
-    def __test(self, vector: Vector) -> str:
-        ratio = vector.length() / self.base.length()
+    def __test(self, vector: Scene.Vector) -> str:
+        ratio = self.placement.length(vector) / self.placement.length(self.base)
         for i in range(1, 10):
             candidate = ratio * i
             if np.fabs(candidate - round(candidate)) < ERROR:
@@ -135,7 +114,7 @@ class LengthFamily:
                 return 'SQRT(%d/%d)' % (round(candidate), i)
         return None
 
-    def add(self, vector: Vector) -> bool:
+    def add(self, vector: Scene.Vector) -> bool:
         test = self.__test(vector)
         if test is None:
             return False
@@ -163,22 +142,6 @@ class AngleFamily:
             return False
         self.angles.append({'angle': angle, 'comment': test})
         return True
-
-def hunt_proportional_segments(vectors):
-    families = []
-    for vec in vectors:
-        for fam in families:
-            if fam.add(vec):
-                break
-        else:
-            families.append(LengthFamily(vec))
-
-    print('%d segments in %d families' % (len(vectors), len([f for f in families if len(f.vectors) > 0])))
-    for fam in families:
-        if len(fam.vectors) > 0:
-            print('%s: %d segments' % (fam.base, 1 + len(fam.vectors)))
-            for data in fam.vectors:
-                print('\t%s (%s)' % (data['vector'], data['comment']))
 
 def hunt_proportional_angles(angles):
     families = []
@@ -240,8 +203,8 @@ class Hunter:
         points = self.placement.scene.points(skip_auxiliary=True)
         for index, point0 in enumerate(points):
             for point1 in points[index + 1:]:
-                vec = Vector(point0, point1, self.placement)
-                if np.fabs(vec.length()) >= ERROR:
+                vec = point0.vector(point1)
+                if np.fabs(self.placement.length(vec)) >= ERROR:
                     yield vec
 
     def __triangles(self):
@@ -283,7 +246,7 @@ class Hunter:
 
     def __angles(self, vectors):
         for pair in iterate_pairs(vectors):
-            yield Angle(pair[0], pair[1])
+            yield Angle(pair[0], pair[1], self.placement)
 
     def __add(self, prop):
         if prop not in self.properties:
@@ -299,7 +262,7 @@ class Hunter:
         families = []
         for vec in vectors:
             for fam in families:
-                if np.fabs(vec.length() - fam[0].length()) < ERROR:
+                if np.fabs(self.placement.length(vec) - self.placement.length(fam[0])) < ERROR:
                     fam.append(vec)
                     break
             else:
@@ -308,6 +271,22 @@ class Hunter:
         for fam in families:
             for pair in iterate_pairs(fam):
                 self.__add(EqualDistancesProperty((pair[0].start, pair[0].end), (pair[1].start, pair[1].end)))
+
+    def __hunt_proportional_segments(self, vectors):
+        families = []
+        for vec in vectors:
+            for fam in families:
+                if fam.add(vec):
+                    break
+            else:
+                families.append(LengthFamily(vec, self.placement))
+
+        print('%d segments in %d families' % (len(vectors), len([f for f in families if len(f.vectors) > 0])))
+        for fam in families:
+            if len(fam.vectors) > 0:
+                print('%s: %d segments' % (fam.base, 1 + len(fam.vectors)))
+                for data in fam.vectors:
+                    print('\t%s (%s)' % (data['vector'], data['comment']))
 
     def __hunt_angle_values(self, angles):
         for ngl in angles:
@@ -393,7 +372,7 @@ class Hunter:
 
     def hunt(self, options=('default')):
         all_vectors = list(self.__vectors())
-        all_vectors.sort(key=Vector.length)
+        all_vectors.sort(key=lambda v: self.placement.length(v))
 
         all_lines = list(self.__lines())
 
@@ -419,7 +398,7 @@ class Hunter:
             self.__hunt_similar_triangles()
 
         if 'proportional_segments' in options or 'all' in options:
-            hunt_proportional_segments(all_vectors)
+            self.__hunt_proportional_segments(all_vectors)
 
         if 'proportional_angles' in options or 'all' in options:
             hunt_proportional_angles(all_angles)

@@ -158,6 +158,9 @@ class CoreScene:
                 self.scene, centre=self, radius_start=start, radius_end=end, **kwargs
             )
 
+        def vector(self, point):
+            return CoreScene.Vector(self, point)
+
         def belongs_to(self, line_or_circle):
             self.scene.assert_line_or_circle(line_or_circle)
             line_or_circle.all_points.add(self)
@@ -278,11 +281,14 @@ class CoreScene:
             point.belongs_to(self)
             return point
 
-        def __contains__(self, point):
-            if point is None:
+        def __contains__(self, obj):
+            if obj is None:
                 return False
-            self.scene.assert_point(point)
-            return point in self.all_points
+            if isinstance(obj, CoreScene.Point):
+                return obj in self.all_points
+            if isinstance(obj, CoreScene.Vector):
+                return obj.start in self.all_points and obj.end in self.all_points
+            assert False, 'Operator not defined for %s and Line' % type(obj)
 
         def intersection_point(self, obj, **kwargs):
             """
@@ -359,6 +365,24 @@ class CoreScene:
             crossing.belongs_to(self)
             crossing.belongs_to(obj)
             return crossing
+
+    class Vector:
+        def __init__(self, start, end):
+            self.start = start
+            self.end = end
+
+        @property
+        def reversed(self):
+            return CoreScene.Vector(self.end, self.start)
+
+        def __eq__(self, other):
+            return self.start == other.start and self.end == other.end
+
+        def __hash__(self):
+            return hash(self.start) * 13 + hash(self.end) * 23
+
+        def __str__(self):
+            return str(_comment('%s %s', self.start, self.end))
 
     def __init__(self):
         self.__objects = []
