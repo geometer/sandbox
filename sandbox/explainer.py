@@ -156,40 +156,43 @@ class Explainer:
                         self.__add(SameDirectionProperty(B, C, X), comments)
                         self.__add(SameDirectionProperty(C, B, X), comments)
 
-            same_direction = [exp.property for exp in self.explained if isinstance(exp.property, SameDirectionProperty)]
+            same_direction = [exp for exp in self.explained if isinstance(exp.property, SameDirectionProperty)]
             def same_dir(vector):
                 for sd in same_direction:
-                    if sd.start == vector.start:
-                        if sd.points[0] == vector.end:
-                            yield Vector(sd.start, sd.points[1], vector.placement)
-                        elif sd.points[1] == vector.end:
-                            yield Vector(sd.start, sd.points[0], vector.placement)
-                    if sd.start == vector.end:
-                        if sd.points[0] == vector.start:
-                            yield Vector(sd.points[1], sd.start, vector.placement)
-                        elif sd.points[1] == vector.start:
-                            yield Vector(sd.points[0], sd.start, vector.placement)
+                    if sd.property.start == vector.start:
+                        if sd.property.points[0] == vector.end:
+                            yield (Vector(sd.property.start, sd.property.points[1], vector.placement), sd)
+                        elif sd.property.points[1] == vector.end:
+                            yield (Vector(sd.property.start, sd.property.points[0], vector.placement), sd)
+                    if sd.property.start == vector.end:
+                        if sd.property.points[0] == vector.start:
+                            yield (Vector(sd.property.points[1], sd.property.start, vector.placement), sd)
+                        elif sd.property.points[1] == vector.start:
+                            yield (Vector(sd.property.points[0], sd.property.start, vector.placement), sd)
 
             for prop in list(self.unexplained):
                 if isinstance(prop, EqualAnglesProperty):
                     found = False
-                    for v0 in same_dir(prop.angle0.vector0):
-                        #TODO: roots
-                        if v0 == prop.angle1.vector0 and prop.angle1.vector1 in same_dir(prop.angle0.vector1):
-                            self.__reason(prop, 'same angle')
-                            found = True
-                            break
-                        elif v0 == prop.angle1.vector1 and prop.angle1.vector0 in same_dir(prop.angle0.vector1):
-                            self.__reason(prop, 'same angle')
-                            found = True
-                            break
-                        elif v0 == prop.angle1.vector0.reversed and prop.angle1.vector1.reversed in same_dir(prop.angle0.vector1):
-                            self.__reason(prop, 'same angle')
-                            found = True
-                            break
-                        elif v0 == prop.angle1.vector1.reversed and prop.angle1.vector0.reversed in same_dir(prop.angle0.vector1):
-                            self.__reason(prop, 'same angle')
-                            found = True
+                    for v0, sd0 in same_dir(prop.angle0.vector0):
+                        lst = list(same_dir(prop.angle0.vector1))
+                        def add_reason(vector0, vector1):
+                            if v0 == vector0:
+                                try:
+                                    found = next(p for p in lst if p[0] == vector1)
+                                    self.__reason(prop, 'Same angle', roots=[sd0, found[1]])
+                                    return True
+                                except:
+                                    pass
+                            return False
+
+                        a10 = prop.angle1.vector0
+                        a11 = prop.angle1.vector1
+                        found = \
+                            add_reason(a10, a11) or \
+                            add_reason(a11, a10) or \
+                            add_reason(a10.reversed, a11.reversed) or \
+                            add_reason(a11.reversed, a10.reversed)
+                        if found:
                             break
 
                     if found:
