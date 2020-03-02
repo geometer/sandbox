@@ -1,3 +1,5 @@
+import sympy as sp
+
 from .core import Constraint, _comment
 from .hunter import *
 from .property import *
@@ -16,7 +18,7 @@ class Explainer:
         def __str__(self):
             if self.roots:
                 return '%s (%s)' % (
-                    ', '.join(self.comments),
+                    ', '.join([str(com) for com in self.comments]),
                     ', '.join(['*%d' % rsn.index for rsn in self.roots])
                 )
             else:
@@ -320,6 +322,23 @@ class Explainer:
                         pts = ed.property.AB + ed.property.CD
                         if pts.count(prop.A) == 2 and prop.BC[0] in pts and prop.BC[1] in pts:
                             self.__reason(prop, 'Two equal sides', roots=[ed])
+
+                elif isinstance(prop, AngleValueProperty):
+                    isosceles = [exp for exp in self.explained if isinstance(exp.property, IsoscelesTriangleProperty)]
+                    values = [exp for exp in self.explained if isinstance(exp.property, AngleValueProperty)]
+                    def is_angle(angle, vertex, points):
+                        return angle.vector0.start == vertex and angle.vector1.start == vertex and set([angle.vector0.end, angle.vector1.end]) == set(points)
+                    for iso in isosceles:
+                        if is_angle(prop.angle, iso.property.BC[0], [iso.property.A, iso.property.BC[1]]):
+                            break
+                        if is_angle(prop.angle, iso.property.BC[1], [iso.property.A, iso.property.BC[0]]):
+                            break
+                    else:
+                        continue
+                    for val in values:
+                        if is_angle(val.property.angle, iso.property.A, iso.property.BC):
+                            self.__reason(prop, _comment('Base angle of isosceles △ %s %s %s with apex angle %s', iso.property.A, *iso.property.BC, val.property.degree), roots=[iso, val])
+
 
         base()
         while len(self.unexplained) > 0:
