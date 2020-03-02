@@ -328,13 +328,16 @@ class Hunter:
             for pair in iterate_pairs(fam):
                 self.__add(EqualDistancesProperty((pair[0].start, pair[0].end), (pair[1].start, pair[1].end)))
 
-    def __hunt_right_angles(self, angles):
+    def __hunt_angle_values(self, angles):
         for ngl in angles:
             arc = ngl.arc()
-            if np.fabs(arc - np.pi / 2) < ERROR:
-                self.__add(AngleValueProperty(ngl, 90))
-            elif np.fabs(arc + np.pi / 2) < ERROR:
-                self.__add(AngleValueProperty(ngl.reversed(), 90))
+            frac = arc / np.pi * 12
+            frac_int = int(np.round(frac))
+            if np.fabs(frac - frac_int) < ERROR:
+                if frac >= 0:
+                    self.__add(AngleValueProperty(ngl, 15 * frac_int))
+                else:
+                    self.__add(AngleValueProperty(ngl.reversed(), -15 * frac_int))
 
     def __hunt_equal_angles(self, angles):
         families = []
@@ -425,8 +428,8 @@ class Hunter:
         if 'equal_angles' in options or 'default' in options:
             self.__hunt_equal_angles(all_angles)
 
-        if 'right_angles' in options or 'default' in options:
-            self.__hunt_right_angles(all_angles)
+        if 'angle_values' in options or 'default' in options:
+            self.__hunt_angle_values(all_angles)
 
         if 'equal_triangles' in options or 'default' in options:
             self.__hunt_equal_triangles()
