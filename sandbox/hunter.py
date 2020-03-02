@@ -180,25 +180,6 @@ def hunt_proportional_segments(vectors):
             for data in fam.vectors:
                 print('\t%s (%s)' % (data['vector'], data['comment']))
 
-def hunt_rational_angles(angles):
-    for ngl in angles:
-        arc = ngl.arc()
-        if np.fabs(arc) < ERROR:
-            print('%s = 0' % ngl)
-        else:
-            ratio = arc / np.pi
-            for i in range(1, 60):
-                candidate = i * ratio
-                if np.fabs(candidate - round(candidate)) < ERROR:
-                    pi = 'PI' if i == 1 else ('PI / %d' % i)
-                    if round(candidate) == 1:
-                        print('%s = %s' % (ngl, pi))
-                    elif round(candidate) == -1:
-                        print('%s = -%s' % (ngl, pi))
-                    else:
-                        print('%s = %d %s' % (ngl, round(candidate), pi))
-                    break
-
 def hunt_proportional_angles(angles):
     families = []
     zero_count = 0
@@ -439,9 +420,6 @@ class Hunter:
 
         if 'proportional_segments' in options or 'all' in options:
             hunt_proportional_segments(all_vectors)
-
-        if 'rational_angles' in options or 'all' in options:
-            hunt_rational_angles(all_angles)
 
         if 'proportional_angles' in options or 'all' in options:
             hunt_proportional_angles(all_angles)
