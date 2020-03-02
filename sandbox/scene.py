@@ -185,7 +185,7 @@ class Scene(CoreScene):
         points.remove(vertex)
         base = points[0].line_through(points[1], auxiliary=True)
         altitude = vertex.perpendicular_line(base, **kwargs)
-        altitude.perpendicular_constraint(base, comment='Altitude is perpendicular to the base', guaranteed=True)
+        altitude.perpendicular_constraint(base, comment=ParametrizedString('Altitude %s is perpendicular to the base %s', altitude, base), guaranteed=True)
         return altitude
 
     def parallelogram(self, labels=None, auxiliary=False):

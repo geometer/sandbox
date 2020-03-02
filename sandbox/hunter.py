@@ -3,6 +3,7 @@ import numpy as np
 from . import Scene, iterative_placement
 from .placement import Placement
 from .property import *
+from .core import _comment
 
 ERROR = np.float128(5e-6)
 
@@ -27,7 +28,7 @@ class Vector:
         return self.start == other.start and self.end == other.end
 
     def __str__(self):
-        return "%s %s" % (self.start.label, self.end.label)
+        return str(_comment('%s %s', self.start, self.end))
 
 class Angle:
     def __init__(self, vector0: Vector, vector1: Vector):
@@ -56,8 +57,8 @@ class Angle:
 
     def __str__(self):
         if self.vector0.start == self.vector1.start:
-            return "∠ %s %s %s" % (self.vector0.end.label, self.vector0.start.label, self.vector1.end.label)
-        return "∠(%s, %s)" % (self.vector0, self.vector1)
+            return '∠ %s %s %s' % (self.vector0.end.label, self.vector0.start.label, self.vector1.end.label)
+        return '∠(%s, %s)' % (self.vector0, self.vector1)
 
     def __eq__(self, other):
         return self.vector0 == other.vector0 and self.vector1 == other.vector1
@@ -86,7 +87,7 @@ class Triangle:
         return self.pts[0] == other.pts[0] and self.pts[1] == other.pts[1] and self.pts[2] == other.pts[2]
 
     def __str__(self):
-        return "△ %s %s %s" % (self.pts[0].label, self.pts[1].label, self.pts[2].label)
+        return str(_comment('△ %s %s %s', *self.pts))
 
     def equilateral(self):
         return np.fabs(self.side0 - self.side1) < ERROR and \
@@ -124,14 +125,14 @@ class LengthFamily:
         for i in range(1, 10):
             candidate = ratio * i
             if np.fabs(candidate - round(candidate)) < ERROR:
-                return "%d/%d" % (round(candidate), i) if i > 1 else "%d" % round(candidate)
+                return '%d/%d' % (round(candidate), i) if i > 1 else '%d' % round(candidate)
         ratio = ratio * ratio
         for i in range(1, 100):
             candidate = ratio * i
             if np.fabs(candidate - round(candidate)) < ERROR:
                 if i == 1:
-                    return "SQRT(%d)" % round(candidate)
-                return "SQRT(%d/%d)" % (round(candidate), i)
+                    return 'SQRT(%d)' % round(candidate)
+                return 'SQRT(%d/%d)' % (round(candidate), i)
         return None
 
     def add(self, vector: Vector) -> bool:
@@ -153,7 +154,7 @@ class AngleFamily:
                 for i in range(1, 10):
                     candidate = ratio * i
                     if np.fabs(candidate - round(candidate)) < ERROR:
-                        return "%d/%d" % (round(candidate), i) if i > 1 else "%d" % round(candidate)
+                        return '%d/%d' % (round(candidate), i) if i > 1 else '%d' % round(candidate)
         return None
 
     def add(self, angle: Angle) -> bool:
@@ -172,30 +173,30 @@ def hunt_proportional_segments(vectors):
         else:
             families.append(LengthFamily(vec))
 
-    print("%d segments in %d families" % (len(vectors), len([f for f in families if len(f.vectors) > 0])))
+    print('%d segments in %d families' % (len(vectors), len([f for f in families if len(f.vectors) > 0])))
     for fam in families:
         if len(fam.vectors) > 0:
-            print("%s: %d segments" % (fam.base, 1 + len(fam.vectors)))
+            print('%s: %d segments' % (fam.base, 1 + len(fam.vectors)))
             for data in fam.vectors:
-                print("\t%s (%s)" % (data['vector'], data['comment']))
+                print('\t%s (%s)' % (data['vector'], data['comment']))
 
 def hunt_rational_angles(angles):
     for ngl in angles:
         arc = ngl.arc()
         if np.fabs(arc) < ERROR:
-            print("%s = 0" % ngl)
+            print('%s = 0' % ngl)
         else:
             ratio = arc / np.pi
             for i in range(1, 60):
                 candidate = i * ratio
                 if np.fabs(candidate - round(candidate)) < ERROR:
-                    pi = "PI" if i == 1 else ("PI / %d" % i)
+                    pi = 'PI' if i == 1 else ('PI / %d' % i)
                     if round(candidate) == 1:
-                        print("%s = %s" % (ngl, pi))
+                        print('%s = %s' % (ngl, pi))
                     elif round(candidate) == -1:
-                        print("%s = -%s" % (ngl, pi))
+                        print('%s = -%s' % (ngl, pi))
                     else:
-                        print("%s = %d %s" % (ngl, round(candidate), pi))
+                        print('%s = %d %s' % (ngl, round(candidate), pi))
                     break
 
 def hunt_proportional_angles(angles):
@@ -211,12 +212,12 @@ def hunt_proportional_angles(angles):
         else:
             families.append(AngleFamily(ngl))
 
-    print("%d non-zero angles in %d families" % (len(angles) - zero_count, len([f for f in families if len(f.angles) > 0])))
+    print('%d non-zero angles in %d families' % (len(angles) - zero_count, len([f for f in families if len(f.angles) > 0])))
     for fam in families:
         if len(fam.angles) > 0:
-            print("%s: %d angles" % (fam.base, 1 + len(fam.angles)))
+            print('%s: %d angles' % (fam.base, 1 + len(fam.angles)))
             for pair in fam.angles:
-                print("\t%s (%s)" % (pair['angle'], pair['comment']))
+                print('\t%s (%s)' % (pair['angle'], pair['comment']))
 
 def hunt_coincidences(placement: Placement):
     used_points = set()
@@ -455,8 +456,9 @@ class CollinearProperty(Property):
     def __init__(self, A, B, C):
         self.points = (A, B, C)
 
-    def __str__(self):
-        return 'collinear %s, %s, %s' % tuple(p.label for p in self.points)
+    @property
+    def description(self):
+        return _comment('collinear %s, %s, %s', *self.points)
 
 class RightAngleProperty(Property):
     def __init__(self, angle):
@@ -487,29 +489,33 @@ class EqualDistancesProperty(Property):
         self.AB = list(AB)
         self.CD = list(CD)
 
-    def __str__(self):
-        return '|%s %s| = |%s %s|' % tuple(p.label for p in self.AB + self.CD)
+    @property
+    def description(self):
+        return _comment('|%s %s| = |%s %s|', *self.AB, *self.CD)
 
 class SimilarTrianglesProperty(Property):
     def __init__(self, ABC, DEF):
         self.ABC = list(ABC)
         self.DEF = list(DEF)
 
-    def __str__(self):
-        return '△ %s %s %s ~ △ %s %s %s' % tuple(p.label for p in self.ABC + self.DEF)
+    @property
+    def description(self):
+        return _comment('△ %s %s %s ~ △ %s %s %s', *self.ABC, *self.DEF)
 
 class EqualTrianglesProperty(Property):
     def __init__(self, ABC, DEF):
         self.ABC = list(ABC)
         self.DEF = list(DEF)
 
-    def __str__(self):
-        return '△ %s %s %s = △ %s %s %s' % tuple(p.label for p in self.ABC + self.DEF)
+    @property
+    def description(self):
+        return _comment('△ %s %s %s = △ %s %s %s', *self.ABC, *self.DEF)
 
 class IsoscelesTriangleProperty(Property):
     def __init__(self, A, BC):
         self.A = A
         self.BC = list(BC)
 
-    def __str__(self):
-        return 'isosceles △ %s %s %s' % tuple(p.label for p in [self.A] + self.BC)
+    @property
+    def description(self):
+        return _comment('isosceles △ %s %s %s', self.A, *self.BC)

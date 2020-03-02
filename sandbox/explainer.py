@@ -1,4 +1,4 @@
-from .core import Constraint, ParametrizedString
+from .core import Constraint, _comment
 from .hunter import *
 from .property import *
 
@@ -53,7 +53,7 @@ class Explainer:
                             if pt == pt0 or pt == pt1:
                                 not_equal(pt, pt2, cnst.comments)
                             else:
-                                not_equal(pt, pt2, cnst.comments + [ParametrizedString('%s lies on the line %s %s', pt, pt0, pt1)])
+                                not_equal(pt, pt2, cnst.comments + [_comment('%s lies on the line %s %s', pt, pt0, pt1)])
                 adjust(cnst.params[0], cnst.params[1], cnst.params[2])
                 adjust(cnst.params[1], cnst.params[2], cnst.params[0])
                 adjust(cnst.params[2], cnst.params[0], cnst.params[1])
@@ -90,10 +90,10 @@ class Explainer:
 
                         if vector_on_line(prop.angle.vector0, line0):
                             if vector_on_line(prop.angle.vector1, line1):
-                                self.__reason(prop, [ParametrizedString('%s ⟂ %s', line0.label, line1.label)] + cnst.comments)
+                                self.__reason(prop, cnst.comments)
                         elif vector_on_line(prop.angle.vector0, line1):
                             if vector_on_line(prop.angle.vector1, line0):
-                                self.__reason(prop, [ParametrizedString('%s ⟂ %s', line0.label, line1.label)] + cnst.comments)
+                                self.__reason(prop, cnst.comments)
                 elif isinstance(prop, EqualDistancesProperty):
                     for cnst in self.scene.constraints(Constraint.Kind.distances_ratio):
                         if cnst.params[4] == cnst.params[5]:
@@ -344,8 +344,9 @@ class NotEqualProperty(Property):
     def __init__(self, point0, point1):
         self.points = [point0, point1]
 
-    def __str__(self):
-        return '%s != %s' % tuple(p.label for p in self.points)
+    @property
+    def description(self):
+        return _comment('%s != %s', *self.points)
 
     def __eq__(self, other):
         return isinstance(other, NotEqualProperty) and set(self.points) == set(other.points)
@@ -355,8 +356,9 @@ class SameDirectionProperty(Property):
         self.start = start
         self.points = [point0, point1]
 
-    def __str__(self):
-        return '%s, %s in the same direction from %s' % tuple(p.label for p in self.points + [self.start])
+    @property
+    def description(self):
+        return _comment('%s, %s in the same direction from %s', *self.points, self.start)
 
     def __eq__(self, other):
         if not isinstance(other, SameDirectionProperty):
@@ -368,8 +370,9 @@ class OppositeSideProperty(Property):
         self.line = line
         self.points = [point0, point1]
 
-    def __str__(self):
-        return '%s, %s located on opposite sides of %s' % tuple(p.label for p in self.points + [self.line])
+    @property
+    def description(self):
+        return _comment('%s, %s located on opposite sides of %s', *self.points, self.line)
 
     def __eq__(self, other):
         if not isinstance(other, OppositeSideProperty):
@@ -381,8 +384,9 @@ class SameSideProperty(Property):
         self.line = line
         self.points = [point0, point1]
 
-    def __str__(self):
-        return '%s, %s located on the same side of %s' % tuple(p.label for p in self.points + [self.line])
+    @property
+    def description(self):
+        return _comment('%s, %s located on the same side of %s', *self.points, self.line)
 
     def __eq__(self, other):
         if not isinstance(other, SameSideProperty):
