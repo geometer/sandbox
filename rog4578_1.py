@@ -35,14 +35,6 @@ scene.dump()
 # *15* ∠ A C H = (180º - ∠ A H C) / 2             *14                isocseles
 # *16* ∠ A C H = 45º                              *3, *15            algebra
 
-#Facts
-# *+ right angles
-# *+ equal angles
-# *+ similar triangles
-# * equal triangles
-# *+ equal segments
-# *+ isosceles
-
 placement = iterative_placement(scene)
 
 hunter = Hunter(placement)
