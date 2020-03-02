@@ -2,6 +2,7 @@
 
 from sandbox import Scene, iterative_placement
 from sandbox.hunter import Hunter
+from sandbox.explainer import Explainer
 
 scene = Scene()
 
@@ -15,7 +16,10 @@ placement = iterative_placement(scene)
 hunter = Hunter(placement)
 hunter.hunt()
 print('')
-hunter.dump()
+
+explainer = Explainer(scene, hunter.properties)
+explainer.explain()
+explainer.dump()
 
 print('|%s%s| = %.5f' % (A.label, J.label, placement.distance(A, J)))
 print('|%s%s| = %.5f' % (B.label, I.label, placement.distance(B, I)))

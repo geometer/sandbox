@@ -31,7 +31,7 @@ scene.dump()
 # +*11* △ A B H ∼ △ C D H                          *5, *10            two anlges
 # +*12* △ A B H = △ C D H                          *1, *11            similarity, side
 # +*13* |AH| = |CH|                                *12                equal triangles => equal sides
-# *14* isosceles △ A H C                          *13                equal sides => isosceles
+# +*14* isosceles △ A H C                          *13                equal sides => isosceles
 # *15* ∠ A C H = (180º - ∠ A H C) / 2             *14                isocseles
 # *16* ∠ A C H = 45º                              *3, *15            algebra
 
