@@ -331,6 +331,18 @@ class Explainer:
                             self.__reason(prop, 'Two equal sides', roots=[ed])
 
                 elif isinstance(prop, AngleValueProperty):
+                    found = False
+                    if prop.degree == 0:
+                        same_direction = [exp for exp in self.explained if isinstance(exp.property, SameDirectionProperty)]
+                        for sd in same_direction:
+                            if prop.angle.vector0.start == sd.property.start and prop.angle.vector1.start == sd.property.start and set([prop.angle.vector0.end, prop.angle.vector1.end]) == set(sd.property.points):
+                                self.__reason(prop, 'TBW', roots=[sd])
+                                found = True
+                                break
+
+                    if found:
+                        continue
+
                     isosceles = [exp for exp in self.explained if isinstance(exp.property, IsoscelesTriangleProperty)]
                     values = [exp for exp in self.explained if isinstance(exp.property, AngleValueProperty)]
                     def is_angle(angle, vertex, points):
