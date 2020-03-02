@@ -83,6 +83,12 @@ class Explainer:
                         if all(p in line for p in prop.points):
                             self.__reason(prop, 'Given')
                             break
+                elif isinstance(prop, AngleValueProperty) and prop.degree == 0:
+                    def is_angle(angle, vertex, points):
+                        return angle.vector0.start == vertex and angle.vector1.start == vertex and set([angle.vector0.end, angle.vector1.end]) == set(points)
+                    for cnst in self.scene.constraints(Constraint.Kind.same_direction):
+                        if is_angle(prop.angle, cnst.params[0], cnst.params[1:]):
+                             self.__reason(prop, cnst.comments)
                 elif isinstance(prop, AngleValueProperty) and prop.degree == 90:
                     for cnst in self.scene.constraints(Constraint.Kind.perpendicular):
                         line0 = cnst.params[0]
