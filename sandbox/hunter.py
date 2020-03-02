@@ -505,3 +505,11 @@ class EqualTrianglesProperty(Property):
 
     def __str__(self):
         return '△ %s %s %s = △ %s %s %s' % tuple(p.label for p in self.ABC + self.DEF)
+
+class IsoscelesTriangleProperty(Property):
+    def __init__(self, A, BC):
+        self.A = A
+        self.BC = list(BC)
+
+    def __str__(self):
+        return 'isosceles △ %s %s %s' % tuple(p.label for p in [self.A] + self.BC)

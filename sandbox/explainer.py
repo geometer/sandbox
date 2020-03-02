@@ -314,6 +314,13 @@ class Explainer:
                         if ind is not None and ind == index(prop.AB, et.property.DEF):
                             self.__reason(prop, 'Corr. sides in equal triangles', roots=[et])
 
+                elif isinstance(prop, IsoscelesTriangleProperty):
+                    equal_distances = [exp for exp in self.explained if isinstance(exp.property, EqualDistancesProperty)]
+                    for ed in equal_distances:
+                        pts = ed.property.AB + ed.property.CD
+                        if pts.count(prop.A) == 2 and prop.BC[0] in pts and prop.BC[1] in pts:
+                            self.__reason(prop, 'Two equal sides', roots=[ed])
+
         base()
         while len(self.unexplained) > 0:
             total = len(self.properties)
