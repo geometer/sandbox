@@ -344,6 +344,31 @@ class Explainer:
                     if found:
                         continue
 
+                    equal_angles = [exp for exp in self.explained if isinstance(exp.property, EqualAnglesProperty)]
+                    angle_values = [exp for exp in self.explained if isinstance(exp.property, AngleValueProperty)]
+                    for ea in equal_angles:
+                        if ea.property.angle0 == prop.angle:
+                            for av in angle_values:
+                                if av.property.angle == ea.property.angle1:
+                                    #TODO: report contradiction if degrees are different
+                                    self.__reason(prop, _comment('%s = %s = %sº', prop.angle, av.property.angle, av.property.degree), roots=[ea, av])
+                                    found = True
+                                    break
+                            if found:
+                                break
+                        elif ea.property.angle1 == prop.angle:
+                            for av in angle_values:
+                                if av.property.angle == ea.property.angle0:
+                                    #TODO: report contradiction if degrees are different
+                                    self.__reason(prop, _comment('%s = %s = %sº', prop.angle, av.property.angle, av.property.degree), roots=[ea, av])
+                                    found = True
+                                    break
+                            if found:
+                                break
+
+                    if found:
+                        continue
+
                     isosceles = [exp for exp in self.explained if isinstance(exp.property, IsoscelesTriangleProperty)]
                     values = [exp for exp in self.explained if isinstance(exp.property, AngleValueProperty)]
                     def is_angle(angle, vertex, points):
@@ -363,10 +388,9 @@ class Explainer:
 
         base()
         while len(self.unexplained) > 0:
-            total = len(self.properties)
             explained_size = len(self.explained)
             iteration()
-            if len(self.properties) == total and len(self.explained) == explained_size:
+            if len(self.explained) == explained_size:
                 break
 
     def dump(self):
@@ -378,7 +402,7 @@ class Explainer:
         for prop in self.properties:
             if not prop in explained:
                 print('\t%s' % prop)
-        print('\nTotal properties: %d, explained: %d' % (len(self.properties), len(self.explained)))
+        print('\nTotal properties: %d, explained: %d, not explained: %d' % (len(self.properties), len(self.explained), len(self.unexplained)))
 
 class NotEqualProperty(Property):
     def __init__(self, point0, point1):

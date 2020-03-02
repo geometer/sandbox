@@ -33,6 +33,8 @@ scene.dump()
 # +*13* |AH| = |CH|                                *12                equal triangles => equal sides
 # +*14* isosceles △ A H C                          *13                equal sides => isosceles
 # +*15* ∠ A C H = (180º - ∠ A H C) / 2 = 45º       *14                isocseles
+# +*16* ∠ A C B = ∠ A C H                          *same angle
+# +*17* ∠ A C B = ∠ A C H = 45º                    *15, *16           transitivity
 
 placement = iterative_placement(scene)
 
