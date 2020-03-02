@@ -22,7 +22,7 @@ class Angle:
         else:
             self.vector0 = vector0
             self.vector1 = vector1
-        self.__arc = self.placement.vec_angle(self.vector0, self.vector1)
+        self.__arc = self.placement.angle(self.vector0, self.vector1)
 
     def reversed(self):
         return Angle(self.vector1, self.vector0, self.placement)
