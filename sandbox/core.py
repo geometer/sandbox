@@ -435,7 +435,7 @@ class CoreScene:
         assert len(AB) == 2 and len(CD) == 2
         lineAB = AB[0].line_through(AB[1], auxiliary=True)
         lineCD = CD[0].line_through(CD[1], auxiliary=True)
-        lineAB.perpendicular_constraint(lineCD, *kwargs)
+        lineAB.perpendicular_constraint(lineCD, **kwargs)
 
     def angles_ratio_constraint(self, ABCD, EFGH, ratio, **kwargs):
         self.constraint(
