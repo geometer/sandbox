@@ -1,3 +1,4 @@
+import itertools
 import numpy as np
 
 from . import Scene, iterative_placement
@@ -169,11 +170,6 @@ def hunt_coincidences(placement: Placement):
         if len(same_points) > 1:
             print('same point: %s' % [pt.label for pt in same_points])
 
-def iterate_pairs(lst):
-    for index, elt0 in enumerate(lst):
-        for elt1 in lst[index + 1:]:
-            yield (elt0, elt1)
-
 class Hunter:
     def __init__(self, scene):
         if isinstance(scene, Placement):
@@ -181,13 +177,6 @@ class Hunter:
         else:
             self.placement = iterative_placement(scene)
         self.properties = []
-
-    @staticmethod
-    def __iterate_triples(lst):
-        for index0, elt0 in enumerate(lst):
-            for index1, elt1 in enumerate(lst[index0 + 1:], start=index0 + 1):
-                for elt2 in lst[index1 + 1:]:
-                    yield (elt0, elt1, elt2)
 
     def __vectors(self):
         points = self.placement.scene.points(skip_auxiliary=True)
@@ -235,7 +224,7 @@ class Hunter:
         return lines
 
     def __angles(self, vectors):
-        for pair in iterate_pairs(vectors):
+        for pair in itertools.combinations(vectors, 2):
             yield wrapper(pair[0], pair[1], self.placement)
 
     def __add(self, prop):
@@ -244,7 +233,7 @@ class Hunter:
 
     def __hunt_collinears(self):
         for line in self.__lines():
-            for triple in Hunter.__iterate_triples(line):
+            for triple in itertools.combinations(line, 3):
                 self.__add(CollinearProperty(triple[0], triple[1], triple[2]))
 
     def __hunt_equal_segments(self):
@@ -259,7 +248,7 @@ class Hunter:
                 families.append([vec])
 
         for fam in families:
-            for pair in iterate_pairs(fam):
+            for pair in itertools.combinations(fam, 2):
                 self.__add(CongruentSegmentProperty((pair[0].start, pair[0].end), (pair[1].start, pair[1].end)))
 
     def __hunt_proportional_segments(self, vectors):
@@ -300,7 +289,7 @@ class Hunter:
                 families.append([ngl])
 
         for fam in families:
-            for pair in iterate_pairs(fam):
+            for pair in itertools.combinations(fam, 2):
                 self.__add(CongruentAnglesProperty(pair[0].angle, pair[1].angle))
 
     def __hunt_equal_triangles(self):
@@ -320,7 +309,7 @@ class Hunter:
                 families.append([trn])
 
         for fam in families:
-            for pair in iterate_pairs(fam):
+            for pair in itertools.combinations(fam, 2):
                 self.__add(CongruentTrianglesProperty(pair[0].pts, pair[1].pts))
 
     def __hunt_similar_triangles(self):
@@ -351,7 +340,7 @@ class Hunter:
                 families.append([trn])
 
         for fam in families:
-            for pair in iterate_pairs(fam):
+            for pair in itertools.combinations(fam, 2):
                 self.__add(SimilarTrianglesProperty(pair[0].pts, pair[1].pts))
 
     def hunt(self, options=('default')):
