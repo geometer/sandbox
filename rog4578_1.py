@@ -11,8 +11,8 @@ scene = Scene()
 A, B, C = scene.triangle(labels=('A', 'B', 'C'))
 D = scene.orthocentre_point((A, B, C), label='D')
 D.inside_triangle_constraint(A, B, C)
-H = A.line_through(D, label='altitudeA').intersection_point(B.line_through(C), label='H')
-G = C.line_through(D, label='altitudeC').intersection_point(A.line_through(B), label='G')
+H = A.line_through(D).intersection_point(B.line_through(C), label='H')
+G = C.line_through(D).intersection_point(A.line_through(B), label='G')
 scene.equal_distances_constraint((A, B), (C, D), comment='Given: |AB| = |CD|')
 
 #Proof
@@ -48,5 +48,15 @@ print('\tGuessed: %s = %s' % (angle, explainer.guessed(angle)))
 explainer.explain()
 print('\tExplainer stats:')
 for stat in explainer.stats():
-    print('\t\t%s: %s' % stat)
+    print('\t  %s: %s' % stat)
 print('\tExplained: %s = %s' % (angle, explainer.explained(angle)))
+
+def dump(explanation, level=0):
+    print('\t' + '  ' * level + str(explanation.property) + ': ' + ' + '.join([str(com) for com in explanation.comments]))
+    if explanation.roots:
+        for root in explanation.roots:
+            dump(root, level + 1)
+
+explanation = explainer.explanation(angle)
+if explanation:
+    dump(explanation)

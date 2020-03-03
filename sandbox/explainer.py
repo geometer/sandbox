@@ -235,12 +235,12 @@ class Explainer:
                     for st in similar_triangles:
                         ind = match(prop.angle0, st.property.ABC)
                         if ind is not None and ind == match(prop.angle1, st.property.DEF):
-                            self.__reason(prop, 'Corr. angles in similar triangles', roots=[st])
+                            self.__reason(prop, 'Corresponding angles in similar triangles', roots=[st])
                             found = True
                             break
                         ind = match(prop.angle1, st.property.ABC)
                         if ind is not None and ind == match(prop.angle0, st.property.DEF):
-                            self.__reason(prop, 'Corr. angles in similar triangles', roots=[st])
+                            self.__reason(prop, 'Corresponding angles in similar triangles', roots=[st])
                             found = True
                             break
 
@@ -327,11 +327,11 @@ class Explainer:
                     for et in equal_triangles:
                         ind = index(prop.AB, et.property.ABC)
                         if ind is not None and ind == index(prop.CD, et.property.DEF):
-                            self.__reason(prop, 'Corr. sides in equal triangles', roots=[et])
+                            self.__reason(prop, 'Corresponding sides in equal triangles', roots=[et])
                             break
                         ind = index(prop.CD, et.property.ABC)
                         if ind is not None and ind == index(prop.AB, et.property.DEF):
-                            self.__reason(prop, 'Corr. sides in equal triangles', roots=[et])
+                            self.__reason(prop, 'Corresponding sides in equal triangles', roots=[et])
 
                 elif isinstance(prop, IsoscelesTriangleProperty):
                     equal_distances = self.__list_explained(CongruentSegmentProperty)
@@ -428,8 +428,8 @@ class Explainer:
                         return prop.degree
                     if prop.angle.reversed == obj:
                         return -prop.degree
-            return 'not found'
-        return 'Guess not supported for objects of type %s' % type(obj).__name__
+            return None
+        raise Exception('Guess not supported for objects of type %s' % type(obj).__name__)
 
     def explained(self, obj):
         if isinstance(obj, Scene.Angle):
@@ -438,8 +438,15 @@ class Explainer:
                     return exp.property.degree
                 if exp.property.angle.reversed == obj:
                     return -exp.property.degree
-            return 'not found'
-        return 'Explanation not supported for objects of type %s' % type(obj).__name__
+            return None
+        raise Exception('Explanation not supported for objects of type %s' % type(obj).__name__)
+
+    def explanation(self, obj):
+        if isinstance(obj, Scene.Angle):
+            for exp in self.__list_explained(AngleValueProperty):
+                if exp.property.angle == obj or exp.property.angle.reversed == obj:
+                    return exp
+        return None
 
 class NotEqualProperty(Property):
     def __init__(self, point0, point1):
