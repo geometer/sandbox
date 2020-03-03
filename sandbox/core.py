@@ -138,8 +138,10 @@ class CoreScene:
 
             line = CoreScene.Line(self.scene, point0=self, point1=point, **kwargs)
             for cnstr in self.scene.constraints(Constraint.Kind.collinear):
-                if len(line.all_points.intersection(set(cnstr.params))) == 2:
-                    line.all_points.update(cnstr.params)
+                if len([pt for pt in line.all_points if pt in cnstr.params]) == 2:
+                    for pt in cnstr.params:
+                        if pt not in line.all_points:
+                            line.all_points.append(pt)
 
             return line
 
@@ -166,7 +168,8 @@ class CoreScene:
 
         def belongs_to(self, line_or_circle):
             self.scene.assert_line_or_circle(line_or_circle)
-            line_or_circle.all_points.add(self)
+            if self not in line_or_circle.all_points:
+                line_or_circle.all_points.append(self)
 
         def not_equal_constraint(self, A, **kwargs):
             """
@@ -197,8 +200,10 @@ class CoreScene:
             """
             cnstr = self.scene.constraint(Constraint.Kind.collinear, self, A, B, **kwargs)
             for line in self.scene.lines():
-                if len(line.all_points.intersection(set(cnstr.params))) == 2:
-                    line.all_points.update(cnstr.params)
+                if len([pt for pt in line.all_points if pt in cnstr.params]) == 2:
+                    for pt in cnstr.params:
+                        if pt not in line.all_points:
+                            line.all_points.append(pt)
 
         def distance_constraint(self, A, distance, **kwargs):
             """
@@ -274,14 +279,11 @@ class CoreScene:
     class Line(Object):
         def __init__(self, scene, **kwargs):
             CoreScene.Object.__init__(self, scene, **kwargs)
-            self.all_points = set([self.point0, self.point1])
+            self.all_points = [self.point0, self.point1]
 
         @property
         def name(self):
             if hasattr(self, 'auto_label') and self.auto_label:
-                if not self.point0.auxiliary and not self.point1.auxiliary:
-                    return '(%s %s)' % (self.point0.name, self.point1.name)
-
                 for points in itertools.combinations(self.all_points, 2):
                     if not points[0].auxiliary and not points[1].auxiliary:
                         return '(%s %s)' % (points[0].name, points[1].name)
@@ -343,11 +345,11 @@ class CoreScene:
     class Circle(Object):
         def __init__(self, scene, **kwargs):
             CoreScene.Object.__init__(self, scene, **kwargs)
-            self.all_points = set()
+            self.all_points = []
             if self.centre == self.radius_start:
-                self.all_points.add(self.radius_end)
+                self.all_points.append(self.radius_end)
             elif self.centre == self.radius_end:
-                self.all_points.add(self.radius_start)
+                self.all_points.append(self.radius_start)
 
         def free_point(self, **kwargs):
             point = CoreScene.Point(self.scene, CoreScene.Point.Origin.circle, circle=self, **kwargs)
@@ -532,8 +534,10 @@ class CoreScene:
         """
         Returns *existing* intersection point of line0 and line1.
         """
-        intr = line0.all_points.intersection(line1.all_points)
-        return intr.pop() if len(intr) > 0 else None
+        try:
+            return next(pt for pt in line0.all_points if pt in line1)
+        except:
+            return None
 
     def dump(self):
         print('Objects:')
