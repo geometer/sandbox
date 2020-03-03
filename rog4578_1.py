@@ -13,7 +13,7 @@ D = scene.orthocentre_point((A, B, C), label='D')
 D.inside_triangle_constraint(A, B, C)
 H = A.line_through(D, label='altitudeA').intersection_point(B.line_through(C), label='H')
 G = C.line_through(D, label='altitudeC').intersection_point(A.line_through(B), label='G')
-scene.equal_distances_constraint((A, B), (C, D))
+scene.equal_distances_constraint((A, B), (C, D), comment='Given: |AB| = |CD|')
 
 scene.dump()
 
