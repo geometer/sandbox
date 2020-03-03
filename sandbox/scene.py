@@ -2,7 +2,7 @@
 This module is to be extended in the future to add more construction methods.
 """
 
-from .core import CoreScene, ParametrizedString
+from .core import CoreScene, ParametrizedString, _comment
 
 class Scene(CoreScene):
     """
@@ -112,7 +112,19 @@ class Scene(CoreScene):
         X = circle.intersection_point(line, auxiliary=True)
         vertex.same_direction_constraint(X, C)
         Y = X.ratio_point(B, 1, 1, auxiliary=True)
-        return vertex.line_through(Y, **kwargs)
+        angle = vertex.angle(B, C)
+        bisector = vertex.line_through(Y, **kwargs)
+        angle.ratio_constraint(
+            vertex.angle(B, Y), 2,
+            guaranteed=True,
+            comment=_comment('%s is a bisector of %s', bisector, angle)
+        )
+        angle.ratio_constraint(
+            vertex.angle(Y, C), 2,
+            guaranteed=True,
+            comment=_comment('%s is a bisector of %s', bisector, angle)
+        )
+        return bisector
 
     def incentre_point(self, triangle, **kwargs):
         """
