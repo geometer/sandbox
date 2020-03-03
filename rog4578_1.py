@@ -46,4 +46,4 @@ explainer = Explainer(scene, hunter.properties)
 explainer.explain()
 explainer.dump()
 
-print('\n%.5f' % (PlacementHelper(placement).angle(C, A, C, B) / math.pi * 180))
+print('\n%.5f' % (placement.angle(C.angle(A, B)) / math.pi * 180))

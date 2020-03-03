@@ -65,13 +65,15 @@ class BasePlacement:
         end1 = self.location(vector1.end)
         return (end0.x - start0.x) * (end1.y - start1.y) - (end0.y - start0.y) * (end1.x - start1.x)
         
-    def angle(self, vector0, vector1):
-        cos = self.scalar_product(vector0, vector1) / self.length(vector0) / self.length(vector1)
+    def angle(self, angle):
+        vec0 = angle.vector0
+        vec1 = angle.vector1
+        cos = self.scalar_product(vec0, vec1) / self.length(vec0) / self.length(vec1)
         if cos >= 1:
             return 0
         if cos <= -1:
             return np.pi
-        return np.arccos(cos) if self.vector_product(vector0, vector1) > 0 else -np.arccos(cos)
+        return np.arccos(cos) if self.vector_product(vec0, vec1) > 0 else -np.arccos(cos)
 
 class Placement(BasePlacement):
     class TempPlacement(BasePlacement):
@@ -440,7 +442,7 @@ class Placement(BasePlacement):
                 vec2 = cnstr.params[4].vector(cnstr.params[5])
                 vec3 = cnstr.params[6].vector(cnstr.params[7])
                 ratio = cnstr.params[8]
-                numb_square += (self.angle(vec0, vec1) - self.angle(vec2, vec3) * ratio) ** 2
+                numb_square += (self.angle(vec0.angle(vec1)) - self.angle(vec2.angle(vec3)) * ratio) ** 2
             else:
                 assert False, 'Constraint `%s` not supported in adjustment' % cnstr.kind
 

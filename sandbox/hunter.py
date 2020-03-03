@@ -7,39 +7,38 @@ from .core import _comment
 
 ERROR = np.float128(5e-6)
 
-class Angle:
-    def __init__(self, vector0: Scene.Vector, vector1: Scene.Vector, placement: Placement):
-        self.placement = placement
-        if vector0.end == vector1.end:
-            self.vector0 = vector0.reversed
-            self.vector1 = vector1.reversed
-        elif vector0.start == vector1.end:
-            self.vector0 = vector0
-            self.vector1 = vector1.reversed
-        elif vector0.end == vector1.start:
-            self.vector0 = vector0.reversed
-            self.vector1 = vector1
-        else:
-            self.vector0 = vector0
-            self.vector1 = vector1
-        self.__arc = self.placement.angle(self.vector0, self.vector1)
+def wrapper(vector0: Scene.Vector, vector1: Scene.Vector, placement: Placement):
+    if vector0.end == vector1.end:
+        angle = vector0.reversed.angle(vector1.reversed)
+    elif vector0.start == vector1.end:
+        angle = vector0.angle(vector1.reversed)
+    elif vector0.end == vector1.start:
+        angle = vector0.reversed.angle(vector1)
+    else:
+        angle = vector0.angle(vector1)
+    arc = placement.angle(angle)
+    if arc > 0:
+        return AngleWrapper(angle, arc)
+    else:
+        return AngleWrapper(angle.reversed, -arc)
+
+class AngleWrapper:
+    # arc is always >= 0
+    def __init__(self, angle, arc):
+        self.angle = angle
+        self.__arc = arc
 
     def reversed(self):
-        return Angle(self.vector1, self.vector0, self.placement)
+        return AngleWrapper(self.angle.reversed, self.__arc)
 
     def arc(self):
         return self.__arc
 
-    def abs_arc(self):
-        return np.fabs(self.__arc)
-
     def __str__(self):
-        if self.vector0.start == self.vector1.start:
-            return str(_comment('∠ %s %s %s', self.vector0.end, self.vector0.start, self.vector1.end))
-        return '∠(%s, %s)' % (self.vector0, self.vector1)
+        return str(self.angle)
 
     def __eq__(self, other):
-        return self.vector0 == other.vector0 and self.vector1 == other.vector1
+        return self.angle == other.angle
 
 class Triangle:
     def __init__(self, pts, side0, side1, side2):
@@ -122,11 +121,11 @@ class LengthFamily:
         return True
 
 class AngleFamily:
-    def __init__(self, angle: Angle):
+    def __init__(self, angle: AngleWrapper):
         self.base = angle
         self.angles = []
 
-    def __test(self, angle: Angle) -> str:
+    def __test(self, angle: AngleWrapper) -> str:
         for addition0 in (0, 2 * np.pi, -2 * np.pi):
             for addition1 in (0, 2 * np.pi, -2 * np.pi):
                 ratio = (angle.arc() + addition0) / (self.base.arc() + addition1)
@@ -136,7 +135,7 @@ class AngleFamily:
                         return '%d/%d' % (round(candidate), i) if i > 1 else '%d' % round(candidate)
         return None
 
-    def add(self, angle: Angle) -> bool:
+    def add(self, angle: AngleWrapper) -> bool:
         test = self.__test(angle)
         if test is None:
             return False
@@ -147,7 +146,7 @@ def hunt_proportional_angles(angles):
     families = []
     zero_count = 0
     for ngl in angles:
-        if ngl.abs_arc() < ERROR:
+        if ngl.arc() < ERROR:
             zero_count += 1
             continue
         for fam in families:
@@ -246,7 +245,7 @@ class Hunter:
 
     def __angles(self, vectors):
         for pair in iterate_pairs(vectors):
-            yield Angle(pair[0], pair[1], self.placement)
+            yield wrapper(pair[0], pair[1], self.placement)
 
     def __add(self, prop):
         if prop not in self.properties:
@@ -294,16 +293,13 @@ class Hunter:
             frac = arc / np.pi * 12
             frac_int = int(np.round(frac))
             if np.fabs(frac - frac_int) < ERROR:
-                if frac >= 0:
-                    self.__add(AngleValueProperty(ngl, 15 * frac_int))
-                else:
-                    self.__add(AngleValueProperty(ngl.reversed(), -15 * frac_int))
+                self.__add(AngleValueProperty(ngl.angle, 15 * frac_int))
 
     def __hunt_equal_angles(self, angles):
         families = []
 
         for ngl in angles:
-            if ngl.abs_arc() < ERROR or np.fabs(ngl.abs_arc() - np.pi) < ERROR:
+            if ngl.arc() < ERROR or np.fabs(ngl.arc() - np.pi) < ERROR:
                 continue
             for fam in families:
                 if np.fabs(ngl.arc() - fam[0].arc()) < ERROR:
@@ -317,7 +313,7 @@ class Hunter:
 
         for fam in families:
             for pair in iterate_pairs(fam):
-                self.__add(CongruentAnglesProperty(pair[0], pair[1]))
+                self.__add(CongruentAnglesProperty(pair[0].angle, pair[1].angle))
 
     def __hunt_equal_triangles(self):
         triangles = list(self.__triangles())
@@ -377,7 +373,7 @@ class Hunter:
         all_lines = list(self.__lines())
 
         all_angles = list(self.__angles(all_vectors))
-        all_angles.sort(key=Angle.abs_arc)
+        all_angles.sort(key=AngleWrapper.arc)
 
         if 'collinears' in options or 'default' in options:
             self.__hunt_collinears()

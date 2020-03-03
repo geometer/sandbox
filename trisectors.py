@@ -23,9 +23,9 @@ placement = iterative_placement(scene, print_progress=True)
 
 placement.dump()
 
+print('∠ C B A1 = %.5f' % placement.angle(B.angle(C, A1)))
+print('∠ C B A = %.5f' % placement.angle(B.angle(C, A)))
 helper = PlacementHelper(placement)
-print('∠ C B A1 = %.5f' % helper.angle(B, C, B, A1))
-print('∠ C B A = %.5f' % helper.angle(B, C, B, A))
 print('|A1 B1| = %.5f' % helper.distance(A1, B1))
 print('|A1 C1| = %.5f' % helper.distance(A1, C1))
 print('|C1 B1| = %.5f' % helper.distance(C1, B1))

@@ -214,23 +214,22 @@ class Explainer:
 
                     similar_triangles = [exp for exp in self.explained if isinstance(exp.property, SimilarTrianglesProperty)]
                     def match(angle, triangle):
-                        pts = [angle.vector0.start, angle.vector1.start, angle.vector0.end, angle.vector1.end]
-                        if set(pts) == set(triangle):
-                            if angle.vector0.start == angle.vector1.start:
-                                return triangle.index(angle.vector0.start)
-                            elif angle.vector0.end == angle.vector1.end:
-                                return triangle.index(angle.vector0.end)
+                        both = set([angle, angle.reversed])
+                        for i in range(0, 3):
+                            if triangle[i].angle(triangle[(i + 1) % 3], triangle[(i + 2) % 3]) in both:
+                                return i
+
                         return None
 
                     for st in similar_triangles:
                         ind = match(prop.angle0, st.property.ABC)
                         if ind is not None and ind == match(prop.angle1, st.property.DEF):
-                            self.__reason(prop, 'corr. angles in similar triangles', roots=[st])
+                            self.__reason(prop, 'Corr. angles in similar triangles', roots=[st])
                             found = True
                             break
                         ind = match(prop.angle1, st.property.ABC)
                         if ind is not None and ind == match(prop.angle0, st.property.DEF):
-                            self.__reason(prop, 'corr. angles in similar triangles', roots=[st])
+                            self.__reason(prop, 'Corr. angles in similar triangles', roots=[st])
                             found = True
                             break
 
@@ -262,12 +261,11 @@ class Explainer:
                 elif isinstance(prop, SimilarTrianglesProperty):
                     equal_angles = [exp for exp in self.explained if isinstance(exp.property, CongruentAnglesProperty)]
                     def match(angle, triangle):
-                        pts = [angle.vector0.start, angle.vector1.start, angle.vector0.end, angle.vector1.end]
-                        if set(pts) == set(triangle):
-                            if angle.vector0.start == angle.vector1.start:
-                                return triangle.index(angle.vector0.start)
-                            elif angle.vector0.end == angle.vector1.end:
-                                return triangle.index(angle.vector0.end)
+                        both = set([angle, angle.reversed])
+                        for i in range(0, 3):
+                            if triangle[i].angle(triangle[(i + 1) % 3], triangle[(i + 2) % 3]) in both:
+                                return i
+
                         return None
 
                     roots = []

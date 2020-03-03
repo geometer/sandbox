@@ -161,6 +161,9 @@ class CoreScene:
         def vector(self, point):
             return CoreScene.Vector(self, point)
 
+        def angle(self, point0, point1):
+            return self.vector(point0).angle(self.vector(point1))
+
         def belongs_to(self, line_or_circle):
             self.scene.assert_line_or_circle(line_or_circle)
             line_or_circle.all_points.add(self)
@@ -374,6 +377,9 @@ class CoreScene:
             self.start = start
             self.end = end
 
+        def angle(self, other):
+            return CoreScene.Angle(self, other)
+
         @property
         def reversed(self):
             return CoreScene.Vector(self.end, self.start)
@@ -386,6 +392,26 @@ class CoreScene:
 
         def __str__(self):
             return str(_comment('%s %s', self.start, self.end))
+
+    class Angle:
+        def __init__(self, vector0, vector1):
+            self.vector0 = vector0
+            self.vector1 = vector1
+
+        @property
+        def reversed(self):
+            return CoreScene.Angle(self.vector1, self.vector0)
+
+        def __eq__(self, other):
+            return self.vector0 == other.vector0 and self.vector1 == other.vector1
+
+        def __hash__(self):
+            return hash(self.vector0) * 13 + hash(self.vector1) * 23
+
+        def __str__(self):
+            if self.vector0.start == self.vector1.start:
+                return str(_comment('∠ %s %s %s', self.vector0.end, self.vector0.start, self.vector1.end))
+            return '∠(%s, %s)' % (self.vector0, self.vector1)
 
     def __init__(self):
         self.__objects = []

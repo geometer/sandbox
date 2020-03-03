@@ -31,4 +31,4 @@ class PlacementHelper:
         assert isinstance(pt2, CoreScene.Point), 'Parameter is not a point'
         assert isinstance(pt3, CoreScene.Point), 'Parameter is not a point'
 
-        return self.placement.angle(pt0.vector(pt1), pt2.vector(pt3))
+        return self.placement.angle(pt0.vector(pt1).angle(pt2.vector(pt3)))
