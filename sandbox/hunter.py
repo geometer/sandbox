@@ -26,19 +26,10 @@ class AngleWrapper:
     # arc is always >= 0
     def __init__(self, angle, arc):
         self.angle = angle
-        self.__arc = arc
-
-    def reversed(self):
-        return AngleWrapper(self.angle.reversed, self.__arc)
-
-    def arc(self):
-        return self.__arc
+        self.arc = arc
 
     def __str__(self):
         return str(self.angle)
-
-    def __eq__(self, other):
-        return self.angle == other.angle
 
 class Triangle:
     def __init__(self, pts, side0, side1, side2):
@@ -128,7 +119,7 @@ class AngleFamily:
     def __test(self, angle: AngleWrapper) -> str:
         for addition0 in (0, 2 * np.pi, -2 * np.pi):
             for addition1 in (0, 2 * np.pi, -2 * np.pi):
-                ratio = (angle.arc() + addition0) / (self.base.arc() + addition1)
+                ratio = (angle.arc + addition0) / (self.base.arc + addition1)
                 for i in range(1, 10):
                     candidate = ratio * i
                     if np.fabs(candidate - round(candidate)) < ERROR:
@@ -146,7 +137,7 @@ def hunt_proportional_angles(angles):
     families = []
     zero_count = 0
     for ngl in angles:
-        if ngl.arc() < ERROR:
+        if ngl.arc < ERROR:
             zero_count += 1
             continue
         for fam in families:
@@ -289,7 +280,7 @@ class Hunter:
 
     def __hunt_angle_values(self, angles):
         for ngl in angles:
-            arc = ngl.arc()
+            arc = ngl.arc
             frac = arc / np.pi * 12
             frac_int = int(np.round(frac))
             if np.fabs(frac - frac_int) < ERROR:
@@ -299,17 +290,14 @@ class Hunter:
         families = []
 
         for ngl in angles:
-            if ngl.arc() < ERROR or np.fabs(ngl.arc() - np.pi) < ERROR:
+            if ngl.arc < ERROR or np.fabs(ngl.arc - np.pi) < ERROR:
                 continue
             for fam in families:
-                if np.fabs(ngl.arc() - fam[0].arc()) < ERROR:
+                if np.fabs(ngl.arc - fam[0].arc) < ERROR:
                     fam.append(ngl)
                     break
-                if np.fabs(ngl.arc() + fam[0].arc()) < ERROR:
-                    fam.append(ngl.reversed())
-                    break
             else:
-                families.append([ngl if ngl.arc() > 0 else ngl.reversed()])
+                families.append([ngl])
 
         for fam in families:
             for pair in iterate_pairs(fam):
@@ -373,7 +361,7 @@ class Hunter:
         all_lines = list(self.__lines())
 
         all_angles = list(self.__angles(all_vectors))
-        all_angles.sort(key=AngleWrapper.arc)
+        all_angles.sort(key=lambda a: a.arc)
 
         if 'collinears' in options or 'default' in options:
             self.__hunt_collinears()
