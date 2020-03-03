@@ -1,3 +1,4 @@
+import time
 import itertools
 import numpy as np
 
@@ -177,6 +178,7 @@ class Hunter:
         else:
             self.placement = iterative_placement(scene)
         self.properties = []
+        self.__hunting_time = None
 
     def __vectors(self):
         points = self.placement.scene.points(skip_auxiliary=True)
@@ -343,7 +345,17 @@ class Hunter:
             for pair in itertools.combinations(fam, 2):
                 self.__add(SimilarTrianglesProperty(pair[0].pts, pair[1].pts))
 
+    def stats(self):
+        return [
+            ('Hunting time', '%.3f sec' % self.__hunting_time)
+        ]
+
     def hunt(self, options=('default')):
+        start = time.time()
+        self.__hunt(options)
+        self.__hunting_time = time.time() - start
+
+    def __hunt(self, options):
         all_vectors = list(self.__vectors())
         all_vectors.sort(key=lambda v: self.placement.length(v))
 
