@@ -15,8 +15,6 @@ H = A.line_through(D, label='altitudeA').intersection_point(B.line_through(C), l
 G = C.line_through(D, label='altitudeC').intersection_point(A.line_through(B), label='G')
 scene.equal_distances_constraint((A, B), (C, D), comment='Given: |AB| = |CD|')
 
-scene.dump()
-
 #Proof
 # +* 1* |AB| = |CD|                                *given
 # +* 2* ∠ A H B = 90º                              *given (altitude)
@@ -36,14 +34,19 @@ scene.dump()
 # +*16* ∠ A C B = ∠ A C H                          *same angle
 # +*17* ∠ A C B = ∠ A C H = 45º                    *15, *16           transitivity
 
+angle = C.angle(A, B)
+
 placement = iterative_placement(scene)
+print('\tMeasured: %s = %.5f' % (angle, placement.angle(angle) / math.pi * 180))
 
 hunter = Hunter(placement)
 hunter.hunt()
-print('')
 
 explainer = Explainer(scene, hunter.properties)
-explainer.explain()
-explainer.dump()
+print('\tGuessed: %s = %s' % (angle, explainer.guessed(angle)))
 
-print('\n%.5f' % (placement.angle(C.angle(A, B)) / math.pi * 180))
+explainer.explain()
+print('\tExplainer stats:')
+for stat in explainer.stats():
+    print('\t\t%s: %s' % stat)
+print('\tExplained: %s = %s' % (angle, explainer.explained(angle)))

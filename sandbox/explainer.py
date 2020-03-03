@@ -1,8 +1,10 @@
+import time
 import sympy as sp
 
 from .core import Constraint, _comment
 from .hunter import *
 from .property import *
+from .scene import Scene
 
 class Explainer:
     class Reason:
@@ -26,21 +28,30 @@ class Explainer:
 
     def __init__(self, scene, properties):
         self.scene = scene
-        self.properties = properties
-        self.explained = []
-        self.unexplained = list(properties)
+        self.__properties = properties
+        self.__explained = []
+        self.__unexplained = list(properties)
+        self.__explanation_time = None
 
     def __reason(self, prop, comments, roots=None):
-        self.explained.append(Explainer.Reason(len(self.explained), prop, comments, roots))
-        if prop in self.unexplained:
-            self.unexplained.remove(prop)
+        self.__explained.append(Explainer.Reason(len(self.__explained), prop, comments, roots))
+        if prop in self.__unexplained:
+            self.__unexplained.remove(prop)
 
     def __add(self, prop, comments, roots=None):
-        if prop not in self.properties:
-            self.properties.append(prop)
+        if prop not in self.__properties:
+            self.__properties.append(prop)
             self.__reason(prop, comments, roots)
 
+    def __list_explained(self, property_type):
+         return [exp for exp in self.__explained if isinstance(exp.property, property_type)]
+
     def explain(self):
+        start = time.time()
+        self.__explain_all()
+        self.__explanation_time = time.time() - start
+
+    def __explain_all(self):
         def base():
             def not_equal(pt0, pt1, comments):
                 if not pt0.auxiliary and not pt1.auxiliary:
@@ -77,7 +88,7 @@ class Explainer:
                     cnst.comments
                 )
 
-            for prop in list(self.unexplained):
+            for prop in list(self.__unexplained):
                 if isinstance(prop, CollinearProperty):
                     for line in self.scene.lines():
                         if all(p in line for p in prop.points):
@@ -110,7 +121,7 @@ class Explainer:
                                 self.__reason(prop, 'Given')
 
         def iteration():
-            same_side_reasons = [rsn for rsn in self.explained if isinstance(rsn.property, SameSideProperty)]
+            same_side_reasons = self.__list_explained(SameSideProperty)
             for rsn in same_side_reasons:
                 pt0 = rsn.property.points[0]
                 pt1 = rsn.property.points[1]
@@ -159,7 +170,7 @@ class Explainer:
                         self.__add(SameDirectionProperty(B, C, X), comments)
                         self.__add(SameDirectionProperty(C, B, X), comments)
 
-            same_direction = [exp for exp in self.explained if isinstance(exp.property, SameDirectionProperty)]
+            same_direction = self.__list_explained(SameDirectionProperty)
             def same_dir(vector):
                 yield (vector, [])
                 for sd in same_direction:
@@ -174,7 +185,7 @@ class Explainer:
                         elif sd.property.points[1] == vector.start:
                             yield (sd.property.points[0].vector(sd.property.start), [sd])
 
-            for prop in list(self.unexplained):
+            for prop in list(self.__unexplained):
                 if isinstance(prop, CongruentAnglesProperty):
                     found = False
                     for v0, sd0 in same_dir(prop.angle0.vector0):
@@ -202,7 +213,7 @@ class Explainer:
                     if found:
                         continue
 
-                    known_angles = [exp for exp in self.explained if isinstance(exp.property, AngleValueProperty)]
+                    known_angles = self.__list_explained(AngleValueProperty)
                     roots = [exp for exp in known_angles if exp.property.angle in [prop.angle0, prop.angle1]]
                     if len(roots) == 2 and roots[0].property.degree == roots[1].property.degree:
                         self.__reason(prop, _comment('Both angle values = %sº', roots[0].property.degree), roots=roots)
@@ -212,7 +223,7 @@ class Explainer:
                     if found:
                         continue
 
-                    similar_triangles = [exp for exp in self.explained if isinstance(exp.property, SimilarTrianglesProperty)]
+                    similar_triangles = self.__list_explained(SimilarTrianglesProperty)
                     def match(angle, triangle):
                         both = set([angle, angle.reversed])
                         for i in range(0, 3):
@@ -236,7 +247,7 @@ class Explainer:
                     if found:
                         continue
 
-                    equal_angles = [exp for exp in self.explained if isinstance(exp.property, CongruentAnglesProperty)]
+                    equal_angles = self.__list_explained(CongruentAnglesProperty)
                     for index, ea0 in enumerate(equal_angles):
                         if prop.angle0 == ea0.property.angle0:
                             look_for = [prop.angle1, ea0.property.angle1]
@@ -259,7 +270,7 @@ class Explainer:
                             break
 
                 elif isinstance(prop, SimilarTrianglesProperty):
-                    equal_angles = [exp for exp in self.explained if isinstance(exp.property, CongruentAnglesProperty)]
+                    equal_angles = self.__list_explained(CongruentAnglesProperty)
                     def match(angle, triangle):
                         both = set([angle, angle.reversed])
                         for i in range(0, 3):
@@ -281,8 +292,8 @@ class Explainer:
                     elif len(roots) == 2:
                         self.__reason(prop, 'two angles', roots=roots)
                 elif isinstance(prop, CongruentTrianglesProperty):
-                    similar_triangles = [exp for exp in self.explained if isinstance(exp.property, SimilarTrianglesProperty)]
-                    equal_distances = [exp for exp in self.explained if isinstance(exp.property, CongruentSegmentProperty)]
+                    similar_triangles = self.__list_explained(SimilarTrianglesProperty)
+                    equal_distances = self.__list_explained(CongruentSegmentProperty)
                     for st in similar_triangles:
                         if (st.property.ABC == prop.ABC and st.property.DEF == prop.DEF) or \
                            (st.property.ABC == prop.DEF and st.property.DEF == prop.ABC):
@@ -306,7 +317,7 @@ class Explainer:
                             self.__reason(prop, 'Similar triangles with equal side', roots=[st, ed])
 
                 elif isinstance(prop, CongruentSegmentProperty):
-                    equal_triangles = [exp for exp in self.explained if isinstance(exp.property, CongruentTrianglesProperty)]
+                    equal_triangles = self.__list_explained(CongruentTrianglesProperty)
                     def index(two, three):
                         if set(two).issubset(set(three)):
                             for i in range(0, 3):
@@ -323,7 +334,7 @@ class Explainer:
                             self.__reason(prop, 'Corr. sides in equal triangles', roots=[et])
 
                 elif isinstance(prop, IsoscelesTriangleProperty):
-                    equal_distances = [exp for exp in self.explained if isinstance(exp.property, CongruentSegmentProperty)]
+                    equal_distances = self.__list_explained(CongruentSegmentProperty)
                     for ed in equal_distances:
                         pts = ed.property.AB + ed.property.CD
                         if pts.count(prop.A) == 2 and prop.BC[0] in pts and prop.BC[1] in pts:
@@ -332,7 +343,7 @@ class Explainer:
                 elif isinstance(prop, AngleValueProperty):
                     found = False
                     if prop.degree == 0:
-                        same_direction = [exp for exp in self.explained if isinstance(exp.property, SameDirectionProperty)]
+                        same_direction = self.__list_explained(SameDirectionProperty)
                         for sd in same_direction:
                             if prop.angle.vector0.start == sd.property.start and prop.angle.vector1.start == sd.property.start and set([prop.angle.vector0.end, prop.angle.vector1.end]) == set(sd.property.points):
                                 self.__reason(prop, 'TBW', roots=[sd])
@@ -342,8 +353,8 @@ class Explainer:
                     if found:
                         continue
 
-                    equal_angles = [exp for exp in self.explained if isinstance(exp.property, CongruentAnglesProperty)]
-                    angle_values = [exp for exp in self.explained if isinstance(exp.property, AngleValueProperty)]
+                    equal_angles = self.__list_explained(CongruentAnglesProperty)
+                    angle_values = self.__list_explained(AngleValueProperty)
                     for ea in equal_angles:
                         if ea.property.angle0 == prop.angle:
                             for av in angle_values:
@@ -367,8 +378,8 @@ class Explainer:
                     if found:
                         continue
 
-                    isosceles = [exp for exp in self.explained if isinstance(exp.property, IsoscelesTriangleProperty)]
-                    values = [exp for exp in self.explained if isinstance(exp.property, AngleValueProperty)]
+                    isosceles = self.__list_explained(IsoscelesTriangleProperty)
+                    values = self.__list_explained(AngleValueProperty)
                     def is_angle(angle, vertex, points):
                         return angle.vector0.start == vertex and angle.vector1.start == vertex and set([angle.vector0.end, angle.vector1.end]) == set(points)
                     for iso in isosceles:
@@ -385,22 +396,50 @@ class Explainer:
 
 
         base()
-        while len(self.unexplained) > 0:
-            explained_size = len(self.explained)
+        while len(self.__unexplained) > 0:
+            explained_size = len(self.__explained)
             iteration()
-            if len(self.explained) == explained_size:
+            if len(self.__explained) == explained_size:
                 break
 
     def dump(self):
         print('Explained:')
-        for exp in self.explained:
+        for exp in self.__explained:
             print('\t%2d: %s [%s]' % (exp.index, exp.property, exp))
         print('\nNot explained:')
-        explained = [rsn.property for rsn in self.explained]
-        for prop in self.properties:
+        explained = [rsn.property for rsn in self.__explained]
+        for prop in self.__properties:
             if not prop in explained:
                 print('\t%s' % prop)
-        print('\nTotal properties: %d, explained: %d, not explained: %d' % (len(self.properties), len(self.explained), len(self.unexplained)))
+
+    def stats(self):
+        return [
+            ('Total properties', len(self.__properties)),
+            ('Explained properties', len(self.__explained)),
+            ('Unexplained properties', len(self.__unexplained)),
+            ('Explanation time', '%.3f sec' % self.__explanation_time)
+        ]
+
+    def guessed(self, obj):
+        if isinstance(obj, Scene.Angle):
+            for prop in self.__properties:
+                if isinstance(prop, AngleValueProperty):
+                    if prop.angle == obj:
+                        return prop.degree
+                    if prop.angle.reversed == obj:
+                        return -prop.degree
+            return 'not found'
+        return 'Guess not supported for objects of type %s' % type(obj).__name__
+
+    def explained(self, obj):
+        if isinstance(obj, Scene.Angle):
+            for exp in self.__list_explained(AngleValueProperty):
+                if exp.property.angle == obj:
+                    return exp.property.degree
+                if exp.property.angle.reversed == obj:
+                    return -exp.property.degree
+            return 'not found'
+        return 'Explanation not supported for objects of type %s' % type(obj).__name__
 
 class NotEqualProperty(Property):
     def __init__(self, point0, point1):
