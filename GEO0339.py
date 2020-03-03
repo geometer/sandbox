@@ -22,3 +22,6 @@ print('')
 explainer = Explainer(scene, hunter.properties)
 explainer.explain()
 explainer.dump()
+
+helper = PlacementHelper(placement)
+print('%.5f = %.5f' % (helper.distance(A, B), helper.distance(A1, B1)))
