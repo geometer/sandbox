@@ -208,11 +208,11 @@ class CoreScene:
         def distance_constraint(self, A, distance, **kwargs):
             """
             Distance to the point A equals to the given distance.
-            The given distance must be an integer.
+            The given distance must be a non-negative number
             """
-            if distance > 0:
-                self.not_equal_constraint(A)
-            self.scene.constraint(Constraint.Kind.distance, self, A, distance, **kwargs)
+            if isinstance(A, str):
+                A = self.scene.get(A)
+            self.vector(A).length_constraint(distance, **kwargs)
 
         def opposite_side_constraint(self, point, line, **kwargs):
             """
@@ -398,6 +398,15 @@ class CoreScene:
         def reversed(self):
             return CoreScene.Vector(self.end, self.start)
 
+        def length_constraint(self, length, **kwargs):
+            """
+            |self| == length
+            """
+            if length > 0:
+                self.start.not_equal_constraint(self.end)
+            #TODO: equal_constraint otherwise?
+            self.scene.constraint(Constraint.Kind.distance, self, length, **kwargs)
+            
         def length_ratio_constraint(self, vector, coef, **kwargs):
             """
             |self| == |vector| * coef
@@ -587,7 +596,7 @@ class Constraint:
         same_direction    = ('same_direction', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         quadrilateral     = ('quadrilateral', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         convex_polygon    = ('convex_polygon', Stage.validation, List[CoreScene.Point])
-        distance          = ('distance', Stage.adjustment, CoreScene.Point, CoreScene.Point, int)
+        distance          = ('distance', Stage.adjustment, CoreScene.Vector, int)
         distances_ratio   = ('distances_ratio', Stage.adjustment, CoreScene.Vector, CoreScene.Vector, int)
         angles_ratio      = ('angles_ratio', Stage.adjustment, CoreScene.Angle, CoreScene.Angle, int)
         perpendicular     = ('perpendicular', Stage.adjustment, CoreScene.Line, CoreScene.Line)

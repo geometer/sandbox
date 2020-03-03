@@ -412,9 +412,7 @@ class Placement(BasePlacement):
 
             if cnstr.kind == Constraint.Kind.distance:
                 has_distance_constraint = True
-                pt0 = cnstr.params[0]
-                pt1 = cnstr.params[1]
-                dist_square += (self.length(pt0.vector(pt1)) - np.float128(cnstr.params[2])) ** 2
+                dist_square += (self.length(cnstr.params[0]) - np.float128(cnstr.params[1])) ** 2
             elif cnstr.kind == Constraint.Kind.distances_ratio:
                 vec0 = cnstr.params[0]
                 vec1 = cnstr.params[1]
