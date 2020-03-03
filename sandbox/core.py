@@ -109,7 +109,7 @@ class CoreScene:
                 point0=self, point1=point, coef0=coef0, coef1=coef1, **kwargs
             )
             new_point.collinear_constraint(self, point, guaranteed=True)
-            self.scene.distances_ratio_constraint((self, new_point), (new_point, point), coef1, coef0, guaranteed=True)
+            self.vector(new_point).length_ratio_constraint(new_point.vector(point), coef1 / coef0, guaranteed=True)
             return new_point
 
         def perpendicular_line(self, line, **kwargs):
@@ -398,6 +398,21 @@ class CoreScene:
         def reversed(self):
             return CoreScene.Vector(self.end, self.start)
 
+        def length_ratio_constraint(self, vector, coef, **kwargs):
+            """
+            |self| == |vector| * coef
+            coef is a non-zero number
+            """
+            self.scene.assert_vector(vector)
+            assert coef != 0
+            self.scene.constraint(Constraint.Kind.distances_ratio, self, vector, coef, **kwargs)
+
+        def length_equal_constraint(self, vector, **kwargs):
+            """
+            |self| == |vector|
+            """
+            self.length_ratio_constraint(vector, 1, **kwargs)
+
         def __eq__(self, other):
             return self.start == other.start and self.end == other.end
 
@@ -410,8 +425,7 @@ class CoreScene:
     class Angle:
         def __init__(self, vector0, vector1):
             assert isinstance(vector0, CoreScene.Vector)
-            assert isinstance(vector1, CoreScene.Vector)
-            assert vector0.scene == vector1.scene
+            vector0.scene.assert_vector(vector1)
             self.vector0 = vector0
             self.vector1 = vector1
 
@@ -425,6 +439,7 @@ class CoreScene:
 
         def ratio_constraint(self, angle, ratio, **kwargs):
             # self = angle * ratio
+            self.scene.assert_angle(angle)
             self.scene.constraint(Constraint.Kind.angles_ratio, self, angle, ratio, **kwargs)
 
         def __eq__(self, other):
@@ -464,22 +479,6 @@ class CoreScene:
         """
         assert len(points) > 3
         self.constraint(Constraint.Kind.convex_polygon, points, **kwargs)
-
-    def distances_ratio_constraint(self, AB, CD, coefAB, coefCD, **kwargs):
-        """
-        |AB| * coef AB == |CD| * coefCD
-        AB and CD are tuples or lists of two points, coefAB and coefCD are non-zero numbers
-        """
-        assert len(AB) == 2 and len(CD) == 2
-        assert coefAB != 0 and coefCD != 0
-        self.constraint(Constraint.Kind.distances_ratio, AB[0], AB[1], CD[0], CD[1], coefAB, coefCD, **kwargs)
-
-    def equal_distances_constraint(self, AB, CD, **kwargs):
-        """
-        |AB| == |CD|
-        AB and CD are tuples or lists of two points
-        """
-        self.distances_ratio_constraint(AB, CD, 1, 1, **kwargs)
 
     def perpendicular_constraint(self, AB, CD, **kwargs):
         """
@@ -521,6 +520,12 @@ class CoreScene:
 
     def assert_line_or_circle(self, obj):
         self.assert_type(obj, CoreScene.Line, CoreScene.Circle)
+
+    def assert_vector(self, obj):
+        self.assert_type(obj, CoreScene.Vector)
+
+    def assert_angle(self, obj):
+        self.assert_type(obj, CoreScene.Angle)
 
     def free_point(self, **kwargs):
         return CoreScene.Point(self, origin=CoreScene.Point.Origin.free, **kwargs)
@@ -583,7 +588,7 @@ class Constraint:
         quadrilateral     = ('quadrilateral', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         convex_polygon    = ('convex_polygon', Stage.validation, List[CoreScene.Point])
         distance          = ('distance', Stage.adjustment, CoreScene.Point, CoreScene.Point, int)
-        distances_ratio   = ('distances_ratio', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, int, int)
+        distances_ratio   = ('distances_ratio', Stage.adjustment, CoreScene.Vector, CoreScene.Vector, int)
         angles_ratio      = ('angles_ratio', Stage.adjustment, CoreScene.Angle, CoreScene.Angle, int)
         perpendicular     = ('perpendicular', Stage.adjustment, CoreScene.Line, CoreScene.Line)
 

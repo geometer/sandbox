@@ -249,7 +249,7 @@ class Hunter:
 
         for fam in families:
             for pair in itertools.combinations(fam, 2):
-                self.__add(CongruentSegmentProperty((pair[0].start, pair[0].end), (pair[1].start, pair[1].end)))
+                self.__add(CongruentSegmentProperty(*pair))
 
     def __hunt_proportional_segments(self, vectors):
         families = []
@@ -419,13 +419,13 @@ class CongruentAnglesProperty(Property):
                (self.angle0 == other.angle1 and self.angle1 == other.angle0)
 
 class CongruentSegmentProperty(Property):
-    def __init__(self, AB, CD):
-        self.AB = list(AB)
-        self.CD = list(CD)
+    def __init__(self, vector0, vector1):
+        self.vector0 = vector0
+        self.vector1 = vector1
 
     @property
     def description(self):
-        return _comment('|%s %s| = |%s %s|', *self.AB, *self.CD)
+        return _comment('|%s| = |%s|', self.vector0, self.vector1)
 
 class SimilarTrianglesProperty(Property):
     def __init__(self, ABC, DEF):

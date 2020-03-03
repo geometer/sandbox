@@ -13,7 +13,7 @@ class TestRoG4578_orthocentre_inside(PlacementTest):
         A, B, C = scene.triangle(labels=('A', 'B', 'C'))
         D = scene.orthocentre_point((A, B, C))
         D.inside_triangle_constraint(A, B, C)
-        scene.equal_distances_constraint((A, B), (C, D))
+        A.vector(B).length_equal_constraint(C.vector(D))
 
         return iterative_placement(scene)
 
@@ -28,7 +28,7 @@ class TestRoG4578_orthocentre_outside(PlacementTest):
         D = scene.orthocentre_point((A, B, C))
         D.opposite_side_constraint(B.line_through(C), A)
         D.opposite_side_constraint(A.line_through(C), B)
-        scene.equal_distances_constraint((A, B), (C, D))
+        A.vector(B).length_equal_constraint(C.vector(D))
 
         return iterative_placement(scene)
 

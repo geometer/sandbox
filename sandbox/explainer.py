@@ -112,12 +112,14 @@ class Explainer:
                                 self.__reason(prop, cnst.comments)
                 elif isinstance(prop, CongruentSegmentProperty):
                     for cnst in self.scene.constraints(Constraint.Kind.distances_ratio):
-                        if cnst.params[4] == cnst.params[5]:
-                            first = set(cnst.params[0:2])
-                            second = set(cnst.params[2:4])
-                            if first == set(prop.AB) and second == set(prop.CD):
+                        if cnst.params[2] == 1:
+                            first = cnst.params[0]
+                            second = cnst.params[1]
+                            def same_segment(v0, v1):
+                                return v0 == v1 or v0 == v1.reversed
+                            if same_segment(first, prop.vector0) and same_segment(second, prop.vector1):
                                 self.__reason(prop, 'Given')
-                            elif first == set(prop.CD) and second == set(prop.AB):
+                            elif same_segment(first, prop.vector1) and same_segment(second, prop.vector0):
                                 self.__reason(prop, 'Given')
 
         def iteration():
@@ -301,42 +303,44 @@ class Explainer:
                     else:
                         continue
                     for ed in equal_distances:
-                        def index(two, three):
+                        def index(vector, three):
+                            two = [vector.start, vector.end]
                             if set(two).issubset(set(three)):
                                 for i in range(0, 3):
                                     if three[i] not in two:
                                         return i
                             return None
 
-                        ind = index(ed.property.AB, prop.ABC)
-                        if ind is not None and ind == index(ed.property.CD, prop.DEF):
+                        ind = index(ed.property.vector0, prop.ABC)
+                        if ind is not None and ind == index(ed.property.vector1, prop.DEF):
                             self.__reason(prop, 'Similar triangles with equal side', premises=[st, ed])
                             break
-                        ind = index(ed.property.AB, prop.DEF)
-                        if ind is not None and ind == index(ed.property.CD, prop.ABC):
+                        ind = index(ed.property.vector0, prop.DEF)
+                        if ind is not None and ind == index(ed.property.vector1, prop.ABC):
                             self.__reason(prop, 'Similar triangles with equal side', premises=[st, ed])
 
                 elif isinstance(prop, CongruentSegmentProperty):
                     equal_triangles = self.__list_explained(CongruentTrianglesProperty)
-                    def index(two, three):
+                    def index(vector, three):
+                        two = [vector.start, vector.end]
                         if set(two).issubset(set(three)):
                             for i in range(0, 3):
                                 if three[i] not in two:
                                     return i
                         return None
                     for et in equal_triangles:
-                        ind = index(prop.AB, et.property.ABC)
-                        if ind is not None and ind == index(prop.CD, et.property.DEF):
+                        ind = index(prop.vector0, et.property.ABC)
+                        if ind is not None and ind == index(prop.vector1, et.property.DEF):
                             self.__reason(prop, 'Corresponding sides in equal triangles', premises=[et])
                             break
-                        ind = index(prop.CD, et.property.ABC)
-                        if ind is not None and ind == index(prop.AB, et.property.DEF):
+                        ind = index(prop.vector1, et.property.ABC)
+                        if ind is not None and ind == index(prop.vector0, et.property.DEF):
                             self.__reason(prop, 'Corresponding sides in equal triangles', premises=[et])
 
                 elif isinstance(prop, IsoscelesTriangleProperty):
                     equal_distances = self.__list_explained(CongruentSegmentProperty)
                     for ed in equal_distances:
-                        pts = ed.property.AB + ed.property.CD
+                        pts = [ed.property.vector0.start, ed.property.vector0.end, ed.property.vector1.start, ed.property.vector1.end]
                         if pts.count(prop.A) == 2 and prop.BC[0] in pts and prop.BC[1] in pts:
                             self.__reason(prop, 'Two equal sides', premises=[ed])
 

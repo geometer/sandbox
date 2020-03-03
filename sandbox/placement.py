@@ -416,13 +416,10 @@ class Placement(BasePlacement):
                 pt1 = cnstr.params[1]
                 dist_square += (self.length(pt0.vector(pt1)) - np.float128(cnstr.params[2])) ** 2
             elif cnstr.kind == Constraint.Kind.distances_ratio:
-                pt0 = cnstr.params[0]
-                pt1 = cnstr.params[1]
-                pt2 = cnstr.params[2]
-                pt3 = cnstr.params[3]
-                coef0 = np.float128(cnstr.params[4])
-                coef1 = np.float128(cnstr.params[5])
-                numb_square += (self.length(pt0.vector(pt1)) / self.length(pt2.vector(pt3)) - coef1 / coef0) ** 2
+                vec0 = cnstr.params[0]
+                vec1 = cnstr.params[1]
+                coef = np.float128(cnstr.params[2])
+                numb_square += (self.length(vec0) / self.length(vec1) - coef) ** 2
             elif cnstr.kind == Constraint.Kind.collinear:
                 pt = cnstr.params[0]
                 vec0 = pt.vector(cnstr.params[1])

@@ -15,7 +15,7 @@ D = altitudeA.intersection_point(altitudeC, label='D')
 D.inside_triangle_constraint(A, B, C)
 H = altitudeA.intersection_point(B.line_through(C, label='BC'), label='H')
 G = altitudeC.intersection_point(A.line_through(B, label='AB'), label='G')
-scene.equal_distances_constraint((A, B), (C, D))
+A.vector(B).length_equal_constraint(C.vector(D), comment='Given: |AB| = |CD|')
 
 scene.dump()
 
