@@ -279,21 +279,12 @@ class CoreScene:
         @property
         def name(self):
             if hasattr(self, 'auto_label') and self.auto_label:
-                two_points = []
-                def add_point(pt):
-                    if not pt.auxiliary and pt not in two_points:
-                        if len(two_points) == 0:
-                            two_points.append(pt)
-                        for cnst in self.scene.constraints(Constraint.Kind.not_equal):
-                            if set([two_points[0], pt]) == set(cnst.params):
-                                two_points.append(pt)
+                if not self.point0.auxiliary and not self.point1.auxiliary:
+                    return '(%s %s)' % (self.point0.name, self.point1.name)
 
-                add_point(self.point0)
-                add_point(self.point1)
-                for pt in self.all_points:
-                    if len(two_points) == 2:
-                        return '(%s %s)' % (two_points[0].name, two_points[1].name)
-                    add_point(pt)
+                for points in itertools.combinations(self.all_points, 2):
+                    if not points[0].auxiliary and not points[1].auxiliary:
+                        return '(%s %s)' % (points[0].name, points[1].name)
 
             return super().name
 
