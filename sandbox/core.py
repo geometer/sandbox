@@ -279,7 +279,22 @@ class CoreScene:
         @property
         def name(self):
             if hasattr(self, 'auto_label') and self.auto_label:
-                return '(%s %s)' % (self.point0.name, self.point1.name)
+                two_points = []
+                def add_point(pt):
+                    if not pt.auxiliary and pt not in two_points:
+                        if len(two_points) == 0:
+                            two_points.append(pt)
+                        for cnst in self.scene.constraints(Constraint.Kind.not_equal):
+                            if set([two_points[0], pt]) == set(cnst.params):
+                                two_points.append(pt)
+
+                add_point(self.point0)
+                add_point(self.point1)
+                for pt in self.all_points:
+                    if len(two_points) == 2:
+                        return '(%s %s)' % (two_points[0].name, two_points[1].name)
+                    add_point(pt)
+
             return super().name
 
         def free_point(self, **kwargs):
