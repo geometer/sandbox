@@ -437,12 +437,10 @@ class Placement(BasePlacement):
                 vec1 = TwoDVector(pt2, pt3)
                 numb_square += vec0.scalar_product(vec1) ** 2 / vec0.length2 / vec1.length2
             elif cnstr.kind == Constraint.Kind.angles_ratio:
-                vec0 = cnstr.params[0].vector(cnstr.params[1])
-                vec1 = cnstr.params[2].vector(cnstr.params[3])
-                vec2 = cnstr.params[4].vector(cnstr.params[5])
-                vec3 = cnstr.params[6].vector(cnstr.params[7])
-                ratio = cnstr.params[8]
-                numb_square += (self.angle(vec0.angle(vec1)) - self.angle(vec2.angle(vec3)) * ratio) ** 2
+                angle0 = cnstr.params[0]
+                angle1 = cnstr.params[1]
+                ratio = cnstr.params[2]
+                numb_square += (self.angle(angle0) - self.angle(angle1) * ratio) ** 2
             else:
                 assert False, 'Constraint `%s` not supported in adjustment' % cnstr.kind
 

@@ -481,14 +481,8 @@ class CoreScene:
         lineCD = CD[0].line_through(CD[1], auxiliary=True)
         lineAB.perpendicular_constraint(lineCD, **kwargs)
 
-    def angles_ratio_constraint(self, ABCD, EFGH, ratio, **kwargs):
-        self.constraint(
-            Constraint.Kind.angles_ratio,
-            ABCD[0][0], ABCD[0][1], ABCD[1][0], ABCD[1][1],
-            EFGH[0][0], EFGH[0][1], EFGH[1][0], EFGH[1][1],
-            ratio,
-            **kwargs
-        )
+    def angles_ratio_constraint(self, angle0, angle1, ratio, **kwargs):
+        self.constraint(Constraint.Kind.angles_ratio, angle0, angle1, ratio, **kwargs)
 
     def points(self, skip_auxiliary=False):
         if skip_auxiliary:
@@ -581,7 +575,7 @@ class Constraint:
         convex_polygon    = ('convex_polygon', Stage.validation, List[CoreScene.Point])
         distance          = ('distance', Stage.adjustment, CoreScene.Point, CoreScene.Point, int)
         distances_ratio   = ('distances_ratio', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, int, int)
-        angles_ratio      = ('angles_ratio', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point, int)
+        angles_ratio      = ('angles_ratio', Stage.adjustment, CoreScene.Angle, CoreScene.Angle, int)
         perpendicular     = ('perpendicular', Stage.adjustment, CoreScene.Line, CoreScene.Line)
 
         def __init__(self, name, stage, *params):
