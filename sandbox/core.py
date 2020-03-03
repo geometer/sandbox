@@ -382,11 +382,17 @@ class CoreScene:
 
     class Vector:
         def __init__(self, start, end):
+            assert isinstance(start, CoreScene.Point)
+            start.scene.assert_point(end)
             self.start = start
             self.end = end
 
         def angle(self, other):
             return CoreScene.Angle(self, other)
+
+        @property
+        def scene(self):
+            return self.start.scene
 
         @property
         def reversed(self):
@@ -403,12 +409,23 @@ class CoreScene:
 
     class Angle:
         def __init__(self, vector0, vector1):
+            assert isinstance(vector0, CoreScene.Vector)
+            assert isinstance(vector1, CoreScene.Vector)
+            assert vector0.scene == vector1.scene
             self.vector0 = vector0
             self.vector1 = vector1
 
         @property
+        def scene(self):
+            return self.vector0.scene
+
+        @property
         def reversed(self):
             return CoreScene.Angle(self.vector1, self.vector0)
+
+        def ratio_constraint(self, angle, ratio, **kwargs):
+            # self = angle * ratio
+            self.scene.constraint(Constraint.Kind.angles_ratio, self, angle, ratio, **kwargs)
 
         def __eq__(self, other):
             return self.vector0 == other.vector0 and self.vector1 == other.vector1
@@ -473,9 +490,6 @@ class CoreScene:
         lineAB = AB[0].line_through(AB[1], auxiliary=True)
         lineCD = CD[0].line_through(CD[1], auxiliary=True)
         lineAB.perpendicular_constraint(lineCD, **kwargs)
-
-    def angles_ratio_constraint(self, angle0, angle1, ratio, **kwargs):
-        self.constraint(Constraint.Kind.angles_ratio, angle0, angle1, ratio, **kwargs)
 
     def points(self, skip_auxiliary=False):
         if skip_auxiliary:

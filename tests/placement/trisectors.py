@@ -12,12 +12,12 @@ class TestTrisectors(PlacementTest):
         A1 = scene.free_point(label='A1')
         B1 = scene.free_point(label='B1')
         C1 = scene.free_point(label='C1')
-        scene.angles_ratio_constraint(A.angle(B, C), A.angle(B, C1), 3)
-        scene.angles_ratio_constraint(A.angle(B, C), A.angle(B1, C), 3)
-        scene.angles_ratio_constraint(B.angle(C, A), B.angle(C, A1), 3)
-        scene.angles_ratio_constraint(B.angle(C, A), B.angle(C1, A), 3)
-        scene.angles_ratio_constraint(C.angle(A, B), C.angle(A, B1), 3)
-        scene.angles_ratio_constraint(C.angle(A, B), C.angle(A1, B), 3)
+        A.angle(B, C).ratio_constraint(A.angle(B, C1), 3)
+        A.angle(B, C).ratio_constraint(A.angle(B1, C), 3)
+        B.angle(C, A).ratio_constraint(B.angle(C, A1), 3)
+        B.angle(C, A).ratio_constraint(B.angle(C1, A), 3)
+        C.angle(A, B).ratio_constraint(C.angle(A, B1), 3)
+        C.angle(A, B).ratio_constraint(C.angle(A1, B), 3)
 
         return iterative_placement(scene)
 
