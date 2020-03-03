@@ -8,20 +8,20 @@ from .scene import Scene
 
 class Explainer:
     class Reason:
-        def __init__(self, index, prop, comments, roots):
+        def __init__(self, index, prop, comments, premises):
             self.index = index
             self.property = prop
             if not isinstance(comments, (list, tuple)):
                 self.comments = [comments]
             else:
                 self.comments = list(comments)
-            self.roots = roots
+            self.premises = premises
 
         def __str__(self):
-            if self.roots:
+            if self.premises:
                 return '%s (%s)' % (
                     ', '.join([str(com) for com in self.comments]),
-                    ', '.join(['*%d' % rsn.index for rsn in self.roots])
+                    ', '.join(['*%d' % rsn.index for rsn in self.premises])
                 )
             else:
                 return ', '.join([str(com) for com in self.comments])
@@ -33,15 +33,15 @@ class Explainer:
         self.__unexplained = list(properties)
         self.__explanation_time = None
 
-    def __reason(self, prop, comments, roots=None):
-        self.__explained.append(Explainer.Reason(len(self.__explained), prop, comments, roots))
+    def __reason(self, prop, comments, premises=None):
+        self.__explained.append(Explainer.Reason(len(self.__explained), prop, comments, premises))
         if prop in self.__unexplained:
             self.__unexplained.remove(prop)
 
-    def __add(self, prop, comments, roots=None):
+    def __add(self, prop, comments, premises=None):
         if prop not in self.__properties:
             self.__properties.append(prop)
-            self.__reason(prop, comments, roots)
+            self.__reason(prop, comments, premises)
 
     def __list_explained(self, property_type):
          return [exp for exp in self.__explained if isinstance(exp.property, property_type)]
@@ -194,7 +194,7 @@ class Explainer:
                             if v0 == vector0:
                                 try:
                                     found = next(p for p in lst if p[0] == vector1)
-                                    self.__reason(prop, 'Same angle', roots=sd0 + found[1])
+                                    self.__reason(prop, 'Same angle', premises=sd0 + found[1])
                                     return True
                                 except:
                                     pass
@@ -214,9 +214,9 @@ class Explainer:
                         continue
 
                     known_angles = self.__list_explained(AngleValueProperty)
-                    roots = [exp for exp in known_angles if exp.property.angle in [prop.angle0, prop.angle1]]
-                    if len(roots) == 2 and roots[0].property.degree == roots[1].property.degree:
-                        self.__reason(prop, _comment('Both angle values = %sº', roots[0].property.degree), roots=roots)
+                    premises = [exp for exp in known_angles if exp.property.angle in [prop.angle0, prop.angle1]]
+                    if len(premises) == 2 and premises[0].property.degree == premises[1].property.degree:
+                        self.__reason(prop, _comment('Both angle values = %sº', premises[0].property.degree), premises=premises)
                         found = True
                     # TODO: report contradiction, if not angle values are not equal
 
@@ -235,12 +235,12 @@ class Explainer:
                     for st in similar_triangles:
                         ind = match(prop.angle0, st.property.ABC)
                         if ind is not None and ind == match(prop.angle1, st.property.DEF):
-                            self.__reason(prop, 'Corresponding angles in similar triangles', roots=[st])
+                            self.__reason(prop, 'Corresponding angles in similar triangles', premises=[st])
                             found = True
                             break
                         ind = match(prop.angle1, st.property.ABC)
                         if ind is not None and ind == match(prop.angle0, st.property.DEF):
-                            self.__reason(prop, 'Corresponding angles in similar triangles', roots=[st])
+                            self.__reason(prop, 'Corresponding angles in similar triangles', premises=[st])
                             found = True
                             break
 
@@ -262,7 +262,7 @@ class Explainer:
 
                         for ea1 in equal_angles[index + 1:]:
                             if ea1.property.angle0 in look_for and ea1.property.angle1 in look_for:
-                                self.__reason(prop, 'transitivity', roots=[ea0, ea1])
+                                self.__reason(prop, 'transitivity', premises=[ea0, ea1])
                                 found = True
                                 break
 
@@ -279,18 +279,18 @@ class Explainer:
 
                         return None
 
-                    roots = []
+                    premises = []
                     for ea in equal_angles:
                         ind = match(ea.property.angle0, prop.ABC)
                         if ind is not None and ind == match(ea.property.angle1, prop.DEF):
-                            roots.append(ea)
+                            premises.append(ea)
                         ind = match(ea.property.angle1, prop.ABC)
                         if ind is not None and ind == match(ea.property.angle0, prop.DEF):
-                            roots.append(ea)
-                    if len(roots) == 3:
-                        self.__reason(prop, 'three angles', roots=roots)
-                    elif len(roots) == 2:
-                        self.__reason(prop, 'two angles', roots=roots)
+                            premises.append(ea)
+                    if len(premises) == 3:
+                        self.__reason(prop, 'three angles', premises=premises)
+                    elif len(premises) == 2:
+                        self.__reason(prop, 'two angles', premises=premises)
                 elif isinstance(prop, CongruentTrianglesProperty):
                     similar_triangles = self.__list_explained(SimilarTrianglesProperty)
                     equal_distances = self.__list_explained(CongruentSegmentProperty)
@@ -310,11 +310,11 @@ class Explainer:
 
                         ind = index(ed.property.AB, prop.ABC)
                         if ind is not None and ind == index(ed.property.CD, prop.DEF):
-                            self.__reason(prop, 'Similar triangles with equal side', roots=[st, ed])
+                            self.__reason(prop, 'Similar triangles with equal side', premises=[st, ed])
                             break
                         ind = index(ed.property.AB, prop.DEF)
                         if ind is not None and ind == index(ed.property.CD, prop.ABC):
-                            self.__reason(prop, 'Similar triangles with equal side', roots=[st, ed])
+                            self.__reason(prop, 'Similar triangles with equal side', premises=[st, ed])
 
                 elif isinstance(prop, CongruentSegmentProperty):
                     equal_triangles = self.__list_explained(CongruentTrianglesProperty)
@@ -327,18 +327,18 @@ class Explainer:
                     for et in equal_triangles:
                         ind = index(prop.AB, et.property.ABC)
                         if ind is not None and ind == index(prop.CD, et.property.DEF):
-                            self.__reason(prop, 'Corresponding sides in equal triangles', roots=[et])
+                            self.__reason(prop, 'Corresponding sides in equal triangles', premises=[et])
                             break
                         ind = index(prop.CD, et.property.ABC)
                         if ind is not None and ind == index(prop.AB, et.property.DEF):
-                            self.__reason(prop, 'Corresponding sides in equal triangles', roots=[et])
+                            self.__reason(prop, 'Corresponding sides in equal triangles', premises=[et])
 
                 elif isinstance(prop, IsoscelesTriangleProperty):
                     equal_distances = self.__list_explained(CongruentSegmentProperty)
                     for ed in equal_distances:
                         pts = ed.property.AB + ed.property.CD
                         if pts.count(prop.A) == 2 and prop.BC[0] in pts and prop.BC[1] in pts:
-                            self.__reason(prop, 'Two equal sides', roots=[ed])
+                            self.__reason(prop, 'Two equal sides', premises=[ed])
 
                 elif isinstance(prop, AngleValueProperty):
                     found = False
@@ -346,7 +346,7 @@ class Explainer:
                         same_direction = self.__list_explained(SameDirectionProperty)
                         for sd in same_direction:
                             if prop.angle.vector0.start == sd.property.start and prop.angle.vector1.start == sd.property.start and set([prop.angle.vector0.end, prop.angle.vector1.end]) == set(sd.property.points):
-                                self.__reason(prop, 'TBW', roots=[sd])
+                                self.__reason(prop, 'TBW', premises=[sd])
                                 found = True
                                 break
 
@@ -360,7 +360,7 @@ class Explainer:
                             for av in angle_values:
                                 if av.property.angle == ea.property.angle1:
                                     #TODO: report contradiction if degrees are different
-                                    self.__reason(prop, _comment('%s = %s = %sº', prop.angle, av.property.angle, av.property.degree), roots=[ea, av])
+                                    self.__reason(prop, _comment('%s = %s = %sº', prop.angle, av.property.angle, av.property.degree), premises=[ea, av])
                                     found = True
                                     break
                             if found:
@@ -369,7 +369,7 @@ class Explainer:
                             for av in angle_values:
                                 if av.property.angle == ea.property.angle0:
                                     #TODO: report contradiction if degrees are different
-                                    self.__reason(prop, _comment('%s = %s = %sº', prop.angle, av.property.angle, av.property.degree), roots=[ea, av])
+                                    self.__reason(prop, _comment('%s = %s = %sº', prop.angle, av.property.angle, av.property.degree), premises=[ea, av])
                                     found = True
                                     break
                             if found:
@@ -391,7 +391,7 @@ class Explainer:
                         continue
                     for val in values:
                         if is_angle(val.property.angle, iso.property.A, iso.property.BC):
-                            self.__reason(prop, _comment('Base angle of isosceles △ %s %s %s with apex angle %s', iso.property.A, *iso.property.BC, val.property.degree), roots=[iso, val])
+                            self.__reason(prop, _comment('Base angle of isosceles △ %s %s %s with apex angle %s', iso.property.A, *iso.property.BC, val.property.degree), premises=[iso, val])
                         # TODO: check sum of angles; report contradiction if found
 
 

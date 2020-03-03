@@ -53,9 +53,9 @@ print('\tExplained: %s = %s' % (angle, explainer.explained(angle)))
 
 def dump(explanation, level=0):
     print('\t' + '  ' * level + str(explanation.property) + ': ' + ' + '.join([str(com) for com in explanation.comments]))
-    if explanation.roots:
-        for root in explanation.roots:
-            dump(root, level + 1)
+    if explanation.premises:
+        for premise in explanation.premises:
+            dump(premise, level + 1)
 
 explanation = explainer.explanation(angle)
 if explanation:
