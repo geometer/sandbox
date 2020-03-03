@@ -183,6 +183,9 @@ class CoreScene:
                 if set(cnstr.params) == set([self, A, B]):
                     cnstr.update(kwargs)
                     return
+            self.not_equal_constraint(A, **kwargs)
+            self.not_equal_constraint(B, **kwargs)
+            A.not_equal_constraint(B, **kwargs)
             self.scene.constraint(Constraint.Kind.not_collinear, self, A, B, **kwargs)
 
         def collinear_constraint(self, A, B, **kwargs):
@@ -568,7 +571,8 @@ class Constraint:
 
     def update(self, kwargs):
         if 'comment' in kwargs:
-            if kwargs['comment'] not in self.comments:
+            #if kwargs['comment'] not in self.comments:
+            if not self.comments:
                 self.comments.append(kwargs['comment'])
             del kwargs['comment']
         self.__dict__.update(kwargs)
