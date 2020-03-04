@@ -111,7 +111,7 @@ class Explainer:
                             break
                 elif isinstance(prop, AngleValueProperty) and prop.degree == 0:
                     for cnst in self.scene.constraints(Constraint.Kind.same_direction):
-                        if same(prop.angle, cnst.params[0].angle(cnst.params[1:])):
+                        if same(prop.angle, cnst.params[0].angle(*cnst.params[1:])):
                              self.__reason(prop, cnst.comments)
                 elif isinstance(prop, AngleValueProperty) and prop.degree == 90:
                     for cnst in self.scene.constraints(Constraint.Kind.perpendicular):
