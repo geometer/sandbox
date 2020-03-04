@@ -238,7 +238,8 @@ class Explainer:
                     similar_triangles = self.__list_explained(SimilarTrianglesProperty)
                     pair = (prop.angle0, prop.angle1)
                     for st in similar_triangles:
-                        if any(same_pair(pair, (angle_of(st.property.ABC, i), angle_of(st.property.DEF, i))) for i in range(0, 3)):
+                        trs = (st.property.ABC, st.property.DEF)
+                        if any(same_pair(pair, [angle_of(t, i) for t in trs]) for i in range(0, 3)):
                             self.__reason(prop, 'Corresponding angles in similar triangles', premises=[st])
                             found = True
                             break
@@ -271,10 +272,10 @@ class Explainer:
                 elif isinstance(prop, SimilarTrianglesProperty):
                     equal_angles = self.__list_explained(CongruentAnglesProperty)
                     premises = []
+                    trs = (prop.ABC, prop.DEF)
                     for ea in equal_angles:
                         pair = (ea.property.angle0, ea.property.angle1)
-                        if any(same_pair(pair, (angle_of(prop.ABC, i), angle_of(prop.DEF, i))) \
-                                for i in range(0, 3)):
+                        if any(same_pair(pair, [angle_of(t, i) for t in trs]) for i in range(0, 3)):
                             premises.append(ea)
 
                     if len(premises) == 3:
@@ -290,17 +291,18 @@ class Explainer:
                             break
                     else:
                         continue
+                    trs = (prop.ABC, prop.DEF)
                     for ed in equal_distances:
                         pair = (ed.property.vector0, ed.property.vector1)
-                        if any(same_pair(pair, (side_of(prop.ABC, i), side_of(prop.DEF, i))) \
-                                for i in range(0, 3)):
+                        if any(same_pair(pair, [side_of(t, i) for t in trs]) for i in range(0, 3)):
                             self.__reason(prop, 'Similar triangles with equal side', premises=[st, ed])
 
                 elif isinstance(prop, CongruentSegmentProperty):
                     equal_triangles = self.__list_explained(CongruentTrianglesProperty)
                     pair = (prop.vector0, prop.vector1)
                     for et in equal_triangles:
-                        if any(same_pair(pair, (side_of(et.property.ABC, i), side_of(et.property.DEF, i))) for i in range(0, 3)):
+                        trs = (et.property.ABC, et.property.DEF)
+                        if any(same_pair(pair, [side_of(t, i) for t in trs]) for i in range(0, 3)):
                             self.__reason(prop, 'Corresponding sides in equal triangles', premises=[et])
                             break
 
