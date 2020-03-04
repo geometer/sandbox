@@ -85,9 +85,6 @@ class Explainer:
             self.__properties.append(prop)
             self.__reason(prop, comments, premises)
 
-    def __list_explained(self, property_type):
-        return self.__explained.list(property_type)
-
     def explain(self):
         start = time.time()
         self.__explain_all()
@@ -155,7 +152,7 @@ class Explainer:
                                 self.__reason(prop, 'Given')
 
         def iteration():
-            same_side_reasons = self.__list_explained(SameSideProperty)
+            same_side_reasons = self.__explained.list(SameSideProperty)
             for rsn in same_side_reasons:
                 pt0 = rsn.property.points[0]
                 pt1 = rsn.property.points[1]
@@ -203,7 +200,7 @@ class Explainer:
                     self.__add(SameDirectionProperty(B, C, X), comments)
                     self.__add(SameDirectionProperty(C, B, X), comments)
 
-            same_direction = self.__list_explained(SameDirectionProperty)
+            same_direction = self.__explained.list(SameDirectionProperty)
             def same_dir(vector):
                 yield (vector, [])
                 for sd in same_direction:
@@ -305,7 +302,7 @@ class Explainer:
                         self.__reason(prop, 'two angles', premises=premises)
                 elif isinstance(prop, CongruentTrianglesProperty):
                     similar_triangles = self.__explained.list(SimilarTrianglesProperty, prop.keys)
-                    equal_distances = self.__list_explained(CongruentSegmentProperty)
+                    equal_distances = self.__explained.list(CongruentSegmentProperty, prop.keys)
                     for st in similar_triangles:
                         if (st.property.ABC == prop.ABC and st.property.DEF == prop.DEF) or \
                            (st.property.ABC == prop.DEF and st.property.DEF == prop.ABC):
@@ -319,7 +316,7 @@ class Explainer:
                             self.__reason(prop, 'Similar triangles with equal side', premises=[st, ed])
 
                 elif isinstance(prop, CongruentSegmentProperty):
-                    equal_triangles = self.__list_explained(CongruentTrianglesProperty)
+                    equal_triangles = self.__explained.list(CongruentTrianglesProperty, prop.keys)
                     pair = (prop.vector0, prop.vector1)
                     for et in equal_triangles:
                         trs = (et.property.ABC, et.property.DEF)
@@ -329,7 +326,7 @@ class Explainer:
 
                 elif isinstance(prop, IsoscelesTriangleProperty):
                     sides = (prop.A.vector(prop.BC[0]), prop.A.vector(prop.BC[1]))
-                    equal_distances = self.__list_explained(CongruentSegmentProperty)
+                    equal_distances = self.__explained.list(CongruentSegmentProperty, prop.keys)
                     for ed in equal_distances:
                         if same_pair(sides, (ed.property.vector0, ed.property.vector1)):
                             self.__reason(prop, 'Two equal sides', premises=[ed])
@@ -337,7 +334,7 @@ class Explainer:
                 elif isinstance(prop, AngleValueProperty):
                     found = False
                     if prop.degree == 0:
-                        same_direction = self.__list_explained(SameDirectionProperty)
+                        same_direction = self.__explained.list(SameDirectionProperty)
                         for sd in same_direction:
                             if prop.angle.vector0.start == sd.property.start and prop.angle.vector1.start == sd.property.start and set([prop.angle.vector0.end, prop.angle.vector1.end]) == set(sd.property.points):
                                 self.__reason(prop, 'TBW', premises=[sd])
@@ -409,9 +406,9 @@ class Explainer:
         return [
             ('Total properties', len(self.__properties)),
             ('Explained properties', len(self.__explained)),
+            ('Explained property keys', len(self.__explained.specific)),
             ('Unexplained properties', len(self.__unexplained)),
             ('Explanation time', '%.3f sec' % self.__explanation_time),
-            ('Keys', len(self.__explained.specific))
         ]
 
     def guessed(self, obj):
@@ -427,7 +424,7 @@ class Explainer:
 
     def explained(self, obj):
         if isinstance(obj, Scene.Angle):
-            for exp in self.__list_explained(AngleValueProperty):
+            for exp in self.__explained.list(AngleValueProperty):
                 if exp.property.angle == obj:
                     return exp.property.degree
                 if exp.property.angle.reversed == obj:
@@ -437,7 +434,7 @@ class Explainer:
 
     def explanation(self, obj):
         if isinstance(obj, Scene.Angle):
-            for exp in self.__list_explained(AngleValueProperty):
+            for exp in self.__explained.list(AngleValueProperty):
                 if exp.property.angle == obj or exp.property.angle.reversed == obj:
                     return exp
         return None

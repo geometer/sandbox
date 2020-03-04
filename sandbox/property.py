@@ -1,7 +1,13 @@
 from .core import _comment
 
+def keys_for_vector(vector):
+    return [frozenset([vector.start, vector.end])]
+
 def keys_for_angle(angle):
     return [frozenset([angle.vector0.start, angle.vector0.end, angle.vector1.start, angle.vector1.end])]
+
+def keys_for_triangle(triangle):
+    return [frozenset(triangle), frozenset(triangle[1:]), frozenset(triangle[:-1]), frozenset([triangle[0], triangle[2]])]
 
 class Property:
     def __str__(self):
@@ -17,7 +23,7 @@ class EquilateralTriangleProperty(Property):
 
     @property
     def keys(self):
-        return [frozenset(self.ABC)]
+        return keys_for_triangle(self.ABC)
 
     @property
     def description(self):
@@ -72,6 +78,10 @@ class CongruentSegmentProperty(Property):
         self.vector1 = vector1
 
     @property
+    def keys(self):
+        return keys_for_vector(self.vector0) + keys_for_vector(self.vector1)
+
+    @property
     def description(self):
         return _comment('|%s| = |%s|', self.vector0, self.vector1)
 
@@ -82,7 +92,7 @@ class SimilarTrianglesProperty(Property):
 
     @property
     def keys(self):
-        return [frozenset(self.ABC), frozenset(self.DEF)]
+        return keys_for_triangle(self.ABC) + keys_for_triangle(self.DEF)
 
     @property
     def description(self):
@@ -95,7 +105,7 @@ class CongruentTrianglesProperty(Property):
 
     @property
     def keys(self):
-        return [frozenset(self.ABC), frozenset(self.DEF)]
+        return keys_for_triangle(self.ABC) + keys_for_triangle(self.DEF)
 
     @property
     def description(self):
@@ -108,7 +118,7 @@ class IsoscelesTriangleProperty(Property):
 
     @property
     def keys(self):
-        return [frozenset([self.A] + self.BC)]
+        return keys_for_triangle([self.A] + self.BC)
 
     @property
     def description(self):
