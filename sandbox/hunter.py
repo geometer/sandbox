@@ -182,11 +182,10 @@ class Hunter:
 
     def __vectors(self):
         points = self.placement.scene.points(skip_auxiliary=True)
-        for index, point0 in enumerate(points):
-            for point1 in points[index + 1:]:
-                vec = point0.vector(point1)
-                if np.fabs(self.placement.length(vec)) >= ERROR:
-                    yield vec
+        for point0, point1 in itertools.combinations(points, 2):
+            vec = point0.vector(point1)
+            if np.fabs(self.placement.length(vec)) >= ERROR:
+                yield vec
 
     def __triangles(self):
         points = self.placement.scene.points(skip_auxiliary=True)

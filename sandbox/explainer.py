@@ -1,3 +1,4 @@
+import itertools
 import time
 
 from .core import Constraint, _comment
@@ -137,43 +138,42 @@ class Explainer:
                 if crossing:
                     self.__add(SameDirectionProperty(crossing, pt0, pt1), rsn.comments)
 
-            for index, rsn0 in enumerate(same_side_reasons):
-                for rsn1 in same_side_reasons[index + 1:]:
-                    AB = rsn0.property.line
-                    AC = rsn1.property.line
-                    A = self.scene.get_intersection(AB, AC)
-                    if A is None:
-                        continue
-                    pt00 = rsn0.property.points[0]
-                    pt01 = rsn0.property.points[1]
-                    pt10 = rsn1.property.points[0]
-                    pt11 = rsn1.property.points[1]
-                    if pt00 == pt10:
-                        B, C, D = pt11, pt01, pt00
-                    elif pt01 == pt10:
-                        B, C, D = pt11, pt00, pt01
-                    elif pt00 == pt11:
-                        B, C, D = pt10, pt01, pt00
-                    elif pt01 == pt11:
-                        B, C, D = pt10, pt00, pt01
-                    else:
-                        continue
-                    if B == C or B not in AB or C not in AC:
-                        continue
-                    AD = self.scene.get_line(A, D)
-                    BC = self.scene.get_line(B, C)
-                    if AD is None or BC is None:
-                        continue
-                    X = self.scene.get_intersection(AD, BC)
-                    if X:
-                        comments = rsn0.comments
-                        for com in rsn1.comments:
-                            if not com in comments:
-                                comments.append(com)
-                        self.__add(SameDirectionProperty(X, A, D), comments)
-                        self.__add(SameDirectionProperty(A, D, X), comments)
-                        self.__add(SameDirectionProperty(B, C, X), comments)
-                        self.__add(SameDirectionProperty(C, B, X), comments)
+            for rsn0, rsn1 in itertools.combinations(same_side_reasons, 2):
+                AB = rsn0.property.line
+                AC = rsn1.property.line
+                A = self.scene.get_intersection(AB, AC)
+                if A is None:
+                    continue
+                pt00 = rsn0.property.points[0]
+                pt01 = rsn0.property.points[1]
+                pt10 = rsn1.property.points[0]
+                pt11 = rsn1.property.points[1]
+                if pt00 == pt10:
+                    B, C, D = pt11, pt01, pt00
+                elif pt01 == pt10:
+                    B, C, D = pt11, pt00, pt01
+                elif pt00 == pt11:
+                    B, C, D = pt10, pt01, pt00
+                elif pt01 == pt11:
+                    B, C, D = pt10, pt00, pt01
+                else:
+                    continue
+                if B == C or B not in AB or C not in AC:
+                    continue
+                AD = self.scene.get_line(A, D)
+                BC = self.scene.get_line(B, C)
+                if AD is None or BC is None:
+                    continue
+                X = self.scene.get_intersection(AD, BC)
+                if X:
+                    comments = rsn0.comments
+                    for com in rsn1.comments:
+                        if not com in comments:
+                            comments.append(com)
+                    self.__add(SameDirectionProperty(X, A, D), comments)
+                    self.__add(SameDirectionProperty(A, D, X), comments)
+                    self.__add(SameDirectionProperty(B, C, X), comments)
+                    self.__add(SameDirectionProperty(C, B, X), comments)
 
             same_direction = self.__list_explained(SameDirectionProperty)
             def same_dir(vector):

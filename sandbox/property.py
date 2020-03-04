@@ -25,8 +25,9 @@ class AngleValueProperty(Property):
         self.angle = angle
         self.degree = degree
 
-    def __str__(self):
-        return '%s = %dº' % (self.angle, self.degree)
+    @property
+    def description(self):
+        return _comment('%s = %dº', self.angle, self.degree)
 
     def __eq__(self, other):
         return isinstance(other, AngleValueProperty) and self.angle == other.angle and self.degree == other.degree
