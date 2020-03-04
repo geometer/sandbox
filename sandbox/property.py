@@ -1,12 +1,23 @@
 from .core import _comment
 
+def keys_for_angle(angle):
+    return [frozenset([angle.vector0.start, angle.vector0.end, angle.vector1.start, angle.vector1.end])]
+
 class Property:
     def __str__(self):
         return str(self.description)
 
+    @property
+    def keys(self):
+        return []
+
 class EquilateralTriangleProperty(Property):
     def __init__(self, ABC):
         self.ABC = list(ABC)
+
+    @property
+    def keys(self):
+        return [frozenset(self.ABC)]
 
     @property
     def description(self):
@@ -26,6 +37,10 @@ class AngleValueProperty(Property):
         self.degree = degree
 
     @property
+    def keys(self):
+        return keys_for_angle(self.angle)
+
+    @property
     def description(self):
         return _comment('%s = %dº', self.angle, self.degree)
 
@@ -37,8 +52,13 @@ class CongruentAnglesProperty(Property):
         self.angle0 = angle0
         self.angle1 = angle1
 
-    def __str__(self):
-        return '%s = %s' % (self.angle0, self.angle1)
+    @property
+    def keys(self):
+        return keys_for_angle(self.angle0) + keys_for_angle(self.angle1)
+
+    @property
+    def description(self):
+        return _comment('%s = %s', self.angle0, self.angle1)
 
     def __eq__(self, other):
         if not isinstance(other, CongruentAnglesProperty):
@@ -61,6 +81,10 @@ class SimilarTrianglesProperty(Property):
         self.DEF = list(DEF)
 
     @property
+    def keys(self):
+        return [frozenset(self.ABC), frozenset(self.DEF)]
+
+    @property
     def description(self):
         return _comment('△ %s %s %s ~ △ %s %s %s', *self.ABC, *self.DEF)
 
@@ -70,6 +94,10 @@ class CongruentTrianglesProperty(Property):
         self.DEF = list(DEF)
 
     @property
+    def keys(self):
+        return [frozenset(self.ABC), frozenset(self.DEF)]
+
+    @property
     def description(self):
         return _comment('△ %s %s %s = △ %s %s %s', *self.ABC, *self.DEF)
 
@@ -77,6 +105,10 @@ class IsoscelesTriangleProperty(Property):
     def __init__(self, A, BC):
         self.A = A
         self.BC = list(BC)
+
+    @property
+    def keys(self):
+        return [frozenset([self.A] + self.BC)]
 
     @property
     def description(self):
