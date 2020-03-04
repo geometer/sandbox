@@ -11,11 +11,8 @@ def same(obj0, obj1): #same segment or angle
     return obj0 == obj1 or obj0 == obj1.reversed
 
 def same_pair(pair0, pair1):
-    if same(pair0[0], pair1[0]):
-        return same(pair0[1], pair1[1])
-    if same(pair0[0], pair1[1]):
-        return same(pair0[1], pair1[0])
-    return False
+    return same(pair0[0], pair1[0]) and same(pair0[1], pair1[1]) \
+        or same(pair0[0], pair1[1]) and same(pair0[1], pair1[0])
 
 def side_of(triangle, index):
     return triangle[(index + 1) % 3].vector(triangle[(index + 2) % 3])
@@ -62,7 +59,7 @@ class Explainer:
             self.__reason(prop, comments, premises)
 
     def __list_explained(self, property_type):
-         return [exp for exp in self.__explained if isinstance(exp.property, property_type)]
+        return [exp for exp in self.__explained if isinstance(exp.property, property_type)]
 
     def explain(self):
         start = time.time()
@@ -120,12 +117,10 @@ class Explainer:
                     for cnst in self.scene.constraints(Constraint.Kind.perpendicular):
                         line0 = cnst.params[0]
                         line1 = cnst.params[1]
-                        if prop.angle.vector0 in line0:
-                            if prop.angle.vector1 in line1:
-                                self.__reason(prop, cnst.comments)
-                        elif prop.angle.vector0 in line1:
-                            if prop.angle.vector1 in line0:
-                                self.__reason(prop, cnst.comments)
+                        if prop.angle.vector0 in line0 and prop.angle.vector1 in line1:
+                            self.__reason(prop, cnst.comments)
+                        elif prop.angle.vector0 in line1 and prop.angle.vector1 in line0:
+                            self.__reason(prop, cnst.comments)
                 elif isinstance(prop, CongruentSegmentProperty):
                     for cnst in self.scene.constraints(Constraint.Kind.distances_ratio):
                         if cnst.params[2] == 1:
