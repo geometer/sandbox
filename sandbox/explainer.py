@@ -47,7 +47,7 @@ class Explainer:
 
         def add(self, reason):
             self.all.append(reason)
-            for key in reason.property.keys:
+            for key in reason.property.keys():
                 arr = self.specific.get(key)
                 if arr is None:
                     arr = [reason]
@@ -243,7 +243,7 @@ class Explainer:
                     if found:
                         continue
 
-                    known_angles = self.__explained.list(AngleValueProperty, prop.keys)
+                    known_angles = self.__explained.list(AngleValueProperty, prop.keys())
                     premises = [exp for exp in known_angles if exp.property.angle in [prop.angle0, prop.angle1]]
                     if len(premises) == 2 and premises[0].property.degree == premises[1].property.degree:
                         self.__reason(prop, _comment('Both angle values = %sº', premises[0].property.degree), premises=premises)
@@ -253,7 +253,7 @@ class Explainer:
                     if found:
                         continue
 
-                    similar_triangles = self.__explained.list(SimilarTrianglesProperty, prop.keys)
+                    similar_triangles = self.__explained.list(SimilarTrianglesProperty, prop.keys())
                     pair = (prop.angle0, prop.angle1)
                     for st in similar_triangles:
                         trs = (st.property.ABC, st.property.DEF)
@@ -265,7 +265,7 @@ class Explainer:
                     if found:
                         continue
 
-                    equal_angles = self.__explained.list(CongruentAnglesProperty, prop.keys)
+                    equal_angles = self.__explained.list(CongruentAnglesProperty, prop.keys())
                     for index, ea0 in enumerate(equal_angles):
                         if prop.angle0 == ea0.property.angle0:
                             look_for = [prop.angle1, ea0.property.angle1]
@@ -288,7 +288,7 @@ class Explainer:
                             break
 
                 elif isinstance(prop, SimilarTrianglesProperty):
-                    equal_angles = self.__explained.list(CongruentAnglesProperty, prop.keys)
+                    equal_angles = self.__explained.list(CongruentAnglesProperty, prop.keys([3]))
                     premises = []
                     trs = (prop.ABC, prop.DEF)
                     for ea in equal_angles:
@@ -301,8 +301,8 @@ class Explainer:
                     elif len(premises) == 2:
                         self.__reason(prop, 'two angles', premises=premises)
                 elif isinstance(prop, CongruentTrianglesProperty):
-                    similar_triangles = self.__explained.list(SimilarTrianglesProperty, prop.keys)
-                    equal_distances = self.__explained.list(CongruentSegmentProperty, prop.keys)
+                    similar_triangles = self.__explained.list(SimilarTrianglesProperty, prop.keys([3]))
+                    equal_distances = self.__explained.list(CongruentSegmentProperty, prop.keys([2]))
                     for st in similar_triangles:
                         if (st.property.ABC == prop.ABC and st.property.DEF == prop.DEF) or \
                            (st.property.ABC == prop.DEF and st.property.DEF == prop.ABC):
@@ -316,7 +316,7 @@ class Explainer:
                             self.__reason(prop, 'Similar triangles with equal side', premises=[st, ed])
 
                 elif isinstance(prop, CongruentSegmentProperty):
-                    equal_triangles = self.__explained.list(CongruentTrianglesProperty, prop.keys)
+                    equal_triangles = self.__explained.list(CongruentTrianglesProperty, prop.keys())
                     pair = (prop.vector0, prop.vector1)
                     for et in equal_triangles:
                         trs = (et.property.ABC, et.property.DEF)
@@ -326,7 +326,7 @@ class Explainer:
 
                 elif isinstance(prop, IsoscelesTriangleProperty):
                     sides = (prop.A.vector(prop.BC[0]), prop.A.vector(prop.BC[1]))
-                    equal_distances = self.__explained.list(CongruentSegmentProperty, prop.keys)
+                    equal_distances = self.__explained.list(CongruentSegmentProperty, prop.keys([2]))
                     for ed in equal_distances:
                         if same_pair(sides, (ed.property.vector0, ed.property.vector1)):
                             self.__reason(prop, 'Two equal sides', premises=[ed])
@@ -344,7 +344,7 @@ class Explainer:
                     if found:
                         continue
 
-                    equal_angles = self.__explained.list(CongruentAnglesProperty, prop.keys)
+                    equal_angles = self.__explained.list(CongruentAnglesProperty, prop.keys())
                     for ea in equal_angles:
                         if ea.property.angle0 == prop.angle:
                             angle_values = self.__explained.list(AngleValueProperty, keys_for_angle(ea.property.angle1))
@@ -370,8 +370,8 @@ class Explainer:
                     if found:
                         continue
 
-                    isosceles = self.__explained.list(IsoscelesTriangleProperty, prop.keys)
-                    values = self.__explained.list(AngleValueProperty, prop.keys)
+                    isosceles = self.__explained.list(IsoscelesTriangleProperty, prop.keys())
+                    values = self.__explained.list(AngleValueProperty, prop.keys())
                     for iso in isosceles:
                         if same(prop.angle, iso.property.BC[0].angle(iso.property.A, iso.property.BC[1])):
                             break
