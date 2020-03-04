@@ -1,8 +1,6 @@
 import time
-import sympy as sp
 
 from .core import Constraint, _comment
-from .hunter import *
 from .property import *
 from .scene import Scene
 
