@@ -41,32 +41,44 @@ class Explainer:
                 return ', '.join([str(com) for com in self.comments])
 
     class ReasonSet:
+        class ByType:
+            def __init__(self):
+                self.all = []
+                self.by_key_map = {}
+
         def __init__(self):
-            self.all = []
-            self.specific = {}
+            self.by_type_map = {}
 
         def add(self, reason):
-            self.all.append(reason)
+            key = type(reason.property)
+            by_type = self.by_type_map.get(key)
+            if by_type is None:
+                by_type = Explainer.ReasonSet.ByType()
+                self.by_type_map[key] = by_type
+            by_type.all.append(reason)
             for key in reason.property.keys():
-                arr = self.specific.get(key)
+                arr = by_type.by_key_map.get(key)
                 if arr is None:
                     arr = [reason]
-                    self.specific[key] = arr
+                    by_type.by_key_map[key] = arr
                 else:
                     arr.append(reason)
 
         def list(self, property_type, keys=None):
+            by_type = self.by_type_map.get(property_type)
+            if not by_type:
+                return []
             if keys:
-                sublists = [self.specific.get(k) for k in keys] 
-                return list(set(filter(
-                    lambda r: isinstance(r.property, property_type),
-                    itertools.chain(*[l for l in sublists if l])
-                )))
+                sublists = [by_type.by_key_map.get(k) for k in keys] 
+                return list(set(itertools.chain(*[l for l in sublists if l])))
             else:
-                return [rsn for rsn in self.all if isinstance(rsn.property, property_type)]
+                return by_type.all
 
         def __len__(self):
-            return len(self.all)
+            return sum(len(by_type.all) for by_type in self.by_type_map.values())
+
+        def keys_num(self):
+            return sum(len(by_type.by_key_map) for by_type in self.by_type_map.values())
 
     def __init__(self, scene, properties):
         self.scene = scene
@@ -406,7 +418,7 @@ class Explainer:
         return [
             ('Total properties', len(self.__properties)),
             ('Explained properties', len(self.__explained)),
-            ('Explained property keys', len(self.__explained.specific)),
+            ('Explained property keys', self.__explained.keys_num()),
             ('Unexplained properties', len(self.__unexplained)),
             ('Explanation time', '%.3f sec' % self.__explanation_time),
         ]
