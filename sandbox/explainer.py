@@ -17,6 +17,9 @@ def same_pair(pair0, pair1):
         return same(pair0[1], pair1[0])
     return False
 
+def side_of(triangle, index):
+    return triangle[(index + 1) % 3].vector(triangle[(index + 2) % 3])
+
 def angle_of(triangle, index):
     return triangle[index].angle(triangle[(index + 1) % 3], triangle[(index + 2) % 3])
 # ----- utility methods -----
@@ -233,13 +236,11 @@ class Explainer:
                         continue
 
                     similar_triangles = self.__list_explained(SimilarTrianglesProperty)
+                    pair = (prop.angle0, prop.angle1)
                     for st in similar_triangles:
-                        for i in range(0, 3):
-                            if same_pair((prop.angle0, prop.angle1), (angle_of(st.property.ABC, i), angle_of(st.property.DEF, i))):
-                                self.__reason(prop, 'Corresponding angles in similar triangles', premises=[st])
-                                found = True
-                                break
-                        if found:
+                        if any(same_pair(pair, (angle_of(st.property.ABC, i), angle_of(st.property.DEF, i))) for i in range(0, 3)):
+                            self.__reason(prop, 'Corresponding angles in similar triangles', premises=[st])
+                            found = True
                             break
 
                     if found:
@@ -271,10 +272,10 @@ class Explainer:
                     equal_angles = self.__list_explained(CongruentAnglesProperty)
                     premises = []
                     for ea in equal_angles:
-                        for i in range(0, 3):
-                            if same_pair((ea.property.angle0, ea.property.angle1), (angle_of(prop.ABC, i), angle_of(prop.DEF, i))):
-                                premises.append(ea)
-                                break
+                        pair = (ea.property.angle0, ea.property.angle1)
+                        if any(same_pair(pair, (angle_of(prop.ABC, i), angle_of(prop.DEF, i))) \
+                                for i in range(0, 3)):
+                            premises.append(ea)
 
                     if len(premises) == 3:
                         self.__reason(prop, 'three angles', premises=premises)
@@ -290,39 +291,18 @@ class Explainer:
                     else:
                         continue
                     for ed in equal_distances:
-                        def index(vector, three):
-                            two = [vector.start, vector.end]
-                            if set(two).issubset(set(three)):
-                                for i in range(0, 3):
-                                    if three[i] not in two:
-                                        return i
-                            return None
-
-                        ind = index(ed.property.vector0, prop.ABC)
-                        if ind is not None and ind == index(ed.property.vector1, prop.DEF):
-                            self.__reason(prop, 'Similar triangles with equal side', premises=[st, ed])
-                            break
-                        ind = index(ed.property.vector0, prop.DEF)
-                        if ind is not None and ind == index(ed.property.vector1, prop.ABC):
+                        pair = (ed.property.vector0, ed.property.vector1)
+                        if any(same_pair(pair, (side_of(prop.ABC, i), side_of(prop.DEF, i))) \
+                                for i in range(0, 3)):
                             self.__reason(prop, 'Similar triangles with equal side', premises=[st, ed])
 
                 elif isinstance(prop, CongruentSegmentProperty):
                     equal_triangles = self.__list_explained(CongruentTrianglesProperty)
-                    def index(vector, three):
-                        two = [vector.start, vector.end]
-                        if set(two).issubset(set(three)):
-                            for i in range(0, 3):
-                                if three[i] not in two:
-                                    return i
-                        return None
+                    pair = (prop.vector0, prop.vector1)
                     for et in equal_triangles:
-                        ind = index(prop.vector0, et.property.ABC)
-                        if ind is not None and ind == index(prop.vector1, et.property.DEF):
+                        if any(same_pair(pair, (side_of(et.property.ABC, i), side_of(et.property.DEF, i))) for i in range(0, 3)):
                             self.__reason(prop, 'Corresponding sides in equal triangles', premises=[et])
                             break
-                        ind = index(prop.vector1, et.property.ABC)
-                        if ind is not None and ind == index(prop.vector0, et.property.DEF):
-                            self.__reason(prop, 'Corresponding sides in equal triangles', premises=[et])
 
                 elif isinstance(prop, IsoscelesTriangleProperty):
                     sides = (prop.A.vector(prop.BC[0]), prop.A.vector(prop.BC[1]))
