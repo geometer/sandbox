@@ -383,7 +383,8 @@ class CoreScene:
     class Vector:
         def __init__(self, start, end):
             assert isinstance(start, CoreScene.Point)
-            start.scene.assert_point(end)
+            assert isinstance(end, CoreScene.Point)
+            assert start.scene == end.scene
             self.start = start
             self.end = end
 
@@ -406,13 +407,14 @@ class CoreScene:
                 self.start.not_equal_constraint(self.end)
             #TODO: equal_constraint otherwise?
             self.scene.constraint(Constraint.Kind.distance, self, length, **kwargs)
-            
+
         def length_ratio_constraint(self, vector, coef, **kwargs):
             """
             |self| == |vector| * coef
             coef is a non-zero number
             """
-            self.scene.assert_vector(vector)
+            assert isinstance(vector, CoreScene.Vector)
+            assert self.scene == vector.scene
             assert coef != 0
             self.scene.constraint(Constraint.Kind.distances_ratio, self, vector, coef, **kwargs)
 
@@ -434,7 +436,8 @@ class CoreScene:
     class Angle:
         def __init__(self, vector0, vector1):
             assert isinstance(vector0, CoreScene.Vector)
-            vector0.scene.assert_vector(vector1)
+            assert isinstance(vector1, CoreScene.Vector)
+            assert vector0.scene == vector1.scene
             self.vector0 = vector0
             self.vector1 = vector1
 
@@ -452,7 +455,13 @@ class CoreScene:
             self.scene.constraint(Constraint.Kind.angles_ratio, self, angle, ratio, **kwargs)
 
         def __eq__(self, other):
-            return self.vector0 == other.vector0 and self.vector1 == other.vector1
+            #return self.vector0 == other.vector0 and self.vector1 == other.vector1
+            # optimized version
+            return \
+                self.vector0.start == other.vector0.start and \
+                self.vector0.end == other.vector0.end and \
+                self.vector1.start == other.vector1.start and \
+                self.vector1.end == other.vector1.end
 
         def __hash__(self):
             return hash(self.vector0) * 13 + hash(self.vector1) * 23
@@ -529,9 +538,6 @@ class CoreScene:
 
     def assert_line_or_circle(self, obj):
         self.assert_type(obj, CoreScene.Line, CoreScene.Circle)
-
-    def assert_vector(self, obj):
-        self.assert_type(obj, CoreScene.Vector)
 
     def assert_angle(self, obj):
         self.assert_type(obj, CoreScene.Angle)
