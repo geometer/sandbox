@@ -87,6 +87,10 @@ class Explainer:
         def __len__(self):
             return sum(len(by_type.all) for by_type in self.by_type_map.values())
 
+        @property
+        def all(self):
+            return list(itertools.chain(*[by_type.all for by_type in self.by_type_map.values()]))
+
         def __contains__(self, prop):
             return any(prop == rsn.property for rsn in self.list(type(prop), prop.keys()))
 
