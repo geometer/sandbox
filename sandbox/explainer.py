@@ -306,10 +306,10 @@ class Explainer:
                 elif isinstance(prop, SimilarTrianglesProperty):
                     equal_angles = self.__explained.list(CongruentAnglesProperty, prop.keys([3]))
                     premises = []
-                    trs = (prop.ABC, prop.DEF)
+                    angle_pairs = [[angle_of(t, i) for t in (prop.ABC, prop.DEF)] for i in range(0, 3)]
                     for ea in equal_angles:
                         pair = (ea.property.angle0, ea.property.angle1)
-                        if any(same_pair(pair, [angle_of(t, i) for t in trs]) for i in range(0, 3)):
+                        if any(same_pair(pair, ap) for ap in angle_pairs):
                             premises.append(ea)
 
                     if len(premises) == 3:
@@ -325,10 +325,10 @@ class Explainer:
                             break
                     else:
                         continue
-                    trs = (prop.ABC, prop.DEF)
+                    side_pairs = [[side_of(t, i) for t in (prop.ABC, prop.DEF)] for i in range(0, 3)]
                     for ed in equal_distances:
                         pair = (ed.property.vector0, ed.property.vector1)
-                        if any(same_pair(pair, [side_of(t, i) for t in trs]) for i in range(0, 3)):
+                        if any(same_pair(pair, sp) for sp in side_pairs):
                             self.__reason(prop, 'Similar triangles with equal side', premises=[st, ed])
 
                 elif isinstance(prop, CongruentSegmentProperty):
