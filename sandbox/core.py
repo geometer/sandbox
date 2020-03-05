@@ -642,7 +642,7 @@ class Constraint:
         self.__dict__.update(kwargs)
 
     def __str__(self):
-        params = [para.label if isinstance(para, CoreScene.Object) else para for para in self.params]
+        params = [para.label if isinstance(para, CoreScene.Object) else str(para) for para in self.params]
         extras = dict(self.__dict__)
         del extras['kind']
         del extras['params']
