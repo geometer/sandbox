@@ -229,8 +229,7 @@ class Hunter:
             yield wrapper(pair[0], pair[1], self.placement)
 
     def __add(self, prop):
-        if prop not in self.properties:
-            self.properties.append(prop)
+        self.properties.append(prop)
 
     def __hunt_collinears(self):
         for line in self.__lines():
