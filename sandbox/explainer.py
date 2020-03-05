@@ -247,7 +247,7 @@ class Explainer:
                             yield (sd.property.points[0].vector(sd.property.start), [sd])
 
             for prop in list(self.__unexplained):
-                if isinstance(prop, CongruentAnglesProperty):
+                if isinstance(prop, AnglesRatioProperty) and prop.ratio == 1:
                     found = False
                     for v0, sd0 in same_dir(prop.angle0.vector0):
                         lst = list(same_dir(prop.angle0.vector1))
@@ -295,22 +295,22 @@ class Explainer:
                     if found:
                         continue
 
-                    equal_angles = self.__explained.list(CongruentAnglesProperty, prop.keys())
-                    for index, ea0 in enumerate(equal_angles):
-                        if prop.angle0 == ea0.property.angle0:
-                            look_for = [prop.angle1, ea0.property.angle1]
-                        elif prop.angle1 == ea0.property.angle0:
-                            look_for = [prop.angle0, ea0.property.angle1]
-                        elif prop.angle0 == ea0.property.angle1:
-                            look_for = [prop.angle1, ea0.property.angle0]
-                        elif prop.angle1 == ea0.property.angle1:
-                            look_for = [prop.angle0, ea0.property.angle0]
+                    congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys()) if rsn.property.ratio == 1]
+                    for index, ca0 in enumerate(congruent_angles):
+                        if prop.angle0 == ca0.property.angle0:
+                            look_for = [prop.angle1, ca0.property.angle1]
+                        elif prop.angle1 == ca0.property.angle0:
+                            look_for = [prop.angle0, ca0.property.angle1]
+                        elif prop.angle0 == ca0.property.angle1:
+                            look_for = [prop.angle1, ca0.property.angle0]
+                        elif prop.angle1 == ca0.property.angle1:
+                            look_for = [prop.angle0, ca0.property.angle0]
                         else:
                             continue
 
-                        for ea1 in equal_angles[index + 1:]:
-                            if ea1.property.angle0 in look_for and ea1.property.angle1 in look_for:
-                                self.__reason(prop, 'transitivity', premises=[ea0, ea1])
+                        for ca1 in congruent_angles[index + 1:]:
+                            if ca1.property.angle0 in look_for and ca1.property.angle1 in look_for:
+                                self.__reason(prop, 'transitivity', premises=[ca0, ca1])
                                 found = True
                                 break
 
@@ -318,12 +318,12 @@ class Explainer:
                             break
 
                 elif isinstance(prop, SimilarTrianglesProperty):
-                    equal_angles = self.__explained.list(CongruentAnglesProperty, prop.keys([3]))
+                    congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys([3])) if rsn.property.ratio == 1]
                     premises = []
-                    for ea in equal_angles:
-                        pair = (ea.property.angle0, ea.property.angle1)
+                    for ca in congruent_angles:
+                        pair = (ca.property.angle0, ca.property.angle1)
                         if any(same_pair(pair, ap) for ap in angle_pairs(prop)):
-                            premises.append(ea)
+                            premises.append(ca)
 
                     if len(premises) == 3:
                         self.__reason(prop, 'three angles', premises=premises)
@@ -371,24 +371,24 @@ class Explainer:
                     if found:
                         continue
 
-                    equal_angles = self.__explained.list(CongruentAnglesProperty, prop.keys())
-                    for ea in equal_angles:
-                        if ea.property.angle0 == prop.angle:
-                            angle_values = self.__explained.list(AngleValueProperty, keys_for_angle(ea.property.angle1))
+                    congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys()) if rsn.property.ratio == 1]
+                    for ca in congruent_angles:
+                        if ca.property.angle0 == prop.angle:
+                            angle_values = self.__explained.list(AngleValueProperty, keys_for_angle(ca.property.angle1))
                             for av in angle_values:
-                                if av.property.angle == ea.property.angle1:
+                                if av.property.angle == ca.property.angle1:
                                     #TODO: report contradiction if degrees are different
-                                    self.__reason(prop, _comment('%s = %s = %sº', prop.angle, av.property.angle, av.property.degree), premises=[ea, av])
+                                    self.__reason(prop, _comment('%s = %s = %sº', prop.angle, av.property.angle, av.property.degree), premises=[ca, av])
                                     found = True
                                     break
                             if found:
                                 break
-                        elif ea.property.angle1 == prop.angle:
-                            angle_values = self.__explained.list(AngleValueProperty, keys_for_angle(ea.property.angle0))
+                        elif ca.property.angle1 == prop.angle:
+                            angle_values = self.__explained.list(AngleValueProperty, keys_for_angle(ca.property.angle0))
                             for av in angle_values:
-                                if av.property.angle == ea.property.angle0:
+                                if av.property.angle == ca.property.angle0:
                                     #TODO: report contradiction if degrees are different
-                                    self.__reason(prop, _comment('%s = %s = %sº', prop.angle, av.property.angle, av.property.degree), premises=[ea, av])
+                                    self.__reason(prop, _comment('%s = %s = %sº', prop.angle, av.property.angle, av.property.degree), premises=[ca, av])
                                     found = True
                                     break
                             if found:

@@ -55,23 +55,29 @@ class AngleValueProperty(Property):
     def __eq__(self, other):
         return isinstance(other, AngleValueProperty) and self.angle == other.angle and self.degree == other.degree
 
-class CongruentAnglesProperty(Property):
-    def __init__(self, angle0, angle1):
+class AnglesRatioProperty(Property):
+    def __init__(self, angle0, angle1, ratio):
+        # angle0 / angle1 = ratio
         self.angle0 = angle0
         self.angle1 = angle1
+        self.ratio = ratio
 
     def keys(self):
         return keys_for_angle(self.angle0) + keys_for_angle(self.angle1)
 
     @property
     def description(self):
-        return _comment('%s = %s', self.angle0, self.angle1)
+        if self.ratio == 1:
+            return _comment('%s = %s', self.angle0, self.angle1)
+        else:
+            return _comment('%s = %s %s', self.angle0, self.ratio, self.angle1)
 
     def __eq__(self, other):
-        if not isinstance(other, CongruentAnglesProperty):
+        if not isinstance(other, AnglesRatioProperty):
             return False
-        return (self.angle0 == other.angle0 and self.angle1 == other.angle1) or \
-               (self.angle0 == other.angle1 and self.angle1 == other.angle0)
+        return self.ratio == other.ratio and \
+            ((self.angle0 == other.angle0 and self.angle1 == other.angle1) or \
+             (self.angle0 == other.angle1 and self.angle1 == other.angle0))
 
 class CongruentSegmentProperty(Property):
     def __init__(self, vector0, vector1):

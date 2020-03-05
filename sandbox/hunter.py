@@ -135,25 +135,25 @@ class AngleFamily:
         self.angles.append({'angle': angle, 'comment': test})
         return True
 
-def hunt_proportional_angles(angles):
-    families = []
-    zero_count = 0
-    for ngl in angles:
-        if ngl.arc < ERROR:
-            zero_count += 1
-            continue
-        for fam in families:
-            if fam.add(ngl):
-                break
-        else:
-            families.append(AngleFamily(ngl))
-
-    print('%d non-zero angles in %d families' % (len(angles) - zero_count, len([f for f in families if len(f.angles) > 0])))
-    for fam in families:
-        if len(fam.angles) > 0:
-            print('%s: %d angles' % (fam.base, 1 + len(fam.angles)))
-            for pair in fam.angles:
-                print('\t%s (%s)' % (pair['angle'], pair['comment']))
+#def hunt_proportional_angles(angles):
+#    families = []
+#    zero_count = 0
+#    for ngl in angles:
+#        if ngl.arc < ERROR:
+#            zero_count += 1
+#            continue
+#        for fam in families:
+#            if fam.add(ngl):
+#                break
+#        else:
+#            families.append(AngleFamily(ngl))
+#
+#    print('%d non-zero angles in %d families' % (len(angles) - zero_count, len([f for f in families if len(f.angles) > 0])))
+#    for fam in families:
+#        if len(fam.angles) > 0:
+#            print('%s: %d angles' % (fam.base, 1 + len(fam.angles)))
+#            for pair in fam.angles:
+#                print('\t%s (%s)' % (pair['angle'], pair['comment']))
 
 def hunt_coincidences(placement: Placement):
     used_points = set()
@@ -275,7 +275,7 @@ class Hunter:
             if np.fabs(frac - frac_int) < ERROR:
                 self.__add(AngleValueProperty(ngl.angle, 15 * frac_int))
 
-    def __hunt_equal_angles(self, angles):
+    def __hunt_angles_ratio(self, angles):
         families = []
 
         for ngl in angles:
@@ -290,7 +290,7 @@ class Hunter:
 
         for fam in families:
             for pair in itertools.combinations(fam, 2):
-                self.__add(CongruentAnglesProperty(pair[0].angle, pair[1].angle))
+                self.__add(AnglesRatioProperty(pair[0].angle, pair[1].angle, 1))
 
     def __hunt_equal_triangles(self):
         triangles = list(self.__triangles())
@@ -368,8 +368,8 @@ class Hunter:
         if 'equal_segments' in options or 'default' in options:
             self.__hunt_equal_segments()
 
-        if 'equal_angles' in options or 'default' in options:
-            self.__hunt_equal_angles(all_angles)
+        if 'angles_ratio' in options or 'default' in options:
+            self.__hunt_angles_ratio(all_angles)
 
         if 'angle_values' in options or 'default' in options:
             self.__hunt_angle_values(all_angles)
@@ -382,9 +382,6 @@ class Hunter:
 
         if 'proportional_segments' in options or 'all' in options:
             self.__hunt_proportional_segments(all_vectors)
-
-        if 'proportional_angles' in options or 'all' in options:
-            hunt_proportional_angles(all_angles)
 
         if 'coincidences' in options or 'all' in options:
             hunt_coincidences(self.placement)
