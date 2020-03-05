@@ -97,7 +97,7 @@ class Explainer:
         self.__unexplained = [prop for prop in self.__unexplained if prop not in self.__explained]
 
     def __add(self, prop, comments, premises=None):
-        if prop not in self.__properties:
+        if prop not in self.__explained:
             self.__properties.append(prop)
             self.__reason(prop, comments, premises)
 
