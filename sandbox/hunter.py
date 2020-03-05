@@ -1,6 +1,7 @@
 import time
 import itertools
 import numpy as np
+import sympy as sp
 
 from . import Scene, iterative_placement
 from .placement import Placement
@@ -282,15 +283,17 @@ class Hunter:
             if ngl.arc < ERROR or np.fabs(ngl.arc - np.pi) < ERROR:
                 continue
             for fam in families:
-                if np.fabs(ngl.arc - fam[0].arc) < ERROR:
-                    fam.append(ngl)
+                ratio = ngl.arc / fam[0][0].arc
+                if np.fabs(ratio - np.round(ratio)) < ERROR:
+                    fam.append((ngl, int(np.round(ratio))))
                     break
             else:
-                families.append([ngl])
+                families.append([(ngl, 1)])
 
         for fam in families:
             for pair in itertools.combinations(fam, 2):
-                self.__add(AnglesRatioProperty(pair[0].angle, pair[1].angle, 1))
+                ratio = sp.sympify(pair[1][1]) / pair[0][1]
+                self.__add(AnglesRatioProperty(pair[1][0].angle, pair[0][0].angle, ratio))
 
     def __hunt_equal_triangles(self):
         triangles = list(self.__triangles())
