@@ -79,7 +79,7 @@ class Explainer:
             if not by_type:
                 return []
             if keys:
-                sublists = [by_type.by_key_map.get(k) for k in keys] 
+                sublists = [by_type.by_key_map.get(k) for k in keys]
                 return list(set(itertools.chain(*[l for l in sublists if l])))
             else:
                 return by_type.all
@@ -463,7 +463,7 @@ class Explainer:
     def explanation(self, obj):
         if isinstance(obj, Scene.Angle):
             for exp in self.__explained.list(AngleValueProperty):
-                if exp.property.angle == obj or exp.property.angle.reversed == obj:
+                if obj in (exp.property.angle, exp.property.angle.reversed):
                     return exp
         return None
 
