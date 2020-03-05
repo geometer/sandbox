@@ -77,6 +77,9 @@ class Explainer:
         def __len__(self):
             return sum(len(by_type.all) for by_type in self.by_type_map.values())
 
+        def __contains__(self, prop):
+            return any(prop == rsn.property for rsn in self.list(type(prop), prop.keys()))
+
         def keys_num(self):
             return sum(len(by_type.by_key_map) for by_type in self.by_type_map.values())
 
@@ -89,8 +92,9 @@ class Explainer:
 
     def __reason(self, prop, comments, premises=None):
         self.__explained.add(Explainer.Reason(len(self.__explained), prop, comments, premises))
-        if prop in self.__unexplained:
-            self.__unexplained.remove(prop)
+
+    def __refresh_unexplained(self):
+        self.__unexplained = [prop for prop in self.__unexplained if prop not in self.__explained]
 
     def __add(self, prop, comments, premises=None):
         if prop not in self.__properties:
@@ -398,9 +402,11 @@ class Explainer:
 
 
         base()
+        self.__refresh_unexplained()
         while len(self.__unexplained) > 0:
             explained_size = len(self.__explained)
             iteration()
+            self.__refresh_unexplained()
             if len(self.__explained) == explained_size:
                 break
 
