@@ -15,6 +15,8 @@ scene.perpendicular_constraint((A, B), (A, C), comment='Given: AB ⟂ AC')
 D = A.line_through(B).intersection_point(I.line_through(J), label='D')
 E = A.line_through(I).intersection_point(B.line_through(J), label='E')
 
+scene.dump()
+
 placement = iterative_placement(scene)
 
 hunter = Hunter(placement)
@@ -23,7 +25,7 @@ print('')
 
 explainer = Explainer(scene, hunter.properties)
 explainer.explain()
-explainer.dump()
+#explainer.dump()
 
 print('\tExplainer stats:')
 for stat in explainer.stats():

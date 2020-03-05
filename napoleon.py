@@ -2,6 +2,7 @@
 
 from sandbox import Scene
 from sandbox.hunter import Hunter
+from sandbox.explainer import Explainer
 
 scene = Scene()
 
@@ -23,4 +24,14 @@ napoleonic(B, C, A)
 
 hunter = Hunter(scene)
 hunter.hunt()
-hunter.dump()
+
+angle = scene.get('A2').angle(scene.get('B2'), scene.get('C2'))
+
+explainer = Explainer(scene, hunter.properties)
+print('\tGuessed: %s = %s' % (angle, explainer.guessed(angle)))
+
+explainer.explain()
+print('\tExplainer stats:')
+for stat in explainer.stats():
+    print('\t  %s: %s' % stat)
+print('\tExplained: %s = %s' % (angle, explainer.explained(angle)))

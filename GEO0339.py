@@ -21,7 +21,9 @@ print('')
 
 explainer = Explainer(scene, hunter.properties)
 explainer.explain()
-explainer.dump()
+print('\tExplainer stats:')
+for stat in explainer.stats():
+    print('\t  %s: %s' % stat)
 
 helper = PlacementHelper(placement)
 print('%.5f = %.5f' % (helper.distance(A, B), helper.distance(A1, B1)))
