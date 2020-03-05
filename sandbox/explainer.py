@@ -103,6 +103,7 @@ class Explainer:
         self.__explained = Explainer.ReasonSet()
         self.__unexplained = list(properties)
         self.__explanation_time = None
+        self.__iteration_step_count = None
 
     def __reason(self, prop, comments, premises=None):
         self.__explained.add(Explainer.Reason(len(self.__explained), prop, comments, premises))
@@ -412,10 +413,12 @@ class Explainer:
 
 
         base()
+        self.__iteration_step_count = 0
         self.__refresh_unexplained()
         while len(self.__unexplained) > 0:
             explained_size = len(self.__explained)
             iteration()
+            self.__iteration_step_count += 1
             self.__refresh_unexplained()
             if len(self.__explained) == explained_size:
                 break
@@ -436,6 +439,7 @@ class Explainer:
             ('Explained properties', len(self.__explained)),
             ('Explained property keys', self.__explained.keys_num()),
             ('Unexplained properties', len(self.__unexplained)),
+            ('Iterations', self.__iteration_step_count),
             ('Explanation time', '%.3f sec' % self.__explanation_time),
         ]
 
