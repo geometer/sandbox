@@ -53,7 +53,7 @@ class AngleValueProperty(Property):
         return _comment('%s = %dº', self.angle, self.degree)
 
     def __eq__(self, other):
-        return isinstance(other, AngleValueProperty) and self.angle == other.angle and self.degree == other.degree
+        return isinstance(other, AngleValueProperty) and self.degree == other.degree and self.angle == other.angle
 
 class AnglesRatioProperty(Property):
     def __init__(self, angle0, angle1, ratio):
