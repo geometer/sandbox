@@ -114,16 +114,10 @@ class Scene(CoreScene):
         Y = X.ratio_point(B, 1, 1, auxiliary=True)
         angle = vertex.angle(B, C)
         bisector = vertex.line_through(Y, **kwargs)
-        angle.ratio_constraint(
-            vertex.angle(B, Y), 2,
-            guaranteed=True,
-            comment=_comment('%s is a bisector of %s', bisector, angle)
-        )
-        angle.ratio_constraint(
-            vertex.angle(Y, C), 2,
-            guaranteed=True,
-            comment=_comment('%s is a bisector of %s', bisector, angle)
-        )
+        comment = _comment('%s is bisector of %s', bisector, angle)
+        Y.inside_angle_constraint(vertex, B, C, comment=comment)
+        angle.ratio_constraint(vertex.angle(B, Y), 2, guaranteed=True, comment=comment)
+        angle.ratio_constraint(vertex.angle(Y, C), 2, guaranteed=True, comment=comment)
         return bisector
 
     def incentre_point(self, triangle, **kwargs):
@@ -136,6 +130,7 @@ class Scene(CoreScene):
         centre = bisector0.intersection_point(bisector1, **kwargs)
         bisector2 = self.angle_bisector_line(triangle[2], triangle[0], triangle[1], auxiliary=True)
         centre.belongs_to(bisector2)
+        centre.inside_triangle_constraint(*triangle, comment=_comment('%s is incentre of %s %s %s', centre, *triangle))
         return centre
 
     def incircle(self, triangle, **kwargs):
