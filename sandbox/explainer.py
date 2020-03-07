@@ -99,7 +99,6 @@ class Explainer:
 
     def __init__(self, scene, properties):
         self.scene = scene
-        self.__properties = properties
         self.__explained = Explainer.ReasonSet()
         self.__unexplained = list(properties)
         self.__explanation_time = None
@@ -113,7 +112,6 @@ class Explainer:
 
     def __add(self, prop, comments, premises=None):
         if prop not in self.__explained:
-            self.__properties.append(prop)
             self.__reason(prop, comments, premises)
 
     def explain(self):
@@ -136,7 +134,7 @@ class Explainer:
                             if pt == pt0 or pt == pt1:
                                 not_equal(pt, pt2, cnst.comments)
                             else:
-                                not_equal(pt, pt2, cnst.comments + [_comment('%s lies on the line %s %s', pt, pt0, pt1)])
+                                not_equal(pt, pt2, cnst.comments + [_comment('%s lies on the line %s', pt, line)])
                 adjust(cnst.params[0], cnst.params[1], cnst.params[2])
                 adjust(cnst.params[1], cnst.params[2], cnst.params[0])
                 adjust(cnst.params[2], cnst.params[0], cnst.params[1])
@@ -155,6 +153,11 @@ class Explainer:
             for cnst in self.scene.constraints(Constraint.Kind.same_side):
                 self.__add(
                     SameSideProperty(cnst.params[2], cnst.params[0], cnst.params[1]),
+                    cnst.comments
+                )
+            for cnst in self.scene.constraints(Constraint.Kind.angles_ratio):
+                self.__add(
+                    AnglesRatioProperty(cnst.params[0], cnst.params[1], cnst.params[2]),
                     cnst.comments
                 )
 
@@ -428,14 +431,12 @@ class Explainer:
         for exp in self.__explained.all:
             print('\t%2d: %s [%s]' % (exp.index, exp.property, exp))
         print('\nNot explained:')
-        explained = [rsn.property for rsn in self.__explained.all]
-        for prop in self.__properties:
-            if not prop in explained:
-                print('\t%s' % prop)
+        for prop in self.__unexplained:
+            print('\t%s' % prop)
 
     def stats(self):
         return [
-            ('Total properties', len(self.__properties)),
+            ('Total properties', len(self.__explained) + len(self.__unexplained)),
             ('Explained properties', len(self.__explained)),
             ('Explained property keys', self.__explained.keys_num()),
             ('Unexplained properties', len(self.__unexplained)),
@@ -444,8 +445,12 @@ class Explainer:
         ]
 
     def guessed(self, obj):
+        explained = self.explained(obj)
+        if explained:
+            return explained
+
         if isinstance(obj, Scene.Angle):
-            for prop in self.__properties:
+            for prop in self.__unexplained:
                 if isinstance(prop, AngleValueProperty):
                     if prop.angle == obj:
                         return prop.degree
