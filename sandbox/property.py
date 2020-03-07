@@ -77,7 +77,9 @@ class AnglesRatioProperty(Property):
             return False
         return self.ratio == other.ratio and \
             ((self.angle0 == other.angle0 and self.angle1 == other.angle1) or \
-             (self.angle0 == other.angle1 and self.angle1 == other.angle0))
+             (self.angle0 == other.angle1 and self.angle1 == other.angle0) or \
+             (self.angle0 == other.angle0.reversed and self.angle1 == other.angle1.reversed) or \
+             (self.angle0 == other.angle1.reversed and self.angle1 == other.angle0.reversed))
 
 class CongruentSegmentProperty(Property):
     def __init__(self, vector0, vector1):
