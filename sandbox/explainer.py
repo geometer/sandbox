@@ -106,6 +106,8 @@ class Explainer:
 
     def __reason(self, prop, comments, premises=None):
         if prop not in self.__explained:
+            if prop not in self.__unexplained:
+                print('DEBUG: %s' % prop)
             self.__explained.add(Explainer.Reason(len(self.__explained), prop, comments, premises))
 
     def __refresh_unexplained(self):
@@ -139,6 +141,10 @@ class Explainer:
             for cnst in self.scene.constraints(Constraint.Kind.same_direction):
                 self.__reason(
                     SameDirectionProperty(cnst.params[0], cnst.params[1], cnst.params[2]),
+                    cnst.comments
+                )
+                self.__reason(
+                    AngleValueProperty(cnst.params[0].angle(cnst.params[1], cnst.params[2]), 0),
                     cnst.comments
                 )
 
@@ -193,6 +199,7 @@ class Explainer:
                 crossing = self.scene.get_intersection(rsn.property.line, line2)
                 if crossing:
                     self.__reason(SameDirectionProperty(crossing, pt0, pt1), rsn.comments)
+                    self.__reason(AngleValueProperty(crossing.angle(pt0, pt1), 0), rsn.comments)
 
             for rsn0, rsn1 in itertools.combinations(same_side_reasons, 2):
                 AB = rsn0.property.line
@@ -230,6 +237,12 @@ class Explainer:
                     self.__reason(SameDirectionProperty(A, D, X), comments)
                     self.__reason(SameDirectionProperty(B, C, X), comments)
                     self.__reason(SameDirectionProperty(C, B, X), comments)
+                    self.__reason(AngleValueProperty(X.angle(A, D), 0), comments)
+                    self.__reason(AngleValueProperty(A.angle(D, X), 0), comments)
+                    self.__reason(AngleValueProperty(D.angle(A, X), 180), comments)
+                    self.__reason(AngleValueProperty(B.angle(C, X), 0), comments)
+                    self.__reason(AngleValueProperty(C.angle(B, X), 0), comments)
+                    self.__reason(AngleValueProperty(X.angle(B, C), 180), comments)
 
             same_direction = self.__explained.list(SameDirectionProperty)
             def same_dir(vector):
@@ -472,16 +485,6 @@ class Explainer:
 
                 elif isinstance(prop, AngleValueProperty):
                     found = False
-                    if prop.degree == 0:
-                        same_direction = self.__explained.list(SameDirectionProperty)
-                        for sd in same_direction:
-                            if prop.angle.vertex == sd.property.start and set([prop.angle.vector0.end, prop.angle.vector1.end]) == set(sd.property.points):
-                                self.__reason(prop, 'TBW', premises=[sd])
-                                found = True
-                                break
-
-                    if found:
-                        continue
 
                     congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys()) if rsn.property.ratio == 1]
                     for ca in congruent_angles:
