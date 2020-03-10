@@ -398,7 +398,10 @@ class CoreScene:
             self.end = end
 
         def angle(self, other):
-            return CoreScene.Angle(self, other)
+            angle = CoreScene.Angle(self, other)
+            self.non_zero_length_constraint(comment=_comment('%s is side of angle %s', self, angle))
+            other.non_zero_length_constraint(comment=_comment('%s is side of angle %s', other, angle))
+            return angle
 
         @property
         def scene(self):
@@ -408,12 +411,18 @@ class CoreScene:
         def reversed(self):
             return CoreScene.Vector(self.end, self.start)
 
+        def non_zero_length_constraint(self, **kwargs):
+            """
+            |self| > 0
+            """
+            self.start.not_equal_constraint(self.end, **kwargs)
+
         def length_constraint(self, length, **kwargs):
             """
             |self| == length
             """
             if length > 0:
-                self.start.not_equal_constraint(self.end)
+                self.non_zero_length_constraint(**kwargs)
             #TODO: equal_constraint otherwise?
             self.scene.constraint(Constraint.Kind.distance, self, length, **kwargs)
 
