@@ -301,7 +301,7 @@ class Explainer:
                                         found = next(p for p in lst if p[0] == vector1)
                                         self.__reason(prop, 'Same angle', premises=sd0 + found[1])
                                         return True
-                                    except:
+                                    except StopIteration:
                                         pass
                                 return False
 
@@ -328,7 +328,7 @@ class Explainer:
                         else:
                             self.__reason(prop, _comment('%s = %sº, %s = %sº', left.property.angle, left.property.degree, right.property.angle, right.property.degree), premises=[left, right])
                         found = True
-                    except:
+                    except StopIteration:
                         pass
 
                     if found:
@@ -377,7 +377,7 @@ class Explainer:
                                 (ct.property.ABC == prop.DEF and ct.property.DEF == prop.ABC))
                         self.__reason(prop, 'Equal triangles are similar', premises=[congruent])
                         continue
-                    except:
+                    except StopIteration:
                         pass
 
                     congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys([3])) if rsn.property.ratio == 1]
@@ -435,11 +435,23 @@ class Explainer:
                             break
 
                 elif isinstance(prop, IsoscelesTriangleProperty):
-                    sides = (prop.A.vector(prop.BC[0]), prop.A.vector(prop.BC[1]))
-                    equal_distances = self.__explained.list(CongruentSegmentProperty, prop.keys([2]))
-                    for ed in equal_distances:
-                        if same_pair(sides, (ed.property.vector0, ed.property.vector1)):
-                            self.__reason(prop, 'Two equal sides', premises=[ed])
+                    try:
+                        angles = (prop.BC[0].angle(prop.BC[1], prop.A), prop.BC[1].angle(prop.A, prop.BC[0]))
+                        ca = next(rsn for rsn in \
+                            self.__explained.list(AnglesRatioProperty, prop.keys([3])) if \
+                                rsn.property.ratio == 1 and \
+                                same_pair(angles, (rsn.property.angle0, rsn.property.angle1)))
+                        self.__reason(prop, 'Equal base angles', premises=[ca])
+                    except StopIteration:
+                        pass
+                    try:
+                        sides = (prop.A.vector(prop.BC[0]), prop.A.vector(prop.BC[1]))
+                        cs = next(rsn for rsn in \
+                            self.__explained.list(CongruentSegmentProperty, prop.keys([2])) if \
+                                same_pair(sides, (rsn.property.vector0, rsn.property.vector1)))
+                        self.__reason(prop, 'Equal sides', premises=[cs])
+                    except StopIteration:
+                        pass
 
                 elif isinstance(prop, AngleValueProperty):
                     found = False
