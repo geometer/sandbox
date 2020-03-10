@@ -264,12 +264,15 @@ class CoreScene:
             A.belongs_to(self.line_through(B, auxiliary=True))
             self.scene.constraint(Constraint.Kind.same_direction, self, A, B, **kwargs)
 
-        def inside_angle_constraint(self, vertex, B, C, **kwargs):
+        def inside_angle_constraint(self, angle, **kwargs):
             """
             The point is inside the ∠ B vertex C
             """
-            self.same_side_constraint(B, vertex.line_through(C), **kwargs)
-            self.same_side_constraint(C, vertex.line_through(B), **kwargs)
+            assert angle.vertex is not None
+            B = angle.vector0.end
+            C = angle.vector1.end
+            self.same_side_constraint(B, angle.vertex.line_through(C), **kwargs)
+            self.same_side_constraint(C, angle.vertex.line_through(B), **kwargs)
 
         def inside_triangle_constraint(self, A, B, C, **kwargs):
             """
@@ -281,9 +284,9 @@ class CoreScene:
                 kwargs['comment'] = ParametrizedString(
                     'Point %s is inside △ %s %s %s', self, A, B, C
                 )
-            self.inside_angle_constraint(A, B, C, **kwargs)
-            self.inside_angle_constraint(B, A, C, **kwargs)
-            self.inside_angle_constraint(C, B, A, **kwargs)
+            self.inside_angle_constraint(A.angle(B, C), **kwargs)
+            self.inside_angle_constraint(B.angle(A, C), **kwargs)
+            self.inside_angle_constraint(C.angle(B, A), **kwargs)
 
     class Line(Object):
         def __init__(self, scene, **kwargs):

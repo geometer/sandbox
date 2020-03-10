@@ -98,26 +98,24 @@ class Scene(CoreScene):
         line = point0.line_through(point1, auxiliary=True)
         return middle.perpendicular_line(line, **kwargs)
 
-    def angle_bisector_line(self, vertex, B, C, **kwargs):
+    def angle_bisector_line(self, angle, **kwargs):
         """
         The bisector of ∠ B vertex C
         """
-        self.assert_point(vertex)
-        self.assert_point(B)
-        self.assert_point(C)
-        vertex.not_equal_constraint(B)
-        vertex.not_equal_constraint(C)
-        circle = vertex.circle_through(B, auxiliary=True)
-        line = vertex.line_through(C, auxiliary=True)
+        self.assert_angle(angle)
+        assert angle.vertex is not None
+        B = angle.vector0.end
+        C = angle.vector1.end
+        circle = angle.vertex.circle_through(B, auxiliary=True)
+        line = angle.vertex.line_through(C, auxiliary=True)
         X = circle.intersection_point(line, auxiliary=True)
-        vertex.same_direction_constraint(X, C)
+        angle.vertex.same_direction_constraint(X, C)
         Y = X.ratio_point(B, 1, 1, auxiliary=True)
-        angle = vertex.angle(B, C)
-        bisector = vertex.line_through(Y, **kwargs)
+        bisector = angle.vertex.line_through(Y, **kwargs)
         comment = _comment('%s is bisector of %s', bisector, angle)
-        Y.inside_angle_constraint(vertex, B, C, comment=comment)
-        angle.ratio_constraint(vertex.angle(B, Y), 2, guaranteed=True, comment=comment)
-        angle.ratio_constraint(vertex.angle(Y, C), 2, guaranteed=True, comment=comment)
+        Y.inside_angle_constraint(angle, comment=comment)
+        angle.ratio_constraint(angle.vertex.angle(B, Y), 2, guaranteed=True, comment=comment)
+        angle.ratio_constraint(angle.vertex.angle(Y, C), 2, guaranteed=True, comment=comment)
         return bisector
 
     def incentre_point(self, triangle, **kwargs):
@@ -125,10 +123,10 @@ class Scene(CoreScene):
         Centre of the inscribed circle of the triangle
         """
         self.triangle_constraint(triangle)
-        bisector0 = self.angle_bisector_line(triangle[0], triangle[1], triangle[2], auxiliary=True)
-        bisector1 = self.angle_bisector_line(triangle[1], triangle[0], triangle[2], auxiliary=True)
+        bisector0 = self.angle_bisector_line(triangle[0].angle(triangle[1], triangle[2]), auxiliary=True)
+        bisector1 = self.angle_bisector_line(triangle[1].angle(triangle[0], triangle[2]), auxiliary=True)
+        bisector2 = self.angle_bisector_line(triangle[2].angle(triangle[0], triangle[1]), auxiliary=True)
         centre = bisector0.intersection_point(bisector1, **kwargs)
-        bisector2 = self.angle_bisector_line(triangle[2], triangle[0], triangle[1], auxiliary=True)
         centre.belongs_to(bisector2)
         centre.inside_triangle_constraint(*triangle, comment=_comment('%s is incentre of %s %s %s', centre, *triangle))
         return centre
