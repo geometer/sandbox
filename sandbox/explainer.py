@@ -427,12 +427,26 @@ class Explainer:
                             self.__reason(prop, 'Similar triangles with congruent side', premises=[st, ed])
 
                 elif isinstance(prop, CongruentSegmentProperty):
-                    equal_triangles = self.__explained.list(CongruentTrianglesProperty, prop.keys())
                     pair = (prop.vector0, prop.vector1)
-                    for et in equal_triangles:
-                        if any(same_pair(pair, sp) for sp in side_pairs(et.property)):
-                            self.__reason(prop, 'Corresponding sides in congruent triangles', premises=[et])
-                            break
+                    try:
+                        ct = next(rsn for rsn in \
+                            self.__explained.list(CongruentTrianglesProperty, prop.keys()) if \
+                                any(same_pair(pair, sp) for sp in side_pairs(rsn.property)))
+                        self.__reason(prop, 'Corresponding sides in congruent triangles', premises=[ct])
+                        continue
+                    except StopIteration:
+                        pass
+
+                    key = frozenset([prop.vector0.start, prop.vector0.end, prop.vector1.start, prop.vector1.end])
+                    if len(key) == 3:
+                        try:
+                            it = next(rsn for rsn in \
+                                self.__explained.list(IsoscelesTriangleProperty, [key]) if \
+                                    same_pair(pair, (rsn.property.A.vector(rsn.property.BC[0]), rsn.property.A.vector(rsn.property.BC[1]))))
+                            self.__reason(prop, 'Legs of an isosceles triangle', premises=[it])
+                            continue
+                        except StopIteration:
+                            pass
 
                 elif isinstance(prop, IsoscelesTriangleProperty):
                     try:
