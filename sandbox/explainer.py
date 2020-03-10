@@ -425,8 +425,10 @@ class Explainer:
 
     def dump(self):
         print('Explained:')
-        for exp in self.__explained.all:
-            print('\t%2d: %s [%s]' % (exp.index, exp.property, exp))
+        explained = self.__explained.all
+        explained.sort(key=lambda rsn: rsn.index)
+        for rsn in explained:
+            print('\t%2d: %s [%s]' % (rsn.index, rsn.property, rsn))
         print('\nNot explained:')
         for prop in self.__unexplained:
             print('\t%s' % prop)
