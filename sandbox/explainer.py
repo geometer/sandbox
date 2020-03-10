@@ -618,6 +618,9 @@ class OppositeSideProperty(Property):
         self.line = line
         self.points = [point0, point1]
 
+    def keys(self):
+        return [frozenset([self.line] + self.points)]
+
     @property
     def description(self):
         return _comment('%s, %s located on opposite sides of %s', *self.points, self.line)
@@ -631,6 +634,9 @@ class SameSideProperty(Property):
     def __init__(self, line, point0, point1):
         self.line = line
         self.points = [point0, point1]
+
+    def keys(self):
+        return [frozenset([self.line] + self.points)]
 
     @property
     def description(self):
