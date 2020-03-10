@@ -105,14 +105,11 @@ class Explainer:
         self.__iteration_step_count = None
 
     def __reason(self, prop, comments, premises=None):
-        self.__explained.add(Explainer.Reason(len(self.__explained), prop, comments, premises))
+        if prop not in self.__explained:
+            self.__explained.add(Explainer.Reason(len(self.__explained), prop, comments, premises))
 
     def __refresh_unexplained(self):
         self.__unexplained = [prop for prop in self.__unexplained if prop not in self.__explained]
-
-    def __add(self, prop, comments, premises=None):
-        if prop not in self.__explained:
-            self.__reason(prop, comments, premises)
 
     def explain(self):
         start = time.time()
@@ -123,7 +120,7 @@ class Explainer:
         def base():
             def not_equal(pt0, pt1, comments):
                 if not pt0.auxiliary and not pt1.auxiliary:
-                    self.__add(NotEqualProperty(pt0, pt1), comments)
+                    self.__reason(NotEqualProperty(pt0, pt1), comments)
             for cnst in self.scene.constraints(Constraint.Kind.not_equal):
                 not_equal(cnst.params[0], cnst.params[1], cnst.comments)
             for cnst in self.scene.constraints(Constraint.Kind.not_collinear):
@@ -140,23 +137,23 @@ class Explainer:
                 adjust(cnst.params[2], cnst.params[0], cnst.params[1])
 
             for cnst in self.scene.constraints(Constraint.Kind.same_direction):
-                self.__add(
+                self.__reason(
                     SameDirectionProperty(cnst.params[0], cnst.params[1], cnst.params[2]),
                     cnst.comments
                 )
 
             for cnst in self.scene.constraints(Constraint.Kind.opposite_side):
-                self.__add(
+                self.__reason(
                     OppositeSideProperty(cnst.params[2], cnst.params[0], cnst.params[1]),
                     cnst.comments
                 )
             for cnst in self.scene.constraints(Constraint.Kind.same_side):
-                self.__add(
+                self.__reason(
                     SameSideProperty(cnst.params[2], cnst.params[0], cnst.params[1]),
                     cnst.comments
                 )
             for cnst in self.scene.constraints(Constraint.Kind.angles_ratio):
-                self.__add(
+                self.__reason(
                     AnglesRatioProperty(cnst.params[0], cnst.params[1], cnst.params[2]),
                     cnst.comments
                 )
@@ -195,7 +192,7 @@ class Explainer:
                     continue
                 crossing = self.scene.get_intersection(rsn.property.line, line2)
                 if crossing:
-                    self.__add(SameDirectionProperty(crossing, pt0, pt1), rsn.comments)
+                    self.__reason(SameDirectionProperty(crossing, pt0, pt1), rsn.comments)
 
             for rsn0, rsn1 in itertools.combinations(same_side_reasons, 2):
                 AB = rsn0.property.line
@@ -229,10 +226,10 @@ class Explainer:
                     for com in rsn1.comments:
                         if not com in comments:
                             comments.append(com)
-                    self.__add(SameDirectionProperty(X, A, D), comments)
-                    self.__add(SameDirectionProperty(A, D, X), comments)
-                    self.__add(SameDirectionProperty(B, C, X), comments)
-                    self.__add(SameDirectionProperty(C, B, X), comments)
+                    self.__reason(SameDirectionProperty(X, A, D), comments)
+                    self.__reason(SameDirectionProperty(A, D, X), comments)
+                    self.__reason(SameDirectionProperty(B, C, X), comments)
+                    self.__reason(SameDirectionProperty(C, B, X), comments)
 
             same_direction = self.__explained.list(SameDirectionProperty)
             def same_dir(vector):
