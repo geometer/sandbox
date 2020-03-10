@@ -606,10 +606,7 @@ class CoreScene:
         """
         Returns *existing* intersection point of line0 and line1.
         """
-        try:
-            return next(pt for pt in line0.all_points if pt in line1)
-        except:
-            return None
+        return next((pt for pt in line0.all_points if pt in line1), None)
 
     def dump(self):
         print('Objects:')
