@@ -50,10 +50,19 @@ class AngleValueProperty(Property):
 
     @property
     def description(self):
+        if self.degree == 0:
+            if self.angle.vertex is not None:
+                return _comment('%s, %s in the same direction from %s', self.angle.vector0.end, self.angle.vector1.end, self.angle.vertex)
         return _comment('%s = %dº', self.angle, self.degree)
 
     def __eq__(self, other):
-        return isinstance(other, AngleValueProperty) and self.degree == other.degree and self.angle == other.angle
+        if not isinstance(other, AngleValueProperty):
+            return False
+        if self.degree == 180:
+            return self.angle == other.angle or self.angle.reversed == other.angle
+        return \
+            (self.degree == other.degree and self.angle == other.angle) or \
+            (self.degree == -other.degree and self.angle.reversed == other.angle)
 
 class AnglesRatioProperty(Property):
     def __init__(self, angle0, angle1, ratio):
