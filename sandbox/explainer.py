@@ -106,8 +106,6 @@ class Explainer:
 
     def __reason(self, prop, comments, premises=None):
         if prop not in self.__explained:
-            if prop not in self.__unexplained:
-                print('DEBUG: %s' % prop)
             self.__explained.add(Explainer.Reason(len(self.__explained), prop, comments, premises))
 
     def __refresh_unexplained(self):
@@ -259,47 +257,47 @@ class Explainer:
                         elif sd.property.points[1] == vector.start:
                             yield (sd.property.points[0].vector(sd.property.start), [sd])
 
-            for ar in self.__explained.list(AnglesRatioProperty):
-                a0 = ar.property.angle0
-                a1 = ar.property.angle1
-                if a0.vertex is None or a0.vertex != a1.vertex:
-                    continue
-                if a0.vector1.end == a1.vector0.end:
-                    angle = a0.vertex.angle(a0.vector0.end, a1.vector1.end) #a0 + a1
-                    is_sum = True
-                elif a0.vector0.end == a1.vector1.end:
-                    angle = a0.vertex.angle(a1.vector0.end, a0.vector1.end) #a0 + a1
-                    is_sum = True
-                elif a0.vector0.end == a1.vector0.end:
-                    angle = a0.vertex.angle(a1.vector1.end, a0.vector1.end) #a0 - a1
-                    is_sum = False
-                elif a0.vector1.end == a1.vector1.end:
-                    angle = a0.vertex.angle(a0.vector0.end, a1.vector0.end) #a0 - a1
-                    is_sum = False
-                else:
-                    continue
-                for ka in self.__explained.list(AngleValueProperty):
-                    if ka.property.angle == angle:
-                        value = ka.property.degree
-                        break
-                    elif ka.property.angle == angle.reversed:
-                        value = -ka.property.degree
-                        break
-                else:
-                    continue
-                if is_sum:
-                    if ar.property.ratio == -1:
-                        continue
-                    second = value / (1 + ar.property.ratio)
-                    first = value - second
-                else:
-                    if ar.property.ratio == 1:
-                        continue
-                    second = value / (ar.property.ratio - 1)
-                    first = value + second
-                #TODO: write comments
-                self.__reason(AngleValueProperty(a0, first), [], premises=[ar, ka])
-                self.__reason(AngleValueProperty(a1, second), [], premises=[ar, ka])
+#            for ar in self.__explained.list(AnglesRatioProperty):
+#                a0 = ar.property.angle0
+#                a1 = ar.property.angle1
+#                if a0.vertex is None or a0.vertex != a1.vertex:
+#                    continue
+#                if a0.vector1.end == a1.vector0.end:
+#                    angle = a0.vertex.angle(a0.vector0.end, a1.vector1.end) #a0 + a1
+#                    is_sum = True
+#                elif a0.vector0.end == a1.vector1.end:
+#                    angle = a0.vertex.angle(a1.vector0.end, a0.vector1.end) #a0 + a1
+#                    is_sum = True
+#                elif a0.vector0.end == a1.vector0.end:
+#                    angle = a0.vertex.angle(a1.vector1.end, a0.vector1.end) #a0 - a1
+#                    is_sum = False
+#                elif a0.vector1.end == a1.vector1.end:
+#                    angle = a0.vertex.angle(a0.vector0.end, a1.vector0.end) #a0 - a1
+#                    is_sum = False
+#                else:
+#                    continue
+#                for ka in self.__explained.list(AngleValueProperty):
+#                    if ka.property.angle == angle:
+#                        value = ka.property.degree
+#                        break
+#                    elif ka.property.angle == angle.reversed:
+#                        value = -ka.property.degree
+#                        break
+#                else:
+#                    continue
+#                if is_sum:
+#                    if ar.property.ratio == -1:
+#                        continue
+#                    second = value / (1 + ar.property.ratio)
+#                    first = value - second
+#                else:
+#                    if ar.property.ratio == 1:
+#                        continue
+#                    second = value / (ar.property.ratio - 1)
+#                    first = value + second
+#                #TODO: write comments
+#                self.__reason(AngleValueProperty(a0, first), [], premises=[ar, ka])
+#                self.__reason(AngleValueProperty(a1, second), [], premises=[ar, ka])
 
             for prop in list(self.__unexplained):
                 if isinstance(prop, AnglesRatioProperty):
