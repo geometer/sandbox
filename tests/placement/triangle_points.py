@@ -8,9 +8,9 @@ class TestTrianglePoints(PlacementTest):
 
         A, B, C = scene.triangle(labels=('A', 'B', 'C'))
 
-        bisectorA = scene.angle_bisector_line(A.angle(B, C))
-        bisectorB = scene.angle_bisector_line(B.angle(A, C))
-        bisectorC = scene.angle_bisector_line(C.angle(A, B))
+        bisectorA = A.angle(B, C).bisector_line()
+        bisectorB = B.angle(A, C).bisector_line()
+        bisectorC = C.angle(A, B).bisector_line()
         X_bisector = bisectorA.intersection_point(bisectorB, label='X_bisector')
         Y_bisector = bisectorA.intersection_point(bisectorC, label='Y_bisector')
 

@@ -471,6 +471,22 @@ class CoreScene:
         def reversed(self):
             return CoreScene.Angle(self.vector1, self.vector0)
 
+        def bisector_line(self, **kwargs):
+            assert self.vertex is not None
+            B = self.vector0.end
+            C = self.vector1.end
+            circle = self.vertex.circle_through(B, auxiliary=True)
+            line = self.vertex.line_through(C, auxiliary=True)
+            X = circle.intersection_point(line, auxiliary=True)
+            self.vertex.same_direction_constraint(X, C)
+            Y = X.ratio_point(B, 1, 1, auxiliary=True)
+            bisector = self.vertex.line_through(Y, **kwargs)
+            comment = _comment('%s is bisector of %s', bisector, self)
+            Y.inside_angle_constraint(self, comment=comment)
+            self.ratio_constraint(self.vertex.angle(B, Y), 2, guaranteed=True, comment=comment)
+            self.ratio_constraint(self.vertex.angle(Y, C), 2, guaranteed=True, comment=comment)
+            return bisector
+
         def ratio_constraint(self, angle, ratio, **kwargs):
             # self = angle * ratio
             self.scene.assert_angle(angle)
