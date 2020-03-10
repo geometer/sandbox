@@ -280,7 +280,7 @@ class Explainer:
                         known_angles = self.__explained.list(AngleValueProperty, prop.keys())
                         left = next(exp for exp in known_angles if exp.property.angle == prop.angle0)
                         right = next(exp for exp in known_angles if exp.property.angle == prop.angle1)
-                        # TODO: report contradiction, if not angle values are not equal
+                        # TODO: report contradiction, if angle ratio differs
                         if left.property.degree == right.property.degree:
                             self.__reason(prop, _comment('Both angle values = %sº', left.property.degree), premises=[left, right])
                         else:
