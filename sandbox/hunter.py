@@ -10,21 +10,6 @@ from .core import _comment
 
 ERROR = np.float128(5e-6)
 
-def wrapper(vector0: Scene.Vector, vector1: Scene.Vector, placement: Placement):
-    if vector0.end == vector1.end:
-        angle = vector0.reversed.angle(vector1.reversed)
-    elif vector0.start == vector1.end:
-        angle = vector0.angle(vector1.reversed)
-    elif vector0.end == vector1.start:
-        angle = vector0.reversed.angle(vector1)
-    else:
-        angle = vector0.angle(vector1)
-    arc = placement.angle(angle)
-    if arc > 0:
-        return AngleWrapper(angle, arc)
-    else:
-        return AngleWrapper(angle.reversed, -arc)
-
 class AngleWrapper:
     # arc is always >= 0
     def __init__(self, angle, arc):
@@ -227,7 +212,19 @@ class Hunter:
 
     def __angles(self, vectors):
         for pair in itertools.combinations(vectors, 2):
-            yield wrapper(pair[0], pair[1], self.placement)
+            if pair[0].end == pair[1].end:
+                angle = pair[0].reversed.angle(pair[1].reversed)
+            elif pair[0].start == pair[1].end:
+                angle = pair[0].angle(pair[1].reversed)
+            elif pair[0].end == pair[1].start:
+                angle = pair[0].reversed.angle(pair[1])
+            else:
+                angle = pair[0].angle(pair[1])
+            arc = self.placement.angle(angle)
+            if arc < 0:
+                angle = angle.reversed
+                arc = -arc
+            yield AngleWrapper(angle, arc)
 
     def __add(self, prop):
         self.properties.append(prop)
