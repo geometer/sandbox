@@ -404,7 +404,7 @@ class Explainer:
                     if prop.degree == 0:
                         same_direction = self.__explained.list(SameDirectionProperty)
                         for sd in same_direction:
-                            if prop.angle.vector0.start == sd.property.start and prop.angle.vector1.start == sd.property.start and set([prop.angle.vector0.end, prop.angle.vector1.end]) == set(sd.property.points):
+                            if prop.angle.vertex == sd.property.start and set([prop.angle.vector0.end, prop.angle.vector1.end]) == set(sd.property.points):
                                 self.__reason(prop, 'TBW', premises=[sd])
                                 found = True
                                 break

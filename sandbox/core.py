@@ -458,6 +458,7 @@ class CoreScene:
             assert vector0.scene == vector1.scene
             self.vector0 = vector0
             self.vector1 = vector1
+            self.vertex = self.vector0.start if self.vector0.start == self.vector1.start else None
 
         @property
         def scene(self):
@@ -485,8 +486,8 @@ class CoreScene:
             return hash(self.vector0) * 13 + hash(self.vector1) * 23
 
         def __str__(self):
-            if self.vector0.start == self.vector1.start:
-                return str(_comment('∠ %s %s %s', self.vector0.end, self.vector0.start, self.vector1.end))
+            if self.vertex:
+                return str(_comment('∠ %s %s %s', self.vector0.end, self.vertex, self.vector1.end))
             return '∠(%s, %s)' % (self.vector0, self.vector1)
 
     def __init__(self):
