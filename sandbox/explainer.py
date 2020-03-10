@@ -375,7 +375,7 @@ class Explainer:
                             self.__explained.list(CongruentTrianglesProperty, prop.keys()) if \
                                 (ct.property.ABC == prop.ABC and ct.property.DEF == prop.DEF) or \
                                 (ct.property.ABC == prop.DEF and ct.property.DEF == prop.ABC))
-                        self.__reason(prop, 'Equal triangles are similar', premises=[congruent])
+                        self.__reason(prop, 'Congruent triangles are similar', premises=[congruent])
                         continue
                     except StopIteration:
                         pass
@@ -409,9 +409,9 @@ class Explainer:
                             break
                     else:
                         if len(premises) == 3:
-                            self.__reason(prop, 'Three pairs of equal sides', premises=premises)
+                            self.__reason(prop, 'Three pairs of congruent sides', premises=premises)
                         else: # len(premises) == 2
-                            self.__reason(prop, _comment('Common side %s, two pairs of equal sides', common_sides[0]), premises=premises)
+                            self.__reason(prop, _comment('Common side %s, two pairs of congruent sides', common_sides[0]), premises=premises)
                         continue
 
                     similar_triangles = self.__explained.list(SimilarTrianglesProperty, prop.keys([3]))
@@ -424,14 +424,14 @@ class Explainer:
                     for ed in equal_distances:
                         pair = (ed.property.vector0, ed.property.vector1)
                         if any(same_pair(pair, sp) for sp in side_pairs(prop)):
-                            self.__reason(prop, 'Similar triangles with equal side', premises=[st, ed])
+                            self.__reason(prop, 'Similar triangles with congruent side', premises=[st, ed])
 
                 elif isinstance(prop, CongruentSegmentProperty):
                     equal_triangles = self.__explained.list(CongruentTrianglesProperty, prop.keys())
                     pair = (prop.vector0, prop.vector1)
                     for et in equal_triangles:
                         if any(same_pair(pair, sp) for sp in side_pairs(et.property)):
-                            self.__reason(prop, 'Corresponding sides in equal triangles', premises=[et])
+                            self.__reason(prop, 'Corresponding sides in congruent triangles', premises=[et])
                             break
 
                 elif isinstance(prop, IsoscelesTriangleProperty):
@@ -441,15 +441,18 @@ class Explainer:
                             self.__explained.list(AnglesRatioProperty, prop.keys([3])) if \
                                 rsn.property.ratio == 1 and \
                                 same_pair(angles, (rsn.property.angle0, rsn.property.angle1)))
-                        self.__reason(prop, 'Equal base angles', premises=[ca])
+                        self.__reason(prop, 'Congruent base angles', premises=[ca])
+                        continue
                     except StopIteration:
                         pass
+
                     try:
                         sides = (prop.A.vector(prop.BC[0]), prop.A.vector(prop.BC[1]))
                         cs = next(rsn for rsn in \
                             self.__explained.list(CongruentSegmentProperty, prop.keys([2])) if \
                                 same_pair(sides, (rsn.property.vector0, rsn.property.vector1)))
-                        self.__reason(prop, 'Equal sides', premises=[cs])
+                        self.__reason(prop, 'Congruent sides', premises=[cs])
+                        continue
                     except StopIteration:
                         pass
 
