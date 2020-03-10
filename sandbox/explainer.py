@@ -328,6 +328,16 @@ class Explainer:
                                 break
 
                 elif isinstance(prop, SimilarTrianglesProperty):
+                    try:
+                        congruent = next(ct for ct in \
+                            self.__explained.list(CongruentTrianglesProperty, prop.keys()) if \
+                                (ct.property.ABC == prop.ABC and ct.property.DEF == prop.DEF) or \
+                                (ct.property.ABC == prop.DEF and ct.property.DEF == prop.ABC))
+                        self.__reason(prop, 'Equal triangles are similar', premises=[congruent])
+                        continue
+                    except:
+                        pass
+
                     congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys([3])) if rsn.property.ratio == 1]
                     premises = []
                     for ca in congruent_angles:
