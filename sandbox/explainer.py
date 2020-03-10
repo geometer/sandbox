@@ -277,13 +277,13 @@ class Explainer:
                 if is_sum:
                     if ar.property.ratio == -1:
                         continue
-                    first = value / (1 + ar.property.ratio)
-                    second = value - first
+                    second = value / (1 + ar.property.ratio)
+                    first = value - second
                 else:
                     if ar.property.ratio == 1:
                         continue
-                    first = value / (1 - ar.property.ratio)
-                    second = first - value
+                    second = value / (ar.property.ratio - 1)
+                    first = value + second
                 #TODO: write comments
                 self.__reason(AngleValueProperty(a0, first), [], premises=[ar, ka])
                 self.__reason(AngleValueProperty(a1, second), [], premises=[ar, ka])
@@ -443,7 +443,7 @@ class Explainer:
                             it = next(rsn for rsn in \
                                 self.__explained.list(IsoscelesTriangleProperty, [key]) if \
                                     same_pair(pair, (rsn.property.A.vector(rsn.property.BC[0]), rsn.property.A.vector(rsn.property.BC[1]))))
-                            self.__reason(prop, 'Legs of an isosceles triangle', premises=[it])
+                            self.__reason(prop, _comment('Legs of isosceles △ %s %s %s', it.property.A, *it.property.BC), premises=[it])
                             continue
                         except StopIteration:
                             pass
@@ -465,7 +465,7 @@ class Explainer:
                         cs = next(rsn for rsn in \
                             self.__explained.list(CongruentSegmentProperty, prop.keys([2])) if \
                                 same_pair(sides, (rsn.property.vector0, rsn.property.vector1)))
-                        self.__reason(prop, 'Congruent sides', premises=[cs])
+                        self.__reason(prop, 'Congruent legs', premises=[cs])
                         continue
                     except StopIteration:
                         pass
