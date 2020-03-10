@@ -247,75 +247,80 @@ class Explainer:
                             yield (sd.property.points[0].vector(sd.property.start), [sd])
 
             for prop in list(self.__unexplained):
-                if isinstance(prop, AnglesRatioProperty) and prop.ratio == 1:
+                if isinstance(prop, AnglesRatioProperty):
                     found = False
-                    for v0, sd0 in same_dir(prop.angle0.vector0):
-                        lst = list(same_dir(prop.angle0.vector1))
-                        def add_reason(vector0, vector1):
-                            if v0 == vector0:
-                                try:
-                                    found = next(p for p in lst if p[0] == vector1)
-                                    self.__reason(prop, 'Same angle', premises=sd0 + found[1])
-                                    return True
-                                except:
-                                    pass
-                            return False
 
-                        a10 = prop.angle1.vector0
-                        a11 = prop.angle1.vector1
-                        found = \
-                            add_reason(a10, a11) or \
-                            add_reason(a11, a10) or \
-                            add_reason(a10.reversed, a11.reversed) or \
-                            add_reason(a11.reversed, a10.reversed)
+                    if prop.ratio == 1:
+                        for v0, sd0 in same_dir(prop.angle0.vector0):
+                            lst = list(same_dir(prop.angle0.vector1))
+                            def add_reason(vector0, vector1):
+                                if v0 == vector0:
+                                    try:
+                                        found = next(p for p in lst if p[0] == vector1)
+                                        self.__reason(prop, 'Same angle', premises=sd0 + found[1])
+                                        return True
+                                    except:
+                                        pass
+                                return False
+
+                            a10 = prop.angle1.vector0
+                            a11 = prop.angle1.vector1
+                            found = \
+                                add_reason(a10, a11) or \
+                                add_reason(a11, a10) or \
+                                add_reason(a10.reversed, a11.reversed) or \
+                                add_reason(a11.reversed, a10.reversed)
+                            if found:
+                                break
+
                         if found:
-                            break
-
-                    if found:
-                        continue
-
-                    known_angles = self.__explained.list(AngleValueProperty, prop.keys())
-                    premises = [exp for exp in known_angles if exp.property.angle in [prop.angle0, prop.angle1]]
-                    if len(premises) == 2 and premises[0].property.degree == premises[1].property.degree:
-                        self.__reason(prop, _comment('Both angle values = %sº', premises[0].property.degree), premises=premises)
-                        found = True
-                    # TODO: report contradiction, if not angle values are not equal
-
-                    if found:
-                        continue
-
-                    similar_triangles = self.__explained.list(SimilarTrianglesProperty, prop.keys())
-                    pair = (prop.angle0, prop.angle1)
-                    for st in similar_triangles:
-                        if any(same_pair(pair, ap) for ap in angle_pairs(st.property)):
-                            self.__reason(prop, 'Corresponding angles in similar triangles', premises=[st])
-                            found = True
-                            break
-
-                    if found:
-                        continue
-
-                    congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys()) if rsn.property.ratio == 1]
-                    for index, ca0 in enumerate(congruent_angles):
-                        if prop.angle0 == ca0.property.angle0:
-                            look_for = [prop.angle1, ca0.property.angle1]
-                        elif prop.angle1 == ca0.property.angle0:
-                            look_for = [prop.angle0, ca0.property.angle1]
-                        elif prop.angle0 == ca0.property.angle1:
-                            look_for = [prop.angle1, ca0.property.angle0]
-                        elif prop.angle1 == ca0.property.angle1:
-                            look_for = [prop.angle0, ca0.property.angle0]
-                        else:
                             continue
 
-                        for ca1 in congruent_angles[index + 1:]:
-                            if ca1.property.angle0 in look_for and ca1.property.angle1 in look_for:
-                                self.__reason(prop, 'transitivity', premises=[ca0, ca1])
+                    if prop.ratio == 1:
+                        known_angles = self.__explained.list(AngleValueProperty, prop.keys())
+                        premises = [exp for exp in known_angles if exp.property.angle in [prop.angle0, prop.angle1]]
+                        if len(premises) == 2 and premises[0].property.degree == premises[1].property.degree:
+                            self.__reason(prop, _comment('Both angle values = %sº', premises[0].property.degree), premises=premises)
+                            found = True
+                        # TODO: report contradiction, if not angle values are not equal
+
+                        if found:
+                            continue
+
+                    if prop.ratio == 1:
+                        similar_triangles = self.__explained.list(SimilarTrianglesProperty, prop.keys())
+                        pair = (prop.angle0, prop.angle1)
+                        for st in similar_triangles:
+                            if any(same_pair(pair, ap) for ap in angle_pairs(st.property)):
+                                self.__reason(prop, 'Corresponding angles in similar triangles', premises=[st])
                                 found = True
                                 break
 
                         if found:
-                            break
+                            continue
+
+                    if prop.ratio == 1:
+                        congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys()) if rsn.property.ratio == 1]
+                        for index, ca0 in enumerate(congruent_angles):
+                            if prop.angle0 == ca0.property.angle0:
+                                look_for = [prop.angle1, ca0.property.angle1]
+                            elif prop.angle1 == ca0.property.angle0:
+                                look_for = [prop.angle0, ca0.property.angle1]
+                            elif prop.angle0 == ca0.property.angle1:
+                                look_for = [prop.angle1, ca0.property.angle0]
+                            elif prop.angle1 == ca0.property.angle1:
+                                look_for = [prop.angle0, ca0.property.angle0]
+                            else:
+                                continue
+
+                            for ca1 in congruent_angles[index + 1:]:
+                                if ca1.property.angle0 in look_for and ca1.property.angle1 in look_for:
+                                    self.__reason(prop, 'transitivity', premises=[ca0, ca1])
+                                    found = True
+                                    break
+
+                            if found:
+                                break
 
                 elif isinstance(prop, SimilarTrianglesProperty):
                     congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys([3])) if rsn.property.ratio == 1]
