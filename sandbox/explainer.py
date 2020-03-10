@@ -276,16 +276,21 @@ class Explainer:
                         if found:
                             continue
 
-                    if prop.ratio == 1:
+                    try:
                         known_angles = self.__explained.list(AngleValueProperty, prop.keys())
-                        premises = [exp for exp in known_angles if exp.property.angle in [prop.angle0, prop.angle1]]
-                        if len(premises) == 2 and premises[0].property.degree == premises[1].property.degree:
-                            self.__reason(prop, _comment('Both angle values = %sº', premises[0].property.degree), premises=premises)
-                            found = True
+                        left = next(exp for exp in known_angles if exp.property.angle == prop.angle0)
+                        right = next(exp for exp in known_angles if exp.property.angle == prop.angle1)
                         # TODO: report contradiction, if not angle values are not equal
+                        if left.property.degree == right.property.degree:
+                            self.__reason(prop, _comment('Both angle values = %sº', left.property.degree), premises=[left, right])
+                        else:
+                            self.__reason(prop, _comment('%s = %sº, %s = %sº', left.property.angle, left.property.degree, right.property.angle, right.property.degree), premises=[left, right])
+                        found = True
+                    except:
+                        pass
 
-                        if found:
-                            continue
+                    if found:
+                        continue
 
                     if prop.ratio == 1:
                         similar_triangles = self.__explained.list(SimilarTrianglesProperty, prop.keys())
