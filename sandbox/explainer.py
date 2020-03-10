@@ -340,8 +340,29 @@ class Explainer:
                     elif len(premises) == 2:
                         self.__reason(prop, 'two angles', premises=premises)
                 elif isinstance(prop, CongruentTrianglesProperty):
-                    similar_triangles = self.__explained.list(SimilarTrianglesProperty, prop.keys([3]))
                     equal_distances = self.__explained.list(CongruentSegmentProperty, prop.keys([2]))
+                    common_sides = []
+                    premises = []
+                    for i in range(0, 3):
+                        left = side_of(prop.ABC, i)
+                        right = side_of(prop.DEF, i)
+                        if same(left, right):
+                            common_sides.append(left)
+                        else:
+                            for ed in equal_distances:
+                                if same_pair((left, right), (ed.property.vector0, ed.property.vector1)):
+                                    premises.append(ed)
+                                    break
+                        if len(common_sides) + len(premises) < i + 1:
+                            break
+                    else:
+                        if len(premises) == 3:
+                            self.__reason(prop, 'Three pairs of equal sides', premises=premises)
+                        else: # len(premises) == 2
+                            self.__reason(prop, _comment('Common side %s, two pairs of equal sides', common_sides[0]), premises=premises)
+                        continue
+
+                    similar_triangles = self.__explained.list(SimilarTrianglesProperty, prop.keys([3]))
                     for st in similar_triangles:
                         if (st.property.ABC == prop.ABC and st.property.DEF == prop.DEF) or \
                            (st.property.ABC == prop.DEF and st.property.DEF == prop.ABC):
