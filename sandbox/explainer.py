@@ -118,11 +118,8 @@ class Explainer:
 
     def __explain_all(self):
         def base():
-            def not_equal(pt0, pt1, comments):
-                if not pt0.auxiliary and not pt1.auxiliary:
-                    self.__reason(NotEqualProperty(pt0, pt1), comments)
             for cnst in self.scene.constraints(Constraint.Kind.not_equal):
-                not_equal(cnst.params[0], cnst.params[1], cnst.comments)
+                self.__reason(NotEqualProperty(cnst.params[0], cnst.params[1]), cnst.comments)
             for cnst in self.scene.constraints(Constraint.Kind.not_collinear):
                 def extra_comments(pt, pt0, pt1):
                     return [_comment('%s lies on the line %s %s', pt, pt0, pt1)]
@@ -132,9 +129,9 @@ class Explainer:
                     if line:
                         for pt in line.all_points:
                             if pt in (pt0, pt1):
-                                not_equal(pt, pt2, cnst.comments)
+                                self.__reason(NotEqualProperty(pt, pt2), cnst.comments)
                             else:
-                                not_equal(pt, pt2, cnst.comments + extra_comments(pt, pt0, pt1))
+                                self.__reason(NotEqualProperty(pt, pt2), cnst.comments + extra_comments(pt, pt0, pt1))
                         for ptX, ptY in itertools.combinations(line.all_points, 2):
                             #TODO check ptX != ptY
                             comments = list(cnst.comments)
