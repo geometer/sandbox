@@ -125,6 +125,21 @@ class AnglesRatioProperty(Property):
              (self.angle0 == other.angle0.reversed and self.angle1 == other.angle1.reversed) or \
              (self.angle0 == other.angle1.reversed and self.angle1 == other.angle0.reversed))
 
+class ParallelVectorsProperty(Property):
+    """
+    Two vectors are parallel (or at least one of them has zero length)
+    """
+    def __init__(self, vector0, vector1):
+        self.vector0 = vector0
+        self.vector1 = vector1
+
+    def keys(self):
+        return keys_for_vector(self.vector0) + keys_for_vector(self.vector1)
+
+    @property
+    def description(self):
+        return _comment('%s ↑↑ %s', self.vector0, self.vector1)
+
 class CongruentSegmentProperty(Property):
     """
     Two segments are congruent

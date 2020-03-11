@@ -129,6 +129,8 @@ class Explainer:
                 self.__reason(NotEqualProperty(cnst.params[0], cnst.params[1]), cnst.comments)
             for cnst in self.scene.constraints(Constraint.Kind.not_collinear):
                 self.__reason(NonCollinearProperty(*cnst.params), cnst.comments)
+            for cnst in self.scene.constraints(Constraint.Kind.collinear):
+                self.__reason(CollinearProperty(*cnst.params), cnst.comments)
             for cnst in self.scene.constraints(Constraint.Kind.opposite_side):
                 self.__reason(
                     OppositeSideProperty(cnst.params[2], cnst.params[0], cnst.params[1]),
@@ -139,6 +141,8 @@ class Explainer:
                     SameSideProperty(cnst.params[2], cnst.params[0], cnst.params[1]),
                     cnst.comments
                 )
+            for cnst in self.scene.constraints(Constraint.Kind.parallel_vectors):
+                self.__reason(ParallelVectorsProperty(*cnst.params), cnst.comments)
             for cnst in self.scene.constraints(Constraint.Kind.angles_ratio):
                 self.__reason(
                     AnglesRatioProperty(cnst.params[0], cnst.params[1], cnst.params[2]),
@@ -225,6 +229,14 @@ class Explainer:
                         self.__reason(NotEqualProperty(*vec0.points), [], [cs, ne])
                         self.__reason(NotEqualProperty(*vec1.points), [], [cs, ne])
 
+            for pv in self.__explained.list(ParallelVectorsProperty):
+                vec0 = pv.property.vector0
+                vec1 = pv.property.vector1
+                ne0 = not_equal_reason(*vec0.points)
+                ne1 = not_equal_reason(*vec1.points)
+                if ne0 is not None and ne1 is not None:
+                    self.__reason(AngleValueProperty(vec0.angle(vec1), 0), [], [pv, ne0, ne1])
+                
             same_side_reasons = self.__explained.list(SameSideProperty)
             for rsn in same_side_reasons:
                 pt0 = rsn.property.points[0]
