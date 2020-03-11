@@ -4,6 +4,7 @@ Normally, do not add new construction methods here, do this in scene.py instead.
 """
 
 from enum import Enum, auto, unique
+import sympy as sp
 import itertools
 from typing import List
 
@@ -109,7 +110,7 @@ class CoreScene:
                 point0=self, point1=point, coef0=coef0, coef1=coef1, **kwargs
             )
             new_point.collinear_constraint(self, point, guaranteed=True)
-            self.vector(new_point).length_ratio_constraint(new_point.vector(point), coef1 / coef0, guaranteed=True)
+            self.vector(new_point).length_ratio_constraint(new_point.vector(point), sp.sympify(coef1) / coef0, guaranteed=True)
             #TODO: do not add same_direction_constraint here, there is a chance that
             # self == point; instead explain it in the explainer
             if coef0 > 0 and coef1 > 0 or coef0 < 0 and coef1 < 0:
