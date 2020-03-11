@@ -351,7 +351,12 @@ class Hunter:
 
     def hunt(self, options=('default')):
         start = time.time()
+        frozen = self.placement.scene.is_frozen
+        if not frozen:
+            self.placement.scene.freeze()
         self.__hunt(options)
+        if not frozen:
+            self.placement.scene.unfreeze()
         self.__hunting_time = time.time() - start
 
     def __hunt(self, options):
