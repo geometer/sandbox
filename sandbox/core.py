@@ -110,6 +110,8 @@ class CoreScene:
             )
             new_point.collinear_constraint(self, point, guaranteed=True)
             self.vector(new_point).length_ratio_constraint(new_point.vector(point), coef1 / coef0, guaranteed=True)
+            #TODO: do not add same_direction_constraint here, there is a chance that
+            # self == point; instead explain it in the explainer
             if coef0 > 0 and coef1 > 0 or coef0 < 0 and coef1 < 0:
                 self.same_direction_constraint(point, new_point, guaranteed=True)
                 point.same_direction_constraint(self, new_point, guaranteed=True)
