@@ -182,14 +182,17 @@ class Explainer:
                             else:
                                 self.__reason(NotEqualProperty(pt, pt2), [str(ncl.property)] + extra_comments(pt, pt0, pt1))
                         for ptX, ptY in itertools.combinations(line.all_points, 2):
-                            #TODO check ptX != ptY
+                            key = frozenset([ptX, ptY])
+                            if key == set([pt0, pt1]):
+                                continue
+                            if len(self.__explained.list(NotEqualProperty, keys=[key])) == 0:
+                                continue
                             comments = [str(ncl.property)]
                             if not ptX in (pt0, pt1):
                                 comments += extra_comments(ptX, pt0, pt1)
                             if not ptY in (pt0, pt1):
                                 comments += extra_comments(ptY, pt0, pt1)
-                            if len(comments) > 1:
-                                self.__reason(NonCollinearProperty(ptX, ptY, pt2), comments)
+                            self.__reason(NonCollinearProperty(ptX, ptY, pt2), comments)
 
                 add_reasons(ncl.property.points[0], ncl.property.points[1], ncl.property.points[2])
                 add_reasons(ncl.property.points[1], ncl.property.points[2], ncl.property.points[0])
@@ -668,6 +671,9 @@ class NotEqualProperty(Property):
     """
     def __init__(self, point0, point1):
         self.points = [point0, point1]
+
+    def keys(self):
+        return [frozenset(self.points)]
 
     @property
     def description(self):
