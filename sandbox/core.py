@@ -111,17 +111,15 @@ class CoreScene:
             )
             new_point.collinear_constraint(self, point, guaranteed=True)
             self.vector(new_point).length_ratio_constraint(new_point.vector(point), sp.sympify(coef1) / coef0, guaranteed=True)
-            #TODO: do not add same_direction_constraint here, there is a chance that
-            # self == point; instead explain it in the explainer
             if coef0 > 0 and coef1 > 0 or coef0 < 0 and coef1 < 0:
-                self.same_direction_constraint(point, new_point, guaranteed=True)
-                point.same_direction_constraint(self, new_point, guaranteed=True)
+                self.vector(point).parallel_constraint(self.vector(new_point), guaranteed=True)
+                point.vector(self).parallel_constraint(point.vector(new_point), guaranteed=True)
             elif coef0 < 0:
-                self.same_direction_constraint(point, new_point, guaranteed=True)
-                new_point.same_direction_constraint(self, point, guaranteed=True)
+                self.vector(point).parallel_constraint(self.vector(new_point), guaranteed=True)
+                new_point.vector(self).parallel_constraint(new_point.vector(point), guaranteed=True)
             elif coef1 < 0:
-                new_point.same_direction_constraint(point, self, guaranteed=True)
-                point.same_direction_constraint(self, new_point, guaranteed=True)
+                new_point.vector(self).parallel_constraint(new_point.vector(point), guaranteed=True)
+                point.vector(self).parallel_constraint(point.vector(new_point), guaranteed=True)
             return new_point
 
         def perpendicular_line(self, line, **kwargs):
@@ -449,7 +447,16 @@ class CoreScene:
             assert isinstance(vector, CoreScene.Vector)
             assert self.scene == vector.scene
             assert coef != 0
-            self.scene.constraint(Constraint.Kind.distances_ratio, self, vector, coef, **kwargs)
+            return self.scene.constraint(Constraint.Kind.distances_ratio, self, vector, coef, **kwargs)
+
+        def parallel_constraint(self, vector, **kwargs):
+            """
+            Self and vector have the same direction.
+            This constraint also fulfilled if at least one of the vectors has zero length.
+            """
+            assert isinstance(vector, CoreScene.Vector)
+            assert self.scene == vector.scene
+            return self.scene.constraint(Constraint.Kind.parallel_vectors, self, vector, **kwargs)
 
         def length_equal_constraint(self, vector, **kwargs):
             """
@@ -664,6 +671,7 @@ class Constraint:
         convex_polygon    = ('convex_polygon', Stage.validation, List[CoreScene.Point])
         distance          = ('distance', Stage.adjustment, CoreScene.Vector, int)
         distances_ratio   = ('distances_ratio', Stage.adjustment, CoreScene.Vector, CoreScene.Vector, int)
+        parallel_vectors  = ('parallel_vectors', Stage.adjustment, CoreScene.Vector, CoreScene.Vector)
         angles_ratio      = ('angles_ratio', Stage.adjustment, CoreScene.Angle, CoreScene.Angle, int)
         perpendicular     = ('perpendicular', Stage.adjustment, CoreScene.Line, CoreScene.Line)
 

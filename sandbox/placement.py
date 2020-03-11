@@ -443,6 +443,10 @@ class Placement(BasePlacement):
                 angle1 = cnstr.params[1]
                 ratio = cnstr.params[2]
                 numb_square += (self.angle(angle0) - self.angle(angle1) * ratio) ** 2
+            elif cnstr.kind == Constraint.Kind.parallel_vectors:
+                vec0 = cnstr.params[0]
+                vec1 = cnstr.params[1]
+                numb_square += self.angle(vec0.angle(vec1)) ** 2
             else:
                 assert False, 'Constraint `%s` not supported in adjustment' % cnstr.kind
 

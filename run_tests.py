@@ -13,6 +13,7 @@ from tests.placement.mccme7 import *
 from tests.placement.triangle_points import *
 from tests.placement.trisectors import *
 from tests.placement.pentagon import *
+from tests.placement.parallel import *
 
 if __name__ == '__main__':
     unittest.main()
