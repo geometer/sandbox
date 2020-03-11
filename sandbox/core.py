@@ -4,8 +4,8 @@ Normally, do not add new construction methods here, do this in scene.py instead.
 """
 
 from enum import Enum, auto, unique
-import sympy as sp
 import itertools
+import sympy as sp
 from typing import List
 
 class CoreScene:
@@ -149,11 +149,12 @@ class CoreScene:
                 return existing.with_extra_args(**kwargs)
 
             line = CoreScene.Line(self.scene, point0=self, point1=point, **kwargs)
-            for cnstr in self.scene.constraints(Constraint.Kind.collinear):
-                if len([pt for pt in line.all_points if pt in cnstr.params]) == 2:
-                    for pt in cnstr.params:
-                        if pt not in line.all_points:
-                            line.all_points.append(pt)
+            if not self.scene.is_frozen:
+                for cnstr in self.scene.constraints(Constraint.Kind.collinear):
+                    if len([pt for pt in line.all_points if pt in cnstr.params]) == 2:
+                        for pt in cnstr.params:
+                            if pt not in line.all_points:
+                                line.all_points.append(pt)
 
             return line
 
@@ -178,12 +179,9 @@ class CoreScene:
         def angle(self, point0, point1):
             return self.vector(point0).angle(self.vector(point1))
 
-        def _angle(self, point0, point1):
-            return self.vector(point0)._angle(self.vector(point1))
-
         def belongs_to(self, line_or_circle):
             self.scene.assert_line_or_circle(line_or_circle)
-            if self not in line_or_circle.all_points:
+            if not self.scene.is_frozen and self not in line_or_circle.all_points:
                 line_or_circle.all_points.append(self)
 
         def not_equal_constraint(self, A, **kwargs):
@@ -214,11 +212,13 @@ class CoreScene:
             The current point is collinear with A and B.
             """
             cnstr = self.scene.constraint(Constraint.Kind.collinear, self, A, B, **kwargs)
-            for line in self.scene.lines():
-                if len([pt for pt in line.all_points if pt in cnstr.params]) == 2:
-                    for pt in cnstr.params:
-                        if pt not in line.all_points:
-                            line.all_points.append(pt)
+            if not self.scene.is_frozen:
+                for line in self.scene.lines():
+                    if len([pt for pt in line.all_points if pt in cnstr.params]) == 2:
+                        for pt in cnstr.params:
+                            if pt not in line.all_points:
+                                line.all_points.append(pt)
+            return cnstr
 
         def distance_constraint(self, A, distance, **kwargs):
             """
@@ -227,7 +227,7 @@ class CoreScene:
             """
             if isinstance(A, str):
                 A = self.scene.get(A)
-            self.vector(A).length_constraint(distance, **kwargs)
+            return self.vector(A).length_constraint(distance, **kwargs)
 
         def opposite_side_constraint(self, point, line, **kwargs):
             """
@@ -364,10 +364,11 @@ class CoreScene:
         def __init__(self, scene, **kwargs):
             CoreScene.Object.__init__(self, scene, **kwargs)
             self.all_points = []
-            if self.centre == self.radius_start:
-                self.all_points.append(self.radius_end)
-            elif self.centre == self.radius_end:
-                self.all_points.append(self.radius_start)
+            if not scene.is_frozen:
+                if self.centre == self.radius_start:
+                    self.all_points.append(self.radius_end)
+                elif self.centre == self.radius_end:
+                    self.all_points.append(self.radius_start)
 
         def free_point(self, **kwargs):
             point = CoreScene.Point(self.scene, CoreScene.Point.Origin.circle, circle=self, **kwargs)
@@ -412,13 +413,10 @@ class CoreScene:
             return self.scene.get_line(self.start, self.end)
 
         def angle(self, other):
-            angle = self._angle(other)
+            angle = CoreScene.Angle(self, other)
             self.non_zero_length_constraint(comment=_comment('%s is side of %s', self, angle))
             other.non_zero_length_constraint(comment=_comment('%s is side of %s', other, angle))
             return angle
-
-        def _angle(self, other):
-            return CoreScene.Angle(self, other)
 
         @property
         def scene(self):
@@ -527,13 +525,15 @@ class CoreScene:
         self.__objects = []
         self.validation_constraints = []
         self.adjustment_constraints = []
+        self.__frozen = False
 
     def constraint(self, kind, *args, **kwargs):
         cns = Constraint(kind, self, *args, **kwargs)
-        if kind.stage == Stage.validation:
-            self.validation_constraints.append(cns)
-        else:
-            self.adjustment_constraints.append(cns)
+        if not self.__frozen:
+            if kind.stage == Stage.validation:
+                self.validation_constraints.append(cns)
+            else:
+                self.adjustment_constraints.append(cns)
         return cns
 
     def quadrilateral_constraint(self, A, B, C, D, **kwargs):
@@ -598,7 +598,8 @@ class CoreScene:
         return CoreScene.Point(self, origin=CoreScene.Point.Origin.free, **kwargs)
 
     def add(self, obj: Object):
-        self.__objects.append(obj)
+        if not self.__frozen:
+            self.__objects.append(obj)
 
     def get(self, label: str):
         for obj in self.__objects:
@@ -621,6 +622,16 @@ class CoreScene:
         Returns *existing* intersection point of line0 and line1.
         """
         return next((pt for pt in line0.all_points if pt in line1), None)
+
+    def freeze(self):
+        self.__frozen = True
+
+    def unfreeze(self):
+        self.__frozen = False
+
+    @property
+    def is_frozen(self):
+        return self.__frozen
 
     def dump(self):
         print('Objects:')

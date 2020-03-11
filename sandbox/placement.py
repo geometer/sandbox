@@ -58,14 +58,14 @@ class BasePlacement:
         start1 = self.location(vector1.start)
         end1 = self.location(vector1.end)
         return (end0.x - start0.x) * (end1.x - start1.x) + (end0.y - start0.y) * (end1.y - start1.y)
-        
+
     def vector_product(self, vector0, vector1):
         start0 = self.location(vector0.start)
         end0 = self.location(vector0.end)
         start1 = self.location(vector1.start)
         end1 = self.location(vector1.end)
         return (end0.x - start0.x) * (end1.y - start1.y) - (end0.y - start0.y) * (end1.x - start1.x)
-        
+
     def angle(self, angle):
         vec0 = angle.vector0
         vec1 = angle.vector1
@@ -155,9 +155,17 @@ class Placement(BasePlacement):
         self._coordinates = {}
         self.params = params if params else {}
         self.__deviation = None
-        not_placed = list(scene.points())
-        passed_constraints = set()
 
+        frozen = scene.is_frozen
+        if not frozen:
+            scene.freeze()
+        self.__place()
+        if not frozen:
+            scene.unfreeze()
+
+    def __place(self):
+        not_placed = list(self.scene.points())
+        passed_constraints = set()
         def add(p: CoreScene.Point, *coords):
             for candidate in coords:
                 temp = Placement.TempPlacement(self, p, candidate)

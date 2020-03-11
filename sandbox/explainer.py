@@ -18,7 +18,7 @@ def side_of(triangle, index):
     return triangle[(index + 1) % 3].vector(triangle[(index + 2) % 3])
 
 def angle_of(triangle, index):
-    return triangle[index]._angle(triangle[(index + 1) % 3], triangle[(index + 2) % 3])
+    return triangle[index].angle(triangle[(index + 1) % 3], triangle[(index + 2) % 3])
 
 def side_pairs(prop):
     if not hasattr(prop, 'side_pairs'):
@@ -115,7 +115,12 @@ class Explainer:
 
     def explain(self):
         start = time.time()
+        frozen = self.scene.is_frozen
+        if not frozen:
+            self.scene.freeze()
         self.__explain_all()
+        if not frozen:
+            self.scene.unfreeze()
         self.__explanation_time = time.time() - start
 
     def __explain_all(self):
@@ -126,7 +131,7 @@ class Explainer:
                 self.__reason(NonCollinearProperty(*cnst.params), cnst.comments)
             for cnst in self.scene.constraints(Constraint.Kind.same_direction):
                 self.__reason(
-                    AngleValueProperty(cnst.params[0]._angle(cnst.params[1], cnst.params[2]), 0),
+                    AngleValueProperty(cnst.params[0].angle(cnst.params[1], cnst.params[2]), 0),
                     cnst.comments
                 )
             for cnst in self.scene.constraints(Constraint.Kind.opposite_side):
@@ -153,7 +158,7 @@ class Explainer:
                             break
                 elif isinstance(prop, AngleValueProperty) and prop.degree == 0:
                     for cnst in self.scene.constraints(Constraint.Kind.same_direction):
-                        if same(prop.angle, cnst.params[0]._angle(*cnst.params[1:])):
+                        if same(prop.angle, cnst.params[0].angle(*cnst.params[1:])):
                              self.__reason(prop, cnst.comments)
                 elif isinstance(prop, AngleValueProperty) and prop.degree == 90:
                     for cnst in self.scene.constraints(Constraint.Kind.perpendicular):
@@ -208,7 +213,7 @@ class Explainer:
                     continue
                 crossing = self.scene.get_intersection(rsn.property.line, line2)
                 if crossing:
-                    self.__reason(AngleValueProperty(crossing._angle(pt0, pt1), 0), rsn.comments)
+                    self.__reason(AngleValueProperty(crossing.angle(pt0, pt1), 0), rsn.comments)
 
             for rsn0, rsn1 in itertools.combinations(same_side_reasons, 2):
                 AB = rsn0.property.line
@@ -244,12 +249,12 @@ class Explainer:
                     for com in rsn1.comments:
                         if not com in comments:
                             comments.append(com)
-                    self.__reason(AngleValueProperty(X._angle(A, D), 0), comments)
-                    self.__reason(AngleValueProperty(A._angle(D, X), 0), comments)
-                    self.__reason(AngleValueProperty(D._angle(A, X), 180), comments)
-                    self.__reason(AngleValueProperty(B._angle(C, X), 0), comments)
-                    self.__reason(AngleValueProperty(C._angle(B, X), 0), comments)
-                    self.__reason(AngleValueProperty(X._angle(B, C), 180), comments)
+                    self.__reason(AngleValueProperty(X.angle(A, D), 0), comments)
+                    self.__reason(AngleValueProperty(A.angle(D, X), 0), comments)
+                    self.__reason(AngleValueProperty(D.angle(A, X), 180), comments)
+                    self.__reason(AngleValueProperty(B.angle(C, X), 0), comments)
+                    self.__reason(AngleValueProperty(C.angle(B, X), 0), comments)
+                    self.__reason(AngleValueProperty(X.angle(B, C), 180), comments)
 
             same_direction = [rsn for rsn in self.__explained.list(AngleValueProperty) if \
                 rsn.property.degree == 0 and rsn.property.angle.vertex is not None]
@@ -316,21 +321,21 @@ class Explainer:
                 if a0.vertex is None or a0.vertex != a1.vertex:
                     continue
                 if a0.vector1.end == a1.vector0.end:
-                    angle = a0.vertex._angle(a0.vector0.end, a1.vector1.end) #a0 + a1
+                    angle = a0.vertex.angle(a0.vector0.end, a1.vector1.end) #a0 + a1
                     is_sum = True
                     if not point_inside_angle(a0.vector1.end, angle):
                         continue
                 elif a0.vector0.end == a1.vector1.end:
-                    angle = a0.vertex._angle(a1.vector0.end, a0.vector1.end) #a0 + a1
+                    angle = a0.vertex.angle(a1.vector0.end, a0.vector1.end) #a0 + a1
                     is_sum = True
                     if not point_inside_angle(a0.vector0.end, angle):
                         continue
                 elif a0.vector0.end == a1.vector0.end:
-                    angle = a0.vertex._angle(a1.vector1.end, a0.vector1.end) #a0 - a1
+                    angle = a0.vertex.angle(a1.vector1.end, a0.vector1.end) #a0 - a1
                     is_sum = False
                     continue
                 elif a0.vector1.end == a1.vector1.end:
-                    angle = a0.vertex._angle(a0.vector0.end, a1.vector0.end) #a0 - a1
+                    angle = a0.vertex.angle(a0.vector0.end, a1.vector0.end) #a0 - a1
                     is_sum = False
                     continue
                 else:
@@ -520,7 +525,7 @@ class Explainer:
 
                 elif isinstance(prop, IsoscelesTriangleProperty):
                     try:
-                        angles = (prop.BC[0]._angle(prop.BC[1], prop.A), prop.BC[1]._angle(prop.A, prop.BC[0]))
+                        angles = (prop.BC[0].angle(prop.BC[1], prop.A), prop.BC[1].angle(prop.A, prop.BC[0]))
                         ca = next(rsn for rsn in \
                             self.__explained.list(AnglesRatioProperty, prop.keys([3])) if \
                                 rsn.property.ratio == 1 and \
@@ -572,14 +577,14 @@ class Explainer:
                     isosceles = self.__explained.list(IsoscelesTriangleProperty, prop.keys())
                     values = self.__explained.list(AngleValueProperty, prop.keys())
                     for iso in isosceles:
-                        if same(prop.angle, iso.property.BC[0]._angle(iso.property.A, iso.property.BC[1])):
+                        if same(prop.angle, iso.property.BC[0].angle(iso.property.A, iso.property.BC[1])):
                             break
-                        if same(prop.angle, iso.property.BC[1]._angle(iso.property.A, iso.property.BC[0])):
+                        if same(prop.angle, iso.property.BC[1].angle(iso.property.A, iso.property.BC[0])):
                             break
                     else:
                         continue
                     for val in values:
-                        if same(val.property.angle, iso.property.A._angle(*iso.property.BC)):
+                        if same(val.property.angle, iso.property.A.angle(*iso.property.BC)):
                             self.__reason(prop, _comment('Base angle of isosceles △ %s %s %s with apex angle %s', iso.property.A, *iso.property.BC, val.property.degree), premises=[iso, val])
                         # TODO: check sum of angles; report contradiction if found
 
