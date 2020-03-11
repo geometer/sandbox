@@ -1,10 +1,10 @@
 from .core import _comment
 
 def keys_for_vector(vector):
-    return [frozenset([vector.start, vector.end])]
+    return [frozenset(vector.points)]
 
 def keys_for_angle(angle):
-    return [frozenset([angle.vector0.start, angle.vector0.end, angle.vector1.start, angle.vector1.end])]
+    return [frozenset([*angle.vector0.points, *angle.vector1.points])]
 
 def keys_for_triangle(triangle, lengths):
     keys = []

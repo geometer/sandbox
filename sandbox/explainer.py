@@ -169,6 +169,10 @@ class Explainer:
                             if same_pair(cnst.params[0:2], (prop.vector0, prop.vector1)):
                                 self.__reason(prop, 'Given')
 
+        def not_equal_reason(pt0, pt1):
+            key = frozenset([pt0, pt1])
+            return next((r for r in self.__explained.list(NotEqualProperty, keys=[key])), None)
+
         def iteration():
             for ncl in self.__explained.list(NonCollinearProperty):
                 def extra_comments(pt, pt0, pt1):
@@ -183,21 +187,43 @@ class Explainer:
                             else:
                                 self.__reason(NotEqualProperty(pt, pt2), [str(ncl.property)] + extra_comments(pt, pt0, pt1))
                         for ptX, ptY in itertools.combinations(line.all_points, 2):
-                            key = frozenset([ptX, ptY])
-                            if key == set([pt0, pt1]):
-                                continue
-                            if len(self.__explained.list(NotEqualProperty, keys=[key])) == 0:
+                            ne = not_equal_reason(ptX, ptY)
+                            if ne is None:
                                 continue
                             comments = [str(ncl.property)]
                             if not ptX in (pt0, pt1):
                                 comments += extra_comments(ptX, pt0, pt1)
                             if not ptY in (pt0, pt1):
                                 comments += extra_comments(ptY, pt0, pt1)
-                            self.__reason(NonCollinearProperty(ptX, ptY, pt2), comments)
+                            self.__reason(NonCollinearProperty(ptX, ptY, pt2), comments, [ncl, ne])
 
                 add_reasons(ncl.property.points[0], ncl.property.points[1], ncl.property.points[2])
                 add_reasons(ncl.property.points[1], ncl.property.points[2], ncl.property.points[0])
                 add_reasons(ncl.property.points[2], ncl.property.points[0], ncl.property.points[1])
+
+            for cs in self.__explained.list(CongruentSegmentProperty):
+                vec0 = cs.property.vector0
+                vec1 = cs.property.vector1
+
+                ne0 = not_equal_reason(*vec0.points)
+                ne1 = not_equal_reason(*vec1.points)
+                if ne0 is not None and ne1 is None:
+                    self.__reason(NotEqualProperty(*vec1.points), [], [cs, ne0])
+                elif ne1 is not None and ne0 is None:
+                    self.__reason(NotEqualProperty(*vec0.points), [], [cs, ne1])
+                elif ne0 is None and ne1 is None:
+                    ne = None
+                    if vec0.start == vec1.start:
+                        ne = not_equal_reason(vec0.end, vec1.end)
+                    elif vec0.start == vec1.end:
+                        ne = not_equal_reason(vec0.end, vec1.start)
+                    elif vec0.end == vec1.start:
+                        ne = not_equal_reason(vec0.start, vec1.end)
+                    elif vec0.end == vec1.end:
+                        ne = not_equal_reason(vec0.start, vec1.start)
+                    if ne:
+                        self.__reason(NotEqualProperty(*vec0.points), [], [cs, ne])
+                        self.__reason(NotEqualProperty(*vec1.points), [], [cs, ne])
 
             same_side_reasons = self.__explained.list(SameSideProperty)
             for rsn in same_side_reasons:
@@ -507,7 +533,7 @@ class Explainer:
                     except StopIteration:
                         pass
 
-                    key = frozenset([prop.vector0.start, prop.vector0.end, prop.vector1.start, prop.vector1.end])
+                    key = frozenset([*prop.vector0.points, *prop.vector1.points])
                     if len(key) == 3:
                         try:
                             it = next(rsn for rsn in \

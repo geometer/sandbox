@@ -417,6 +417,10 @@ class CoreScene:
             return angle
 
         @property
+        def points(self):
+            return (self.start, self.end)
+
+        @property
         def scene(self):
             return self.start.scene
 
