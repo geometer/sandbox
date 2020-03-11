@@ -129,11 +129,6 @@ class Explainer:
                 self.__reason(NotEqualProperty(cnst.params[0], cnst.params[1]), cnst.comments)
             for cnst in self.scene.constraints(Constraint.Kind.not_collinear):
                 self.__reason(NonCollinearProperty(*cnst.params), cnst.comments)
-            for cnst in self.scene.constraints(Constraint.Kind.same_direction):
-                self.__reason(
-                    AngleValueProperty(cnst.params[0].angle(cnst.params[1], cnst.params[2]), 0),
-                    cnst.comments
-                )
             for cnst in self.scene.constraints(Constraint.Kind.opposite_side):
                 self.__reason(
                     OppositeSideProperty(cnst.params[2], cnst.params[0], cnst.params[1]),
