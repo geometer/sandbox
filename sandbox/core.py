@@ -175,6 +175,9 @@ class CoreScene:
         def angle(self, point0, point1):
             return self.vector(point0).angle(self.vector(point1))
 
+        def _angle(self, point0, point1):
+            return self.vector(point0)._angle(self.vector(point1))
+
         def belongs_to(self, line_or_circle):
             self.scene.assert_line_or_circle(line_or_circle)
             if self not in line_or_circle.all_points:
@@ -406,10 +409,13 @@ class CoreScene:
             return self.scene.get_line(self.start, self.end)
 
         def angle(self, other):
-            angle = CoreScene.Angle(self, other)
+            angle = self._angle(other)
             self.non_zero_length_constraint(comment=_comment('%s is side of %s', self, angle))
             other.non_zero_length_constraint(comment=_comment('%s is side of %s', other, angle))
             return angle
+
+        def _angle(self, other):
+            return CoreScene.Angle(self, other)
 
         @property
         def scene(self):

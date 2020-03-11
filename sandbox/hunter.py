@@ -214,13 +214,13 @@ class Hunter:
     def __angles(self, vectors):
         for pair in itertools.combinations(vectors, 2):
             if pair[0].end == pair[1].end:
-                angle = pair[0].reversed.angle(pair[1].reversed)
+                angle = pair[0].reversed._angle(pair[1].reversed)
             elif pair[0].start == pair[1].end:
-                angle = pair[0].angle(pair[1].reversed)
+                angle = pair[0]._angle(pair[1].reversed)
             elif pair[0].end == pair[1].start:
-                angle = pair[0].reversed.angle(pair[1])
+                angle = pair[0].reversed._angle(pair[1])
             else:
-                angle = pair[0].angle(pair[1])
+                angle = pair[0]._angle(pair[1])
             arc = self.placement.angle(angle)
             if arc < 0:
                 angle = angle.reversed
