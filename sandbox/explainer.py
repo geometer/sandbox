@@ -244,38 +244,44 @@ class Explainer:
                     self.__reason(AngleValueProperty(C.angle(B, X), 0), comments)
                     self.__reason(AngleValueProperty(X.angle(B, C), 180), comments)
 
-            same_direction = self.__explained.list(SameDirectionProperty)
+            same_direction = [rsn for rsn in self.__explained.list(AngleValueProperty) if \
+                rsn.property.degree == 0 and rsn.property.angle.vertex is not None]
 
             for sd in same_direction:
-                prop = sd.property
+                vertex = sd.property.angle.vertex
+                pt0 = sd.property.angle.vector0.end
+                pt1 = sd.property.angle.vector1.end
                 for cnst in self.scene.constraints(Constraint.Kind.not_collinear):
                     params = set(cnst.params)
-                    if prop.start in params:
-                        params.remove(prop.start)
-                        if prop.points[0] in params and prop.points[1] not in params:
-                            params.remove(prop.points[0])
-                            line = self.scene.get_line(prop.start, params.pop())
+                    if vertex in params:
+                        params.remove(vertex)
+                        if pt0 in params and pt1 not in params:
+                            params.remove(pt0)
+                            line = self.scene.get_line(vertex, params.pop())
                             if line:
-                                self.__reason(SameSideProperty(line, *prop.points), 'TBW', [sd])
-                        elif prop.points[1] in params and prop.points[0] not in params:
-                            params.remove(prop.points[1])
-                            line = self.scene.get_line(prop.start, params.pop())
+                                self.__reason(SameSideProperty(line, pt0, pt1), str(sd.property), [sd])
+                        elif pt1 in params and pt0 not in params:
+                            params.remove(pt1)
+                            line = self.scene.get_line(vertex, params.pop())
                             if line:
-                                self.__reason(SameSideProperty(line, *prop.points), 'TBW', [sd])
+                                self.__reason(SameSideProperty(line, pt0, pt1), str(sd.property), [sd])
 
             def same_dir(vector):
                 yield (vector, [])
                 for sd in same_direction:
-                    if sd.property.start == vector.start:
-                        if sd.property.points[0] == vector.end:
-                            yield (sd.property.start.vector(sd.property.points[1]), [sd])
-                        elif sd.property.points[1] == vector.end:
-                            yield (sd.property.start.vector(sd.property.points[0]), [sd])
-                    if sd.property.start == vector.end:
-                        if sd.property.points[0] == vector.start:
-                            yield (sd.property.points[1].vector(sd.property.start), [sd])
-                        elif sd.property.points[1] == vector.start:
-                            yield (sd.property.points[0].vector(sd.property.start), [sd])
+                    vertex = sd.property.angle.vertex
+                    pt0 = sd.property.angle.vector0.end
+                    pt1 = sd.property.angle.vector1.end
+                    if vertex == vector.start:
+                        if pt0 == vector.end:
+                            yield (vertex.vector(pt1), [sd])
+                        elif pt1 == vector.end:
+                            yield (vertex.vector(pt0), [sd])
+                    if vertex == vector.end:
+                        if pt0 == vector.start:
+                            yield (pt1.vector(vertex), [sd])
+                        elif pt1 == vector.start:
+                            yield (pt0.vector(vertex), [sd])
 
             def point_inside_angle(point, angle):
                 if angle.vertex is None:
