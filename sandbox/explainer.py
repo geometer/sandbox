@@ -121,36 +121,12 @@ class Explainer:
             for cnst in self.scene.constraints(Constraint.Kind.not_equal):
                 self.__reason(NotEqualProperty(cnst.params[0], cnst.params[1]), cnst.comments)
             for cnst in self.scene.constraints(Constraint.Kind.not_collinear):
-                def extra_comments(pt, pt0, pt1):
-                    return [_comment('%s lies on the line %s %s', pt, pt0, pt1)]
-
-                def add_reasons(pt0, pt1, pt2):
-                    line = self.scene.get_line(pt0, pt1)
-                    if line:
-                        for pt in line.all_points:
-                            if pt in (pt0, pt1):
-                                self.__reason(NotEqualProperty(pt, pt2), cnst.comments)
-                            else:
-                                self.__reason(NotEqualProperty(pt, pt2), cnst.comments + extra_comments(pt, pt0, pt1))
-                        for ptX, ptY in itertools.combinations(line.all_points, 2):
-                            #TODO check ptX != ptY
-                            comments = list(cnst.comments)
-                            if not ptX in (pt0, pt1):
-                                comments += extra_comments(ptX, pt0, pt1)
-                            if not ptY in (pt0, pt1):
-                                comments += extra_comments(ptY, pt0, pt1)
-                            self.__reason(NonCollinearProperty(ptX, ptY, pt2), comments)
-
-                add_reasons(cnst.params[0], cnst.params[1], cnst.params[2])
-                add_reasons(cnst.params[1], cnst.params[2], cnst.params[0])
-                add_reasons(cnst.params[2], cnst.params[0], cnst.params[1])
-
+                self.__reason(NonCollinearProperty(*cnst.params), cnst.comments)
             for cnst in self.scene.constraints(Constraint.Kind.same_direction):
                 self.__reason(
                     AngleValueProperty(cnst.params[0].angle(cnst.params[1], cnst.params[2]), 0),
                     cnst.comments
                 )
-
             for cnst in self.scene.constraints(Constraint.Kind.opposite_side):
                 self.__reason(
                     OppositeSideProperty(cnst.params[2], cnst.params[0], cnst.params[1]),
@@ -192,6 +168,32 @@ class Explainer:
                                 self.__reason(prop, 'Given')
 
         def iteration():
+            for ncl in self.__explained.list(NonCollinearProperty):
+                def extra_comments(pt, pt0, pt1):
+                    return [_comment('%s lies on the line %s %s', pt, pt0, pt1)]
+
+                def add_reasons(pt0, pt1, pt2):
+                    line = self.scene.get_line(pt0, pt1)
+                    if line:
+                        for pt in line.all_points:
+                            if pt in (pt0, pt1):
+                                self.__reason(NotEqualProperty(pt, pt2), str(ncl.property))
+                            else:
+                                self.__reason(NotEqualProperty(pt, pt2), [str(ncl.property)] + extra_comments(pt, pt0, pt1))
+                        for ptX, ptY in itertools.combinations(line.all_points, 2):
+                            #TODO check ptX != ptY
+                            comments = [str(ncl.property)]
+                            if not ptX in (pt0, pt1):
+                                comments += extra_comments(ptX, pt0, pt1)
+                            if not ptY in (pt0, pt1):
+                                comments += extra_comments(ptY, pt0, pt1)
+                            if len(comments) > 1:
+                                self.__reason(NonCollinearProperty(ptX, ptY, pt2), comments)
+
+                add_reasons(ncl.property.points[0], ncl.property.points[1], ncl.property.points[2])
+                add_reasons(ncl.property.points[1], ncl.property.points[2], ncl.property.points[0])
+                add_reasons(ncl.property.points[2], ncl.property.points[0], ncl.property.points[1])
+
             same_side_reasons = self.__explained.list(SameSideProperty)
             for rsn in same_side_reasons:
                 pt0 = rsn.property.points[0]
