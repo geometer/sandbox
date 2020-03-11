@@ -138,10 +138,6 @@ class Explainer:
 
             for cnst in self.scene.constraints(Constraint.Kind.same_direction):
                 self.__reason(
-                    SameDirectionProperty(cnst.params[0], cnst.params[1], cnst.params[2]),
-                    cnst.comments
-                )
-                self.__reason(
                     AngleValueProperty(cnst.params[0].angle(cnst.params[1], cnst.params[2]), 0),
                     cnst.comments
                 )
@@ -196,7 +192,6 @@ class Explainer:
                     continue
                 crossing = self.scene.get_intersection(rsn.property.line, line2)
                 if crossing:
-                    self.__reason(SameDirectionProperty(crossing, pt0, pt1), rsn.comments)
                     self.__reason(AngleValueProperty(crossing.angle(pt0, pt1), 0), rsn.comments)
 
             for rsn0, rsn1 in itertools.combinations(same_side_reasons, 2):
@@ -233,10 +228,6 @@ class Explainer:
                     for com in rsn1.comments:
                         if not com in comments:
                             comments.append(com)
-                    self.__reason(SameDirectionProperty(X, A, D), comments)
-                    self.__reason(SameDirectionProperty(A, D, X), comments)
-                    self.__reason(SameDirectionProperty(B, C, X), comments)
-                    self.__reason(SameDirectionProperty(C, B, X), comments)
                     self.__reason(AngleValueProperty(X.angle(A, D), 0), comments)
                     self.__reason(AngleValueProperty(A.angle(D, X), 0), comments)
                     self.__reason(AngleValueProperty(D.angle(A, X), 180), comments)
@@ -650,20 +641,6 @@ class NotEqualProperty(Property):
 
     def __eq__(self, other):
         return isinstance(other, NotEqualProperty) and set(self.points) == set(other.points)
-
-class SameDirectionProperty(Property):
-    def __init__(self, start, point0, point1):
-        self.start = start
-        self.points = [point0, point1]
-
-    @property
-    def description(self):
-        return _comment('%s, %s in the same direction from %s', *self.points, self.start)
-
-    def __eq__(self, other):
-        if not isinstance(other, SameDirectionProperty):
-            return False
-        return self.start == other.start and set(self.points) == set(other.points)
 
 class OppositeSideProperty(Property):
     def __init__(self, line, point0, point1):
