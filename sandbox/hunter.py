@@ -7,6 +7,7 @@ from . import Scene, iterative_placement
 from .placement import Placement
 from .property import *
 from .core import _comment
+from .stats import Stats
 
 ERROR = np.float128(5e-6)
 
@@ -344,9 +345,9 @@ class Hunter:
                 self.__add(SimilarTrianglesProperty(pair[0].pts, pair[1].pts))
 
     def stats(self):
-        return [
+        return Stats([
             ('Hunting time', '%.3f sec' % self.__hunting_time)
-        ]
+        ], 'Hunter stats')
 
     def hunt(self, options=('default')):
         start = time.time()

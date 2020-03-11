@@ -22,6 +22,9 @@ class Property:
         return []
 
 class EquilateralTriangleProperty(Property):
+    """
+    A triangle is equilateral
+    """
     def __init__(self, ABC):
         self.ABC = list(ABC)
 
@@ -33,6 +36,9 @@ class EquilateralTriangleProperty(Property):
         return _comment('△ %s %s %s is equilateral', *self.ABC)
 
 class CollinearProperty(Property):
+    """
+    Three points are collinear
+    """
     def __init__(self, A, B, C):
         self.points = (A, B, C)
 
@@ -47,6 +53,9 @@ class CollinearProperty(Property):
         return isinstance(other, CollinearProperty) and set(self.points) == set(other.points)
 
 class NonCollinearProperty(Property):
+    """
+    Three points are not collinear
+    """
     def __init__(self, point0, point1, point2):
         self.points = [point0, point1, point2]
 
@@ -61,6 +70,9 @@ class NonCollinearProperty(Property):
         return isinstance(other, NonCollinearProperty) and set(self.points) == set(other.points)
 
 class AngleValueProperty(Property):
+    """
+    Angle value
+    """
     def __init__(self, angle, degree):
         self.angle = angle
         self.degree = degree
@@ -85,6 +97,9 @@ class AngleValueProperty(Property):
             (self.degree == -other.degree and self.angle.reversed == other.angle)
 
 class AnglesRatioProperty(Property):
+    """
+    Two angle values ratio
+    """
     def __init__(self, angle0, angle1, ratio):
         # angle0 / angle1 = ratio
         self.angle0 = angle0
@@ -111,6 +126,9 @@ class AnglesRatioProperty(Property):
              (self.angle0 == other.angle1.reversed and self.angle1 == other.angle0.reversed))
 
 class CongruentSegmentProperty(Property):
+    """
+    Two segments are congruent
+    """
     def __init__(self, vector0, vector1):
         self.vector0 = vector0
         self.vector1 = vector1
@@ -123,6 +141,9 @@ class CongruentSegmentProperty(Property):
         return _comment('|%s| = |%s|', self.vector0, self.vector1)
 
 class SimilarTrianglesProperty(Property):
+    """
+    Two triangles are similar
+    """
     def __init__(self, ABC, DEF):
         self.ABC = list(ABC)
         self.DEF = list(DEF)
@@ -135,6 +156,9 @@ class SimilarTrianglesProperty(Property):
         return _comment('△ %s %s %s ~ △ %s %s %s', *self.ABC, *self.DEF)
 
 class CongruentTrianglesProperty(Property):
+    """
+    Two triangles are congruent
+    """
     def __init__(self, ABC, DEF):
         self.ABC = list(ABC)
         self.DEF = list(DEF)
@@ -147,6 +171,9 @@ class CongruentTrianglesProperty(Property):
         return _comment('△ %s %s %s = △ %s %s %s', *self.ABC, *self.DEF)
 
 class IsoscelesTriangleProperty(Property):
+    """
+    A triangle is isosceles
+    """
     def __init__(self, A, BC):
         self.A = A
         self.BC = list(BC)
@@ -156,4 +183,4 @@ class IsoscelesTriangleProperty(Property):
 
     @property
     def description(self):
-        return _comment('isosceles △ %s %s %s', self.A, *self.BC)
+        return _comment('△ %s %s %s is isosceles (with apex %s)', self.A, *self.BC, self.A)

@@ -41,17 +41,13 @@ print('\tMeasured: %s = %.5f' % (angle, placement.angle(angle) / math.pi * 180))
 
 hunter = Hunter(placement)
 hunter.hunt()
-print('\tHunter stats:')
-for stat in hunter.stats():
-    print('\t  %s: %s' % stat)
+hunter.stats().dump()
 
 explainer = Explainer(scene, hunter.properties)
 print('\tGuessed: %s = %s' % (angle, explainer.guessed(angle)))
 
 explainer.explain()
-print('\tExplainer stats:')
-for stat in explainer.stats():
-    print('\t  %s: %s' % stat)
+explainer.stats().dump()
 print('\tExplained: %s = %s' % (angle, explainer.explained(angle)))
 
 #def dump(explanation, level=0):

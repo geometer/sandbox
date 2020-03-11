@@ -4,6 +4,7 @@ import time
 from .core import Constraint, _comment
 from .property import *
 from .scene import Scene
+from .stats import Stats
 
 # +++++ utility methods +++++
 def same(obj0, obj1): #same segment or angle
@@ -601,14 +602,33 @@ class Explainer:
             print('\t%s' % prop)
 
     def stats(self):
-        return [
+        def type_presentation(kind):
+            return kind.__doc__.strip() if kind.__doc__ else kind.__name__
+
+        explained_by_kind = {}
+        for rsn in self.__explained.all:
+            kind = type(rsn.property)
+            explained_by_kind[kind] = explained_by_kind.get(kind, 0) + 1
+        explained_by_kind = [(type_presentation(k), v) for k, v in explained_by_kind.items()]
+        explained_by_kind.sort(key=lambda pair: -pair[1])
+
+        unexplained_by_kind = {}
+        for prop in self.__unexplained:
+            kind = type(prop)
+            unexplained_by_kind[kind] = unexplained_by_kind.get(kind, 0) + 1
+        unexplained_by_kind = [(type_presentation(k), v) for k, v in unexplained_by_kind.items()]
+        unexplained_by_kind.sort(key=lambda pair: -pair[1])
+
+        return Stats([
             ('Total properties', len(self.__explained) + len(self.__unexplained)),
             ('Explained properties', len(self.__explained)),
+            Stats(explained_by_kind),
             ('Explained property keys', self.__explained.keys_num()),
             ('Unexplained properties', len(self.__unexplained)),
+            Stats(unexplained_by_kind),
             ('Iterations', self.__iteration_step_count),
             ('Explanation time', '%.3f sec' % self.__explanation_time),
-        ]
+        ], 'Explainer stats')
 
     def guessed(self, obj):
         explained = self.explained(obj)
@@ -643,6 +663,9 @@ class Explainer:
         return None
 
 class NotEqualProperty(Property):
+    """
+    The distance between two points is non-zero
+    """
     def __init__(self, point0, point1):
         self.points = [point0, point1]
 
@@ -654,6 +677,9 @@ class NotEqualProperty(Property):
         return isinstance(other, NotEqualProperty) and set(self.points) == set(other.points)
 
 class OppositeSideProperty(Property):
+    """
+    Two points are located on opposite sides of the line
+    """
     def __init__(self, line, point0, point1):
         self.line = line
         self.points = [point0, point1]
@@ -671,6 +697,9 @@ class OppositeSideProperty(Property):
         return self.line == other.line and set(self.points) == set(other.points)
 
 class SameSideProperty(Property):
+    """
+    Two points are located on the same side of the line
+    """
     def __init__(self, line, point0, point1):
         self.line = line
         self.points = [point0, point1]
