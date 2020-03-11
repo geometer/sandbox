@@ -202,6 +202,8 @@ class Explainer:
             for rsn0, rsn1 in itertools.combinations(same_side_reasons, 2):
                 AB = rsn0.property.line
                 AC = rsn1.property.line
+                if AB == AC:
+                    continue
                 A = self.scene.get_intersection(AB, AC)
                 if A is None:
                     continue
@@ -226,7 +228,7 @@ class Explainer:
                 if AD is None or BC is None:
                     continue
                 X = self.scene.get_intersection(AD, BC)
-                if X:
+                if X is not None and X not in (A, B, C, D):
                     comments = rsn0.comments
                     for com in rsn1.comments:
                         if not com in comments:
@@ -243,6 +245,24 @@ class Explainer:
                     self.__reason(AngleValueProperty(X.angle(B, C), 180), comments)
 
             same_direction = self.__explained.list(SameDirectionProperty)
+
+            for sd in same_direction:
+                prop = sd.property
+                for cnst in self.scene.constraints(Constraint.Kind.not_collinear):
+                    params = set(cnst.params)
+                    if prop.start in params:
+                        params.remove(prop.start)
+                        if prop.points[0] in params and prop.points[1] not in params:
+                            params.remove(prop.points[0])
+                            line = self.scene.get_line(prop.start, params.pop())
+                            if line:
+                                self.__reason(SameSideProperty(line, *prop.points), 'TBW', [sd])
+                        elif prop.points[1] in params and prop.points[0] not in params:
+                            params.remove(prop.points[1])
+                            line = self.scene.get_line(prop.start, params.pop())
+                            if line:
+                                self.__reason(SameSideProperty(line, *prop.points), 'TBW', [sd])
+
             def same_dir(vector):
                 yield (vector, [])
                 for sd in same_direction:
@@ -257,47 +277,73 @@ class Explainer:
                         elif sd.property.points[1] == vector.start:
                             yield (sd.property.points[0].vector(sd.property.start), [sd])
 
-#            for ar in self.__explained.list(AnglesRatioProperty):
-#                a0 = ar.property.angle0
-#                a1 = ar.property.angle1
-#                if a0.vertex is None or a0.vertex != a1.vertex:
-#                    continue
-#                if a0.vector1.end == a1.vector0.end:
-#                    angle = a0.vertex.angle(a0.vector0.end, a1.vector1.end) #a0 + a1
-#                    is_sum = True
-#                elif a0.vector0.end == a1.vector1.end:
-#                    angle = a0.vertex.angle(a1.vector0.end, a0.vector1.end) #a0 + a1
-#                    is_sum = True
-#                elif a0.vector0.end == a1.vector0.end:
-#                    angle = a0.vertex.angle(a1.vector1.end, a0.vector1.end) #a0 - a1
-#                    is_sum = False
-#                elif a0.vector1.end == a1.vector1.end:
-#                    angle = a0.vertex.angle(a0.vector0.end, a1.vector0.end) #a0 - a1
-#                    is_sum = False
-#                else:
-#                    continue
-#                for ka in self.__explained.list(AngleValueProperty):
-#                    if ka.property.angle == angle:
-#                        value = ka.property.degree
-#                        break
-#                    elif ka.property.angle == angle.reversed:
-#                        value = -ka.property.degree
-#                        break
-#                else:
-#                    continue
-#                if is_sum:
-#                    if ar.property.ratio == -1:
-#                        continue
-#                    second = value / (1 + ar.property.ratio)
-#                    first = value - second
-#                else:
-#                    if ar.property.ratio == 1:
-#                        continue
-#                    second = value / (ar.property.ratio - 1)
-#                    first = value + second
-#                #TODO: write comments
-#                self.__reason(AngleValueProperty(a0, first), [], premises=[ar, ka])
-#                self.__reason(AngleValueProperty(a1, second), [], premises=[ar, ka])
+            def point_inside_angle(point, angle):
+                if angle.vertex is None:
+                    return False
+
+                line = angle.vector1.line()
+                if line is None:
+                    return False
+                keys = [frozenset([point, angle.vector0.end, line])]
+                if next((r for r in self.__explained.list(SameSideProperty, keys=keys)), None) is None:
+                    return False
+
+                line = angle.vector0.line()
+                if line is None:
+                    return False
+                keys = [frozenset([point, angle.vector1.end, line])]
+                if next((r for r in self.__explained.list(SameSideProperty, keys=keys)), None) is None:
+                    return False
+
+                return True
+
+            for ar in self.__explained.list(AnglesRatioProperty):
+                a0 = ar.property.angle0
+                a1 = ar.property.angle1
+                if a0.vertex is None or a0.vertex != a1.vertex:
+                    continue
+                if a0.vector1.end == a1.vector0.end:
+                    angle = a0.vertex.angle(a0.vector0.end, a1.vector1.end) #a0 + a1
+                    is_sum = True
+                    if not point_inside_angle(a0.vector1.end, angle):
+                        continue
+                elif a0.vector0.end == a1.vector1.end:
+                    angle = a0.vertex.angle(a1.vector0.end, a0.vector1.end) #a0 + a1
+                    is_sum = True
+                    if not point_inside_angle(a0.vector0.end, angle):
+                        continue
+                elif a0.vector0.end == a1.vector0.end:
+                    angle = a0.vertex.angle(a1.vector1.end, a0.vector1.end) #a0 - a1
+                    is_sum = False
+                    continue
+                elif a0.vector1.end == a1.vector1.end:
+                    angle = a0.vertex.angle(a0.vector0.end, a1.vector0.end) #a0 - a1
+                    is_sum = False
+                    continue
+                else:
+                    continue
+                for ka in self.__explained.list(AngleValueProperty):
+                    if ka.property.angle == angle:
+                        value = ka.property.degree
+                        break
+                    elif ka.property.angle == angle.reversed:
+                        value = -ka.property.degree
+                        break
+                else:
+                    continue
+                if is_sum:
+                    if ar.property.ratio == -1:
+                        continue
+                    second = value / (1 + ar.property.ratio)
+                    first = value - second
+                else:
+                    if ar.property.ratio == 1:
+                        continue
+                    second = value / (ar.property.ratio - 1)
+                    first = value + second
+                #TODO: write comments
+                self.__reason(AngleValueProperty(a0, first), [], premises=[ar, ka])
+                self.__reason(AngleValueProperty(a1, second), [], premises=[ar, ka])
 
             for prop in list(self.__unexplained):
                 if isinstance(prop, AnglesRatioProperty):

@@ -400,6 +400,11 @@ class CoreScene:
             self.start = start
             self.end = end
 
+        def line(self, create_if_not_exists=False):
+            if create_if_not_exists:
+                return self.start.line_through(self.end)
+            return self.scene.get_line(self.start, self.end)
+
         def angle(self, other):
             angle = CoreScene.Angle(self, other)
             self.non_zero_length_constraint(comment=_comment('%s is side of angle %s', self, angle))
