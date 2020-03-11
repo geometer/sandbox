@@ -30,15 +30,35 @@ class EquilateralTriangleProperty(Property):
 
     @property
     def description(self):
-        return _comment('equilateral △ %s %s %s', *self.ABC)
+        return _comment('△ %s %s %s is equilateral', *self.ABC)
 
 class CollinearProperty(Property):
     def __init__(self, A, B, C):
         self.points = (A, B, C)
 
+    def keys(self):
+        return [frozenset(self.points)]
+
     @property
     def description(self):
-        return _comment('collinear %s, %s, %s', *self.points)
+        return _comment('Points %s, %s, and %s are collinear', *self.points)
+
+    def __eq__(self, other):
+        return isinstance(other, CollinearProperty) and set(self.points) == set(other.points)
+
+class NonCollinearProperty(Property):
+    def __init__(self, point0, point1, point2):
+        self.points = [point0, point1, point2]
+
+    def keys(self):
+        return [frozenset(self.points)]
+
+    @property
+    def description(self):
+        return _comment('Points %s, %s, and %s are not collinear', *self.points)
+
+    def __eq__(self, other):
+        return isinstance(other, NonCollinearProperty) and set(self.points) == set(other.points)
 
 class AngleValueProperty(Property):
     def __init__(self, angle, degree):

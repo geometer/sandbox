@@ -124,17 +124,29 @@ class Explainer:
             for cnst in self.scene.constraints(Constraint.Kind.not_equal):
                 not_equal(cnst.params[0], cnst.params[1], cnst.comments)
             for cnst in self.scene.constraints(Constraint.Kind.not_collinear):
-                def adjust(pt0, pt1, pt2):
+                def extra_comments(pt, pt0, pt1):
+                    return [_comment('%s lies on the line %s %s', pt, pt0, pt1)]
+
+                def add_reasons(pt0, pt1, pt2):
                     line = self.scene.get_line(pt0, pt1)
                     if line:
                         for pt in line.all_points:
-                            if pt == pt0 or pt == pt1:
+                            if pt in (pt0, pt1):
                                 not_equal(pt, pt2, cnst.comments)
                             else:
-                                not_equal(pt, pt2, cnst.comments + [_comment('%s lies on the line %s', pt, line)])
-                adjust(cnst.params[0], cnst.params[1], cnst.params[2])
-                adjust(cnst.params[1], cnst.params[2], cnst.params[0])
-                adjust(cnst.params[2], cnst.params[0], cnst.params[1])
+                                not_equal(pt, pt2, cnst.comments + extra_comments(pt, pt0, pt1))
+                        for ptX, ptY in itertools.combinations(line.all_points, 2):
+                            #TODO check ptX != ptY
+                            comments = list(cnst.comments)
+                            if not ptX in (pt0, pt1):
+                                comments += extra_comments(ptX, pt0, pt1)
+                            if not ptY in (pt0, pt1):
+                                comments += extra_comments(ptY, pt0, pt1)
+                            self.__reason(NonCollinearProperty(ptX, ptY, pt2), comments)
+
+                add_reasons(cnst.params[0], cnst.params[1], cnst.params[2])
+                add_reasons(cnst.params[1], cnst.params[2], cnst.params[0])
+                add_reasons(cnst.params[2], cnst.params[0], cnst.params[1])
 
             for cnst in self.scene.constraints(Constraint.Kind.same_direction):
                 self.__reason(
@@ -242,20 +254,20 @@ class Explainer:
                 vertex = sd.property.angle.vertex
                 pt0 = sd.property.angle.vector0.end
                 pt1 = sd.property.angle.vector1.end
-                for cnst in self.scene.constraints(Constraint.Kind.not_collinear):
-                    params = set(cnst.params)
+                for nc in self.__explained.list(NonCollinearProperty):
+                    params = set(nc.property.points)
                     if vertex in params:
                         params.remove(vertex)
                         if pt0 in params and pt1 not in params:
                             params.remove(pt0)
                             line = self.scene.get_line(vertex, params.pop())
                             if line:
-                                self.__reason(SameSideProperty(line, pt0, pt1), str(sd.property), [sd])
+                                self.__reason(SameSideProperty(line, pt0, pt1), [str(sd.property), str(nc.property)], [sd, nc])
                         elif pt1 in params and pt0 not in params:
                             params.remove(pt1)
                             line = self.scene.get_line(vertex, params.pop())
                             if line:
-                                self.__reason(SameSideProperty(line, pt0, pt1), str(sd.property), [sd])
+                                self.__reason(SameSideProperty(line, pt0, pt1), [str(sd.property), str(nc.property)], [sd, nc])
 
             def same_dir(vector):
                 yield (vector, [])
