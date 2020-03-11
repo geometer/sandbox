@@ -407,8 +407,8 @@ class CoreScene:
 
         def angle(self, other):
             angle = CoreScene.Angle(self, other)
-            self.non_zero_length_constraint(comment=_comment('%s is side of angle %s', self, angle))
-            other.non_zero_length_constraint(comment=_comment('%s is side of angle %s', other, angle))
+            self.non_zero_length_constraint(comment=_comment('%s is side of %s', self, angle))
+            other.non_zero_length_constraint(comment=_comment('%s is side of %s', other, angle))
             return angle
 
         @property
