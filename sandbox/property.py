@@ -119,11 +119,18 @@ class AnglesRatioProperty(Property):
     def __eq__(self, other):
         if not isinstance(other, AnglesRatioProperty):
             return False
-        return self.ratio == other.ratio and \
-            ((self.angle0 == other.angle0 and self.angle1 == other.angle1) or \
-             (self.angle0 == other.angle1 and self.angle1 == other.angle0) or \
-             (self.angle0 == other.angle0.reversed and self.angle1 == other.angle1.reversed) or \
-             (self.angle0 == other.angle1.reversed and self.angle1 == other.angle0.reversed))
+        same_ratio = self.ratio == other.ratio
+        if same_ratio:
+            if self.angle0 == other.angle0:
+                return self.angle1 == other.angle1
+            if self.angle0 == other.angle0.reversed:
+                return self.angle1 == other.angle1.reversed
+        if (same_ratio and self.ratio == 1) or self.ratio * other.ratio == 1:
+            if self.angle0 == other.angle1:
+                return self.angle1 == other.angle0
+            if self.angle0 == other.angle1.reversed:
+                return self.angle1 == other.angle0.reversed
+        return False
 
 class ParallelVectorsProperty(Property):
     """
