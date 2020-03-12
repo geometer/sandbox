@@ -27,9 +27,7 @@ explainer = Explainer(scene, hunter.properties)
 explainer.explain()
 #explainer.dump()
 
-print('\tExplainer stats:')
-for stat in explainer.stats():
-    print('\t  %s: %s' % stat)
+explainer.stats().dump()
 
 helper = PlacementHelper(placement)
 print('|%s%s| = %.5f' % (A.label, J.label, helper.distance(A, J)))
