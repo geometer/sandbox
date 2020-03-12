@@ -1,5 +1,6 @@
 import itertools
 import time
+import numpy as np
 
 from .core import Constraint, _comment
 from .property import *
@@ -610,6 +611,24 @@ class Explainer:
                                     break
                             if found:
                                 break
+
+                    if found:
+                        continue
+
+                    if prop.angle.vertex is not None:
+                        angle = prop.angle
+                        first = angle.vector0.end.angle(angle.vector1.end, angle.vertex)
+                        second = angle.vector1.end.angle(angle.vertex, angle.vector0.end)
+                        pairs = []
+                        for ka in self.__explained.list(AngleValueProperty, keys_for_angle(angle)):
+                            if ka.property.angle in (first, second):
+                                pairs.append((ka.property.degree, ka))
+                            if ka.property.angle.reversed in (first, second):
+                                pairs.append((-ka.property.degree, ka))
+                        if len(pairs) >= 2:
+                            #TODO: Better way to report contradiction
+                            assert np.abs(prop.degree + pairs[0][0] + pairs[1][0]) == 180
+                            self.__reason(prop, _comment('%s + %s + %s = 180º', angle, first, second), [pairs[0][1], pairs[1][1]])
 
                     if found:
                         continue
