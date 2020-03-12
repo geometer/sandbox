@@ -28,7 +28,7 @@ class EquilateralTriangleProperty(Property):
     A triangle is equilateral
     """
     def __init__(self, ABC):
-        self.ABC = list(ABC)
+        self.ABC = tuple(ABC)
 
     def keys(self, lengths=None):
         return keys_for_triangle(self.ABC, lengths)
@@ -148,8 +148,8 @@ class SimilarTrianglesProperty(Property):
     Two triangles are similar
     """
     def __init__(self, ABC, DEF):
-        self.ABC = list(ABC)
-        self.DEF = list(DEF)
+        self.ABC = tuple(ABC)
+        self.DEF = tuple(DEF)
 
     def keys(self, lengths=None):
         return keys_for_triangle(self.ABC, lengths) + keys_for_triangle(self.DEF, lengths)
@@ -163,8 +163,8 @@ class CongruentTrianglesProperty(Property):
     Two triangles are congruent
     """
     def __init__(self, ABC, DEF):
-        self.ABC = list(ABC)
-        self.DEF = list(DEF)
+        self.ABC = tuple(ABC)
+        self.DEF = tuple(DEF)
 
     def keys(self, lengths=None):
         return keys_for_triangle(self.ABC, lengths) + keys_for_triangle(self.DEF, lengths)
@@ -179,10 +179,10 @@ class IsoscelesTriangleProperty(Property):
     """
     def __init__(self, A, BC):
         self.A = A
-        self.BC = list(BC)
+        self.BC = tuple(BC)
 
     def keys(self, lengths=None):
-        return keys_for_triangle([self.A] + self.BC, lengths)
+        return keys_for_triangle([self.A, *self.BC], lengths)
 
     @property
     def description(self):

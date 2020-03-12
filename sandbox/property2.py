@@ -1,5 +1,5 @@
 from .core import _comment
-from .property import Property
+from .property import Property, keys_for_vector
 
 class NonCollinearProperty(Property):
     """
@@ -56,10 +56,10 @@ class OppositeSideProperty(Property):
     """
     def __init__(self, line, point0, point1):
         self.line = line
-        self.points = [point0, point1]
+        self.points = (point0, point1)
 
     def keys(self):
-        return [frozenset([self.line] + self.points)]
+        return [frozenset([self.line, *self.points])]
 
     @property
     def description(self):
@@ -79,7 +79,7 @@ class SameSideProperty(Property):
         self.points = [point0, point1]
 
     def keys(self):
-        return [frozenset([self.line] + self.points)]
+        return [frozenset([self.line, *self.points])]
 
     @property
     def description(self):
