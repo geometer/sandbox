@@ -1,4 +1,5 @@
-# https://www.facebook.com/groups/parmenides52/, problem 4594
+# "Romantics of Geometry" group on Facebook, problem 4594
+# https://www.facebook.com/groups/parmenides52/permalink/2784962828284072/
 
 from sandbox import Scene, iterative_placement, PlacementHelper
 from sandbox.hunter import Hunter

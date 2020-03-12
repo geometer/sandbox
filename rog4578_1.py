@@ -1,4 +1,5 @@
-# https://www.facebook.com/groups/parmenides52/, problem 4578
+# "Romantics of Geometry" group on Facebook, problem 4578
+# https://www.facebook.com/groups/parmenides52/permalink/2779763428804012/
 
 import math
 
