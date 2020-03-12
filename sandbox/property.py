@@ -1,3 +1,5 @@
+import sympy as sp
+
 from .core import _comment
 
 def keys_for_vector(vector):
@@ -102,9 +104,18 @@ class AnglesRatioProperty(Property):
     """
     def __init__(self, angle0, angle1, ratio):
         # angle0 / angle1 = ratio
-        self.angle0 = angle0
-        self.angle1 = angle1
-        self.ratio = ratio
+        if ratio < 0:
+            ratio = -ratio
+            angle1 = angle1.reversed
+
+        if ratio >= 1:
+            self.angle0 = angle0
+            self.angle1 = angle1
+            self.ratio = ratio
+        else:
+            self.angle0 = angle1
+            self.angle1 = angle0
+            self.ratio = sp.sympify(1) / ratio
 
     def keys(self):
         return keys_for_angle(self.angle0) + keys_for_angle(self.angle1)
@@ -119,13 +130,15 @@ class AnglesRatioProperty(Property):
     def __eq__(self, other):
         if not isinstance(other, AnglesRatioProperty):
             return False
-        same_ratio = self.ratio == other.ratio
-        if same_ratio:
-            if self.angle0 == other.angle0:
-                return self.angle1 == other.angle1
-            if self.angle0 == other.angle0.reversed:
-                return self.angle1 == other.angle1.reversed
-        if (same_ratio and self.ratio == 1) or self.ratio * other.ratio == 1:
+
+        if self.ratio != other.ratio:
+            return False
+
+        if self.angle0 == other.angle0:
+            return self.angle1 == other.angle1
+        if self.angle0 == other.angle0.reversed:
+            return self.angle1 == other.angle1.reversed
+        if self.ratio == 1:
             if self.angle0 == other.angle1:
                 return self.angle1 == other.angle0
             if self.angle0 == other.angle1.reversed:
