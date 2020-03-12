@@ -167,14 +167,17 @@ class Explainer:
                     for cnst in self.scene.constraints(Constraint.Kind.same_direction):
                         if same(prop.angle, cnst.params[0].angle(*cnst.params[1:])):
                              self.__reason(prop, cnst.comments)
+                             break
                 elif isinstance(prop, AngleValueProperty) and prop.degree == 90:
                     for cnst in self.scene.constraints(Constraint.Kind.perpendicular):
                         line0 = cnst.params[0]
                         line1 = cnst.params[1]
                         if prop.angle.vector0 in line0 and prop.angle.vector1 in line1:
                             self.__reason(prop, cnst.comments)
+                            break
                         elif prop.angle.vector0 in line1 and prop.angle.vector1 in line0:
                             self.__reason(prop, cnst.comments)
+                            break
                 elif isinstance(prop, CongruentSegmentProperty):
                     found = False
                     points0 = prop.vector0.points
@@ -196,6 +199,7 @@ class Explainer:
                         if cnst.params[2] == 1:
                             if same_pair(cnst.params[0:2], (prop.vector0, prop.vector1)):
                                 self.__reason(prop, 'Given')
+                                break
 
         def not_equal_reason(pt0, pt1):
             key = frozenset([pt0, pt1])
@@ -648,6 +652,7 @@ class Explainer:
                         pair = (ed.property.vector0, ed.property.vector1)
                         if any(same_pair(pair, sp) for sp in side_pairs(prop)):
                             self.__reason(prop, 'Similar triangles with congruent side', premises=[st, ed])
+                            break
 
                 elif isinstance(prop, CongruentSegmentProperty):
                     pair = (prop.vector0, prop.vector1)
