@@ -96,7 +96,13 @@ class Explainer:
             return list(itertools.chain(*[by_type.all for by_type in self.by_type_map.values()]))
 
         def __contains__(self, prop):
-            return any(prop == rsn.property for rsn in self.list(type(prop), prop.keys()))
+            by_type = self.by_type_map.get(type(prop))
+            if not by_type:
+                return False
+
+            keys = prop.keys()
+            lst = by_type.by_key_map.get(keys[0]) if keys else by_type.all
+            return any(prop == rsn.property for rsn in lst) if lst else False
 
         def keys_num(self):
             return sum(len(by_type.by_key_map) for by_type in self.by_type_map.values())
