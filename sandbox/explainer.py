@@ -157,6 +157,18 @@ class Explainer:
                         if all(p in line for p in prop.points):
                             self.__reason(prop, 'Given')
                             break
+                if isinstance(prop, CongruentSegmentProperty):
+                    points0 = prop.vector0.points
+                    points1 = prop.vector1.points
+                    centre = next((p for p in points0 if p in points1), None)
+                    if centre is None:
+                        continue
+                    pt0 = next((p for p in points0 if p != centre), None)
+                    pt1 = next((p for p in points1 if p != centre), None)
+                    for circle in self.scene.circles():
+                        if circle.centre == centre and pt0 in circle and pt1 in circle:
+                            self.__reason(prop, 'Two radiuses of the same circle')
+                            break
                 elif isinstance(prop, AngleValueProperty) and prop.degree == 0:
                     for cnst in self.scene.constraints(Constraint.Kind.same_direction):
                         if same(prop.angle, cnst.params[0].angle(*cnst.params[1:])):

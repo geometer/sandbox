@@ -311,15 +311,6 @@ class CoreScene:
             point.belongs_to(self)
             return point
 
-        def __contains__(self, obj):
-            if obj is None:
-                return False
-            if isinstance(obj, CoreScene.Point):
-                return obj in self.all_points
-            if isinstance(obj, CoreScene.Vector):
-                return obj.start in self.all_points and obj.end in self.all_points
-            assert False, 'Operator not defined for %s and Line' % type(obj)
-
         def intersection_point(self, obj, **kwargs):
             """
             Creates an intersection point of the line and given object (line or circle).
@@ -357,6 +348,15 @@ class CoreScene:
                     cnstr.update(kwargs)
                     return
             self.scene.constraint(Constraint.Kind.perpendicular, self, other, **kwargs)
+
+        def __contains__(self, obj):
+            if obj is None:
+                return False
+            if isinstance(obj, CoreScene.Point):
+                return obj in self.all_points
+            if isinstance(obj, CoreScene.Vector):
+                return obj.start in self.all_points and obj.end in self.all_points
+            assert False, 'Operator not defined for %s and Line' % type(obj)
 
     class Circle(Object):
         def __init__(self, scene, **kwargs):
@@ -396,6 +396,13 @@ class CoreScene:
             crossing.belongs_to(self)
             crossing.belongs_to(obj)
             return crossing
+
+        def __contains__(self, obj):
+            if obj is None:
+                return False
+            if isinstance(obj, CoreScene.Point):
+                return obj in self.all_points
+            assert False, 'Operator not defined for %s and Circle' % type(obj)
 
     class Vector:
         def __init__(self, start, end):
@@ -582,6 +589,12 @@ class CoreScene:
             return [l for l in self.__objects if isinstance(l, CoreScene.Line) and not l.auxiliary]
         else:
             return [l for l in self.__objects if isinstance(l, CoreScene.Line)]
+
+    def circles(self, skip_auxiliary=False):
+        if skip_auxiliary:
+            return [c for c in self.__objects if isinstance(c, CoreScene.Circle) and not c.auxiliary]
+        else:
+            return [c for c in self.__objects if isinstance(c, CoreScene.Circle)]
 
     def constraints(self, kind):
         if kind.stage == Stage.validation:
