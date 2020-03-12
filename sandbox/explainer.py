@@ -1,6 +1,7 @@
 import itertools
 import time
 import numpy as np
+import sympy as sp
 
 from .core import Constraint, _comment
 from .property import *
@@ -314,6 +315,19 @@ class Explainer:
                             if line:
                                 self.__reason(SameSideProperty(line, pt0, pt1), [str(sd.property), str(nc.property)], [sd, nc])
 
+            for sd in same_direction:
+                angle = sd.property.angle
+                vec0 = angle.vector0
+                vec1 = angle.vector1
+
+                for ne in self.__explained.list(NotEqualProperty, keys=[angle.vertex]):
+                    vector = ne.property.points[0].vector(ne.property.points[1])
+                    if vector.start != angle.vertex:
+                        vector = vector.reversed
+                    if len(set(vector.points + vec0.points)) < 3 or len(set(vector.points + vec1.points)) < 3:
+                        continue
+                    self.__reason(AnglesRatioProperty(vec0.angle(vector), vec1.angle(vector), 1), [], [sd])
+
             def same_dir(vector):
                 yield (vector, [])
                 for sd in same_direction:
@@ -428,6 +442,43 @@ class Explainer:
 
                         if found:
                             continue
+
+                    known_ratios = self.__explained.list(AnglesRatioProperty, keys=prop.keys())
+                    candidates0 = []
+                    candidates1 = []
+                    for kr in known_ratios:
+                        if prop.angle0 == kr.property.angle0:
+                            candidates0.append((kr, kr.property.angle1, kr.property.ratio))
+                        elif prop.angle0.reversed == kr.property.angle0:
+                            candidates0.append((kr, kr.property.angle1, -kr.property.ratio))
+                        elif prop.angle0 == kr.property.angle1:
+                            candidates0.append((kr, kr.property.angle0, sp.sympify(1) / kr.property.ratio))
+                        elif prop.angle0.reversed == kr.property.angle1:
+                            candidates0.append((kr, kr.property.angle0, sp.sympify(-1) / kr.property.ratio))
+                        elif prop.angle1 == kr.property.angle0:
+                            candidates1.append((kr, kr.property.angle1, sp.sympify(1) / kr.property.ratio))
+                        elif prop.angle1.reversed == kr.property.angle0:
+                            candidates1.append((kr, kr.property.angle1, sp.sympify(-1) / kr.property.ratio))
+                        elif prop.angle1 == kr.property.angle1:
+                            candidates1.append((kr, kr.property.angle0, kr.property.ratio))
+                        elif prop.angle1.reversed == kr.property.angle1:
+                            candidates1.append((kr, kr.property.angle0, -kr.property.ratio))
+                    for c0, c1 in itertools.product(candidates0, candidates1):
+                        if c0[1] == c1[1]:
+                            #TODO: Better way to report contradiction
+                            assert c0[2] * c1[2] == prop.ratio
+                            self.__reason(prop, 'Transitivity', [c0[0], c1[0]])
+                            found = True
+                            break
+                        elif c0[1] == c1[1].reversed:
+                            #TODO: Better way to report contradiction
+                            assert c0[2] * c1[2] == -prop.ratio
+                            self.__reason(prop, 'Transitivity', [c0[0], c1[0]])
+                            found = True
+                            break
+
+                    if found:
+                        continue
 
                     try:
                         known_angles = self.__explained.list(AngleValueProperty, prop.keys())
@@ -733,7 +784,7 @@ class NotEqualProperty(Property):
         self.points = [point0, point1]
 
     def keys(self):
-        return [frozenset(self.points)]
+        return [frozenset(self.points), *self.points]
 
     @property
     def description(self):
