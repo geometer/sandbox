@@ -235,7 +235,14 @@ class Explainer:
                 ne0 = not_equal_reason(*vec0.points)
                 ne1 = not_equal_reason(*vec1.points)
                 if ne0 is not None and ne1 is not None:
-                    self.__reason(AngleValueProperty(vec0.angle(vec1), 0), [], [pv, ne0, ne1])
+                    if vec0.end == vec1.end:
+                        self.__reason(AngleValueProperty(vec0.reversed.angle(vec1.reversed), 0), [], [pv, ne0, ne1])
+                    elif vec0.start == vec1.end:
+                        self.__reason(AngleValueProperty(vec0.angle(vec1.reversed), 180), [], [pv, ne0, ne1])
+                    elif vec0.end == vec1.start:
+                        self.__reason(AngleValueProperty(vec0.reversed.angle(vec1), 180), [], [pv, ne0, ne1])
+                    else:
+                        self.__reason(AngleValueProperty(vec0.angle(vec1), 0), [], [pv, ne0, ne1])
                 
             same_side_reasons = self.__explained.list(SameSideProperty)
             for rsn in same_side_reasons:
