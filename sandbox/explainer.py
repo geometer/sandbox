@@ -254,7 +254,7 @@ class Explainer:
                     continue
                 crossing = self.scene.get_intersection(rsn.property.line, line2)
                 if crossing:
-                    self.__reason(AngleValueProperty(crossing.angle(pt0, pt1), 0), rsn.comments)
+                    self.__reason(AngleValueProperty(crossing.angle(pt0, pt1), 0), rsn.comments, [rsn])
 
             for rsn0, rsn1 in itertools.combinations(same_side_reasons, 2):
                 AB = rsn0.property.line
@@ -286,16 +286,11 @@ class Explainer:
                     continue
                 X = self.scene.get_intersection(AD, BC)
                 if X is not None and X not in (A, B, C, D):
-                    comments = rsn0.comments
-                    for com in rsn1.comments:
-                        if not com in comments:
-                            comments.append(com)
-                    self.__reason(AngleValueProperty(X.angle(A, D), 0), comments)
-                    self.__reason(AngleValueProperty(A.angle(D, X), 0), comments)
-                    self.__reason(AngleValueProperty(D.angle(A, X), 180), comments)
-                    self.__reason(AngleValueProperty(B.angle(C, X), 0), comments)
-                    self.__reason(AngleValueProperty(C.angle(B, X), 0), comments)
-                    self.__reason(AngleValueProperty(X.angle(B, C), 180), comments)
+                    comment = _comment('%s is intersection of [%s %s) and [%s %s]', X, A, D, B, C)
+                    self.__reason(AngleValueProperty(A.angle(D, X), 0), [comment], [rsn0, rsn1])
+                    self.__reason(AngleValueProperty(B.angle(C, X), 0), [comment], [rsn0, rsn1])
+                    self.__reason(AngleValueProperty(C.angle(B, X), 0), [comment], [rsn0, rsn1])
+                    self.__reason(AngleValueProperty(X.angle(B, C), 180), [comment], [rsn0, rsn1])
 
             same_direction = [rsn for rsn in self.__explained.list(AngleValueProperty) if \
                 rsn.property.degree == 0 and rsn.property.angle.vertex is not None]

@@ -504,7 +504,7 @@ class CoreScene:
             self.vertex.same_direction_constraint(X, C)
             Y = X.ratio_point(B, 1, 1, auxiliary=True)
             bisector = self.vertex.line_through(Y, **kwargs)
-            comment = _comment('%s is bisector of %s', bisector, self)
+            comment = _comment('[%s %s) is the bisector of %s', self.vertex, Y, self)
             Y.inside_angle_constraint(self, comment=comment)
             self.ratio_constraint(self.vertex.angle(B, Y), 2, guaranteed=True, comment=comment)
             self.ratio_constraint(self.vertex.angle(Y, C), 2, guaranteed=True, comment=comment)
