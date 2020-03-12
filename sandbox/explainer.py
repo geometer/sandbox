@@ -5,6 +5,7 @@ import sympy as sp
 
 from .core import Constraint, _comment
 from .property import *
+from .property2 import *
 from .scene import Scene
 from .stats import Stats
 
@@ -841,60 +842,3 @@ class Explainer:
                 if obj in (exp.property.angle, exp.property.angle.reversed):
                     return exp
         return None
-
-class NotEqualProperty(Property):
-    """
-    The distance between two points is non-zero
-    """
-    def __init__(self, point0, point1):
-        self.points = [point0, point1]
-
-    def keys(self):
-        return [frozenset(self.points), *self.points]
-
-    @property
-    def description(self):
-        return _comment('%s != %s', *self.points)
-
-    def __eq__(self, other):
-        return isinstance(other, NotEqualProperty) and set(self.points) == set(other.points)
-
-class OppositeSideProperty(Property):
-    """
-    Two points are located on opposite sides of the line
-    """
-    def __init__(self, line, point0, point1):
-        self.line = line
-        self.points = [point0, point1]
-
-    def keys(self):
-        return [frozenset([self.line] + self.points)]
-
-    @property
-    def description(self):
-        return _comment('%s, %s located on opposite sides of %s', *self.points, self.line)
-
-    def __eq__(self, other):
-        if not isinstance(other, OppositeSideProperty):
-            return False
-        return self.line == other.line and set(self.points) == set(other.points)
-
-class SameSideProperty(Property):
-    """
-    Two points are located on the same side of the line
-    """
-    def __init__(self, line, point0, point1):
-        self.line = line
-        self.points = [point0, point1]
-
-    def keys(self):
-        return [frozenset([self.line] + self.points)]
-
-    @property
-    def description(self):
-        return _comment('%s, %s located on the same side of %s', *self.points, self.line)
-
-    def __eq__(self, other):
-        if not isinstance(other, SameSideProperty):
-            return False
-        return self.line == other.line and set(self.points) == set(other.points)

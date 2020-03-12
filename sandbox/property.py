@@ -54,23 +54,6 @@ class CollinearProperty(Property):
     def __eq__(self, other):
         return isinstance(other, CollinearProperty) and set(self.points) == set(other.points)
 
-class NonCollinearProperty(Property):
-    """
-    Three points are not collinear
-    """
-    def __init__(self, point0, point1, point2):
-        self.points = [point0, point1, point2]
-
-    def keys(self):
-        return [frozenset(self.points)]
-
-    @property
-    def description(self):
-        return _comment('Points %s, %s, and %s are not collinear', *self.points)
-
-    def __eq__(self, other):
-        return isinstance(other, NonCollinearProperty) and set(self.points) == set(other.points)
-
 class AngleValueProperty(Property):
     """
     Angle value
@@ -144,21 +127,6 @@ class AnglesRatioProperty(Property):
             if self.angle0 == other.angle1.reversed:
                 return self.angle1 == other.angle0.reversed
         return False
-
-class ParallelVectorsProperty(Property):
-    """
-    Two vectors are parallel (or at least one of them has zero length)
-    """
-    def __init__(self, vector0, vector1):
-        self.vector0 = vector0
-        self.vector1 = vector1
-
-    def keys(self):
-        return keys_for_vector(self.vector0) + keys_for_vector(self.vector1)
-
-    @property
-    def description(self):
-        return _comment('%s ↑↑ %s', self.vector0, self.vector1)
 
 class CongruentSegmentProperty(Property):
     """
