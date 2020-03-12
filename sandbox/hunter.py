@@ -225,6 +225,9 @@ class Hunter:
             if arc < 0:
                 angle = angle.reversed
                 arc = -arc
+            if angle.vertex is None and arc > np.pi / 2:
+                angle = angle.vector1.angle(angle.vector0.reversed)
+                arc = np.pi - arc
             yield AngleWrapper(angle, arc)
 
     def __add(self, prop):
