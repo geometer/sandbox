@@ -31,7 +31,5 @@ explainer = Explainer(scene, hunter.properties)
 print('\tGuessed: %s = %s' % (angle, explainer.guessed(angle)))
 
 explainer.explain()
-print('\tExplainer stats:')
-for stat in explainer.stats():
-    print('\t  %s: %s' % stat)
+explainer.stats().dump()
 print('\tExplained: %s = %s' % (angle, explainer.explained(angle)))
