@@ -411,6 +411,7 @@ class CoreScene:
             assert start.scene == end.scene
             self.start = start
             self.end = end
+            self.points = (start, end)
 
         def line(self, create_if_not_exists=False):
             if create_if_not_exists:
@@ -422,10 +423,6 @@ class CoreScene:
             self.non_zero_length_constraint(comment=_comment('%s is side of %s', self, angle))
             other.non_zero_length_constraint(comment=_comment('%s is side of %s', other, angle))
             return angle
-
-        @property
-        def points(self):
-            return (self.start, self.end)
 
         @property
         def scene(self):
@@ -476,10 +473,10 @@ class CoreScene:
             self.length_ratio_constraint(vector, 1, **kwargs)
 
         def __eq__(self, other):
-            return self.start == other.start and self.end == other.end
+            return self.points == other.points
 
         def __hash__(self):
-            return hash(self.start) * 13 + hash(self.end) * 23
+            return hash(self.points)
 
         def __str__(self):
             return str(_comment('%s %s', self.start, self.end))
@@ -492,6 +489,7 @@ class CoreScene:
             self.vector0 = vector0
             self.vector1 = vector1
             self.vertex = self.vector0.start if self.vector0.start == self.vector1.start else None
+            self.points = (vector0.start, vector0.end, vector1.start, vector1.end)
             self.__reversed = None
 
         @property
@@ -529,14 +527,10 @@ class CoreScene:
         def __eq__(self, other):
             #return self.vector0 == other.vector0 and self.vector1 == other.vector1
             # optimized version
-            return \
-                self.vector0.start == other.vector0.start and \
-                self.vector0.end == other.vector0.end and \
-                self.vector1.start == other.vector1.start and \
-                self.vector1.end == other.vector1.end
+            return self.points == other.points
 
         def __hash__(self):
-            return hash(self.vector0) * 13 + hash(self.vector1) * 23
+            return hash(self.points)
 
         def __str__(self):
             if self.vertex:
