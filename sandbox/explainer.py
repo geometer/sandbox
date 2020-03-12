@@ -413,6 +413,45 @@ class Explainer:
                 self.__reason(AngleValueProperty(a0, first), [], premises=[ar, ka])
                 self.__reason(AngleValueProperty(a1, second), [], premises=[ar, ka])
 
+            for ka in self.__explained.list(AngleValueProperty):
+                base = ka.property.angle
+                if ka.property.degree == 0 or ka.property.degree == 180 or base.vertex is None:
+                    continue
+                for vec0, vec1, sign in [(base.vector0, base.vector1, 1), (base.vector1, base.vector0, -1)]:
+                    line = vec0.line()
+                    if line:
+                        for pt in line.all_points:
+                            if pt in vec0.points:
+                                continue
+                            angle_to_look = pt.angle(vec1.end, base.vertex)
+                            keys = keys_for_angle(angle_to_look)
+                            for ka2 in self.__explained.list(AngleValueProperty, keys):
+                                if not same(ka2.property.angle, angle_to_look):
+                                    continue
+                                if ka2.property.angle == angle_to_look:
+                                    degree2 = ka2.property.degree * sign
+                                else:
+                                    degree2 = -ka2.property.degree * sign
+                                # angles have same sign
+                                if ka.property.degree * degree2 < 0:
+                                    #TODO: replace degree2 with 180 - degree2 (?)
+                                    break
+                                found = base.vertex.angle(vec0.end, pt)
+                                angle_sum = np.abs(ka.property.degree + degree2)
+                                if angle_sum < 180:
+                                    comment = _comment(
+                                        '%s lies on the side %s of %s; %s + %s < 180º',
+                                        pt, vec0, base, base, angle_to_look
+                                    )
+                                    self.__reason(AngleValueProperty(found, 0), comment, [ka, ka2])
+                                elif angle_sum > 180:
+                                    #TODO: add properties
+                                    pass
+                                else:
+                                    #TODO: add property: pt == base.vertex
+                                    pass
+                                break
+
             for prop in list(self.__unexplained):
                 if isinstance(prop, AnglesRatioProperty):
                     found = False
