@@ -4,9 +4,7 @@ from sandbox.explainer import Explainer
 
 scene = Scene()
 
-A = scene.free_point(label='A')
-B = scene.free_point(label='B')
-C = scene.free_point(label='C')
+A, B, C = scene.triangle(labels=('A', 'B', 'C'))
 A1 = scene.free_point(label='A1')
 #A1.inside_triangle_constraint(A, B, C)
 B1 = scene.free_point(label='B1')

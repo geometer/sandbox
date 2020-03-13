@@ -6,9 +6,7 @@ class TestTrisectors(PlacementTest):
     def createPlacement(self):
         scene = Scene()
 
-        A = scene.free_point(label='A')
-        B = scene.free_point(label='B')
-        C = scene.free_point(label='C')
+        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
         A1 = scene.free_point(label='A1')
         B1 = scene.free_point(label='B1')
         C1 = scene.free_point(label='C1')
