@@ -234,6 +234,15 @@ class Explainer:
                 add_reasons(ncl.property.points[1], ncl.property.points[2], ncl.property.points[0])
                 add_reasons(ncl.property.points[2], ncl.property.points[0], ncl.property.points[1])
 
+                ncl_set = set(ncl.property.points)
+                for col in self.__explained.list(CollinearProperty):
+                    col_set = set(col.property.points)
+                    intr = col_set.intersection(ncl_set)
+                    if len(intr) == 2:
+                        pt0 = col_set.difference(ncl_set).pop()
+                        pt1 = ncl_set.difference(col_set).pop()
+                        self.__reason(NotEqualProperty(pt0, pt1), [], [ncl, col])
+
             for cs in self.__explained.list(CongruentSegmentProperty):
                 vec0 = cs.property.vector0
                 vec1 = cs.property.vector1
