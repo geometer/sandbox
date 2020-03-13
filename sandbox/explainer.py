@@ -742,7 +742,7 @@ class Explainer:
                                 pairs.append((-ka.property.degree, ka))
                         if len(pairs) >= 2:
                             #TODO: Better way to report contradiction
-                            assert prop.degree + pairs[0][0] + pairs[1][0] == 180
+                            assert np.abs(prop.degree + pairs[0][0] + pairs[1][0]) == 180
                             self.__reason(prop, _comment('%s + %s + %s = 180º', angle, first, second), [pairs[0][1], pairs[1][1]])
 
                     if found:
