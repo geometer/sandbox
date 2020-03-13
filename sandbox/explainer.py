@@ -418,17 +418,12 @@ class Explainer:
                 else:
                     continue
                 for ka in self.__explained.list(AngleValueProperty):
-                    if ka.property.angle == angle:
+                    if same(ka.property.angle, angle):
                         value = ka.property.degree
-                        break
-                    elif ka.property.angle == angle.reversed:
-                        value = -ka.property.degree
                         break
                 else:
                     continue
                 if is_sum:
-                    if ar.property.ratio == -1:
-                        continue
                     second = value / (1 + ar.property.ratio)
                     first = value - second
                 else:
@@ -513,32 +508,18 @@ class Explainer:
                     candidates0 = []
                     candidates1 = []
                     for kr in known_ratios:
-                        if prop.angle0 == kr.property.angle0:
+                        if same(prop.angle0, kr.property.angle0):
                             candidates0.append((kr, kr.property.angle1, kr.property.ratio))
-                        elif prop.angle0.reversed == kr.property.angle0:
-                            candidates0.append((kr, kr.property.angle1, -kr.property.ratio))
-                        elif prop.angle0 == kr.property.angle1:
+                        elif same(prop.angle0, kr.property.angle1):
                             candidates0.append((kr, kr.property.angle0, sp.sympify(1) / kr.property.ratio))
-                        elif prop.angle0.reversed == kr.property.angle1:
-                            candidates0.append((kr, kr.property.angle0, sp.sympify(-1) / kr.property.ratio))
-                        elif prop.angle1 == kr.property.angle0:
+                        elif same(prop.angle1, kr.property.angle0):
                             candidates1.append((kr, kr.property.angle1, sp.sympify(1) / kr.property.ratio))
-                        elif prop.angle1.reversed == kr.property.angle0:
-                            candidates1.append((kr, kr.property.angle1, sp.sympify(-1) / kr.property.ratio))
-                        elif prop.angle1 == kr.property.angle1:
+                        elif same(prop.angle1, kr.property.angle1):
                             candidates1.append((kr, kr.property.angle0, kr.property.ratio))
-                        elif prop.angle1.reversed == kr.property.angle1:
-                            candidates1.append((kr, kr.property.angle0, -kr.property.ratio))
                     for c0, c1 in itertools.product(candidates0, candidates1):
-                        if c0[1] == c1[1]:
+                        if same(c0[1], c1[1]):
                             #TODO: Better way to report contradiction
                             assert c0[2] * c1[2] == prop.ratio
-                            self.__reason(prop, 'Transitivity', [c0[0], c1[0]])
-                            found = True
-                            break
-                        elif c0[1] == c1[1].reversed:
-                            #TODO: Better way to report contradiction
-                            assert c0[2] * c1[2] == -prop.ratio
                             self.__reason(prop, 'Transitivity', [c0[0], c1[0]])
                             found = True
                             break
@@ -734,10 +715,8 @@ class Explainer:
                         second = angle.vector1.end.angle(angle.vertex, angle.vector0.end)
                         pairs = []
                         for ka in self.__explained.list(AngleValueProperty, keys_for_angle(angle)):
-                            if ka.property.angle in (first, second):
+                            if ka.property.angle in (first, second) or ka.property.angle.reversed in (first, second):
                                 pairs.append((ka.property.degree, ka))
-                            if ka.property.angle.reversed in (first, second):
-                                pairs.append((-ka.property.degree, ka))
                         if len(pairs) >= 2:
                             #TODO: Better way to report contradiction
                             assert np.abs(prop.degree + pairs[0][0] + pairs[1][0]) == 180
@@ -819,20 +798,16 @@ class Explainer:
         if isinstance(obj, Scene.Angle):
             for prop in self.__unexplained:
                 if isinstance(prop, AngleValueProperty):
-                    if prop.angle == obj:
+                    if same(prop.angle, obj):
                         return prop.degree
-                    if prop.angle.reversed == obj:
-                        return -prop.degree
             return None
         raise Exception('Guess not supported for objects of type %s' % type(obj).__name__)
 
     def explained(self, obj):
         if isinstance(obj, Scene.Angle):
             for exp in self.__explained.list(AngleValueProperty):
-                if exp.property.angle == obj:
+                if same(exp.property.angle, obj):
                     return exp.property.degree
-                if exp.property.angle.reversed == obj:
-                    return -exp.property.degree
             return None
         raise Exception('Explanation not supported for objects of type %s' % type(obj).__name__)
 
