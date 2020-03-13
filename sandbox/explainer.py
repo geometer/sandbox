@@ -241,22 +241,26 @@ class Explainer:
                 ne0 = not_equal_reason(*vec0.points)
                 ne1 = not_equal_reason(*vec1.points)
                 if ne0 is not None and ne1 is None:
-                    self.__reason(NotEqualProperty(*vec1.points), [], [cs, ne0])
+                    self.__reason(NotEqualProperty(*vec1.points), _comment('Otherwise, %s = %s', *vec0.points), [cs, ne0])
                 elif ne1 is not None and ne0 is None:
-                    self.__reason(NotEqualProperty(*vec0.points), [], [cs, ne1])
+                    self.__reason(NotEqualProperty(*vec0.points), _comment('Otherwise, %s = %s', *vec1.points), [cs, ne1])
                 elif ne0 is None and ne1 is None:
                     ne = None
                     if vec0.start == vec1.start:
                         ne = not_equal_reason(vec0.end, vec1.end)
+                        mid = vec0.start
                     elif vec0.start == vec1.end:
                         ne = not_equal_reason(vec0.end, vec1.start)
+                        mid = vec0.start
                     elif vec0.end == vec1.start:
                         ne = not_equal_reason(vec0.start, vec1.end)
+                        mid = vec0.end
                     elif vec0.end == vec1.end:
                         ne = not_equal_reason(vec0.start, vec1.start)
+                        mid = vec0.end
                     if ne:
-                        self.__reason(NotEqualProperty(*vec0.points), [], [cs, ne])
-                        self.__reason(NotEqualProperty(*vec1.points), [], [cs, ne])
+                        self.__reason(NotEqualProperty(*vec0.points), _comment('Otherwise, %s = %s = %s', ne.property.points[0], mid, ne.property.points[1]), [cs, ne])
+                        self.__reason(NotEqualProperty(*vec1.points), _comment('Otherwise, %s = %s = %s', ne.property.points[1], mid, ne.property.points[0]), [cs, ne])
 
             for pv in self.__explained.list(ParallelVectorsProperty):
                 vec0 = pv.property.vector0
@@ -708,7 +712,7 @@ class Explainer:
                                 pairs.append((ka.property.degree, ka))
                         if len(pairs) >= 2:
                             #TODO: Better way to report contradiction
-                            assert np.abs(prop.degree + pairs[0][0] + pairs[1][0]) == 180
+                            assert prop.degree + pairs[0][0] + pairs[1][0] == 180
                             self.__reason(prop, _comment('%s + %s + %s = 180º', angle, first, second), [pairs[0][1], pairs[1][1]])
 
                     if found:
