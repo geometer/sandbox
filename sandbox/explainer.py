@@ -522,8 +522,8 @@ class Explainer:
 
                     try:
                         known_angles = self.__explained.list(AngleValueProperty, prop.keys())
-                        left = next(exp for exp in known_angles if exp.property.angle == prop.angle0)
-                        right = next(exp for exp in known_angles if exp.property.angle == prop.angle1)
+                        left = next(exp for exp in known_angles if same(exp.property.angle, prop.angle0))
+                        right = next(exp for exp in known_angles if same(exp.property.angle, prop.angle1))
                         # TODO: report contradiction, if angle ratio differs
                         if left.property.degree == right.property.degree:
                             self.__reason(prop, _comment('Both angle values = %sº', left.property.degree), premises=[left, right])
@@ -551,13 +551,13 @@ class Explainer:
                     if prop.ratio == 1:
                         congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys()) if rsn.property.ratio == 1]
                         for index, ca0 in enumerate(congruent_angles):
-                            if prop.angle0 == ca0.property.angle0:
+                            if same(prop.angle0, ca0.property.angle0):
                                 look_for = [prop.angle1, ca0.property.angle1]
-                            elif prop.angle1 == ca0.property.angle0:
+                            elif same(prop.angle1, ca0.property.angle0):
                                 look_for = [prop.angle0, ca0.property.angle1]
-                            elif prop.angle0 == ca0.property.angle1:
+                            elif same(prop.angle0, ca0.property.angle1):
                                 look_for = [prop.angle1, ca0.property.angle0]
-                            elif prop.angle1 == ca0.property.angle1:
+                            elif same(prop.angle1, ca0.property.angle1):
                                 look_for = [prop.angle0, ca0.property.angle0]
                             else:
                                 continue
@@ -678,20 +678,20 @@ class Explainer:
 
                     congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys()) if rsn.property.ratio == 1]
                     for ca in congruent_angles:
-                        if ca.property.angle0 == prop.angle:
+                        if same(ca.property.angle0, prop.angle):
                             angle_values = self.__explained.list(AngleValueProperty, keys_for_angle(ca.property.angle1))
                             for av in angle_values:
-                                if av.property.angle == ca.property.angle1:
+                                if same(av.property.angle, ca.property.angle1):
                                     #TODO: report contradiction if degrees are different
                                     self.__reason(prop, _comment('%s = %s = %sº', prop.angle, av.property.angle, av.property.degree), premises=[ca, av])
                                     found = True
                                     break
                             if found:
                                 break
-                        elif ca.property.angle1 == prop.angle:
+                        elif same(ca.property.angle1, prop.angle):
                             angle_values = self.__explained.list(AngleValueProperty, keys_for_angle(ca.property.angle0))
                             for av in angle_values:
-                                if av.property.angle == ca.property.angle0:
+                                if same(av.property.angle, ca.property.angle0):
                                     #TODO: report contradiction if degrees are different
                                     self.__reason(prop, _comment('%s = %s = %sº', prop.angle, av.property.angle, av.property.degree), premises=[ca, av])
                                     found = True
