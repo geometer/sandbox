@@ -725,7 +725,7 @@ class Explainer:
                         continue
                     for val in values:
                         if same(val.property.angle, iso.property.A.angle(*iso.property.BC)):
-                            self.__reason(prop, _comment('Base angle of isosceles △ %s %s %s with apex angle %s', iso.property.A, *iso.property.BC, val.property.degree), premises=[iso, val])
+                            self.__reason(prop, _comment('Base angle of isosceles △ %s %s %s with apex angle %sº', iso.property.A, *iso.property.BC, val.property.degree), premises=[iso, val])
                         # TODO: check sum of angles; report contradiction if found
 
 
