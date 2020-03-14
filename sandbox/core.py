@@ -529,7 +529,7 @@ class CoreScene:
             return self.vectors == other.vectors
 
         def __hash__(self):
-            return hash(self.points)
+            return hash(self.vectors)
 
         def __str__(self):
             if self.vertex:
