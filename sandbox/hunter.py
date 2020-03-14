@@ -319,6 +319,9 @@ class Hunter:
         equilaterals = [trn for trn in triangles if trn.equilateral()]
         for trn in equilaterals:
             self.__add(EquilateralTriangleProperty(trn.pts))
+            self.__add(IsoscelesTriangleProperty(trn.pts[0], trn.pts[1:]))
+            self.__add(IsoscelesTriangleProperty(trn.pts[2], trn.pts[:-1]))
+            self.__add(IsoscelesTriangleProperty(trn.pts[1], [trn.pts[0], trn.pts[2]]))
 
         triangles = [trn for trn in triangles if not trn.equilateral()]
 
