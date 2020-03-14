@@ -1,6 +1,5 @@
 import itertools
 import time
-import numpy as np
 import sympy as sp
 
 from .core import Constraint, _comment
