@@ -2,10 +2,12 @@ import itertools
 import time
 import sympy as sp
 
-from .core import Constraint, _comment
+from .core import Constraint
 from .property import *
+from .reason import Reason
 from .scene import Scene
 from .stats import Stats
+from .util import _comment
 
 # +++++ utility methods +++++
 def same_segment(vec0, vec1):
@@ -33,34 +35,16 @@ def angle_pairs(prop):
 # ----- utility methods -----
 
 class Explainer:
-    class Reason:
-        def __init__(self, index, comments, premises):
-            self.index = index
-            if not isinstance(comments, (list, tuple)):
-                self.comments = [comments]
-            else:
-                self.comments = list(comments)
-            self.premises = premises
-
-        def __str__(self):
-            if self.premises:
-                return '%s (%s)' % (
-                    ', '.join([str(com) for com in self.comments]),
-                    ', '.join(['*%d' % prop.reason.index for prop in self.premises])
-                )
-            else:
-                return ', '.join([str(com) for com in self.comments])
-
     def __init__(self, scene, properties):
         self.scene = scene
-        self.__explained = PropertySet()
+        self.__explained = self.scene.predefined_properties()
         self.__unexplained = list(properties)
         self.__explanation_time = None
         self.__iteration_step_count = None
 
     def __reason(self, prop, comments, premises=None):
         if prop not in self.__explained:
-            prop.reason = Explainer.Reason(len(self.__explained), comments, premises)
+            prop.reason = Reason(len(self.__explained), comments, premises)
             self.__explained.add(prop)
 
     def __refresh_unexplained(self):
@@ -88,10 +72,6 @@ class Explainer:
 
     def __explain_all(self):
         def base():
-            for cnst in self.scene.constraints(Constraint.Kind.not_equal):
-                self.__reason(NotEqualProperty(cnst.params[0], cnst.params[1]), cnst.comments)
-            for cnst in self.scene.constraints(Constraint.Kind.not_collinear):
-                self.__reason(NonCollinearProperty(*cnst.params), cnst.comments)
             for cnst in self.scene.constraints(Constraint.Kind.collinear):
                 self.__reason(CollinearProperty(*cnst.params), cnst.comments)
             for cnst in self.scene.constraints(Constraint.Kind.opposite_side):

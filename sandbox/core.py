@@ -8,6 +8,10 @@ import itertools
 import sympy as sp
 from typing import List
 
+from .property import NonCollinearProperty, NotEqualProperty, PropertySet
+from .reason import Reason
+from .util import _comment
+
 class CoreScene:
     class Object:
         """
@@ -191,6 +195,7 @@ class CoreScene:
                     cnstr.update(kwargs)
                     return
             self.scene.constraint(Constraint.Kind.not_equal, self, A, **kwargs)
+            self.scene.add_property(NotEqualProperty(self, A), kwargs.get('comment'))
 
         def not_collinear_constraint(self, A, B, **kwargs):
             """
@@ -204,6 +209,8 @@ class CoreScene:
             self.not_equal_constraint(B, **kwargs)
             A.not_equal_constraint(B, **kwargs)
             self.scene.constraint(Constraint.Kind.not_collinear, self, A, B, **kwargs)
+            self.scene.add_property(NonCollinearProperty(self, A, B), kwargs.get('comment'))
+
 
         def collinear_constraint(self, A, B, **kwargs):
             """
@@ -285,7 +292,7 @@ class CoreScene:
             A.not_collinear_constraint(B, C)
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = ParametrizedString(
+                kwargs['comment'] = _comment(
                     'Point %s is inside △ %s %s %s', self, A, B, C
                 )
             self.inside_angle_constraint(A.angle(B, C), **kwargs)
@@ -531,6 +538,7 @@ class CoreScene:
         self.__objects = []
         self.validation_constraints = []
         self.adjustment_constraints = []
+        self.__predefined_properties = PropertySet()
         self.__frozen = False
 
     def constraint(self, kind, *args, **kwargs):
@@ -541,6 +549,17 @@ class CoreScene:
             else:
                 self.adjustment_constraints.append(cns)
         return cns
+
+    def add_property(self, prop, comments):
+        if self.__frozen:
+            return
+        if not prop in self.__predefined_properties:
+            prop.reason = Reason(
+                len(self.__predefined_properties),
+                comments if isinstance(comments, list) else [comments],
+                []
+            )
+            self.__predefined_properties.add(prop)
 
     def quadrilateral_constraint(self, A, B, C, D, **kwargs):
         """
@@ -589,6 +608,9 @@ class CoreScene:
             return [cnstr for cnstr in self.validation_constraints if cnstr.kind == kind]
         else:
             return [cnstr for cnstr in self.adjustment_constraints if cnstr.kind == kind]
+
+    def predefined_properties(self):
+        return self.__predefined_properties.copy()
 
     def assert_type(self, obj, *args):
         assert isinstance(obj, args), 'Unexpected type %s' % type(obj)
@@ -725,17 +747,3 @@ class Constraint:
             return 'Constraint(%s) %s %s (%s)' % (self.kind.name, params, comments, extras)
         else:
             return 'Constraint(%s) %s (%s)' % (self.kind.name, params, extras)
-
-class ParametrizedString:
-    def __init__(self, format_string, *params):
-        self.format_string = format_string
-        self.params = params
-
-    def __eq__(self, other):
-        return isinstance(other, ParametrizedString) and self.format_string == other.format_string and self.params == other.params
-
-    def __str__(self):
-        return self.format_string % tuple(p.name if isinstance(p, CoreScene.Object) else p for p in self.params)
-
-def _comment(*args):
-    return ParametrizedString(*args)

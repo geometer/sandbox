@@ -1,7 +1,7 @@
 import itertools
 import sympy as sp
 
-from .core import _comment
+from .util import _comment
 
 def keys_for_vector(vector):
     return [frozenset(vector.points)]
@@ -76,6 +76,12 @@ class PropertySet:
 
     def keys_num(self):
         return sum(len(by_type.by_key_map) for by_type in self.by_type_map.values())
+
+    def copy(self):
+        copy = PropertySet()
+        for prop in self.all:
+            copy.add(prop)
+        return copy
 
 class NonCollinearProperty(Property):
     """

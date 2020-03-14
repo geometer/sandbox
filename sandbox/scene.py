@@ -2,7 +2,8 @@
 This module is to be extended in the future to add more construction methods.
 """
 
-from .core import CoreScene, ParametrizedString, _comment
+from .core import CoreScene
+from .util import _comment
 
 class Scene(CoreScene):
     """
@@ -155,7 +156,7 @@ class Scene(CoreScene):
             self.assert_point(pt)
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
-            kwargs['comment'] = ParametrizedString('(%s, %s, %s) is a triangle', *triangle)
+            kwargs['comment'] = _comment('(%s, %s, %s) is a triangle', *triangle)
         triangle[0].not_collinear_constraint(triangle[1], triangle[2], **kwargs)
 
     def altitude(self, triangle, vertex, **kwargs):
@@ -170,7 +171,7 @@ class Scene(CoreScene):
         points.remove(vertex)
         base = points[0].line_through(points[1], auxiliary=True)
         altitude = vertex.perpendicular_line(base, **kwargs)
-        altitude.perpendicular_constraint(base, comment=ParametrizedString('Altitude %s is perpendicular to the base %s', altitude, base), guaranteed=True)
+        altitude.perpendicular_constraint(base, comment=_comment('Altitude %s is perpendicular to the base %s', altitude, base), guaranteed=True)
         return altitude
 
     def parallelogram(self, labels=None, auxiliary=False):

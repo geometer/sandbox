@@ -6,8 +6,8 @@ import sympy as sp
 from . import Scene, iterative_placement
 from .placement import Placement
 from .property import *
-from .core import _comment
 from .stats import Stats
+from .util import _comment
 
 ERROR = np.float128(5e-6)
 
