@@ -35,9 +35,8 @@ def angle_pairs(prop):
 
 class Explainer:
     class Reason:
-        def __init__(self, index, prop, comments, premises):
+        def __init__(self, index, comments, premises):
             self.index = index
-            self.property = prop
             if not isinstance(comments, (list, tuple)):
                 self.comments = [comments]
             else:
@@ -48,12 +47,12 @@ class Explainer:
             if self.premises:
                 return '%s (%s)' % (
                     ', '.join([str(com) for com in self.comments]),
-                    ', '.join(['*%d' % rsn.index for rsn in self.premises])
+                    ', '.join(['*%d' % prop.reason.index for prop in self.premises])
                 )
             else:
                 return ', '.join([str(com) for com in self.comments])
 
-    class ReasonSet:
+    class PropertySet:
         class ByType:
             def __init__(self):
                 self.all = []
@@ -62,20 +61,19 @@ class Explainer:
         def __init__(self):
             self.by_type_map = {}
 
-        def add(self, reason):
-            key = type(reason.property)
+        def add(self, prop):
+            key = type(prop)
             by_type = self.by_type_map.get(key)
             if by_type is None:
-                by_type = Explainer.ReasonSet.ByType()
+                by_type = Explainer.PropertySet.ByType()
                 self.by_type_map[key] = by_type
-            by_type.all.append(reason)
-            for key in reason.property.keys():
+            by_type.all.append(prop)
+            for key in prop.keys():
                 arr = by_type.by_key_map.get(key)
                 if arr is None:
-                    arr = [reason]
-                    by_type.by_key_map[key] = arr
+                    by_type.by_key_map[key] = [prop]
                 else:
-                    arr.append(reason)
+                    arr.append(prop)
 
         def list(self, property_type, keys=None):
             by_type = self.by_type_map.get(property_type)
@@ -84,7 +82,16 @@ class Explainer:
             if keys:
                 assert isinstance(keys, list)
                 sublists = [by_type.by_key_map.get(k) for k in keys]
-                return list(set(itertools.chain(*[l for l in sublists if l])))
+                sublists = [sl for sl in sublists if sl]
+                if len(sublists) == 0:
+                    return []
+                if len(sublists) == 1:
+                    return list(sublists[0])
+                collection = list(sublists[0])
+                for sl in sublists[1:]:
+                    inds = [p.reason.index for p in collection]
+                    collection += [s for s in sl if s.reason.index not in inds]
+                return collection
             else:
                 return by_type.all
 
@@ -102,21 +109,22 @@ class Explainer:
 
             keys = prop.keys()
             lst = by_type.by_key_map.get(keys[0]) if keys else by_type.all
-            return any(prop == rsn.property for rsn in lst) if lst else False
+            return lst is not None and prop in lst
 
         def keys_num(self):
             return sum(len(by_type.by_key_map) for by_type in self.by_type_map.values())
 
     def __init__(self, scene, properties):
         self.scene = scene
-        self.__explained = Explainer.ReasonSet()
+        self.__explained = Explainer.PropertySet()
         self.__unexplained = list(properties)
         self.__explanation_time = None
         self.__iteration_step_count = None
 
     def __reason(self, prop, comments, premises=None):
         if prop not in self.__explained:
-            self.__explained.add(Explainer.Reason(len(self.__explained), prop, comments, premises))
+            prop.reason = Explainer.Reason(len(self.__explained), comments, premises)
+            self.__explained.add(prop)
 
     def __refresh_unexplained(self):
         self.__unexplained = [prop for prop in self.__unexplained if prop not in self.__explained]
@@ -137,8 +145,8 @@ class Explainer:
 
     def __angle_value_reason(self, angle):
         keys = keys_for_angle(angle)
-        return next((r for r in self.__explained.list(AngleValueProperty, keys) \
-            if r.property.angle == angle), None)
+        return next((p for p in self.__explained.list(AngleValueProperty, keys) \
+            if p.angle == angle), None)
 
     def __explain_all(self):
         def base():
@@ -220,27 +228,27 @@ class Explainer:
                     if line:
                         for pt in line.all_points:
                             if pt in (pt0, pt1):
-                                self.__reason(NotEqualProperty(pt, pt2), str(ncl.property))
+                                self.__reason(NotEqualProperty(pt, pt2), str(ncl))
                             else:
-                                self.__reason(NotEqualProperty(pt, pt2), [str(ncl.property)] + extra_comments(pt, pt0, pt1))
+                                self.__reason(NotEqualProperty(pt, pt2), [str(ncl)] + extra_comments(pt, pt0, pt1))
                         for ptX, ptY in itertools.combinations(line.all_points, 2):
                             ne = self.__not_equal_reason(ptX, ptY)
                             if ne is None:
                                 continue
-                            comments = [str(ncl.property)]
+                            comments = [str(ncl)]
                             if not ptX in (pt0, pt1):
                                 comments += extra_comments(ptX, pt0, pt1)
                             if not ptY in (pt0, pt1):
                                 comments += extra_comments(ptY, pt0, pt1)
                             self.__reason(NonCollinearProperty(ptX, ptY, pt2), comments, [ncl, ne])
 
-                add_reasons(ncl.property.points[0], ncl.property.points[1], ncl.property.points[2])
-                add_reasons(ncl.property.points[1], ncl.property.points[2], ncl.property.points[0])
-                add_reasons(ncl.property.points[2], ncl.property.points[0], ncl.property.points[1])
+                add_reasons(ncl.points[0], ncl.points[1], ncl.points[2])
+                add_reasons(ncl.points[1], ncl.points[2], ncl.points[0])
+                add_reasons(ncl.points[2], ncl.points[0], ncl.points[1])
 
-                ncl_set = set(ncl.property.points)
+                ncl_set = set(ncl.points)
                 for col in self.__explained.list(CollinearProperty):
-                    col_set = set(col.property.points)
+                    col_set = set(col.points)
                     intr = col_set.intersection(ncl_set)
                     if len(intr) == 2:
                         pt0 = col_set.difference(ncl_set).pop()
@@ -248,8 +256,8 @@ class Explainer:
                         self.__reason(NotEqualProperty(pt0, pt1), [], [ncl, col])
 
             for cs in self.__explained.list(CongruentSegmentProperty):
-                vec0 = cs.property.vector0
-                vec1 = cs.property.vector1
+                vec0 = cs.vector0
+                vec1 = cs.vector1
 
                 ne0 = self.__not_equal_reason(*vec0.points)
                 ne1 = self.__not_equal_reason(*vec1.points)
@@ -272,12 +280,12 @@ class Explainer:
                         ne = self.__not_equal_reason(vec0.start, vec1.start)
                         mid = vec0.end
                     if ne:
-                        self.__reason(NotEqualProperty(*vec0.points), _comment('Otherwise, %s = %s = %s', ne.property.points[0], mid, ne.property.points[1]), [cs, ne])
-                        self.__reason(NotEqualProperty(*vec1.points), _comment('Otherwise, %s = %s = %s', ne.property.points[1], mid, ne.property.points[0]), [cs, ne])
+                        self.__reason(NotEqualProperty(*vec0.points), _comment('Otherwise, %s = %s = %s', ne.points[0], mid, ne.points[1]), [cs, ne])
+                        self.__reason(NotEqualProperty(*vec1.points), _comment('Otherwise, %s = %s = %s', ne.points[1], mid, ne.points[0]), [cs, ne])
 
             for pv in self.__explained.list(ParallelVectorsProperty):
-                vec0 = pv.property.vector0
-                vec1 = pv.property.vector1
+                vec0 = pv.vector0
+                vec1 = pv.vector1
                 ne0 = self.__not_equal_reason(*vec0.points)
                 ne1 = self.__not_equal_reason(*vec1.points)
                 if ne0 is not None and ne1 is not None:
@@ -292,27 +300,27 @@ class Explainer:
 
             same_side_reasons = self.__explained.list(SameSideProperty)
             for rsn in same_side_reasons:
-                pt0 = rsn.property.points[0]
-                pt1 = rsn.property.points[1]
+                pt0 = rsn.points[0]
+                pt1 = rsn.points[1]
                 line2 = self.scene.get_line(pt0, pt1)
                 if line2 is None:
                     continue
-                crossing = self.scene.get_intersection(rsn.property.line, line2)
+                crossing = self.scene.get_intersection(rsn.line, line2)
                 if crossing:
-                    self.__reason(AngleValueProperty(crossing.angle(pt0, pt1), 0), rsn.comments, [rsn])
+                    self.__reason(AngleValueProperty(crossing.angle(pt0, pt1), 0), rsn.reason.comments, [rsn])
 
             for rsn0, rsn1 in itertools.combinations(same_side_reasons, 2):
-                AB = rsn0.property.line
-                AC = rsn1.property.line
+                AB = rsn0.line
+                AC = rsn1.line
                 if AB == AC:
                     continue
                 A = self.scene.get_intersection(AB, AC)
                 if A is None:
                     continue
-                pt00 = rsn0.property.points[0]
-                pt01 = rsn0.property.points[1]
-                pt10 = rsn1.property.points[0]
-                pt11 = rsn1.property.points[1]
+                pt00 = rsn0.points[0]
+                pt01 = rsn0.points[1]
+                pt10 = rsn1.points[0]
+                pt11 = rsn1.points[1]
                 if pt00 == pt10:
                     B, C, D = pt11, pt01, pt00
                 elif pt01 == pt10:
@@ -338,34 +346,34 @@ class Explainer:
                     self.__reason(AngleValueProperty(X.angle(B, C), 180), [comment], [rsn0, rsn1])
 
             same_direction = [rsn for rsn in self.__explained.list(AngleValueProperty) if \
-                rsn.property.degree == 0 and rsn.property.angle.vertex is not None]
+                rsn.degree == 0 and rsn.angle.vertex is not None]
 
             for sd in same_direction:
-                vertex = sd.property.angle.vertex
-                pt0 = sd.property.angle.vector0.end
-                pt1 = sd.property.angle.vector1.end
+                vertex = sd.angle.vertex
+                pt0 = sd.angle.vector0.end
+                pt1 = sd.angle.vector1.end
                 for nc in self.__explained.list(NonCollinearProperty):
-                    params = set(nc.property.points)
+                    params = set(nc.points)
                     if vertex in params:
                         params.remove(vertex)
                         if pt0 in params and pt1 not in params:
                             params.remove(pt0)
                             line = self.scene.get_line(vertex, params.pop())
                             if line:
-                                self.__reason(SameSideProperty(line, pt0, pt1), [str(sd.property), str(nc.property)], [sd, nc])
+                                self.__reason(SameSideProperty(line, pt0, pt1), [str(sd), str(nc)], [sd, nc])
                         elif pt1 in params and pt0 not in params:
                             params.remove(pt1)
                             line = self.scene.get_line(vertex, params.pop())
                             if line:
-                                self.__reason(SameSideProperty(line, pt0, pt1), [str(sd.property), str(nc.property)], [sd, nc])
+                                self.__reason(SameSideProperty(line, pt0, pt1), [str(sd), str(nc)], [sd, nc])
 
             for sd in same_direction:
-                angle = sd.property.angle
+                angle = sd.angle
                 vec0 = angle.vector0
                 vec1 = angle.vector1
 
                 for ne in self.__explained.list(NotEqualProperty, keys=[angle.vertex]):
-                    vector = ne.property.points[0].vector(ne.property.points[1])
+                    vector = ne.points[0].vector(ne.points[1])
                     if vector.start != angle.vertex:
                         vector = vector.reversed
                     if len(set(vector.points + vec0.points)) < 3 or len(set(vector.points + vec1.points)) < 3:
@@ -375,9 +383,9 @@ class Explainer:
             def same_dir(vector):
                 yield (vector, [])
                 for sd in same_direction:
-                    vertex = sd.property.angle.vertex
-                    pt0 = sd.property.angle.vector0.end
-                    pt1 = sd.property.angle.vector1.end
+                    vertex = sd.angle.vertex
+                    pt0 = sd.angle.vector0.end
+                    pt1 = sd.angle.vector1.end
                     if vertex == vector.start:
                         if pt0 == vector.end:
                             yield (vertex.vector(pt1), [sd])
@@ -410,8 +418,8 @@ class Explainer:
                 return True
 
             for ar in self.__explained.list(AnglesRatioProperty):
-                a0 = ar.property.angle0
-                a1 = ar.property.angle1
+                a0 = ar.angle0
+                a1 = ar.angle1
                 if a0.vertex is None or a0.vertex != a1.vertex:
                     continue
                 if a0.vector1.end == a1.vector0.end:
@@ -434,16 +442,16 @@ class Explainer:
                 sum_reason = self.__angle_value_reason(angle)
                 if sum_reason is None:
                     continue
-                value = sum_reason.property.degree
-                second = value / sp.sympify(1 + ar.property.ratio)
+                value = sum_reason.degree
+                second = value / sp.sympify(1 + ar.ratio)
                 first = value - second
                 #TODO: write comments
                 self.__reason(AngleValueProperty(a0, first), [], premises=[ar, sum_reason])
                 self.__reason(AngleValueProperty(a1, second), [], premises=[ar, sum_reason])
 
             for ka in self.__explained.list(AngleValueProperty):
-                base = ka.property.angle
-                if ka.property.degree == 0 or ka.property.degree >= 90 or base.vertex is None:
+                base = ka.angle
+                if ka.degree == 0 or ka.degree >= 90 or base.vertex is None:
                     continue
                 for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
                     line = vec0.line()
@@ -457,10 +465,10 @@ class Explainer:
                                 for k in keys_for_angle(a):
                                     keys.append(k)
                             for ka2 in self.__explained.list(AngleValueProperty, keys):
-                                second = next((a for a in angles_to_look if ka2.property.angle == a), None)
+                                second = next((a for a in angles_to_look if ka2.angle == a), None)
                                 if second is None:
                                     continue
-                                if ka2.property.degree > ka.property.degree:
+                                if ka2.degree > ka.degree:
                                     comment = _comment(
                                         '%s, %s, %s are collinear, %s is acute, and %s > %s',
                                         pt, *vec0.points, base, second, base
@@ -503,14 +511,14 @@ class Explainer:
                     candidates0 = []
                     candidates1 = []
                     for kr in known_ratios:
-                        if prop.angle0 == kr.property.angle0:
-                            candidates0.append((kr, kr.property.angle1, kr.property.ratio))
-                        elif prop.angle0 == kr.property.angle1:
-                            candidates0.append((kr, kr.property.angle0, sp.sympify(1) / kr.property.ratio))
-                        elif prop.angle1 == kr.property.angle0:
-                            candidates1.append((kr, kr.property.angle1, sp.sympify(1) / kr.property.ratio))
-                        elif prop.angle1 == kr.property.angle1:
-                            candidates1.append((kr, kr.property.angle0, kr.property.ratio))
+                        if prop.angle0 == kr.angle0:
+                            candidates0.append((kr, kr.angle1, kr.ratio))
+                        elif prop.angle0 == kr.angle1:
+                            candidates0.append((kr, kr.angle0, sp.sympify(1) / kr.ratio))
+                        elif prop.angle1 == kr.angle0:
+                            candidates1.append((kr, kr.angle1, sp.sympify(1) / kr.ratio))
+                        elif prop.angle1 == kr.angle1:
+                            candidates1.append((kr, kr.angle0, kr.ratio))
                     for c0, c1 in itertools.product(candidates0, candidates1):
                         if c0[1] == c1[1]:
                             #TODO: Better way to report contradiction
@@ -524,13 +532,13 @@ class Explainer:
 
                     try:
                         known_angles = self.__explained.list(AngleValueProperty, prop.keys())
-                        left = next(exp for exp in known_angles if exp.property.angle == prop.angle0)
-                        right = next(exp for exp in known_angles if exp.property.angle == prop.angle1)
+                        left = next(exp for exp in known_angles if exp.angle == prop.angle0)
+                        right = next(exp for exp in known_angles if exp.angle == prop.angle1)
                         # TODO: report contradiction, if angle ratio differs
-                        if left.property.degree == right.property.degree:
-                            self.__reason(prop, _comment('Both angle values = %sº', left.property.degree), premises=[left, right])
+                        if left.degree == right.degree:
+                            self.__reason(prop, _comment('Both angle values = %sº', left.degree), premises=[left, right])
                         else:
-                            self.__reason(prop, _comment('%s = %sº, %s = %sº', left.property.angle, left.property.degree, right.property.angle, right.property.degree), premises=[left, right])
+                            self.__reason(prop, _comment('%s = %sº, %s = %sº', left.angle, left.degree, right.angle, right.degree), premises=[left, right])
                         found = True
                     except StopIteration:
                         pass
@@ -542,7 +550,7 @@ class Explainer:
                         similar_triangles = self.__explained.list(SimilarTrianglesProperty, prop.keys())
                         pair = {prop.angle0, prop.angle1}
                         for st in similar_triangles:
-                            if pair in angle_pairs(st.property):
+                            if pair in angle_pairs(st):
                                 self.__reason(prop, 'Corresponding angles in similar triangles', premises=[st])
                                 found = True
                                 break
@@ -551,21 +559,21 @@ class Explainer:
                             continue
 
                     if prop.ratio == 1:
-                        congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys()) if rsn.property.ratio == 1]
+                        congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys()) if rsn.ratio == 1]
                         for index, ca0 in enumerate(congruent_angles):
-                            if prop.angle0 == ca0.property.angle0:
-                                look_for = [prop.angle1, ca0.property.angle1]
-                            elif prop.angle1 == ca0.property.angle0:
-                                look_for = [prop.angle0, ca0.property.angle1]
-                            elif prop.angle0 == ca0.property.angle1:
-                                look_for = [prop.angle1, ca0.property.angle0]
-                            elif prop.angle1 == ca0.property.angle1:
-                                look_for = [prop.angle0, ca0.property.angle0]
+                            if prop.angle0 == ca0.angle0:
+                                look_for = {prop.angle1, ca0.angle1}
+                            elif prop.angle1 == ca0.angle0:
+                                look_for = {prop.angle0, ca0.angle1}
+                            elif prop.angle0 == ca0.angle1:
+                                look_for = {prop.angle1, ca0.angle0}
+                            elif prop.angle1 == ca0.angle1:
+                                look_for = {prop.angle0, ca0.angle0}
                             else:
                                 continue
 
                             for ca1 in congruent_angles[index + 1:]:
-                                if ca1.property.angle0 in look_for and ca1.property.angle1 in look_for:
+                                if {ca1.angle0, ca1.angle1} == look_for:
                                     self.__reason(prop, 'transitivity', premises=[ca0, ca1])
                                     found = True
                                     break
@@ -577,17 +585,17 @@ class Explainer:
                     try:
                         congruent = next(ct for ct in \
                             self.__explained.list(CongruentTrianglesProperty, prop.keys()) if \
-                                (ct.property.ABC == prop.ABC and ct.property.DEF == prop.DEF) or \
-                                (ct.property.ABC == prop.DEF and ct.property.DEF == prop.ABC))
+                                (ct.ABC == prop.ABC and ct.DEF == prop.DEF) or \
+                                (ct.ABC == prop.DEF and ct.DEF == prop.ABC))
                         self.__reason(prop, 'Congruent triangles are similar', premises=[congruent])
                         continue
                     except StopIteration:
                         pass
 
-                    congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys([3])) if rsn.property.ratio == 1]
+                    congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys([3])) if rsn.ratio == 1]
                     premises = []
                     for ca in congruent_angles:
-                        pair = {ca.property.angle0, ca.property.angle1}
+                        pair = {ca.angle0, ca.angle1}
                         if pair in angle_pairs(prop):
                             premises.append(ca)
 
@@ -606,7 +614,7 @@ class Explainer:
                             common_sides.append(left)
                         else:
                             for ed in equal_distances:
-                                if same_segment_pair((left, right), (ed.property.vector0, ed.property.vector1)):
+                                if same_segment_pair((left, right), (ed.vector0, ed.vector1)):
                                     premises.append(ed)
                                     break
                         if len(common_sides) + len(premises) < i + 1:
@@ -620,13 +628,13 @@ class Explainer:
 
                     similar_triangles = self.__explained.list(SimilarTrianglesProperty, prop.keys([3]))
                     for st in similar_triangles:
-                        if (st.property.ABC == prop.ABC and st.property.DEF == prop.DEF) or \
-                           (st.property.ABC == prop.DEF and st.property.DEF == prop.ABC):
+                        if (st.ABC == prop.ABC and st.DEF == prop.DEF) or \
+                           (st.ABC == prop.DEF and st.DEF == prop.ABC):
                             break
                     else:
                         continue
                     for ed in equal_distances:
-                        pair = (ed.property.vector0, ed.property.vector1)
+                        pair = (ed.vector0, ed.vector1)
                         if any(same_segment_pair(pair, sp) for sp in side_pairs(prop)):
                             self.__reason(prop, 'Similar triangles with congruent side', premises=[st, ed])
                             break
@@ -636,7 +644,7 @@ class Explainer:
                     try:
                         ct = next(rsn for rsn in \
                             self.__explained.list(CongruentTrianglesProperty, prop.keys()) if \
-                                any(same_segment_pair(pair, sp) for sp in side_pairs(rsn.property)))
+                                any(same_segment_pair(pair, sp) for sp in side_pairs(rsn)))
                         self.__reason(prop, 'Corresponding sides in congruent triangles', premises=[ct])
                         continue
                     except StopIteration:
@@ -647,8 +655,8 @@ class Explainer:
                         try:
                             it = next(rsn for rsn in \
                                 self.__explained.list(IsoscelesTriangleProperty, [key]) if \
-                                    same_segment_pair(pair, (rsn.property.A.vector(rsn.property.BC[0]), rsn.property.A.vector(rsn.property.BC[1]))))
-                            self.__reason(prop, _comment('Legs of isosceles △ %s %s %s', it.property.A, *it.property.BC), premises=[it])
+                                    same_segment_pair(pair, (rsn.A.vector(rsn.BC[0]), rsn.A.vector(rsn.BC[1]))))
+                            self.__reason(prop, _comment('Legs of isosceles △ %s %s %s', it.A, *it.BC), premises=[it])
                             continue
                         except StopIteration:
                             pass
@@ -659,8 +667,7 @@ class Explainer:
                             prop.BC[1].angle(prop.A, prop.BC[0])}
                         ca = next(rsn for rsn in \
                             self.__explained.list(AnglesRatioProperty, prop.keys([3])) if \
-                                rsn.property.ratio == 1 and \
-                                angles == {rsn.property.angle0, rsn.property.angle1})
+                                rsn.ratio == 1 and angles == {rsn.angle0, rsn.angle1})
                         self.__reason(prop, 'Congruent base angles', premises=[ca])
                         continue
                     except StopIteration:
@@ -670,7 +677,7 @@ class Explainer:
                         sides = (prop.A.vector(prop.BC[0]), prop.A.vector(prop.BC[1]))
                         cs = next(rsn for rsn in \
                             self.__explained.list(CongruentSegmentProperty, prop.keys([2])) if \
-                                same_segment_pair(sides, (rsn.property.vector0, rsn.property.vector1)))
+                                same_segment_pair(sides, (rsn.vector0, rsn.vector1)))
                         self.__reason(prop, 'Congruent legs', premises=[cs])
                         continue
                     except StopIteration:
@@ -679,17 +686,17 @@ class Explainer:
                 elif isinstance(prop, AngleValueProperty):
                     found = False
 
-                    congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys()) if rsn.property.ratio == 1]
+                    congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys()) if rsn.ratio == 1]
                     for ca in congruent_angles:
-                        if ca.property.angle0 == prop.angle:
-                            value = self.__angle_value_reason(ca.property.angle1)
-                        elif ca.property.angle1 == prop.angle:
-                            value = self.__angle_value_reason(ca.property.angle0)
+                        if ca.angle0 == prop.angle:
+                            value = self.__angle_value_reason(ca.angle1)
+                        elif ca.angle1 == prop.angle:
+                            value = self.__angle_value_reason(ca.angle0)
                         else:
                             continue
                         if value:
                             #TODO: report contradiction if degrees are different
-                            self.__reason(prop, _comment('%s = %s = %sº', prop.angle, value.property.angle, value.property.degree), premises=[ca, value])
+                            self.__reason(prop, _comment('%s = %s = %sº', prop.angle, value.angle, value.degree), premises=[ca, value])
                             found = True
                             break
 
@@ -702,8 +709,8 @@ class Explainer:
                         second = angle.vector1.end.angle(angle.vertex, angle.vector0.end)
                         pairs = []
                         for ka in self.__explained.list(AngleValueProperty, keys_for_angle(angle)):
-                            if ka.property.angle in (first, second):
-                                pairs.append((ka.property.degree, ka))
+                            if ka.angle in (first, second):
+                                pairs.append((ka.degree, ka))
                         if len(pairs) >= 2:
                             #TODO: Better way to report contradiction
                             assert prop.degree + pairs[0][0] + pairs[1][0] == 180
@@ -715,15 +722,15 @@ class Explainer:
                     isosceles = self.__explained.list(IsoscelesTriangleProperty, prop.keys())
                     values = self.__explained.list(AngleValueProperty, prop.keys())
                     for iso in isosceles:
-                        if prop.angle == iso.property.BC[0].angle(iso.property.A, iso.property.BC[1]):
+                        if prop.angle == iso.BC[0].angle(iso.A, iso.BC[1]):
                             break
-                        if prop.angle == iso.property.BC[1].angle(iso.property.A, iso.property.BC[0]):
+                        if prop.angle == iso.BC[1].angle(iso.A, iso.BC[0]):
                             break
                     else:
                         continue
                     for val in values:
-                        if val.property.angle == iso.property.A.angle(*iso.property.BC):
-                            self.__reason(prop, _comment('Base angle of isosceles △ %s %s %s with apex angle %sº', iso.property.A, *iso.property.BC, val.property.degree), premises=[iso, val])
+                        if val.angle == iso.A.angle(*iso.BC):
+                            self.__reason(prop, _comment('Base angle of isosceles △ %s %s %s with apex angle %sº', iso.A, *iso.BC, val.degree), premises=[iso, val])
                         # TODO: check sum of angles; report contradiction if found
 
 
@@ -741,9 +748,9 @@ class Explainer:
     def dump(self):
         print('Explained:')
         explained = self.__explained.all
-        explained.sort(key=lambda rsn: rsn.index)
-        for rsn in explained:
-            print('\t%2d: %s [%s]' % (rsn.index, rsn.property, rsn))
+        explained.sort(key=lambda p: p.reason.index)
+        for prop in explained:
+            print('\t%2d: %s [%s]' % (prop.reason.index, prop, prop.reason))
         print('\nNot explained:')
         for prop in self.__unexplained:
             print('\t%s' % prop)
@@ -754,7 +761,7 @@ class Explainer:
 
         explained_by_kind = {}
         for rsn in self.__explained.all:
-            kind = type(rsn.property)
+            kind = type(rsn)
             explained_by_kind[kind] = explained_by_kind.get(kind, 0) + 1
         explained_by_kind = [(type_presentation(k), v) for k, v in explained_by_kind.items()]
         explained_by_kind.sort(key=lambda pair: -pair[1])
@@ -793,7 +800,7 @@ class Explainer:
     def explained(self, obj):
         if isinstance(obj, Scene.Angle):
             rsn = self.__angle_value_reason(obj)
-            return rsn.property.degree if rsn else None
+            return rsn.degree if rsn else None
         raise Exception('Explanation not supported for objects of type %s' % type(obj).__name__)
 
     def explanation(self, obj):
