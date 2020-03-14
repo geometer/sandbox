@@ -346,7 +346,8 @@ class Hunter:
 
     def stats(self):
         return Stats([
-            ('Hunting time', '%.3f sec' % self.__hunting_time)
+            ('Hunting time', '%.3f sec' % self.__hunting_time),
+            ('Found properties', len(self.properties))
         ], 'Hunter stats')
 
     def hunt(self, options=('default')):
