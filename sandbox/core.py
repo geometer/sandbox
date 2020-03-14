@@ -490,7 +490,6 @@ class CoreScene:
             self.vector1 = vector1
             self.vectors = frozenset([vector0, vector1])
             self.vertex = self.vector0.start if self.vector0.start == self.vector1.start else None
-            self.points = (vector0.start, vector0.end, vector1.start, vector1.end)
 
         @property
         def scene(self):
