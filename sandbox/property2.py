@@ -6,7 +6,7 @@ class NonCollinearProperty(Property):
     Three points are not collinear
     """
     def __init__(self, point0, point1, point2):
-        self.points = [point0, point1, point2]
+        self.points = (point0, point1, point2)
         self.__point_set = frozenset(self.points)
 
     def keys(self):
@@ -29,6 +29,7 @@ class ParallelVectorsProperty(Property):
     def __init__(self, vector0, vector1):
         self.vector0 = vector0
         self.vector1 = vector1
+        self.__vector_set = {vector0, vector1}
 
     def keys(self):
         return keys_for_vector(self.vector0) + keys_for_vector(self.vector1)
@@ -39,7 +40,10 @@ class ParallelVectorsProperty(Property):
 
     def __eq__(self, other):
         return isinstance(other, ParallelVectorsProperty) and \
-            {self.vector0, self.vector1} == {other.vector0, other.vector1}
+            self.__vector_set == other.__vector_set
+
+    def __hash__(self):
+        return hash(ParallelVectorsProperty) + hash(self.__vector_set)
 
 class NotEqualProperty(Property):
     """
@@ -50,7 +54,7 @@ class NotEqualProperty(Property):
         self.__point_set = frozenset(self.points)
 
     def keys(self):
-        return [frozenset(self.points), *self.points]
+        return [self.__point_set, *self.points]
 
     @property
     def description(self):
@@ -90,7 +94,7 @@ class SameSideProperty(Property):
     """
     def __init__(self, line, point0, point1):
         self.line = line
-        self.points = [point0, point1]
+        self.points = (point0, point1)
         self.__object_set = frozenset([line, point0, point1])
 
     def keys(self):
