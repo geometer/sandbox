@@ -488,6 +488,7 @@ class CoreScene:
             assert vector0.scene == vector1.scene
             self.vector0 = vector0
             self.vector1 = vector1
+            self.vectors = frozenset([vector0, vector1])
             self.vertex = self.vector0.start if self.vector0.start == self.vector1.start else None
             self.points = (vector0.start, vector0.end, vector1.start, vector1.end)
             self.__reversed = None
@@ -525,9 +526,7 @@ class CoreScene:
             self.scene.constraint(Constraint.Kind.angles_ratio, self, angle, ratio, **kwargs)
 
         def __eq__(self, other):
-            #return self.vector0 == other.vector0 and self.vector1 == other.vector1
-            # optimized version
-            return self.points == other.points
+            return self.vectors == other.vectors
 
         def __hash__(self):
             return hash(self.points)
