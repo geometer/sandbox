@@ -411,24 +411,21 @@ class Explainer:
                 if a0.vertex is None or a0.vertex != a1.vertex:
                     continue
                 if a0.vector1.end == a1.vector0.end:
-                    angle = a0.vertex.angle(a0.vector0.end, a1.vector1.end) #a0 + a1
-                    is_sum = True
-                    if not point_inside_angle(a0.vector1.end, angle):
-                        continue
+                    angle = a0.vertex.angle(a0.vector0.end, a1.vector1.end)
+                    common_point = a0.vector1.end
                 elif a0.vector0.end == a1.vector1.end:
-                    angle = a0.vertex.angle(a1.vector0.end, a0.vector1.end) #a0 + a1
-                    is_sum = True
-                    if not point_inside_angle(a0.vector0.end, angle):
-                        continue
+                    angle = a0.vertex.angle(a1.vector0.end, a0.vector1.end)
+                    common_point = a0.vector0.end
                 elif a0.vector0.end == a1.vector0.end:
-                    angle = a0.vertex.angle(a1.vector1.end, a0.vector1.end) #a0 - a1
-                    is_sum = False
-                    continue
+                    angle = a0.vertex.angle(a1.vector1.end, a0.vector1.end)
+                    common_point = a0.vector0.end
                 elif a0.vector1.end == a1.vector1.end:
-                    angle = a0.vertex.angle(a0.vector0.end, a1.vector0.end) #a0 - a1
-                    is_sum = False
-                    continue
+                    angle = a0.vertex.angle(a0.vector0.end, a1.vector0.end)
+                    common_point = a0.vector1.end
                 else:
+                    continue
+                if not point_inside_angle(common_point, angle):
+                    #TODO: consider angle difference
                     continue
                 for ka in self.__explained.list(AngleValueProperty):
                     if same(ka.property.angle, angle):
@@ -436,14 +433,8 @@ class Explainer:
                         break
                 else:
                     continue
-                if is_sum:
-                    second = value / (1 + ar.property.ratio)
-                    first = value - second
-                else:
-                    if ar.property.ratio == 1:
-                        continue
-                    second = value / (ar.property.ratio - 1)
-                    first = value + second
+                second = value / (1 + ar.property.ratio)
+                first = value - second
                 #TODO: write comments
                 self.__reason(AngleValueProperty(a0, first), [], premises=[ar, ka])
                 self.__reason(AngleValueProperty(a1, second), [], premises=[ar, ka])
