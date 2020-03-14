@@ -74,7 +74,7 @@ class BasePlacement:
             return 0
         if cos <= -1:
             return np.pi
-        return np.arccos(cos) if self.vector_product(vec0, vec1) > 0 else -np.arccos(cos)
+        return np.arccos(cos)
 
 class Placement(BasePlacement):
     class TempPlacement(BasePlacement):

@@ -75,11 +75,7 @@ class AngleValueProperty(Property):
     def __eq__(self, other):
         if not isinstance(other, AngleValueProperty):
             return False
-        if self.degree == 180:
-            return self.angle == other.angle or self.angle.reversed == other.angle
-        return \
-            (self.degree == other.degree and self.angle == other.angle) or \
-            (self.degree == -other.degree and self.angle.reversed == other.angle)
+        return self.degree == other.degree and self.angle == other.angle
 
 class AnglesRatioProperty(Property):
     """
@@ -89,7 +85,6 @@ class AnglesRatioProperty(Property):
         # angle0 / angle1 = ratio
         if ratio < 0:
             ratio = -ratio
-            angle1 = angle1.reversed
 
         if ratio >= 1:
             self.angle0 = angle0
@@ -119,13 +114,9 @@ class AnglesRatioProperty(Property):
 
         if self.angle0 == other.angle0:
             return self.angle1 == other.angle1
-        if self.angle0 == other.angle0.reversed:
-            return self.angle1 == other.angle1.reversed
         if self.ratio == 1:
             if self.angle0 == other.angle1:
                 return self.angle1 == other.angle0
-            if self.angle0 == other.angle1.reversed:
-                return self.angle1 == other.angle0.reversed
         return False
 
 class CongruentSegmentProperty(Property):
