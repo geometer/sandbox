@@ -82,16 +82,7 @@ class Explainer:
             if keys:
                 assert isinstance(keys, list)
                 sublists = [by_type.by_key_map.get(k) for k in keys]
-                sublists = [sl for sl in sublists if sl]
-                if len(sublists) == 0:
-                    return []
-                if len(sublists) == 1:
-                    return list(sublists[0])
-                collection = list(sublists[0])
-                for sl in sublists[1:]:
-                    inds = [p.reason.index for p in collection]
-                    collection += [s for s in sl if s.reason.index not in inds]
-                return collection
+                return list(set(itertools.chain(*[l for l in sublists if l])))
             else:
                 return by_type.all
 
@@ -127,7 +118,8 @@ class Explainer:
             self.__explained.add(prop)
 
     def __refresh_unexplained(self):
-        self.__unexplained = [prop for prop in self.__unexplained if prop not in self.__explained]
+        test = set(self.__explained.all)
+        self.__unexplained = [prop for prop in self.__unexplained if prop not in test]
 
     def explain(self):
         start = time.time()

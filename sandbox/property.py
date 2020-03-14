@@ -17,11 +17,11 @@ def keys_for_triangle(triangle, lengths):
     return keys
 
 class Property:
-    def __str__(self):
-        return str(self.description)
-
     def keys(self):
         return []
+
+    def __str__(self):
+        return str(self.description)
 
 class EquilateralTriangleProperty(Property):
     """
@@ -46,16 +46,20 @@ class CollinearProperty(Property):
     """
     def __init__(self, A, B, C):
         self.points = (A, B, C)
+        self.__point_set = frozenset(self.points)
 
     def keys(self):
-        return [frozenset(self.points)]
+        return [self.__point_set]
 
     @property
     def description(self):
         return _comment('Points %s, %s, and %s are collinear', *self.points)
 
     def __eq__(self, other):
-        return isinstance(other, CollinearProperty) and set(self.points) == set(other.points)
+        return isinstance(other, CollinearProperty) and self.__point_set == other.__point_set
+
+    def __hash__(self):
+        return hash(CollinearProperty) + hash(self.__point_set)
 
 class AngleValueProperty(Property):
     """
@@ -63,7 +67,8 @@ class AngleValueProperty(Property):
     """
     def __init__(self, angle, degree):
         self.angle = angle
-        self.degree = degree
+        degree = sp.sympify(degree)
+        self.degree = int(degree) if degree.is_integer else degree
 
     def keys(self):
         return keys_for_angle(self.angle)
@@ -79,6 +84,9 @@ class AngleValueProperty(Property):
         if not isinstance(other, AngleValueProperty):
             return False
         return self.degree == other.degree and self.angle == other.angle
+
+    def __hash__(self):
+        return hash(AngleValueProperty) + hash(self.degree) + hash(self.angle)
 
 class AnglesRatioProperty(Property):
     """
@@ -101,6 +109,8 @@ class AnglesRatioProperty(Property):
 
         if self.ratio.is_integer:
             self.ratio = int(self.ratio)
+
+        self.__hash = None
 
     def keys(self):
         return keys_for_angle(self.angle0) + keys_for_angle(self.angle1)
@@ -126,6 +136,11 @@ class AnglesRatioProperty(Property):
                 return self.angle1 == other.angle0
         return False
 
+    def __hash__(self):
+        if self.__hash is None:
+            self.__hash = hash(AnglesRatioProperty) + hash(self.ratio) + hash(self.angle0) + hash(self.angle1)
+        return self.__hash
+
 class CongruentSegmentProperty(Property):
     """
     Two segments are congruent
@@ -133,6 +148,7 @@ class CongruentSegmentProperty(Property):
     def __init__(self, vector0, vector1):
         self.vector0 = vector0
         self.vector1 = vector1
+        self.__vector_set = frozenset([vector0, vector1])
 
     def keys(self):
         return keys_for_vector(self.vector0) + keys_for_vector(self.vector1)
@@ -143,7 +159,10 @@ class CongruentSegmentProperty(Property):
 
     def __eq__(self, other):
         return isinstance(other, CongruentSegmentProperty) and \
-            {self.vector0, self.vector1} == {other.vector0, other.vector1}
+            self.__vector_set == other.__vector_set
+
+    def __hash__(self):
+        return hash(CongruentSegmentProperty) + hash(self.__vector_set)
 
 class SimilarTrianglesProperty(Property):
     """
@@ -152,6 +171,7 @@ class SimilarTrianglesProperty(Property):
     def __init__(self, ABC, DEF):
         self.ABC = tuple(ABC)
         self.DEF = tuple(DEF)
+        self.__triangle_set = frozenset([self.ABC, self.DEF])
 
     def keys(self, lengths=None):
         return keys_for_triangle(self.ABC, lengths) + keys_for_triangle(self.DEF, lengths)
@@ -162,7 +182,10 @@ class SimilarTrianglesProperty(Property):
 
     def __eq__(self, other):
         return isinstance(other, SimilarTrianglesProperty) and \
-            {self.ABC, self.DEF} == {other.ABC, other.DEF}
+            self.__triangle_set == other.__triangle_set
+
+    def __hash__(self):
+        return hash(SimilarTrianglesProperty) + hash(self.__triangle_set)
 
 class CongruentTrianglesProperty(Property):
     """
@@ -171,6 +194,7 @@ class CongruentTrianglesProperty(Property):
     def __init__(self, ABC, DEF):
         self.ABC = tuple(ABC)
         self.DEF = tuple(DEF)
+        self.__triangle_set = frozenset([self.ABC, self.DEF])
 
     def keys(self, lengths=None):
         return keys_for_triangle(self.ABC, lengths) + keys_for_triangle(self.DEF, lengths)
@@ -181,7 +205,10 @@ class CongruentTrianglesProperty(Property):
 
     def __eq__(self, other):
         return isinstance(other, CongruentTrianglesProperty) and \
-            {self.ABC, self.DEF} == {other.ABC, other.DEF}
+            self.__triangle_set == other.__triangle_set
+
+    def __hash__(self):
+        return hash(CongruentTrianglesProperty) + hash(self.__triangle_set)
 
 class IsoscelesTriangleProperty(Property):
     """
@@ -190,6 +217,7 @@ class IsoscelesTriangleProperty(Property):
     def __init__(self, A, BC):
         self.A = A
         self.BC = tuple(BC)
+        self.__base_points_set = frozenset(self.BC)
 
     def keys(self, lengths=None):
         return keys_for_triangle([self.A, *self.BC], lengths)
@@ -200,4 +228,7 @@ class IsoscelesTriangleProperty(Property):
 
     def __eq__(self, other):
         return isinstance(other, IsoscelesTriangleProperty) and \
-            self.A == other.A and set(self.BC) == set(other.BC)
+            self.A == other.A and self.__base_points_set == other.__base_points_set
+
+    def __hash__(self):
+        return hash(IsoscelesTriangleProperty) + hash(self.A) + hash(self.__base_points_set)

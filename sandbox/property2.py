@@ -7,16 +7,20 @@ class NonCollinearProperty(Property):
     """
     def __init__(self, point0, point1, point2):
         self.points = [point0, point1, point2]
+        self.__point_set = frozenset(self.points)
 
     def keys(self):
-        return [frozenset(self.points)]
+        return [self.__point_set]
 
     @property
     def description(self):
         return _comment('Points %s, %s, and %s are not collinear', *self.points)
 
     def __eq__(self, other):
-        return isinstance(other, NonCollinearProperty) and set(self.points) == set(other.points)
+        return isinstance(other, NonCollinearProperty) and self.__point_set == other.__point_set
+
+    def __hash__(self):
+        return hash(NonCollinearProperty) + hash(self.__point_set)
 
 class ParallelVectorsProperty(Property):
     """
@@ -43,6 +47,7 @@ class NotEqualProperty(Property):
     """
     def __init__(self, point0, point1):
         self.points = [point0, point1]
+        self.__point_set = frozenset(self.points)
 
     def keys(self):
         return [frozenset(self.points), *self.points]
@@ -52,7 +57,10 @@ class NotEqualProperty(Property):
         return _comment('%s != %s', *self.points)
 
     def __eq__(self, other):
-        return isinstance(other, NotEqualProperty) and set(self.points) == set(other.points)
+        return isinstance(other, NotEqualProperty) and self.__point_set == other.__point_set
+
+    def __hash__(self):
+        return hash(NotEqualProperty) + hash(self.__point_set)
 
 class OppositeSideProperty(Property):
     """
@@ -61,18 +69,20 @@ class OppositeSideProperty(Property):
     def __init__(self, line, point0, point1):
         self.line = line
         self.points = (point0, point1)
+        self.__object_set = frozenset([line, point0, point1])
 
     def keys(self):
-        return [frozenset([self.line, *self.points])]
+        return [self.__object_set]
 
     @property
     def description(self):
         return _comment('%s, %s located on opposite sides of %s', *self.points, self.line)
 
     def __eq__(self, other):
-        if not isinstance(other, OppositeSideProperty):
-            return False
-        return self.line == other.line and set(self.points) == set(other.points)
+        return isinstance(other, OppositeSideProperty) and self.__object_set == other.__object_set
+
+    def __hash__(self):
+        return hash(OppositeSideProperty) + hash(self.__object_set)
 
 class SameSideProperty(Property):
     """
@@ -81,15 +91,17 @@ class SameSideProperty(Property):
     def __init__(self, line, point0, point1):
         self.line = line
         self.points = [point0, point1]
+        self.__object_set = frozenset([line, point0, point1])
 
     def keys(self):
-        return [frozenset([self.line, *self.points])]
+        return [self.__object_set]
 
     @property
     def description(self):
         return _comment('%s, %s located on the same side of %s', *self.points, self.line)
 
     def __eq__(self, other):
-        if not isinstance(other, SameSideProperty):
-            return False
-        return self.line == other.line and set(self.points) == set(other.points)
+        return isinstance(other, SameSideProperty) and self.__object_set == other.__object_set
+
+    def __hash__(self):
+        return hash(SameSideProperty) + hash(self.__object_set)
