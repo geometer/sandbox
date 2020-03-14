@@ -435,7 +435,7 @@ class Explainer:
                 if sum_reason is None:
                     continue
                 value = sum_reason.property.degree
-                second = value / (1 + ar.property.ratio)
+                second = value / sp.sympify(1 + ar.property.ratio)
                 first = value - second
                 #TODO: write comments
                 self.__reason(AngleValueProperty(a0, first), [], premises=[ar, sum_reason])

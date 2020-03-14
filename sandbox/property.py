@@ -83,6 +83,7 @@ class AnglesRatioProperty(Property):
     """
     def __init__(self, angle0, angle1, ratio):
         # angle0 / angle1 = ratio
+        ratio = sp.sympify(ratio)
         if ratio < 0:
             ratio = -ratio
 
@@ -93,7 +94,10 @@ class AnglesRatioProperty(Property):
         else:
             self.angle0 = angle1
             self.angle1 = angle0
-            self.ratio = sp.sympify(1) / ratio
+            self.ratio = 1 / ratio
+
+        if self.ratio.is_integer:
+            self.ratio = int(self.ratio)
 
     def keys(self):
         return keys_for_angle(self.angle0) + keys_for_angle(self.angle1)
