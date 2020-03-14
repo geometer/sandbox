@@ -37,6 +37,9 @@ class EquilateralTriangleProperty(Property):
     def description(self):
         return _comment('△ %s %s %s is equilateral', *self.ABC)
 
+    def __eq__(self, other):
+        return isinstance(other, EquilateralTriangleProperty) and self.ABC == other.ABC
+
 class CollinearProperty(Property):
     """
     Three points are collinear
@@ -138,6 +141,10 @@ class CongruentSegmentProperty(Property):
     def description(self):
         return _comment('|%s| = |%s|', self.vector0, self.vector1)
 
+    def __eq__(self, other):
+        return isinstance(other, CongruentSegmentProperty) and \
+            {self.vector0, self.vector1} == {other.vector0, other.vector1}
+
 class SimilarTrianglesProperty(Property):
     """
     Two triangles are similar
@@ -152,6 +159,10 @@ class SimilarTrianglesProperty(Property):
     @property
     def description(self):
         return _comment('△ %s %s %s ~ △ %s %s %s', *self.ABC, *self.DEF)
+
+    def __eq__(self, other):
+        return isinstance(other, SimilarTrianglesProperty) and \
+            {self.ABC, self.DEF} == {other.ABC, other.DEF}
 
 class CongruentTrianglesProperty(Property):
     """
@@ -168,6 +179,10 @@ class CongruentTrianglesProperty(Property):
     def description(self):
         return _comment('△ %s %s %s = △ %s %s %s', *self.ABC, *self.DEF)
 
+    def __eq__(self, other):
+        return isinstance(other, CongruentTrianglesProperty) and \
+            {self.ABC, self.DEF} == {other.ABC, other.DEF}
+
 class IsoscelesTriangleProperty(Property):
     """
     A triangle is isosceles
@@ -182,3 +197,7 @@ class IsoscelesTriangleProperty(Property):
     @property
     def description(self):
         return _comment('△ %s %s %s is isosceles (with apex %s)', self.A, *self.BC, self.A)
+
+    def __eq__(self, other):
+        return isinstance(other, IsoscelesTriangleProperty) and \
+            self.A == other.A and set(self.BC) == set(other.BC)

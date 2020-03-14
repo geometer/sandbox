@@ -33,6 +33,10 @@ class ParallelVectorsProperty(Property):
     def description(self):
         return _comment('%s ↑↑ %s', self.vector0, self.vector1)
 
+    def __eq__(self, other):
+        return isinstance(other, ParallelVectorsProperty) and \
+            {self.vector0, self.vector1} == {other.vector0, other.vector1}
+
 class NotEqualProperty(Property):
     """
     The distance between two points is non-zero
