@@ -83,6 +83,7 @@ class EquilateralTriangleProperty(Property):
     """
     def __init__(self, ABC):
         self.ABC = tuple(ABC)
+        self.__point_set = frozenset(self.ABC)
 
     def keys(self, lengths=None):
         return keys_for_triangle(self.ABC, lengths)
@@ -92,7 +93,10 @@ class EquilateralTriangleProperty(Property):
         return _comment('△ %s %s %s is equilateral', *self.ABC)
 
     def __eq__(self, other):
-        return isinstance(other, EquilateralTriangleProperty) and self.ABC == other.ABC
+        return isinstance(other, EquilateralTriangleProperty) and self.__point_set == other.__point_set
+
+    def __hash__(self):
+        return hash(EquilateralTriangleProperty) + hash(self.__point_set)
 
 class CollinearProperty(Property):
     """
