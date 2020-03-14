@@ -226,12 +226,8 @@ class CoreScene:
                 if set(cnstr.params) == {self, A, B}:
                     cnstr.update(kwargs)
                     return
-            self.not_equal_constraint(A, **kwargs)
-            self.not_equal_constraint(B, **kwargs)
-            A.not_equal_constraint(B, **kwargs)
             self.scene.constraint(Constraint.Kind.not_collinear, self, A, B, **kwargs)
             self.scene.add_property(NonCollinearProperty(self, A, B), kwargs.get('comment'))
-
 
         def collinear_constraint(self, A, B, **kwargs):
             """
@@ -602,6 +598,8 @@ class CoreScene:
         AB and CD are tuples or lists of two points
         """
         assert len(AB) == 2 and len(CD) == 2
+        AB[0].not_equal_constraint(AB[1], **kwargs)
+        CD[0].not_equal_constraint(CD[1], **kwargs)
         lineAB = AB[0].line_through(AB[1], auxiliary=True)
         lineCD = CD[0].line_through(CD[1], auxiliary=True)
         lineAB.perpendicular_constraint(lineCD, **kwargs)

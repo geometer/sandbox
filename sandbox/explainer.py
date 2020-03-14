@@ -160,6 +160,9 @@ class Explainer:
                                 comments += extra_comments(ptY, pt0, pt1)
                             self.__reason(NonCollinearProperty(ptX, ptY, pt2), comments, [ncl, ne])
 
+                self.__reason(NotEqualProperty(ncl.points[0], ncl.points[1]), str(ncl))
+                self.__reason(NotEqualProperty(ncl.points[0], ncl.points[2]), str(ncl))
+                self.__reason(NotEqualProperty(ncl.points[1], ncl.points[2]), str(ncl))
                 add_reasons(ncl.points[0], ncl.points[1], ncl.points[2])
                 add_reasons(ncl.points[1], ncl.points[2], ncl.points[0])
                 add_reasons(ncl.points[2], ncl.points[0], ncl.points[1])
