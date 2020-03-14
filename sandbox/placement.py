@@ -209,13 +209,14 @@ class Placement(BasePlacement):
                             0.5 * (loc0.x + loc1.x) + coef * (loc0.x - loc1.x),
                             0.5 * (loc0.y + loc1.y) + coef * (loc0.y - loc1.y)
                         ))
-                    elif p.origin == CoreScene.Point.Origin.ratio:
-                        p0 = self.location(p.point0)
-                        p1 = self.location(p.point1)
-                        denom = p.coef0 + p.coef1
+                    elif p.origin == CoreScene.Point.Origin.translated:
+                        base = self.location(p.base)
+                        start = self.location(p.delta.start)
+                        end = self.location(p.delta.end)
+                        coef = np.float128(p.coef)
                         add(p, TwoDCoordinates(
-                            (p.coef0 * p0.x + p.coef1 * p1.x) / denom,
-                            (p.coef0 * p0.y + p.coef1 * p1.y) / denom
+                            base.x + coef * (end.x - start.x),
+                            base.y + coef * (end.y - start.y)
                         ))
                     elif p.origin == CoreScene.Point.Origin.perp:
                         p0 = self.location(p.point)

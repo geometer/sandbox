@@ -82,7 +82,7 @@ class CoreScene:
     class Point(Object):
         class Origin(Enum):
             free              = auto()
-            ratio             = auto()
+            translated        = auto()
             perp              = auto()
             line              = auto()
             circle            = auto()
@@ -93,6 +93,31 @@ class CoreScene:
         def __init__(self, scene, origin, **kwargs):
             assert isinstance(origin, CoreScene.Point.Origin), 'origin must be a Point.Origin, not %s' % type(origin)
             CoreScene.Object.__init__(self, scene, origin=origin, **kwargs)
+
+        def translated_point(self, vector, coef=1, **kwargs):
+            self.scene.assert_vector(vector)
+            if coef == 0:
+                return self
+            if coef == 1 and vector.start == self:
+                return vector.end
+            if coef == -1 and vector.end == self:
+                return vector.start
+            new_point = CoreScene.Point(
+                self.scene,
+                CoreScene.Point.Origin.translated,
+                base=self, delta=vector, coef=coef, **kwargs
+            )
+            line = vector.line()
+            if line and self in line:
+                new_point.belongs_to(line)
+            if self in {vector.start, vector.end}:
+                new_point.collinear_constraint(vector.start, vector.end)
+            if coef > 0:
+                self.vector(new_point).parallel_constraint(vector, guaranteed=True)
+            else:
+                new_point.vector(self).parallel_constraint(vector, guaranteed=True)
+            self.vector(new_point).length_ratio_constraint(vector, sp.Abs(coef), guaranteed=True)
+            return new_point
 
         def ratio_point(self, point, coef0: int, coef1: int, **kwargs):
             """
@@ -108,11 +133,7 @@ class CoreScene:
                 return point
             if coef1 == 0:
                 return self
-            new_point = CoreScene.Point(
-                self.scene,
-                CoreScene.Point.Origin.ratio,
-                point0=self, point1=point, coef0=coef0, coef1=coef1, **kwargs
-            )
+            new_point = self.translated_point(self.vector(point), sp.sympify(coef1) / (coef0 + coef1), **kwargs)
             new_point.collinear_constraint(self, point, guaranteed=True)
             self.vector(new_point).length_ratio_constraint(new_point.vector(point), sp.sympify(coef1) / coef0, guaranteed=True)
             if coef0 > 0 and coef1 > 0 or coef0 < 0 and coef1 < 0:
@@ -510,7 +531,7 @@ class CoreScene:
             line = self.vertex.line_through(C, auxiliary=True)
             X = circle.intersection_point(line, auxiliary=True)
             self.vertex.same_direction_constraint(X, C)
-            Y = X.ratio_point(B, 1, 1, auxiliary=True)
+            Y = X.translated_point(self.vector0, auxiliary=True)
             bisector = self.vertex.line_through(Y, **kwargs)
             comment = _comment('[%s %s) is the bisector of %s', self.vertex, Y, self)
             Y.inside_angle_constraint(self, comment=comment)
@@ -624,6 +645,9 @@ class CoreScene:
 
     def assert_line_or_circle(self, obj):
         self.assert_type(obj, CoreScene.Line, CoreScene.Circle)
+
+    def assert_vector(self, obj):
+        self.assert_type(obj, CoreScene.Vector)
 
     def assert_angle(self, obj):
         self.assert_type(obj, CoreScene.Angle)

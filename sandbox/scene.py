@@ -32,22 +32,11 @@ class Scene(CoreScene):
         intermediate = self.gravity_centre_point(*points[1:], auxiliary=True)
         return points[0].ratio_point(intermediate, 1, len(points) - 1, **kwargs)
 
-    def opposite_parallelogram_point(self, point0, point1, point2, **kwargs):
-        """
-        Constructs the fourth point of the parallelogram, opposite to point0.
-        Does not suppose any (non-)collinearity conditions.
-        """
-        self.assert_point(point0)
-        self.assert_point(point1)
-        self.assert_point(point2)
-        centre = point1.ratio_point(point2, 1, 1, auxiliary=True)
-        return centre.ratio_point(point0, 2, -1, **kwargs)
-
     def parallel_line(self, line, point, **kwargs):
         """
         Constructs a line parallel to the given line through the given point.
         """
-        fourth = self.opposite_parallelogram_point(line.point0, point, line.point1, auxiliary=True)
+        fourth = point.translated_point(line.point0.vector(line.point1), auxiliary=True)
         return point.line_through(fourth, **kwargs)
 
     def perpendicular_foot_point(self, point, line, **kwargs):
@@ -198,5 +187,5 @@ class Scene(CoreScene):
             args['auxiliary'] = True
         if labels and labels[3]:
             args['label'] = labels[3]
-        pt3 = self.opposite_parallelogram_point(pt1, pt0, pt2, **args)
+        pt3 = pt0.translated_point(pt1.vector(pt2), **args)
         return (pt0, pt1, pt2, pt3)
