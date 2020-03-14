@@ -734,7 +734,7 @@ class Explainer:
         base()
         self.__iteration_step_count = 0
         self.__refresh_unexplained()
-        while len(self.__unexplained) > 0:
+        while itertools.count():
             explained_size = len(self.__explained)
             iteration()
             self.__iteration_step_count += 1
