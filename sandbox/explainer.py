@@ -370,6 +370,30 @@ class Explainer:
                 self.__reason(AngleValueProperty(a0, first), [], premises=[ar, sum_reason])
                 self.__reason(AngleValueProperty(a1, second), [], premises=[ar, sum_reason])
 
+            for ar in self.__explained.list(AnglesRatioProperty):
+                a0 = ar.angle0
+                a1 = ar.angle1
+                if a0.vertex is None or a1.vertex is None:
+                    continue
+                s0 = {a0.vertex, a0.vector0.end, a0.vector1.end}
+                s1 = {a1.vertex, a1.vector0.end, a1.vector1.end}
+                if s0 != s1:
+                    continue
+                s0.remove(a0.vertex)
+                s0.remove(a1.vertex)
+                third_vertex = s0.pop()
+                a2 = third_vertex.angle(a0.vertex, a1.vertex)
+                a2_reason = self.__angle_value_reason(a2)
+                if a2_reason is None:
+                    continue
+                #a0 + a1 + a2 = 180
+                #a0 + a1 = 180 - a2
+                a1_value = (180 - a2_reason.degree) / sp.sympify(1 + ar.ratio) 
+                a0_value = 180 - a2_reason.degree - a1_value
+                comment = _comment('%s + %s + %s = 180º', a0, a1, a2)
+                self.__reason(AngleValueProperty(a0, a0_value), comment, premises=[ar, a2_reason])
+                self.__reason(AngleValueProperty(a1, a1_value), comment, premises=[ar, a2_reason])
+
             for ka in self.__explained.list(AngleValueProperty):
                 base = ka.angle
                 if ka.degree == 0 or ka.degree >= 90 or base.vertex is None:
