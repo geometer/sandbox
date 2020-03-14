@@ -4,7 +4,6 @@ import sympy as sp
 
 from .core import Constraint, _comment
 from .property import *
-from .property2 import *
 from .scene import Scene
 from .stats import Stats
 
