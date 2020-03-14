@@ -29,7 +29,7 @@ class ParallelVectorsProperty(Property):
     def __init__(self, vector0, vector1):
         self.vector0 = vector0
         self.vector1 = vector1
-        self.__vector_set = {vector0, vector1}
+        self.__vector_set = frozenset([vector0, vector1])
 
     def keys(self):
         return keys_for_vector(self.vector0) + keys_for_vector(self.vector1)
