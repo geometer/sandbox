@@ -9,8 +9,8 @@ from .scene import Scene
 from .stats import Stats
 
 # +++++ utility methods +++++
-def same_segment(obj0, obj1):
-    return obj0 == obj1 or obj0 == obj1.reversed
+def same_segment(vec0, vec1):
+    return vec0 == vec1 or vec0 == vec1.reversed
 
 def same_segment_pair(pair0, pair1):
     return same_segment(pair0[0], pair1[0]) and same_segment(pair0[1], pair1[1]) \

@@ -222,9 +222,6 @@ class Hunter:
             else:
                 angle = pair[0].angle(pair[1])
             arc = self.placement.angle(angle)
-            if arc < 0:
-                angle = angle.reversed
-                arc = -arc
             if angle.vertex is None and arc > np.pi / 2:
                 angle = angle.vector1.angle(angle.vector0.reversed)
                 arc = np.pi - arc

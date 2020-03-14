@@ -491,18 +491,10 @@ class CoreScene:
             self.vectors = frozenset([vector0, vector1])
             self.vertex = self.vector0.start if self.vector0.start == self.vector1.start else None
             self.points = (vector0.start, vector0.end, vector1.start, vector1.end)
-            self.__reversed = None
 
         @property
         def scene(self):
             return self.vector0.scene
-
-        @property
-        def reversed(self):
-            if self.__reversed is None:
-                self.__reversed = CoreScene.Angle(self.vector1, self.vector0)
-                self.__reversed.__reversed = self
-            return self.__reversed
 
         def bisector_line(self, **kwargs):
             assert self.vertex is not None
