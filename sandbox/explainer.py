@@ -422,6 +422,25 @@ class Explainer:
                                     self.__reason(AngleValueProperty(zero, 0), comment, [ka, ka2])
                                 break
 
+            for iso in self.__explained.list(IsoscelesTriangleProperty):
+                self.__reason(
+                    AnglesRatioProperty(
+                        iso.BC[0].angle(iso.A, iso.BC[1]),
+                        iso.BC[1].angle(iso.A, iso.BC[0]),
+                        1
+                    ),
+                    _comment('Base angles of isosceles △ %s %s %s', iso.A, *iso.BC),
+                    [iso]
+                )
+                self.__reason(
+                    CongruentSegmentProperty(
+                        iso.A.vector(iso.BC[0]),
+                        iso.A.vector(iso.BC[1])
+                    ),
+                    _comment('Legs of isosceles △ %s %s %s', iso.A, *iso.BC),
+                    [iso]
+                )
+
             for prop in list(self.__unexplained):
                 if isinstance(prop, AnglesRatioProperty):
                     found = False
@@ -625,17 +644,6 @@ class Explainer:
                     except StopIteration:
                         pass
 
-                    key = frozenset([*prop.vector0.points, *prop.vector1.points])
-                    if len(key) == 3:
-                        try:
-                            it = next(rsn for rsn in \
-                                self.__explained.list(IsoscelesTriangleProperty, [key]) if \
-                                    same_segment_pair(pair, (rsn.A.vector(rsn.BC[0]), rsn.A.vector(rsn.BC[1]))))
-                            self.__reason(prop, _comment('Legs of isosceles △ %s %s %s', it.A, *it.BC), premises=[it])
-                            continue
-                        except StopIteration:
-                            pass
-
                 elif isinstance(prop, IsoscelesTriangleProperty):
                     try:
                         angles = {prop.BC[0].angle(prop.BC[1], prop.A), \
@@ -698,21 +706,6 @@ class Explainer:
 
                     if found:
                         continue
-
-                    isosceles = self.__explained.list(IsoscelesTriangleProperty, prop.keys())
-                    values = self.__explained.list(AngleValueProperty, prop.keys())
-                    for iso in isosceles:
-                        if prop.angle == iso.BC[0].angle(iso.A, iso.BC[1]):
-                            break
-                        if prop.angle == iso.BC[1].angle(iso.A, iso.BC[0]):
-                            break
-                    else:
-                        continue
-                    for val in values:
-                        if val.angle == iso.A.angle(*iso.BC):
-                            self.__reason(prop, _comment('Base angle of isosceles △ %s %s %s with apex angle %sº', iso.A, *iso.BC, val.degree), premises=[iso, val])
-                        # TODO: check sum of angles; report contradiction if found
-
 
         base()
         self.__iteration_step_count = 0

@@ -321,7 +321,10 @@ class CongruentSegmentProperty(Property):
     def __init__(self, vector0, vector1):
         self.vector0 = vector0
         self.vector1 = vector1
-        self.__vector_set = frozenset([vector0, vector1])
+        self.__vector_set = frozenset([
+            frozenset([vector0.start, vector0.end]),
+            frozenset([vector1.start, vector1.end])
+        ])
 
     def keys(self):
         return keys_for_vector(self.vector0) + keys_for_vector(self.vector1)
