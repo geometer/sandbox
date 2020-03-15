@@ -388,7 +388,7 @@ class Explainer:
                     continue
                 #a0 + a1 + a2 = 180
                 #a0 + a1 = 180 - a2
-                a1_value = (180 - a2_reason.degree) / sp.sympify(1 + ar.ratio) 
+                a1_value = (180 - a2_reason.degree) / sp.sympify(1 + ar.ratio)
                 a0_value = 180 - a2_reason.degree - a1_value
                 comment = _comment('%s + %s + %s = 180º', a0, a1, a2)
                 self.__reason(AngleValueProperty(a0, a0_value), comment, premises=[ar, a2_reason])
@@ -549,27 +549,57 @@ class Explainer:
                     elif len(premises) == 2:
                         self.__reason(prop, 'two angles', premises=premises)
                 elif isinstance(prop, CongruentTrianglesProperty):
-                    equal_distances = self.__explained.list(CongruentSegmentProperty, prop.keys([2]))
-                    common_sides = []
-                    premises = []
+                    congruent_angles = [ar for ar in self.__explained.list(AnglesRatioProperty, prop.keys([3])) if ar.ratio == 1]
+                    congruent_segments = self.__explained.list(CongruentSegmentProperty, prop.keys([2]))
+                    sides = []
                     for i in range(0, 3):
                         left = side_of(prop.ABC, i)
                         right = side_of(prop.DEF, i)
                         if same_segment(left, right):
-                            common_sides.append(left)
+                            sides.append(left)
+                            continue
+                        for cs in congruent_segments:
+                            if same_segment_pair((left, right), (cs.vector0, cs.vector1)):
+                                sides.append(cs)
+                                break
                         else:
-                            for ed in equal_distances:
-                                if same_segment_pair((left, right), (ed.vector0, ed.vector1)):
-                                    premises.append(ed)
-                                    break
-                        if len(common_sides) + len(premises) < i + 1:
-                            break
-                    else:
+                            sides.append(None)
+
+                    if all(e is not None for e in sides):
+                        premises = [e for e in sides if isinstance(e, Property)]
+                        common = [e for e in sides if not isinstance(e, Property)]
                         if len(premises) == 3:
-                            self.__reason(prop, 'Three pairs of congruent sides', premises=premises)
+                            self.__reason(prop, 'Three pairs of congruent sides', premises)
                         else: # len(premises) == 2
-                            self.__reason(prop, _comment('Common side %s, two pairs of congruent sides', common_sides[0]), premises=premises)
+                            self.__reason(prop, _comment('Common side %s, two pairs of congruent sides', common[0]), premises)
                         continue
+
+                    if any(e is not None for e in sides):
+                        angles = []
+                        for i in range(0, 3):
+                            left = angle_of(prop.ABC, i)
+                            right = angle_of(prop.DEF, i)
+                            if left == right:
+                                angles.append(left)
+                                continue
+                            pair = {left, right}
+                            for ca in congruent_angles:
+                                if pair == {ca.angle0, ca.angle1}:
+                                    angles.append(ca)
+                                    break
+                            else:
+                                angles.append(None)
+
+                        found = False
+                        for i in range(0, 3):
+                            reasons = [angles[j] if j == i else sides[j] for j in range(0, 3)]
+                            if all(e is not None for e in reasons):
+                                premises = [e for e in reasons if isinstance(e, Property)]
+                                #TODO: better comment
+                                self.__reason(prop, 'Two sides and angle between the sides', premises)
+                                break
+                        if found:
+                            continue
 
                     similar_triangles = self.__explained.list(SimilarTrianglesProperty, prop.keys([3]))
                     for st in similar_triangles:
@@ -578,10 +608,10 @@ class Explainer:
                             break
                     else:
                         continue
-                    for ed in equal_distances:
-                        pair = (ed.vector0, ed.vector1)
+                    for cs in congruent_segments:
+                        pair = (cs.vector0, cs.vector1)
                         if any(same_segment_pair(pair, sp) for sp in side_pairs(prop)):
-                            self.__reason(prop, 'Similar triangles with congruent side', premises=[st, ed])
+                            self.__reason(prop, 'Similar triangles with congruent side', premises=[st, cs])
                             break
 
                 elif isinstance(prop, CongruentSegmentProperty):
