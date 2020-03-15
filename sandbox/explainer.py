@@ -691,14 +691,16 @@ class Explainer:
                 break
 
     def dump(self):
-        print('Explained:')
-        explained = self.__explained.all
-        explained.sort(key=lambda p: p.reason.index)
-        for prop in explained:
-            print('\t%2d: %s [%s]' % (prop.reason.index, prop, prop.reason))
-        print('\nNot explained:')
-        for prop in self.__unexplained:
-            print('\t%s' % prop)
+        if len(self.__explained) > 0:
+            print('Explained:')
+            explained = self.__explained.all
+            explained.sort(key=lambda p: p.reason.index)
+            for prop in explained:
+                print('\t%2d: %s [%s]' % (prop.reason.index, prop, prop.reason))
+        if len(self.__unexplained) > 0:
+            print('\nNot explained:')
+            for prop in self.__unexplained:
+                print('\t%s' % prop)
 
     def stats(self):
         def type_presentation(kind):
