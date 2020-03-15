@@ -460,6 +460,28 @@ class Explainer:
                     [cs]
                 )
 
+            for ar in self.__explained.list(AnglesRatioProperty):
+                value = self.__angle_value_reason(ar.angle0)
+                if value:
+                    if ar.ratio == 1:
+                        comment = _comment('%s = %s = %sº', ar.angle1, ar.angle0, value.degree)
+                    else:
+                        comment = _comment('%s = %s / %s = %sº / %s', ar.angle1, ar.angle0, ar.ratio, value.degree, ar.ratio)
+                    self.__reason(
+                        AngleValueProperty(ar.angle1, sp.sympify(value.degree) / ar.ratio),
+                        comment, [ar, value]
+                    )
+                value = self.__angle_value_reason(ar.angle1)
+                if value:
+                    if ar.ratio == 1:
+                        comment = _comment('%s = %s = %sº', ar.angle0, ar.angle1, value.degree)
+                    else:
+                        comment = _comment('%s = %s * %s = %sº * %s', ar.angle0, ar.angle1, ar.ratio, value.degree, ar.ratio)
+                    self.__reason(
+                        AngleValueProperty(ar.angle0, value.degree * ar.ratio),
+                        comment, [ar, value]
+                    )
+
             for prop in list(self.__unexplained):
                 if isinstance(prop, AnglesRatioProperty):
                     found = False
@@ -665,23 +687,6 @@ class Explainer:
 
                 elif isinstance(prop, AngleValueProperty):
                     found = False
-
-                    congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys()) if rsn.ratio == 1]
-                    for ca in congruent_angles:
-                        if ca.angle0 == prop.angle:
-                            value = self.__angle_value_reason(ca.angle1)
-                        elif ca.angle1 == prop.angle:
-                            value = self.__angle_value_reason(ca.angle0)
-                        else:
-                            continue
-                        if value:
-                            #TODO: report contradiction if degrees are different
-                            self.__reason(prop, _comment('%s = %s = %sº', prop.angle, value.angle, value.degree), premises=[ca, value])
-                            found = True
-                            break
-
-                    if found:
-                        continue
 
                     if prop.angle.vertex is not None:
                         angle = prop.angle
