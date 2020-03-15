@@ -66,8 +66,7 @@ class Explainer:
         return next((r for r in self.__explained.list(NotEqualProperty, keys=[key])), None)
 
     def __angle_value_reason(self, angle):
-        keys = keys_for_angle(angle)
-        return next((p for p in self.__explained.list(AngleValueProperty, keys) \
+        return next((p for p in self.__explained.list(AngleValueProperty, [angle.points]) \
             if p.angle == angle), None)
 
     def __explain_all(self):
@@ -405,10 +404,7 @@ class Explainer:
                             if pt in vec0.points:
                                 continue
                             angles_to_look = [pt.angle(vec1.end, p) for p in vec0.points]
-                            keys = []
-                            for a in angles_to_look:
-                                for k in keys_for_angle(a):
-                                    keys.append(k)
+                            keys = [a.points for a in angles_to_look]
                             for ka2 in self.__explained.list(AngleValueProperty, keys):
                                 second = next((a for a in angles_to_look if ka2.angle == a), None)
                                 if second is None:
@@ -425,20 +421,49 @@ class Explainer:
             for iso in self.__explained.list(IsoscelesTriangleProperty):
                 self.__reason(
                     AnglesRatioProperty(
-                        iso.BC[0].angle(iso.A, iso.BC[1]),
-                        iso.BC[1].angle(iso.A, iso.BC[0]),
+                        iso.base[0].angle(iso.apex, iso.base[1]),
+                        iso.base[1].angle(iso.apex, iso.base[0]),
                         1
                     ),
-                    _comment('Base angles of isosceles △ %s %s %s', iso.A, *iso.BC),
+                    _comment('Base angles of isosceles △ %s %s %s', iso.apex, *iso.base),
                     [iso]
                 )
                 self.__reason(
                     CongruentSegmentProperty(
-                        iso.A.vector(iso.BC[0]),
-                        iso.A.vector(iso.BC[1])
+                        iso.apex.vector(iso.base[0]),
+                        iso.apex.vector(iso.base[1])
                     ),
-                    _comment('Legs of isosceles △ %s %s %s', iso.A, *iso.BC),
+                    _comment('Legs of isosceles △ %s %s %s', iso.apex, *iso.base),
                     [iso]
+                )
+
+            for cs in self.__explained.list(CongruentSegmentProperty):
+                if cs.vector1.start in cs.vector0.points:
+                    apex = cs.vector1.start
+                    base0 = cs.vector1.end
+                elif cs.vector1.end in cs.vector0.points:
+                    apex = cs.vector1.end
+                    base0 = cs.vector1.start
+                else:
+                    continue
+                base1 = cs.vector0.start if apex == cs.vector0.end else cs.vector0.end
+                self.__reason(
+                    IsoscelesTriangleProperty(apex, (base0, base1)),
+                    'Congruent legs',
+                    [cs]
+                )
+
+            for ar in self.__explained.list(AnglesRatioProperty):
+                if ar.ratio != 1:
+                    continue
+                if len(ar.angle0.points) != 3 or ar.angle0.points != ar.angle1.points:
+                    continue
+                base = (ar.angle0.vertex, ar.angle1.vertex)
+                apex = next(pt for pt in ar.angle0.points if pt not in base)
+                self.__reason(
+                    IsoscelesTriangleProperty(apex, base),
+                    'Congruent base angles',
+                    [cs]
                 )
 
             for prop in list(self.__unexplained):
@@ -644,28 +669,6 @@ class Explainer:
                     except StopIteration:
                         pass
 
-                elif isinstance(prop, IsoscelesTriangleProperty):
-                    try:
-                        angles = {prop.BC[0].angle(prop.BC[1], prop.A), \
-                            prop.BC[1].angle(prop.A, prop.BC[0])}
-                        ca = next(rsn for rsn in \
-                            self.__explained.list(AnglesRatioProperty, prop.keys([3])) if \
-                                rsn.ratio == 1 and angles == {rsn.angle0, rsn.angle1})
-                        self.__reason(prop, 'Congruent base angles', premises=[ca])
-                        continue
-                    except StopIteration:
-                        pass
-
-                    try:
-                        sides = (prop.A.vector(prop.BC[0]), prop.A.vector(prop.BC[1]))
-                        cs = next(rsn for rsn in \
-                            self.__explained.list(CongruentSegmentProperty, prop.keys([2])) if \
-                                same_segment_pair(sides, (rsn.vector0, rsn.vector1)))
-                        self.__reason(prop, 'Congruent legs', premises=[cs])
-                        continue
-                    except StopIteration:
-                        pass
-
                 elif isinstance(prop, AngleValueProperty):
                     found = False
 
@@ -691,7 +694,7 @@ class Explainer:
                         first = angle.vector0.end.angle(angle.vector1.end, angle.vertex)
                         second = angle.vector1.end.angle(angle.vertex, angle.vector0.end)
                         pairs = []
-                        for ka in self.__explained.list(AngleValueProperty, keys_for_angle(angle)):
+                        for ka in self.__explained.list(AngleValueProperty, [angle.points]):
                             if ka.angle in (first, second):
                                 pairs.append((ka.degree, ka))
                         if len(pairs) >= 2:

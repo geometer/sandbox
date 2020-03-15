@@ -6,9 +6,6 @@ from .util import _comment
 def keys_for_vector(vector):
     return [frozenset(vector.points)]
 
-def keys_for_angle(angle):
-    return [frozenset([*angle.vector0.points, *angle.vector1.points])]
-
 def keys_for_triangle(triangle, lengths):
     keys = []
     if lengths is None or 3 in lengths:
@@ -244,7 +241,7 @@ class AngleValueProperty(Property):
         self.degree = int(degree) if degree.is_integer else degree
 
     def keys(self):
-        return keys_for_angle(self.angle)
+        return [self.angle.points]
 
     @property
     def description(self):
@@ -286,7 +283,7 @@ class AnglesRatioProperty(Property):
         self.__hash = None
 
     def keys(self):
-        return keys_for_angle(self.angle0) + keys_for_angle(self.angle1)
+        return [self.angle0.points, self.angle1.points]
 
     @property
     def description(self):
@@ -390,21 +387,21 @@ class IsoscelesTriangleProperty(Property):
     """
     A triangle is isosceles
     """
-    def __init__(self, A, BC):
-        self.A = A
-        self.BC = tuple(BC)
-        self.__base_points_set = frozenset(self.BC)
+    def __init__(self, apex, base):
+        self.apex = apex
+        self.base = tuple(base)
+        self.__base_points_set = frozenset(self.base)
 
     def keys(self, lengths=None):
-        return keys_for_triangle([self.A, *self.BC], lengths)
+        return keys_for_triangle([self.apex, *self.base], lengths)
 
     @property
     def description(self):
-        return _comment('△ %s %s %s is isosceles (with apex %s)', self.A, *self.BC, self.A)
+        return _comment('△ %s %s %s is isosceles (with apex %s)', self.apex, *self.base, self.apex)
 
     def __eq__(self, other):
         return isinstance(other, IsoscelesTriangleProperty) and \
-            self.A == other.A and self.__base_points_set == other.__base_points_set
+            self.apex == other.apex and self.__base_points_set == other.__base_points_set
 
     def __hash__(self):
-        return hash(IsoscelesTriangleProperty) + hash(self.A) + hash(self.__base_points_set)
+        return hash(IsoscelesTriangleProperty) + hash(self.apex) + hash(self.__base_points_set)
