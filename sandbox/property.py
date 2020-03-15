@@ -1,7 +1,7 @@
 import itertools
 import sympy as sp
 
-from .util import _comment
+from .util import _comment, good_angles
 
 def keys_for_vector(vector):
     return [frozenset(vector.points)]
@@ -235,10 +235,18 @@ class AngleValueProperty(Property):
     """
     Angle value
     """
+    @staticmethod
+    def generate(angle, value):
+        for ngl, complementary in good_angles(angle):
+            yield AngleValueProperty(ngl, 180 - value if complementary else value)
+
     def __init__(self, angle, degree):
         self.angle = angle
-        degree = sp.sympify(degree)
-        self.degree = int(degree) if degree.is_integer else degree
+        if isinstance(degree, int):
+            self.degree = degree
+        else:
+            degree = sp.sympify(degree)
+            self.degree = int(degree) if degree.is_integer else degree
 
     def keys(self):
         return [self.angle.points]
