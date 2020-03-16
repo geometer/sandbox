@@ -510,6 +510,14 @@ class Explainer:
                         comment, [ar, value]
                     )
 
+            for st in self.__explained.list(SimilarTrianglesProperty):
+                for i in range(0, 3):
+                    self.__reason(
+                        AnglesRatioProperty(angle_of(st.ABC, i), angle_of(st.DEF, i), 1),
+                        'Corresponding angles in similar triangles',
+                        [st]
+                    )
+
             for prop in list(self.__unexplained):
                 if isinstance(prop, AnglesRatioProperty):
                     found = False
@@ -575,18 +583,6 @@ class Explainer:
 
                     if found:
                         continue
-
-                    if prop.ratio == 1:
-                        similar_triangles = self.__explained.list(SimilarTrianglesProperty, prop.keys())
-                        pair = {prop.angle0, prop.angle1}
-                        for st in similar_triangles:
-                            if pair in angle_pairs(st):
-                                self.__reason(prop, 'Corresponding angles in similar triangles', premises=[st])
-                                found = True
-                                break
-
-                        if found:
-                            continue
 
                     if prop.ratio == 1:
                         congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys()) if rsn.ratio == 1]
