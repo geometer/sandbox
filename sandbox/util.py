@@ -1,3 +1,14 @@
+import sympy as sp
+
+def divide(num0, num1):
+    ratio = sp.sympify(num0) / num1
+    return int(ratio) if ratio.is_integer else ratio
+
+def normalize_number(num):
+    if isinstance(num, int):
+        return num
+    return int(num) if num.is_integer else num
+
 def good_angles(angle):
     """
     Returns list of pairs (ang, complementary) where ang is an angle
@@ -29,7 +40,7 @@ def good_angles(angle):
         (rev(True, False), True),
         (rev(True, True), False)
     ]
-    
+
 class ParametrizedString:
     def __init__(self, format_string, *params):
         self.format_string = format_string

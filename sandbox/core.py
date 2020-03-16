@@ -11,7 +11,7 @@ from typing import List
 from .property import NonCollinearProperty, NotEqualProperty
 from .propertyset import PropertySet
 from .reason import Reason
-from .util import _comment
+from .util import _comment, divide
 
 class CoreScene:
     class Object:
@@ -134,9 +134,9 @@ class CoreScene:
                 return point
             if coef1 == 0:
                 return self
-            new_point = self.translated_point(self.vector(point), sp.sympify(coef1) / (coef0 + coef1), **kwargs)
+            new_point = self.translated_point(self.vector(point), divide(coef1, coef0 + coef1), **kwargs)
             new_point.collinear_constraint(self, point, guaranteed=True)
-            self.vector(new_point).length_ratio_constraint(new_point.vector(point), sp.sympify(coef1) / coef0, guaranteed=True)
+            self.vector(new_point).length_ratio_constraint(new_point.vector(point), divide(coef1, coef0), guaranteed=True)
             if coef0 > 0 and coef1 > 0 or coef0 < 0 and coef1 < 0:
                 self.vector(point).parallel_constraint(self.vector(new_point), guaranteed=True)
                 point.vector(self).parallel_constraint(point.vector(new_point), guaranteed=True)

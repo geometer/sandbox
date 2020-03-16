@@ -1,6 +1,4 @@
-import sympy as sp
-
-from .util import _comment, good_angles
+from .util import _comment, divide, good_angles, normalize_number
 
 def keys_for_vector(vector):
     return [frozenset(vector.points)]
@@ -182,11 +180,7 @@ class AngleValueProperty(Property):
 
     def __init__(self, angle, degree):
         self.angle = angle
-        if isinstance(degree, int):
-            self.degree = degree
-        else:
-            degree = sp.sympify(degree)
-            self.degree = int(degree) if degree.is_integer else degree
+        self.degree = normalize_number(degree)
 
     def keys(self):
         return [self.angle.points]
@@ -212,21 +206,17 @@ class AnglesRatioProperty(Property):
     """
     def __init__(self, angle0, angle1, ratio):
         # angle0 / angle1 = ratio
-        ratio = sp.sympify(ratio)
         if ratio < 0:
             ratio = -ratio
 
         if ratio >= 1:
             self.angle0 = angle0
             self.angle1 = angle1
-            self.ratio = ratio
+            self.ratio = normalize_number(ratio)
         else:
             self.angle0 = angle1
             self.angle1 = angle0
-            self.ratio = 1 / ratio
-
-        if self.ratio.is_integer:
-            self.ratio = int(self.ratio)
+            self.ratio = divide(1, ratio)
 
         self.__hash = None
 

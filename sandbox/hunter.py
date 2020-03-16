@@ -1,13 +1,12 @@
 import time
 import itertools
 import numpy as np
-import sympy as sp
 
 from . import Scene, iterative_placement
 from .placement import Placement
 from .property import *
 from .stats import Stats
-from .util import _comment
+from .util import _comment, divide
 
 ERROR = np.float128(5e-6)
 
@@ -290,7 +289,7 @@ class Hunter:
 
         for fam in families:
             for pair in itertools.combinations(fam, 2):
-                ratio = sp.sympify(pair[1][1]) / pair[0][1]
+                ratio = divide(pair[1][1], pair[0][1])
                 self.__add(AnglesRatioProperty(pair[1][0].angle, pair[0][0].angle, ratio))
 
     def __hunt_equal_triangles(self):

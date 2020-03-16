@@ -1,13 +1,12 @@
 import itertools
 import time
-import sympy as sp
 
 from .core import Constraint
 from .property import *
 from .reason import Reason
 from .scene import Scene
 from .stats import Stats
-from .util import _comment
+from .util import _comment, divide
 
 # +++++ utility methods +++++
 def same_segment(vec0, vec1):
@@ -365,7 +364,7 @@ class Explainer:
                 if sum_reason is None:
                     continue
                 value = sum_reason.degree
-                second = value / sp.sympify(1 + ar.ratio)
+                second = divide(value, 1 + ar.ratio)
                 first = value - second
                 #TODO: write comments
                 self.__reason(AngleValueProperty(a0, first), [], premises=[ar, sum_reason])
@@ -389,7 +388,7 @@ class Explainer:
                     continue
                 #a0 + a1 + a2 = 180
                 #a0 + a1 = 180 - a2
-                a1_value = (180 - a2_reason.degree) / sp.sympify(1 + ar.ratio)
+                a1_value = divide(180 - a2_reason.degree, 1 + ar.ratio)
                 a0_value = 180 - a2_reason.degree - a1_value
                 comment = _comment('%s + %s + %s = 180º', a0, a1, a2)
                 self.__reason(AngleValueProperty(a0, a0_value), comment, premises=[ar, a2_reason])
@@ -479,7 +478,7 @@ class Explainer:
                     else:
                         comment = _comment('%s = %s / %s = %sº / %s', ar.angle1, ar.angle0, ar.ratio, value.degree, ar.ratio)
                     self.__reason(
-                        AngleValueProperty(ar.angle1, sp.sympify(value.degree) / ar.ratio),
+                        AngleValueProperty(ar.angle1, divide(value.degree, ar.ratio)),
                         comment, [ar, value]
                     )
                 value = self.__angle_value_reason(ar.angle1)
@@ -530,9 +529,9 @@ class Explainer:
                         if prop.angle0 == kr.angle0:
                             candidates0.append((kr, kr.angle1, kr.ratio))
                         elif prop.angle0 == kr.angle1:
-                            candidates0.append((kr, kr.angle0, sp.sympify(1) / kr.ratio))
+                            candidates0.append((kr, kr.angle0, divide(1, kr.ratio)))
                         elif prop.angle1 == kr.angle0:
-                            candidates1.append((kr, kr.angle1, sp.sympify(1) / kr.ratio))
+                            candidates1.append((kr, kr.angle1, divide(1, kr.ratio)))
                         elif prop.angle1 == kr.angle1:
                             candidates1.append((kr, kr.angle0, kr.ratio))
                     for c0, c1 in itertools.product(candidates0, candidates1):
