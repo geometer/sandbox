@@ -8,7 +8,8 @@ import itertools
 import sympy as sp
 from typing import List
 
-from .property import NonCollinearProperty, NotEqualProperty, PropertySet
+from .property import NonCollinearProperty, NotEqualProperty
+from .propertyset import PropertySet
 from .reason import Reason
 from .util import _comment
 
