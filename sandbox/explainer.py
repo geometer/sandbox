@@ -617,33 +617,6 @@ class Explainer:
                             self.__reason(prop, _comment('Both angle values = %sº', left.degree), premises=[left, right])
                         else:
                             self.__reason(prop, _comment('%s = %sº, %s = %sº', left.angle, left.degree, right.angle, right.degree), premises=[left, right])
-                        found = True
-
-                    if found:
-                        continue
-
-                    if prop.ratio == 1:
-                        congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys()) if rsn.ratio == 1]
-                        for index, ca0 in enumerate(congruent_angles):
-                            if prop.angle0 == ca0.angle0:
-                                look_for = {prop.angle1, ca0.angle1}
-                            elif prop.angle1 == ca0.angle0:
-                                look_for = {prop.angle0, ca0.angle1}
-                            elif prop.angle0 == ca0.angle1:
-                                look_for = {prop.angle1, ca0.angle0}
-                            elif prop.angle1 == ca0.angle1:
-                                look_for = {prop.angle0, ca0.angle0}
-                            else:
-                                continue
-
-                            for ca1 in congruent_angles[index + 1:]:
-                                if {ca1.angle0, ca1.angle1} == look_for:
-                                    self.__reason(prop, 'transitivity', premises=[ca0, ca1])
-                                    found = True
-                                    break
-
-                            if found:
-                                break
 
                 elif isinstance(prop, SimilarTrianglesProperty):
                     try:
