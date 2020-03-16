@@ -527,14 +527,34 @@ class Explainer:
                     )
 
             for av in self.__explained.list(AngleValueProperty):
-                ang = av.angle
-                if ang.vertex is not None and av.degree == 180:
-                    for vec0, vec1 in ((ang.vector0, ang.vector1), (ang.vector1, ang.vector0)):
+                if av.angle.vertex is None:
+                    continue
+
+                second = av.angle.vector0.end.angle(av.angle.vertex, av.angle.vector1.end)
+                third = av.angle.vector1.end.angle(av.angle.vertex, av.angle.vector0.end)
+                if av.degree == 180:
+                    for ang in second, third:
                         self.__reason(
-                            AngleValueProperty(vec0.end.angle(ang.vertex, vec1.end), 0),
-                            _comment('%s = 180º', ang),
+                            AngleValueProperty(ang, 0),
+                            _comment('%s = 180º', av.angle),
                             [av]
                         )
+                else:
+                    second_reason = self.__angle_value_reason(second)
+                    if second_reason:
+                        self.__reason(
+                            AngleValueProperty(third, 180 - av.degree - second_reason.degree),
+                            _comment('%s + %s + %s = 180º', third, av.angle, second),
+                            [av, second_reason]
+                        )
+                    else:
+                        third_reason = self.__angle_value_reason(third)
+                        if third_reason:
+                            self.__reason(
+                                AngleValueProperty(second, 180 - av.degree - third_reason.degree),
+                                _comment('%s + %s + %s = 180º', second, av.angle, third),
+                                [av, third_reason]
+                            )
 
             for prop in list(self.__unexplained):
                 if isinstance(prop, AnglesRatioProperty):
@@ -712,24 +732,6 @@ class Explainer:
                         if any(same_segment_pair(pair, sp) for sp in side_pairs(prop)):
                             self.__reason(prop, 'Similar triangles with congruent side', premises=[st, cs])
                             break
-
-                elif isinstance(prop, AngleValueProperty):
-                    found = False
-
-                    if prop.angle.vertex is not None:
-                        angle = prop.angle
-                        first = angle.vector0.end.angle(angle.vector1.end, angle.vertex)
-                        second = angle.vector1.end.angle(angle.vertex, angle.vector0.end)
-                        premises = [self.__angle_value_reason(a) for a in (first, second)]
-                        premises = [p for p in premises if p is not None]
-                        if len(premises) == 2:
-                            #TODO: Better way to report contradiction
-                            assert prop.degree + premises[0].degree + premises[1].degree == 180
-                            self.__reason(prop, _comment('%s + %s + %s = 180º', angle, first, second), premises)
-                            found = True
-
-                    if found:
-                        continue
 
         base()
         self.__iteration_step_count = 0
