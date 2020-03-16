@@ -147,10 +147,14 @@ class Explainer:
                     line = self.scene.get_line(pt0, pt1)
                     if line:
                         for pt in line.all_points:
-                            if pt in (pt0, pt1):
-                                self.__reason(NotEqualProperty(pt, pt2), str(ncl))
-                            else:
-                                self.__reason(NotEqualProperty(pt, pt2), [str(ncl)] + extra_comments(pt, pt0, pt1))
+                            self.__reason(
+                                NotEqualProperty(pt, pt2),
+                                _comment(
+                                    '%s lies on the line %s %s, %s does not',
+                                    pt, pt0, pt1, pt2
+                                ),
+                                [ncl]
+                            )
                         for ptX, ptY in itertools.combinations(line.all_points, 2):
                             ne = self.__not_equal_reason(ptX, ptY)
                             if ne is None:
@@ -160,7 +164,14 @@ class Explainer:
                                 comments += extra_comments(ptX, pt0, pt1)
                             if not ptY in (pt0, pt1):
                                 comments += extra_comments(ptY, pt0, pt1)
-                            self.__reason(NonCollinearProperty(ptX, ptY, pt2), comments, [ncl, ne])
+                            self.__reason(
+                                NonCollinearProperty(ptX, ptY, pt2),
+                                _comment(
+                                    '%s and %s lie on the line %s %s, %s does not',
+                                    ptX, ptY, pt0, pt1, pt2
+                                ),
+                                [ncl, ne]
+                            )
 
                 self.__reason(NotEqualProperty(ncl.points[0], ncl.points[1]), str(ncl))
                 self.__reason(NotEqualProperty(ncl.points[0], ncl.points[2]), str(ncl))
@@ -180,7 +191,14 @@ class Explainer:
                         for common in intr:
                             ne = self.__not_equal_reason(common, pt1)
                             if ne:
-                                self.__reason(NonCollinearProperty(common, pt0, pt1), [], [ncl, col, ne])
+                                self.__reason(
+                                    NonCollinearProperty(common, pt0, pt1),
+                                    _comment(
+                                        '%s and %s lie on the line %s %s, %s does not',
+                                        common, pt0, *intr, pt1
+                                    ),
+                                    [ncl, col, ne]
+                                )
 
             for cs in self.__explained.list(CongruentSegmentProperty):
                 vec0 = cs.vector0
