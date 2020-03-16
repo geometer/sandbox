@@ -526,6 +526,16 @@ class Explainer:
                         [ct]
                     )
 
+            for av in self.__explained.list(AngleValueProperty):
+                ang = av.angle
+                if ang.vertex is not None and av.degree == 180:
+                    for vec0, vec1 in ((ang.vector0, ang.vector1), (ang.vector1, ang.vector0)):
+                        self.__reason(
+                            AngleValueProperty(vec0.end.angle(ang.vertex, vec1.end), 0),
+                            _comment('%s = 180º', ang),
+                            [av]
+                        )
+
             for prop in list(self.__unexplained):
                 if isinstance(prop, AnglesRatioProperty):
                     found = False
@@ -716,10 +726,6 @@ class Explainer:
                             #TODO: Better way to report contradiction
                             assert prop.degree + premises[0].degree + premises[1].degree == 180
                             self.__reason(prop, _comment('%s + %s + %s = 180º', angle, first, second), premises)
-                            found = True
-                        elif len(premises) == 1 and premises[0].degree == 180:
-                            #TODO: Better comment
-                            self.__reason(prop, _comment('%s', premises[0].degree), premises)
                             found = True
 
                     if found:
