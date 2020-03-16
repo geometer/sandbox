@@ -65,6 +65,10 @@ class Explainer:
         key = frozenset([pt0, pt1])
         return next((r for r in self.__explained.list(NotEqualProperty, keys=[key])), None)
 
+    def __not_collinear_reason(self, pt0, pt1, pt2):
+        key = frozenset([pt0, pt1, pt2])
+        return next((r for r in self.__explained.list(NonCollinearProperty, keys=[key])), None)
+
     def __angle_value_reason(self, angle):
         return next((p for p in self.__explained.list(AngleValueProperty, [angle.points]) \
             if p.angle == angle), None)
@@ -174,6 +178,10 @@ class Explainer:
                         pt0 = col_set.difference(ncl_set).pop()
                         pt1 = ncl_set.difference(col_set).pop()
                         self.__reason(NotEqualProperty(pt0, pt1), [], [ncl, col])
+                        for common in intr:
+                            ne = self.__not_equal_reason(common, pt1)
+                            if ne:
+                                self.__reason(NonCollinearProperty(common, pt0, pt1), [], [ncl, col, ne])
 
             for cs in self.__explained.list(CongruentSegmentProperty):
                 vec0 = cs.vector0
@@ -441,16 +449,21 @@ class Explainer:
                 else:
                     continue
                 base1 = cs.vector0.start if apex == cs.vector0.end else cs.vector0.end
-                self.__reason(
-                    IsoscelesTriangleProperty(apex, (base0, base1)),
-                    'Congruent legs',
-                    [cs]
-                )
+                nc = self.__not_collinear_reason(apex, base0, base1)
+                if nc:
+                    self.__reason(
+                        IsoscelesTriangleProperty(apex, (base0, base1)),
+                        'Congruent legs',
+                        [cs, nc]
+                    )
 
             for ar in self.__explained.list(AnglesRatioProperty):
                 if ar.ratio != 1:
                     continue
                 if len(ar.angle0.points) != 3 or ar.angle0.points != ar.angle1.points:
+                    continue
+                nc = self.__not_collinear_reason(*ar.angle0.points)
+                if nc is None:
                     continue
                 base = (ar.angle0.vertex, ar.angle1.vertex)
                 apex = next(pt for pt in ar.angle0.points if pt not in base)
