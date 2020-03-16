@@ -699,18 +699,18 @@ class Explainer:
                         angle = prop.angle
                         first = angle.vector0.end.angle(angle.vector1.end, angle.vertex)
                         second = angle.vector1.end.angle(angle.vertex, angle.vector0.end)
-                        pairs = []
+                        premises = []
                         for ka in self.__explained.list(AngleValueProperty, [angle.points]):
                             if ka.angle in (first, second):
-                                pairs.append((ka.degree, ka))
-                        if len(pairs) >= 2:
+                                premises.append(ka)
+                        if len(premises) >= 2:
                             #TODO: Better way to report contradiction
-                            assert prop.degree + pairs[0][0] + pairs[1][0] == 180
-                            self.__reason(prop, _comment('%s + %s + %s = 180º', angle, first, second), [pairs[0][1], pairs[1][1]])
+                            assert prop.degree + premises[0].degree + premises[1].degree == 180
+                            self.__reason(prop, _comment('%s + %s + %s = 180º', angle, first, second), premises)
                             found = True
-                        elif len(pairs) == 1 and pairs[0][0] == 180:
+                        elif len(premises) == 1 and premises[0].degree == 180:
                             #TODO: Better comment
-                            self.__reason(prop, _comment('%s', pairs[0][1]), [pairs[0][1]])
+                            self.__reason(prop, _comment('%s', premises[0].degree), premises)
                             found = True
 
                     if found:
