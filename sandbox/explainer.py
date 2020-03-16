@@ -518,6 +518,14 @@ class Explainer:
                         [st]
                     )
 
+            for ct in self.__explained.list(CongruentTrianglesProperty):
+                for i in range(0, 3):
+                    self.__reason(
+                        CongruentSegmentProperty(side_of(ct.ABC, i), side_of(ct.DEF, i)),
+                        'Corresponding sides in congruent triangles',
+                        [ct]
+                    )
+
             for prop in list(self.__unexplained):
                 if isinstance(prop, AnglesRatioProperty):
                     found = False
@@ -694,17 +702,6 @@ class Explainer:
                         if any(same_segment_pair(pair, sp) for sp in side_pairs(prop)):
                             self.__reason(prop, 'Similar triangles with congruent side', premises=[st, cs])
                             break
-
-                elif isinstance(prop, CongruentSegmentProperty):
-                    pair = (prop.vector0, prop.vector1)
-                    try:
-                        ct = next(rsn for rsn in \
-                            self.__explained.list(CongruentTrianglesProperty, prop.keys()) if \
-                                any(same_segment_pair(pair, sp) for sp in side_pairs(rsn)))
-                        self.__reason(prop, 'Corresponding sides in congruent triangles', premises=[ct])
-                        continue
-                    except StopIteration:
-                        pass
 
                 elif isinstance(prop, AngleValueProperty):
                     found = False
