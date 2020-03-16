@@ -405,16 +405,14 @@ class Explainer:
                         for pt in line.all_points:
                             if pt in vec0.points:
                                 continue
-                            angles_to_look = [pt.angle(vec1.end, p) for p in vec0.points]
-                            keys = [a.points for a in angles_to_look]
-                            for ka2 in self.__explained.list(AngleValueProperty, keys):
-                                second = next((a for a in angles_to_look if ka2.angle == a), None)
-                                if second is None:
+                            for angle in [pt.angle(vec1.end, p) for p in vec0.points]:
+                                ka2 = self.__angle_value_reason(angle)
+                                if ka2 is None:
                                     continue
                                 if ka2.degree > ka.degree:
                                     comment = _comment(
                                         '%s, %s, %s are collinear, %s is acute, and %s > %s',
-                                        pt, *vec0.points, base, second, base
+                                        pt, *vec0.points, base, angle, base
                                     )
                                     zero = base.vertex.angle(vec0.end, pt)
                                     self.__reason(AngleValueProperty(zero, 0), comment, [ka, ka2])
@@ -548,18 +546,15 @@ class Explainer:
                     if found:
                         continue
 
-                    try:
-                        known_angles = self.__explained.list(AngleValueProperty, prop.keys())
-                        left = next(exp for exp in known_angles if exp.angle == prop.angle0)
-                        right = next(exp for exp in known_angles if exp.angle == prop.angle1)
+                    left = self.__angle_value_reason(prop.angle0)
+                    right = self.__angle_value_reason(prop.angle1)
+                    if left and right:
                         # TODO: report contradiction, if angle ratio differs
                         if left.degree == right.degree:
                             self.__reason(prop, _comment('Both angle values = %sº', left.degree), premises=[left, right])
                         else:
                             self.__reason(prop, _comment('%s = %sº, %s = %sº', left.angle, left.degree, right.angle, right.degree), premises=[left, right])
                         found = True
-                    except StopIteration:
-                        pass
 
                     if found:
                         continue
