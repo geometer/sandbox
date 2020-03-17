@@ -72,6 +72,11 @@ class Explainer:
         return next((p for p in self.__explained.list(AngleValueProperty, [angle.points]) \
             if p.angle == angle), None)
 
+    def __angle_ratio_reasons(self, angle):
+        for ar in self.__explained.list(AnglesRatioProperty, keys=[angle.points]):
+            if ar.angle0 == angle or ar.angle1 == angle:
+                yield ar
+
     def __explain_all(self):
         def base():
             for cnst in self.scene.constraints(Constraint.Kind.collinear):
@@ -596,28 +601,30 @@ class Explainer:
                                 #TODO: better comment
                                 self.__reason(AnglesRatioProperty(ngl0, ngl1, 1), 'Same angle', [zero, ne])
 
-            for prop in list(self.__unexplained):
-                if isinstance(prop, AnglesRatioProperty):
-                    known_ratios = self.__explained.list(AnglesRatioProperty, keys=prop.keys())
-                    candidates0 = []
-                    candidates1 = []
-                    for kr in known_ratios:
-                        if prop.angle0 == kr.angle0:
-                            candidates0.append((kr, kr.angle1, kr.ratio))
-                        elif prop.angle0 == kr.angle1:
-                            candidates0.append((kr, kr.angle0, divide(1, kr.ratio)))
-                        elif prop.angle1 == kr.angle0:
-                            candidates1.append((kr, kr.angle1, divide(1, kr.ratio)))
-                        elif prop.angle1 == kr.angle1:
-                            candidates1.append((kr, kr.angle0, kr.ratio))
-                    for c0, c1 in itertools.product(candidates0, candidates1):
-                        if c0[1] == c1[1]:
-                            #TODO: Better way to report contradiction
-                            assert c0[2] * c1[2] == prop.ratio
-                            self.__reason(prop, 'Transitivity', [c0[0], c1[0]])
-                            break
+            processed = set()
+            for ar0 in self.__explained.list(AnglesRatioProperty):
+                if is_too_old(ar0):
+                    continue
+                processed.add(ar0)
+                for ang0, ang1, ratio in [(ar0.angle0, ar0.angle1, ar0.ratio), (ar0.angle1, ar0.angle0, divide(1, ar0.ratio))]:
+                    for ar1 in self.__angle_ratio_reasons(ang0):
+                        if ar1 in processed:
+                            continue
+                        if ang0 == ar1.angle0:
+                            self.__reason(
+                                AnglesRatioProperty(ar1.angle1, ang1, divide(ratio, ar1.ratio)),
+                                'Transitivity', #TODO: better comment
+                                [ar0, ar1]
+                            )
+                        else:
+                            self.__reason(
+                                AnglesRatioProperty(ar1.angle0, ang1, ratio * ar1.ratio),
+                                'Transitivity', #TODO: better comment
+                                [ar0, ar1]
+                            )
 
-                elif isinstance(prop, SimilarTrianglesProperty):
+            for prop in list(self.__unexplained):
+                if isinstance(prop, SimilarTrianglesProperty):
                     congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys([3])) if rsn.ratio == 1]
                     premises = []
                     for ca in congruent_angles:
