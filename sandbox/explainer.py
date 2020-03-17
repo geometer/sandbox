@@ -525,15 +525,16 @@ class Explainer:
                 if is_too_old(st):
                     continue
                 for i in range(0, 3):
-                    self.__reason(
-                        AnglesRatioProperty(angle_of(st.ABC, i), angle_of(st.DEF, i), 1),
-                        'Corresponding angles in similar triangles',
-                        [st]
-                    )
+                    angle0 = angle_of(st.ABC, i)
+                    angle1 = angle_of(st.DEF, i)
+                    if angle0 != angle1:
+                        self.__reason(
+                            AnglesRatioProperty(angle0, angle1, 1),
+                            'Corresponding angles in similar triangles',
+                            [st]
+                        )
 
             for st in self.__explained.list(SimilarTrianglesProperty):
-                if is_too_old(st):
-                    continue
                 for i in range(0, 3):
                     cs = self.__congruent_segments_reason(side_of(st.ABC, i), side_of(st.DEF, i))
                     if cs:
@@ -544,14 +545,21 @@ class Explainer:
                         )
 
             for ct in self.__explained.list(CongruentTrianglesProperty):
+                if is_too_old(ct):
+                    continue
                 for i in range(0, 3):
-                    self.__reason(
-                        CongruentSegmentProperty(side_of(ct.ABC, i), side_of(ct.DEF, i)),
-                        'Corresponding sides in congruent triangles',
-                        [ct]
-                    )
+                    segment0 = side_of(ct.ABC, i)
+                    segment1 = side_of(ct.DEF, i)
+                    if not same_segment(segment0, segment1):
+                        self.__reason(
+                            CongruentSegmentProperty(segment0, segment1),
+                            'Corresponding sides in congruent triangles',
+                            [ct]
+                        )
 
             for ct in self.__explained.list(CongruentTrianglesProperty):
+                if is_too_old(ct):
+                    continue
                 self.__reason(
                     SimilarTrianglesProperty(ct.ABC, ct.DEF),
                     'Congruent triangles are similar',
