@@ -444,7 +444,7 @@ class CoreScene:
             return self.scene.get_line(self.start, self.end)
 
         def angle(self, other):
-            angle = CoreScene.Angle(self, other)
+            angle = CoreScene.Angle.create(self, other)
             self.non_zero_length_constraint(comment=_comment('%s is side of %s', self, angle))
             other.non_zero_length_constraint(comment=_comment('%s is side of %s', other, angle))
             return angle
@@ -507,13 +507,18 @@ class CoreScene:
             return str(_comment('%s %s', self.start, self.end))
 
     class Angle:
-        def __init__(self, vector0, vector1):
+        @staticmethod
+        def create(vector0, vector1):
             assert isinstance(vector0, CoreScene.Vector)
             assert isinstance(vector1, CoreScene.Vector)
             assert vector0.scene == vector1.scene
+            if vector0.start == vector1.start:
+                return CoreScene.AngleWithVertex(vector0, vector1)
+            return CoreScene.AngleWithNoVertex(vector0, vector1)
+
+        def __init__(self, vector0, vector1):
             self.vector0 = vector0
             self.vector1 = vector1
-            self.vectors = frozenset([vector0, vector1])
             self.vertex = self.vector0.start if self.vector0.start == self.vector1.start else None
             self.points = frozenset([*vector0.points, *vector1.points])
 
@@ -521,8 +526,18 @@ class CoreScene:
         def scene(self):
             return self.vector0.scene
 
+        def ratio_constraint(self, angle, ratio, **kwargs):
+            # self = angle * ratio
+            self.scene.assert_angle(angle)
+            self.scene.constraint(Constraint.Kind.angles_ratio, self, angle, ratio, **kwargs)
+
+    class AngleWithVertex(Angle):
+        def __init__(self, vector0, vector1):
+            super().__init__(vector0, vector1)
+            self.vertex = self.vector0.start
+            self.vectors = frozenset([vector0, vector1])
+
         def bisector_line(self, **kwargs):
-            assert self.vertex is not None
             B = self.vector0.end
             C = self.vector1.end
             circle = self.vertex.circle_through(B, auxiliary=True)
@@ -537,21 +552,35 @@ class CoreScene:
             self.ratio_constraint(self.vertex.angle(Y, C), 2, guaranteed=True, comment=comment)
             return bisector
 
-        def ratio_constraint(self, angle, ratio, **kwargs):
-            # self = angle * ratio
-            self.scene.assert_angle(angle)
-            self.scene.constraint(Constraint.Kind.angles_ratio, self, angle, ratio, **kwargs)
+        def __str__(self):
+            return str(_comment('∠ %s %s %s', self.vector0.end, self.vertex, self.vector1.end))
 
         def __eq__(self, other):
-            return self.vectors == other.vectors
+            return type(self) == type(other) and self.vectors == other.vectors
 
         def __hash__(self):
             return hash(self.vectors)
 
+    class AngleWithNoVertex(Angle):
+        def __init__(self, vector0, vector1):
+            super().__init__(vector0, vector1)
+            self.vertex = None
+            self.vectors_variants = frozenset([
+                frozenset([vector0, vector1]),
+                frozenset([vector0.reversed, vector1.reversed])
+            ])
+
+        def bisector_line(self, **kwargs):
+            assert False, 'There is no bisector in angle %s with no vertex' % self
+
         def __str__(self):
-            if self.vertex:
-                return str(_comment('∠ %s %s %s', self.vector0.end, self.vertex, self.vector1.end))
             return '∠(%s, %s)' % (self.vector0, self.vector1)
+
+        def __eq__(self, other):
+            return type(self) == type(other) and self.vectors_variants == other.vectors_variants
+
+        def __hash__(self):
+            return hash(self.vectors_variants)
 
     def __init__(self):
         self.__objects = []

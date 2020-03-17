@@ -36,9 +36,7 @@ def good_angles(angle):
         return [(rev(True, True), False)]
     return [
         (angle, False),
-        (rev(False, True), True),
-        (rev(True, False), True),
-        (rev(True, True), False)
+        (rev(False, True), True)
     ]
 
 class ParametrizedString:
