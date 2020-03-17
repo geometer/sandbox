@@ -621,10 +621,12 @@ class Explainer:
                         continue
                     for ngl0, cmpl0 in good_angles(vec.angle(zero.angle.vector0)):
                         for ngl1, cmpl1 in good_angles(vec.angle(zero.angle.vector1)):
-                            #TODO: complementary angles otherwise
                             if cmpl0 == cmpl1:
                                 #TODO: better comment
                                 self.__reason(AnglesRatioProperty(ngl0, ngl1, 1), 'Same angle', [zero, ne])
+                            else:
+                                #TODO: better comment
+                                self.__reason(SumOfAnglesProperty(ngl0, ngl1, 180), 'Pair of parallel and pair of antiparallel sides', [zero, ne])
 
             processed = set()
             for ar0 in self.__explained.list(AnglesRatioProperty):
@@ -639,6 +641,7 @@ class Explainer:
                     if ar1 in processed:
                         continue
                     prop = None
+                    #TODO: report contradictions if in used and ratio is different
                     if ar0.angle0 == ar1.angle0 and ar1.angle1 not in used1:
                         prop = AnglesRatioProperty(ar0.angle1, ar1.angle1, divide(ar1.ratio, ar0.ratio))
                     elif ar1.angle0 not in used1:
@@ -657,6 +660,50 @@ class Explainer:
                     if prop:
                         #TODO: better comment
                         self.__reason(prop, 'Transitivity', [ar0, ar1])
+
+            for ar in [p for p in self.__explained.list(AnglesRatioProperty) if p.ratio == 1]:
+                set0 = set()
+                set1 = set()
+                for sa in self.__explained.list(SumOfAnglesProperty, keys=[ar.angle0.points]):
+                    if is_too_old(sa) and is_too_old(ar):
+                        continue
+                    if sa.angle0 == ar.angle0:
+                        set0.add(sa.angle1)
+                    elif sa.angle1 == ar.angle0:
+                        set0.add(sa.angle0)
+                for sa in self.__explained.list(SumOfAnglesProperty, keys=[ar.angle1.points]):
+                    if is_too_old(sa) and is_too_old(ar):
+                        continue
+                    if sa.angle0 == ar.angle1:
+                        set1.add(sa.angle1)
+                    elif sa.angle1 == ar.angle1:
+                        set1.add(sa.angle0)
+                for angle in set0.difference(set1):
+                    prop = SumOfAnglesProperty(ar.angle1, angle, sa.degree)
+                    self.__reason(prop, 'Transitivity', [sa, ar])
+                for angle in set1.difference(set0):
+                    prop = SumOfAnglesProperty(ar.angle0, angle, sa.degree)
+                    self.__reason(prop, 'Transitivity', [sa, ar])
+
+            for sa in self.__explained.list(SumOfAnglesProperty):
+                av = self.__angle_value_reason(sa.angle0)
+                if av:
+                    #TODO: report contradiction if value is already known
+                    #TODO: report contradiction if the sum is greater than the summand
+                    self.__reason(
+                        AngleValueProperty(sa.angle1, sa.degree - av.degree),
+                        _comment('%sº - %sº', sa.degree, av.degree),
+                        [sa, av]
+                    )
+                else:
+                    av = self.__angle_value_reason(sa.angle1)
+                    if av:
+                        #TODO: report contradiction if the sum is greater than the summand
+                        self.__reason(
+                            AngleValueProperty(sa.angle0, sa.degree - av.degree),
+                            _comment('%sº - %sº', sa.degree, av.degree),
+                            [sa, av]
+                        )
 
             angle_ratios = [ar for ar in self.__explained.list(AnglesRatioProperty) if ar.ratio == 1 and ar.angle0.vertex and ar.angle1.vertex]
             def pts(prop):

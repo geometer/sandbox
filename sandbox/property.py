@@ -247,6 +247,29 @@ class AnglesRatioProperty(Property):
             self.__hash = hash(AnglesRatioProperty) + hash(self.angle0) + hash(self.angle1)
         return self.__hash
 
+class SumOfAnglesProperty(Property):
+    """
+    Sum of two angles is equal to degree
+    """
+    def __init__(self, angle0, angle1, degree):
+        self.angle0 = angle0
+        self.angle1 = angle1
+        self.degree = degree
+        self.angle_set = frozenset([angle0, angle1])
+
+    def keys(self):
+        return [self.angle0.points, self.angle1.points]
+
+    @property
+    def description(self):
+        return _comment('%s + %s == %sº', self.angle0, self.angle1, self.degree)
+
+    def __eq__(self, other):
+        return isinstance(other, SumOfAnglesProperty) and self.angle_set == other.angle_set
+
+    def __hash__(self):
+        return hash(SumOfAnglesProperty) + hash(self.angle_set)
+
 class CongruentSegmentProperty(Property):
     """
     Two segments are congruent
