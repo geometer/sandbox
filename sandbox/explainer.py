@@ -68,8 +68,10 @@ class Explainer:
         return next((r for r in self.__explained.list(NonCollinearProperty, keys=[key])), None)
 
     def __angle_value_reason(self, angle):
-        return next((p for p in self.__explained.list(AngleValueProperty, [angle.points]) \
-            if p.angle == angle), None)
+        return self.__explained[AngleValueProperty(angle, 0)]
+
+    def __congruent_segments_reason(self, vec0, vec1):
+        return self.__explained[CongruentSegmentProperty(vec0, vec1)]
 
     def __angle_ratio_reasons(self, angle):
         for ar in self.__explained.list(AnglesRatioProperty, keys=[angle.points]):
@@ -529,6 +531,18 @@ class Explainer:
                         [st]
                     )
 
+            for st in self.__explained.list(SimilarTrianglesProperty):
+                if is_too_old(st):
+                    continue
+                for i in range(0, 3):
+                    cs = self.__congruent_segments_reason(side_of(st.ABC, i), side_of(st.DEF, i))
+                    if cs:
+                        self.__reason(
+                            CongruentTrianglesProperty(st.ABC, st.DEF),
+                            'Similar triangles with congruent corresponding sides',
+                            [st, cs]
+                        )
+
             for ct in self.__explained.list(CongruentTrianglesProperty):
                 for i in range(0, 3):
                     self.__reason(
@@ -636,20 +650,36 @@ class Explainer:
                         #TODO: better comment
                         self.__reason(prop, 'Transitivity', [ar0, ar1])
 
-            for prop in list(self.__unexplained):
-                if isinstance(prop, SimilarTrianglesProperty):
-                    congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys([3])) if rsn.ratio == 1]
-                    premises = []
-                    for ca in congruent_angles:
-                        pair = {ca.angle0, ca.angle1}
-                        if pair in angle_pairs(prop):
-                            premises.append(ca)
+            angle_ratios = [ar for ar in self.__explained.list(AnglesRatioProperty) if ar.ratio == 1 and ar.angle0.vertex and ar.angle1.vertex]
+            def pts(prop):
+                return {prop.angle0.points, prop.angle1.points}
 
-                    if len(premises) == 3:
-                        self.__reason(prop, 'three angles', premises=premises)
-                    elif len(premises) == 2:
-                        self.__reason(prop, 'two angles', premises=premises)
-                elif isinstance(prop, CongruentTrianglesProperty):
+            processed = set()
+            for ar0 in angle_ratios:
+                if is_too_old(ar0):
+                    continue
+                processed.add(ar0)
+                pts0 = pts(ar0)
+                angles0 = {ar0.angle0, ar0.angle1}
+                for ar1 in [ar for ar in angle_ratios if ar not in processed and pts(ar) == pts0]:
+                    if ar1.angle0 in angles0 or ar1.angle1 in angles0:
+                        continue
+                    if ar0.angle0.points == ar1.angle0.points:
+                        tr0 = [ar0.angle0.vertex, ar1.angle0.vertex]
+                        tr1 = [ar0.angle1.vertex, ar1.angle1.vertex]
+                    else:
+                        tr0 = [ar0.angle0.vertex, ar1.angle1.vertex]
+                        tr1 = [ar0.angle1.vertex, ar1.angle0.vertex]
+                    tr0.append(next(p for p in ar0.angle0.points if p not in tr0))
+                    tr1.append(next(p for p in ar0.angle1.points if p not in tr1))
+                    self.__reason(
+                        SimilarTrianglesProperty(tr0, tr1),
+                        'Two pairs of congruent angles',
+                        [ar0, ar1]
+                    )
+
+            for prop in list(self.__unexplained):
+                if isinstance(prop, CongruentTrianglesProperty):
                     congruent_angles = [ar for ar in self.__explained.list(AnglesRatioProperty, prop.keys([3])) if ar.ratio == 1]
                     congruent_segments = self.__explained.list(CongruentSegmentProperty, prop.keys([2]))
                     sides = []
@@ -691,7 +721,6 @@ class Explainer:
                             else:
                                 angles.append(None)
 
-                        found = False
                         for i in range(0, 3):
                             reasons = [angles[j] if j == i else sides[j] for j in range(0, 3)]
                             if all(e is not None for e in reasons):
@@ -699,21 +728,6 @@ class Explainer:
                                 #TODO: better comment
                                 self.__reason(prop, 'Two sides and angle between the sides', premises)
                                 break
-                        if found:
-                            continue
-
-                    similar_triangles = self.__explained.list(SimilarTrianglesProperty, prop.keys([3]))
-                    for st in similar_triangles:
-                        if (st.ABC == prop.ABC and st.DEF == prop.DEF) or \
-                           (st.ABC == prop.DEF and st.DEF == prop.ABC):
-                            break
-                    else:
-                        continue
-                    for cs in congruent_segments:
-                        pair = (cs.vector0, cs.vector1)
-                        if any(same_segment_pair(pair, sp) for sp in side_pairs(prop)):
-                            self.__reason(prop, 'Similar triangles with congruent side', premises=[st, cs])
-                            break
 
         base()
         self.__iteration_step_count = 0
