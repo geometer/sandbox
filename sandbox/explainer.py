@@ -556,6 +556,18 @@ class Explainer:
                                 [av, third_reason]
                             )
 
+            for av0, av1 in itertools.combinations( \
+                [av for av in self.__explained.list(AngleValueProperty) if av.degree not in (0, 180)], 2):
+                if av0.degree == av1.degree:
+                    comment = _comment('Both angle values = %sº', av0.degree)
+                else:
+                    comment = _comment('%s = %sº, %s = %sº', av0.angle, av0.degree, av1.angle, av1.degree)
+                self.__reason(
+                    AnglesRatioProperty(av0.angle, av1.angle, divide(av0.degree, av1.degree)),
+                    comment,
+                    [av0, av1]
+                )
+
             for prop in list(self.__unexplained):
                 if isinstance(prop, AnglesRatioProperty):
                     found = False
@@ -605,18 +617,6 @@ class Explainer:
                             self.__reason(prop, 'Transitivity', [c0[0], c1[0]])
                             found = True
                             break
-
-                    if found:
-                        continue
-
-                    left = self.__angle_value_reason(prop.angle0)
-                    right = self.__angle_value_reason(prop.angle1)
-                    if left and right:
-                        # TODO: report contradiction, if angle ratio differs
-                        if left.degree == right.degree:
-                            self.__reason(prop, _comment('Both angle values = %sº', left.degree), premises=[left, right])
-                        else:
-                            self.__reason(prop, _comment('%s = %sº, %s = %sº', left.angle, left.degree, right.angle, right.degree), premises=[left, right])
 
                 elif isinstance(prop, SimilarTrianglesProperty):
                     try:
