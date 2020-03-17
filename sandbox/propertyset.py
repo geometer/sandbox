@@ -31,17 +31,20 @@ class PropertySet:
             return []
         if keys:
             assert isinstance(keys, list)
+            if len(keys) == 1:
+                lst = by_type.by_key_map.get(keys[0])
+                return list(lst) if lst else []
             sublists = [by_type.by_key_map.get(k) for k in keys]
             return list(set(itertools.chain(*[l for l in sublists if l])))
         else:
-            return by_type.all
+            return list(by_type.all)
 
     def __len__(self):
         return len(self.__full_set)
 
     @property
     def all(self):
-        return list(itertools.chain(*[by_type.all for by_type in self.by_type_map.values()]))
+        return list(self.__full_set)
 
     def __contains__(self, prop):
         return prop in self.__full_set
