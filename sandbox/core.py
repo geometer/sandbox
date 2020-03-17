@@ -604,6 +604,7 @@ class CoreScene:
         if not prop in self.__predefined_properties:
             prop.reason = Reason(
                 len(self.__predefined_properties),
+                -1,
                 comments if isinstance(comments, list) else [comments],
                 []
             )

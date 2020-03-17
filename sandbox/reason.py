@@ -1,6 +1,7 @@
 class Reason:
-    def __init__(self, index, comments, premises):
+    def __init__(self, index, generation, comments, premises):
         self.index = index
+        self.generation = generation
         if not isinstance(comments, (list, tuple)):
             self.comments = [comments]
         else:

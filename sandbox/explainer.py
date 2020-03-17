@@ -39,11 +39,11 @@ class Explainer:
         self.__explained = self.scene.predefined_properties()
         self.__unexplained = list(properties)
         self.__explanation_time = None
-        self.__iteration_step_count = None
+        self.__iteration_step_count = -1
 
     def __reason(self, prop, comments, premises=None):
         if prop not in self.__explained:
-            prop.reason = Reason(len(self.__explained), comments, premises)
+            prop.reason = Reason(len(self.__explained), self.__iteration_step_count, comments, premises)
             self.__explained.add(prop)
 
     def __refresh_unexplained(self):
@@ -139,6 +139,9 @@ class Explainer:
                                 break
 
         def iteration():
+            def is_too_old(prop):
+                return prop.reason.generation < self.__iteration_step_count - 1
+
             for ncl in self.__explained.list(NonCollinearProperty):
                 def extra_comments(pt, pt0, pt1):
                     return [_comment('%s lies on the line %s %s', pt, pt0, pt1)]
@@ -534,6 +537,8 @@ class Explainer:
                 )
 
             for av in self.__explained.list(AngleValueProperty):
+                if is_too_old(av):
+                    continue
                 if av.angle.vertex is None:
                     continue
 
@@ -565,6 +570,8 @@ class Explainer:
 
             for av0, av1 in itertools.combinations( \
                 [av for av in self.__explained.list(AngleValueProperty) if av.degree not in (0, 180)], 2):
+                if all(is_too_old(prop) for prop in [av0, av1]):
+                    continue
                 if av0.degree == av1.degree:
                     comment = _comment('Both angle values = %sº', av0.degree)
                 else:
@@ -577,6 +584,8 @@ class Explainer:
 
             for zero in [av for av in self.__explained.list(AngleValueProperty) if av.degree == 0]:
                 for ne in self.__explained.list(NotEqualProperty):
+                    if all(is_too_old(prop) for prop in [zero, ne]):
+                        continue
                     vec = ne.points[0].vector(ne.points[1])
                     if same_segment(vec, zero.angle.vector0) or same_segment(vec, zero.angle.vector1):
                         continue
