@@ -610,22 +610,32 @@ class Explainer:
                 if is_too_old(ar0):
                     continue
                 processed.add(ar0)
-                for ang0, ang1, ratio in [(ar0.angle0, ar0.angle1, ar0.ratio), (ar0.angle1, ar0.angle0, divide(1, ar0.ratio))]:
-                    for ar1 in self.__angle_ratio_reasons(ang0):
-                        if ar1 in processed:
-                            continue
-                        if ang0 == ar1.angle0:
-                            self.__reason(
-                                AnglesRatioProperty(ar1.angle1, ang1, divide(ratio, ar1.ratio)),
-                                'Transitivity', #TODO: better comment
-                                [ar0, ar1]
-                            )
-                        else:
-                            self.__reason(
-                                AnglesRatioProperty(ar1.angle0, ang1, ratio * ar1.ratio),
-                                'Transitivity', #TODO: better comment
-                                [ar0, ar1]
-                            )
+                angle_ratios0 = list(self.__angle_ratio_reasons(ar0.angle0))
+                angle_ratios1 = list(self.__angle_ratio_reasons(ar0.angle1))
+                used0 = {(ar.angle0 if ar.angle1 == ar0.angle0 else ar.angle1) for ar in angle_ratios0}
+                used1 = {(ar.angle0 if ar.angle1 == ar0.angle1 else ar.angle1) for ar in angle_ratios1}
+                for ar1 in angle_ratios0:
+                    if ar1 in processed:
+                        continue
+                    prop = None
+                    if ar0.angle0 == ar1.angle0 and ar1.angle1 not in used1:
+                        prop = AnglesRatioProperty(ar0.angle1, ar1.angle1, divide(ar1.ratio, ar0.ratio))
+                    elif ar1.angle0 not in used1:
+                        prop = AnglesRatioProperty(ar1.angle0, ar0.angle1, ar0.ratio * ar1.ratio)
+                    if prop:
+                        #TODO: better comment
+                        self.__reason(prop, 'Transitivity', [ar0, ar1])
+                for ar1 in self.__angle_ratio_reasons(ar0.angle1):
+                    if ar1 in processed:
+                        continue
+                    prop = None
+                    if ar0.angle1 == ar1.angle1 and ar1.angle0 not in used0:
+                        prop = AnglesRatioProperty(ar0.angle0, ar1.angle0, divide(ar0.ratio, ar1.ratio))
+                    elif ar1.angle1 not in used0:
+                        prop = AnglesRatioProperty(ar0.angle0, ar1.angle1, ar0.ratio * ar1.ratio)
+                    if prop:
+                        #TODO: better comment
+                        self.__reason(prop, 'Transitivity', [ar0, ar1])
 
             for prop in list(self.__unexplained):
                 if isinstance(prop, SimilarTrianglesProperty):
