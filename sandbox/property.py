@@ -1,3 +1,4 @@
+import itertools
 from .util import _comment, divide, good_angles, normalize_number
 
 def keys_for_vector(vector):
@@ -195,10 +196,10 @@ class AngleValueProperty(Property):
     def __eq__(self, other):
         if not isinstance(other, AngleValueProperty):
             return False
-        return self.degree == other.degree and self.angle == other.angle
+        return self.angle == other.angle
 
     def __hash__(self):
-        return hash(AngleValueProperty) + hash(self.degree) + hash(self.angle)
+        return hash(AngleValueProperty) + hash(self.angle)
 
 class AnglesRatioProperty(Property):
     """
@@ -234,9 +235,6 @@ class AnglesRatioProperty(Property):
         if not isinstance(other, AnglesRatioProperty):
             return False
 
-        if self.ratio != other.ratio:
-            return False
-
         if self.angle0 == other.angle0:
             return self.angle1 == other.angle1
         if self.ratio == 1:
@@ -246,7 +244,7 @@ class AnglesRatioProperty(Property):
 
     def __hash__(self):
         if self.__hash is None:
-            self.__hash = hash(AnglesRatioProperty) + hash(self.ratio) + hash(self.angle0) + hash(self.angle1)
+            self.__hash = hash(AnglesRatioProperty) + hash(self.angle0) + hash(self.angle1)
         return self.__hash
 
 class CongruentSegmentProperty(Property):
@@ -282,7 +280,8 @@ class SimilarTrianglesProperty(Property):
     def __init__(self, ABC, DEF):
         self.ABC = tuple(ABC)
         self.DEF = tuple(DEF)
-        self.__triangle_set = frozenset([self.ABC, self.DEF])
+        pairs = [frozenset([(ABC[i], ABC[j], ABC[k]), (DEF[i], DEF[j], DEF[k])]) for i, j, k in itertools.permutations(range(0, 3), 3)]
+        self.__triangle_set = frozenset(pairs)
 
     def keys(self, lengths=None):
         return keys_for_triangle(self.ABC, lengths) + keys_for_triangle(self.DEF, lengths)
@@ -305,7 +304,8 @@ class CongruentTrianglesProperty(Property):
     def __init__(self, ABC, DEF):
         self.ABC = tuple(ABC)
         self.DEF = tuple(DEF)
-        self.__triangle_set = frozenset([self.ABC, self.DEF])
+        pairs = [frozenset([(ABC[i], ABC[j], ABC[k]), (DEF[i], DEF[j], DEF[k])]) for i, j, k in itertools.permutations(range(0, 3), 3)]
+        self.__triangle_set = frozenset(pairs)
 
     def keys(self, lengths=None):
         return keys_for_triangle(self.ABC, lengths) + keys_for_triangle(self.DEF, lengths)
