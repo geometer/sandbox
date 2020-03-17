@@ -47,8 +47,7 @@ class Explainer:
             self.__explained.add(prop)
 
     def __refresh_unexplained(self):
-        test = set(self.__explained.all)
-        self.__unexplained = [prop for prop in self.__unexplained if prop not in test]
+        self.__unexplained = [prop for prop in self.__unexplained if prop not in self.__explained]
 
     def explain(self):
         start = time.time()

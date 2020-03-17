@@ -8,6 +8,7 @@ class PropertySet:
 
     def __init__(self):
         self.by_type_map = {}
+        self.__full_set = set()
 
     def add(self, prop):
         key = type(prop)
@@ -22,6 +23,7 @@ class PropertySet:
                 by_type.by_key_map[key] = [prop]
             else:
                 arr.append(prop)
+        self.__full_set.add(prop)
 
     def list(self, property_type, keys=None):
         by_type = self.by_type_map.get(property_type)
@@ -35,20 +37,14 @@ class PropertySet:
             return by_type.all
 
     def __len__(self):
-        return sum(len(by_type.all) for by_type in self.by_type_map.values())
+        return len(self.__full_set)
 
     @property
     def all(self):
         return list(itertools.chain(*[by_type.all for by_type in self.by_type_map.values()]))
 
     def __contains__(self, prop):
-        by_type = self.by_type_map.get(type(prop))
-        if not by_type:
-            return False
-
-        keys = prop.keys()
-        lst = by_type.by_key_map.get(keys[0]) if keys else by_type.all
-        return lst is not None and prop in lst
+        return prop in self.__full_set
 
     def keys_num(self):
         return sum(len(by_type.by_key_map) for by_type in self.by_type_map.values())
