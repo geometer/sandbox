@@ -575,36 +575,20 @@ class Explainer:
                     [av0, av1]
                 )
 
+            for zero in [av for av in self.__explained.list(AngleValueProperty) if av.degree == 0]:
+                for ne in self.__explained.list(NotEqualProperty):
+                    vec = ne.points[0].vector(ne.points[1])
+                    if same_segment(vec, zero.angle.vector0) or same_segment(vec, zero.angle.vector1):
+                        continue
+                    for ngl0, cmpl0 in good_angles(vec.angle(zero.angle.vector0)):
+                        for ngl1, cmpl1 in good_angles(vec.angle(zero.angle.vector1)):
+                            #TODO: complementary angles otherwise
+                            if cmpl0 == cmpl1:
+                                #TODO: better comment
+                                self.__reason(AnglesRatioProperty(ngl0, ngl1, 1), 'Same angle', [zero, ne])
+
             for prop in list(self.__unexplained):
                 if isinstance(prop, AnglesRatioProperty):
-                    found = False
-
-                    if prop.ratio == 1:
-                        for v0, sd0 in same_dir(prop.angle0.vector0):
-                            lst = list(same_dir(prop.angle0.vector1))
-                            def add_reason(vector0, vector1):
-                                if v0 == vector0:
-                                    try:
-                                        found = next(p for p in lst if p[0] == vector1)
-                                        self.__reason(prop, 'Same angle', premises=sd0 + found[1])
-                                        return True
-                                    except StopIteration:
-                                        pass
-                                return False
-
-                            a10 = prop.angle1.vector0
-                            a11 = prop.angle1.vector1
-                            found = \
-                                add_reason(a10, a11) or \
-                                add_reason(a11, a10) or \
-                                add_reason(a10.reversed, a11.reversed) or \
-                                add_reason(a11.reversed, a10.reversed)
-                            if found:
-                                break
-
-                        if found:
-                            continue
-
                     known_ratios = self.__explained.list(AnglesRatioProperty, keys=prop.keys())
                     candidates0 = []
                     candidates1 = []
@@ -622,7 +606,6 @@ class Explainer:
                             #TODO: Better way to report contradiction
                             assert c0[2] * c1[2] == prop.ratio
                             self.__reason(prop, 'Transitivity', [c0[0], c1[0]])
-                            found = True
                             break
 
                 elif isinstance(prop, SimilarTrianglesProperty):
