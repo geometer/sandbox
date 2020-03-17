@@ -8,7 +8,7 @@ class PropertySet:
 
     def __init__(self):
         self.by_type_map = {}
-        self.__full_set = set()
+        self.__full_set = {}
 
     def add(self, prop):
         key = type(prop)
@@ -23,7 +23,7 @@ class PropertySet:
                 by_type.by_key_map[key] = [prop]
             else:
                 arr.append(prop)
-        self.__full_set.add(prop)
+        self.__full_set[prop] = prop
 
     def list(self, property_type, keys=None):
         by_type = self.by_type_map.get(property_type)
@@ -48,6 +48,9 @@ class PropertySet:
 
     def __contains__(self, prop):
         return prop in self.__full_set
+
+    def __getitem__(self, prop):
+        return self.__full_set.get(prop)
 
     def keys_num(self):
         return sum(len(by_type.by_key_map) for by_type in self.by_type_map.values())
