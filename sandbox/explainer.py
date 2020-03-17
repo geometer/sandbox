@@ -526,6 +526,13 @@ class Explainer:
                         [ct]
                     )
 
+            for ct in self.__explained.list(CongruentTrianglesProperty):
+                self.__reason(
+                    SimilarTrianglesProperty(ct.ABC, ct.DEF),
+                    'Congruent triangles are similar',
+                    [ct]
+                )
+
             for av in self.__explained.list(AngleValueProperty):
                 if av.angle.vertex is None:
                     continue
@@ -619,16 +626,6 @@ class Explainer:
                             break
 
                 elif isinstance(prop, SimilarTrianglesProperty):
-                    try:
-                        congruent = next(ct for ct in \
-                            self.__explained.list(CongruentTrianglesProperty, prop.keys()) if \
-                                (ct.ABC == prop.ABC and ct.DEF == prop.DEF) or \
-                                (ct.ABC == prop.DEF and ct.DEF == prop.ABC))
-                        self.__reason(prop, 'Congruent triangles are similar', premises=[congruent])
-                        continue
-                    except StopIteration:
-                        pass
-
                     congruent_angles = [rsn for rsn in self.__explained.list(AnglesRatioProperty, prop.keys([3])) if rsn.ratio == 1]
                     premises = []
                     for ca in congruent_angles:
