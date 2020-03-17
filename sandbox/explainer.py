@@ -444,6 +444,8 @@ class Explainer:
                                 break
 
             for iso in self.__explained.list(IsoscelesTriangleProperty):
+                if is_too_old(iso):
+                    continue
                 self.__reason(
                     AnglesRatioProperty(
                         iso.base[0].angle(iso.apex, iso.base[1]),
@@ -519,6 +521,8 @@ class Explainer:
                     )
 
             for st in self.__explained.list(SimilarTrianglesProperty):
+                if is_too_old(st):
+                    continue
                 for i in range(0, 3):
                     self.__reason(
                         AnglesRatioProperty(angle_of(st.ABC, i), angle_of(st.DEF, i), 1),
