@@ -1,6 +1,10 @@
 import sympy as sp
 
 def divide(num0, num1):
+    if isinstance(num0, int) and isinstance(num1, int):
+        quot = num0 // num1
+        if quot * num1 == num0:
+            return quot
     ratio = sp.sympify(num0) / num1
     return int(ratio) if ratio.is_integer else ratio
 
@@ -20,11 +24,9 @@ def good_angles(angle):
     and four pairs otherwise.
     """
     def rev(first, second):
-        if first or second:
-            vec0 = angle.vector0.reversed if first else angle.vector0
-            vec1 = angle.vector1.reversed if second else angle.vector1
-            return vec0.angle(vec1)
-        return angle
+        vec0 = angle.vector0.reversed if first else angle.vector0
+        vec1 = angle.vector1.reversed if second else angle.vector1
+        return vec0.angle(vec1)
 
     if angle.vertex is not None:
         return [(angle, False)]

@@ -558,7 +558,7 @@ class CoreScene:
             return str(_comment('∠ %s %s %s', self.vector0.end, self.vertex, self.vector1.end))
 
         def __eq__(self, other):
-            return type(self) == type(other) and self.vectors == other.vectors
+            return type(other) == CoreScene.AngleWithVertex and self.vectors == other.vectors
 
         def __hash__(self):
             return hash(self.vectors)
@@ -579,7 +579,7 @@ class CoreScene:
             return '∠(%s, %s)' % (self.vector0, self.vector1)
 
         def __eq__(self, other):
-            return type(self) == type(other) and self.vectors_variants == other.vectors_variants
+            return type(other) == CoreScene.AngleWithNoVertex and self.vectors_variants == other.vectors_variants
 
         def __hash__(self):
             return hash(self.vectors_variants)
