@@ -8,11 +8,6 @@ from .scene import Scene
 from .stats import Stats
 from .util import _comment, divide, side_of, angle_of
 
-# +++++ utility methods +++++
-def same_segment(vec0, vec1):
-    return vec0 == vec1 or vec0 == vec1.reversed
-# ----- utility methods -----
-
 class Explainer:
     def __init__(self, scene, properties):
         self.scene = scene
@@ -591,7 +586,7 @@ class Explainer:
                     if zero_is_too_old and is_too_old(ne):
                         continue
                     vec = ne.points[0].vector(ne.points[1])
-                    if same_segment(vec, zero.angle.vector0) or same_segment(vec, zero.angle.vector1):
+                    if vec.as_segment in [zero.angle.vector0.as_segment, zero.angle.vector1.as_segment]:
                         continue
                     for ngl0, cmpl0 in good_angles(vec.angle(zero.angle.vector0)):
                         for ngl1, cmpl1 in good_angles(vec.angle(zero.angle.vector1)):
