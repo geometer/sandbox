@@ -1,43 +1,35 @@
 import itertools
 
 class PropertySet:
-    class ByType:
-        def __init__(self):
-            self.all = []
-            self.by_key_map = {}
-
     def __init__(self):
-        self.by_type_map = {}
-        self.__full_set = {}
+        self.__combined = {} # (type, key) => [prop] and type => prop
+        self.__full_set = {} # prop => prop
 
     def add(self, prop):
-        key = type(prop)
-        by_type = self.by_type_map.get(key)
-        if by_type is None:
-            by_type = PropertySet.ByType()
-            self.by_type_map[key] = by_type
-        by_type.all.append(prop)
-        for key in prop.keys():
-            arr = by_type.by_key_map.get(key)
-            if arr is None:
-                by_type.by_key_map[key] = [prop]
+        def put(key):
+            lst = self.__combined.get(key)
+            if lst:
+                lst.append(prop)
             else:
-                arr.append(prop)
+                self.__combined[key] = [prop]
+
+        type_key = type(prop)
+        put(type_key)
+        for key in prop.keys():
+            put((type_key, key))
         self.__full_set[prop] = prop
 
     def list(self, property_type, keys=None):
-        by_type = self.by_type_map.get(property_type)
-        if not by_type:
-            return []
         if keys:
             assert isinstance(keys, list)
             if len(keys) == 1:
-                lst = by_type.by_key_map.get(keys[0])
+                lst = self.__combined.get((property_type, keys[0]))
                 return list(lst) if lst else []
-            sublists = [by_type.by_key_map.get(k) for k in keys]
+            sublists = [self.__combined.get((property_type, k)) for k in keys]
             return list(set(itertools.chain(*[l for l in sublists if l])))
         else:
-            return list(by_type.all)
+            lst = self.__combined.get(property_type)
+            return list(lst) if lst else []
 
     def __len__(self):
         return len(self.__full_set)
@@ -53,7 +45,7 @@ class PropertySet:
         return self.__full_set.get(prop)
 
     def keys_num(self):
-        return sum(len(by_type.by_key_map) for by_type in self.by_type_map.values())
+        return len(self.__combined)
 
     def copy(self):
         copy = PropertySet()
