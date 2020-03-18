@@ -6,7 +6,7 @@ from .property import *
 from .reason import Reason
 from .scene import Scene
 from .stats import Stats
-from .util import _comment, divide
+from .util import _comment, divide, side_of, angle_of
 
 # +++++ utility methods +++++
 def same_segment(vec0, vec1):
@@ -15,12 +15,6 @@ def same_segment(vec0, vec1):
 def same_segment_pair(pair0, pair1):
     return same_segment(pair0[0], pair1[0]) and same_segment(pair0[1], pair1[1]) \
         or same_segment(pair0[0], pair1[1]) and same_segment(pair0[1], pair1[0])
-
-def side_of(triangle, index):
-    return triangle[(index + 1) % 3].vector(triangle[(index + 2) % 3])
-
-def angle_of(triangle, index):
-    return triangle[index].angle(triangle[(index + 1) % 3], triangle[(index + 2) % 3])
 
 def side_pairs(prop):
     if not hasattr(prop, 'side_pairs'):

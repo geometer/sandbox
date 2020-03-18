@@ -1,5 +1,5 @@
 import itertools
-from .util import _comment, divide, good_angles, normalize_number
+from .util import _comment, divide, good_angles, normalize_number, angle_of
 
 def keys_for_vector(vector):
     return [frozenset(vector.points)]
@@ -7,7 +7,8 @@ def keys_for_vector(vector):
 def keys_for_triangle(triangle, lengths):
     keys = []
     if lengths is None or 3 in lengths:
-        keys.append(frozenset(triangle))
+        for i in range(0, 3):
+            keys.append(angle_of(triangle, i))
     if lengths is None or 2 in lengths:
         keys += [frozenset(triangle[1:]), frozenset(triangle[:-1]), frozenset([triangle[0], triangle[2]])]
     return keys
@@ -26,9 +27,6 @@ class NonCollinearProperty(Property):
     def __init__(self, point0, point1, point2):
         self.points = (point0, point1, point2)
         self.__point_set = frozenset(self.points)
-
-    def keys(self):
-        return [self.__point_set]
 
     @property
     def description(self):
@@ -93,9 +91,6 @@ class OppositeSideProperty(Property):
         self.points = (point0, point1)
         self.__object_set = frozenset([line, point0, point1])
 
-    def keys(self):
-        return [self.__object_set]
-
     @property
     def description(self):
         return _comment('%s, %s located on opposite sides of %s', *self.points, self.line)
@@ -114,9 +109,6 @@ class SameSideProperty(Property):
         self.line = line
         self.points = (point0, point1)
         self.__object_set = frozenset([line, point0, point1])
-
-    def keys(self):
-        return [self.__object_set]
 
     @property
     def description(self):
@@ -157,9 +149,6 @@ class CollinearProperty(Property):
         self.points = (A, B, C)
         self.__point_set = frozenset(self.points)
 
-    def keys(self):
-        return [self.__point_set]
-
     @property
     def description(self):
         return _comment('Points %s, %s, and %s are collinear', *self.points)
@@ -184,7 +173,7 @@ class AngleValueProperty(Property):
         self.degree = normalize_number(degree) if degree is not None else None
 
     def keys(self):
-        return [self.angle.points]
+        return [self.angle]
 
     @property
     def description(self):
@@ -222,7 +211,7 @@ class AnglesRatioProperty(Property):
         self.__hash = None
 
     def keys(self):
-        return [self.angle0.points, self.angle1.points, self.angle0, self.angle1]
+        return [self.angle0, self.angle1]
 
     @property
     def description(self):
@@ -258,7 +247,7 @@ class SumOfAnglesProperty(Property):
         self.angle_set = frozenset([angle0, angle1])
 
     def keys(self):
-        return [self.angle0.points, self.angle1.points, self.angle0, self.angle1]
+        return [self.angle0, self.angle1]
 
     @property
     def description(self):
