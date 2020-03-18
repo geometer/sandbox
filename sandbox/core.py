@@ -8,7 +8,7 @@ import itertools
 import sympy as sp
 from typing import List
 
-from .property import NonCollinearProperty, NotEqualProperty
+from .property import NonCollinearProperty, NotEqualProperty, CongruentSegmentProperty
 from .propertyset import PropertySet
 from .reason import Reason
 from .util import _comment, divide
@@ -489,6 +489,10 @@ class CoreScene:
             assert isinstance(vector, CoreScene.Vector)
             assert self.scene == vector.scene
             assert coef != 0
+            comment = kwargs.get('comment')
+            if not comment:
+                comment = _comment('Given: |%s| == |%s|', self.as_segment, vector.as_segment)
+            self.scene.add_property(CongruentSegmentProperty(self.as_segment, vector.as_segment), comment)
             return self.scene.constraint(Constraint.Kind.distances_ratio, self, vector, coef, **kwargs)
 
         def parallel_constraint(self, vector, **kwargs):

@@ -98,7 +98,6 @@ class Explainer:
                             self.__reason(prop, cnst.comments)
                             break
                 elif isinstance(prop, CongruentSegmentProperty):
-                    found = False
                     points0 = prop.segment0.points
                     points1 = prop.segment1.points
                     centre = next((p for p in points0 if p in points1), None)
@@ -108,16 +107,6 @@ class Explainer:
                         for circle in self.scene.circles():
                             if circle.centre == centre and pt0 in circle and pt1 in circle:
                                 self.__reason(prop, 'Two radiuses of the same circle')
-                                found = True
-                                break
-
-                    if found:
-                        continue
-
-                    for cnst in self.scene.constraints(Constraint.Kind.distances_ratio):
-                        if cnst.params[2] == 1:
-                            if {cnst.params[0].as_segment, cnst.params[1].as_segment} == {prop.segment0, prop.segment1}:
-                                self.__reason(prop, 'Given')
                                 break
 
         def iteration():
