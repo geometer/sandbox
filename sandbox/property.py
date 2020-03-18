@@ -1,9 +1,6 @@
 import itertools
 from .util import _comment, divide, good_angles, normalize_number, angle_of, side_of
 
-def keys_for_vector(vector):
-    return [vector.as_segment]
-
 def keys_for_triangle(triangle, lengths):
     keys = []
     if lengths is None or 3 in lengths:
@@ -47,7 +44,7 @@ class ParallelVectorsProperty(Property):
         self.__vector_set = frozenset([vector0, vector1])
 
     def keys(self):
-        return keys_for_vector(self.vector0) + keys_for_vector(self.vector1)
+        return [self.vector0.as_segment, self.vector1.as_segment]
 
     @property
     def description(self):
