@@ -63,20 +63,20 @@ class NotEqualProperty(Property):
     """
     def __init__(self, point0, point1):
         self.points = [point0, point1]
-        self.__point_set = frozenset(self.points)
+        self.segment = point0.segment(point1)
 
     def keys(self):
-        return [self.__point_set, *self.points]
+        return [self.segment, *self.points]
 
     @property
     def description(self):
         return _comment('%s != %s', *self.points)
 
     def __eq__(self, other):
-        return isinstance(other, NotEqualProperty) and self.__point_set == other.__point_set
+        return isinstance(other, NotEqualProperty) and self.segment == other.segment
 
     def __hash__(self):
-        return hash(NotEqualProperty) + hash(self.__point_set)
+        return hash(NotEqualProperty) + hash(self.segment)
 
 class OppositeSideProperty(Property):
     """
