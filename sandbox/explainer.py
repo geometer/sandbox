@@ -667,17 +667,11 @@ class Explainer:
                 for sa in self.__explained.list(SumOfAnglesProperty, keys=[ar.angle0]):
                     if ar_is_too_old and is_too_old(sa):
                         continue
-                    if sa.angle0 == ar.angle0:
-                        set0.add(sa.angle1)
-                    elif sa.angle1 == ar.angle0:
-                        set0.add(sa.angle0)
+                    set0.add(sa.angle1 if sa.angle0 == ar.angle0 else sa.angle0)
                 for sa in self.__explained.list(SumOfAnglesProperty, keys=[ar.angle1]):
                     if ar_is_too_old and is_too_old(sa):
                         continue
-                    if sa.angle0 == ar.angle1:
-                        set1.add(sa.angle1)
-                    elif sa.angle1 == ar.angle1:
-                        set1.add(sa.angle0)
+                    set1.add(sa.angle1 if sa.angle0 == ar.angle1 else sa.angle0)
                 for angle in set0.difference(set1):
                     prop = SumOfAnglesProperty(ar.angle1, angle, sa.degree)
                     self.__reason(prop, 'Transitivity', [sa, ar])
