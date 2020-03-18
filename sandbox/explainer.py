@@ -729,20 +729,14 @@ class Explainer:
 
             for prop in list(self.__unexplained):
                 if isinstance(prop, CongruentTrianglesProperty):
-                    congruent_segments = self.__explained.list(CongruentSegmentProperty, prop.keys([2]))
                     sides = []
                     for i in range(0, 3):
                         left = side_of(prop.ABC, i)
                         right = side_of(prop.DEF, i)
                         if same_segment(left, right):
                             sides.append(left)
-                            continue
-                        for cs in congruent_segments:
-                            if same_segment_pair((left, right), (cs.vector0, cs.vector1)):
-                                sides.append(cs)
-                                break
                         else:
-                            sides.append(None)
+                            sides.append(self.__congruent_segments_reason(left, right))
 
                     if all(e is None for e in sides):
                         continue
@@ -756,7 +750,6 @@ class Explainer:
                             self.__reason(prop, _comment('Common side %s, two pairs of congruent sides', common[0]), premises)
                         continue
 
-                    congruent_angles = [ar for ar in self.__explained.list(AnglesRatioProperty, prop.keys([3])) if ar.ratio == 1]
                     angles = []
                     for i in range(0, 3):
                         left = angle_of(prop.ABC, i)
@@ -765,7 +758,7 @@ class Explainer:
                             angles.append(left)
                             continue
                         pair = {left, right}
-                        for ca in congruent_angles:
+                        for ca in [ar for ar in self.__explained.list(AnglesRatioProperty, [left]) if ar.ratio == 1]:
                             if pair == {ca.angle0, ca.angle1}:
                                 angles.append(ca)
                                 break
