@@ -729,7 +729,6 @@ class Explainer:
 
             for prop in list(self.__unexplained):
                 if isinstance(prop, CongruentTrianglesProperty):
-                    congruent_angles = [ar for ar in self.__explained.list(AnglesRatioProperty, prop.keys([3])) if ar.ratio == 1]
                     congruent_segments = self.__explained.list(CongruentSegmentProperty, prop.keys([2]))
                     sides = []
                     for i in range(0, 3):
@@ -745,6 +744,9 @@ class Explainer:
                         else:
                             sides.append(None)
 
+                    if all(e is None for e in sides):
+                        continue
+
                     if all(e is not None for e in sides):
                         premises = [e for e in sides if isinstance(e, Property)]
                         common = [e for e in sides if not isinstance(e, Property)]
@@ -754,29 +756,29 @@ class Explainer:
                             self.__reason(prop, _comment('Common side %s, two pairs of congruent sides', common[0]), premises)
                         continue
 
-                    if any(e is not None for e in sides):
-                        angles = []
-                        for i in range(0, 3):
-                            left = angle_of(prop.ABC, i)
-                            right = angle_of(prop.DEF, i)
-                            if left == right:
-                                angles.append(left)
-                                continue
-                            pair = {left, right}
-                            for ca in congruent_angles:
-                                if pair == {ca.angle0, ca.angle1}:
-                                    angles.append(ca)
-                                    break
-                            else:
-                                angles.append(None)
-
-                        for i in range(0, 3):
-                            reasons = [angles[j] if j == i else sides[j] for j in range(0, 3)]
-                            if all(e is not None for e in reasons):
-                                premises = [e for e in reasons if isinstance(e, Property)]
-                                #TODO: better comment
-                                self.__reason(prop, 'Two sides and angle between the sides', premises)
+                    congruent_angles = [ar for ar in self.__explained.list(AnglesRatioProperty, prop.keys([3])) if ar.ratio == 1]
+                    angles = []
+                    for i in range(0, 3):
+                        left = angle_of(prop.ABC, i)
+                        right = angle_of(prop.DEF, i)
+                        if left == right:
+                            angles.append(left)
+                            continue
+                        pair = {left, right}
+                        for ca in congruent_angles:
+                            if pair == {ca.angle0, ca.angle1}:
+                                angles.append(ca)
                                 break
+                        else:
+                            angles.append(None)
+
+                    for i in range(0, 3):
+                        reasons = [angles[j] if j == i else sides[j] for j in range(0, 3)]
+                        if all(e is not None for e in reasons):
+                            premises = [e for e in reasons if isinstance(e, Property)]
+                            #TODO: better comment
+                            self.__reason(prop, 'Two sides and angle between the sides', premises)
+                            break
 
         base()
         self.__iteration_step_count = 0
