@@ -74,9 +74,7 @@ class Explainer:
         return self.__explained[CongruentSegmentProperty(vec0, vec1)]
 
     def __angle_ratio_reasons(self, angle):
-        for ar in self.__explained.list(AnglesRatioProperty, keys=[angle.points]):
-            if ar.angle0 == angle or ar.angle1 == angle:
-                yield ar
+        return self.__explained.list(AnglesRatioProperty, keys=[angle])
 
     def __explain_all(self):
         def base():
@@ -613,8 +611,9 @@ class Explainer:
                 )
 
             for zero in [av for av in self.__explained.list(AngleValueProperty) if av.degree == 0]:
+                zero_is_too_old = is_too_old(zero)
                 for ne in self.__explained.list(NotEqualProperty):
-                    if all(is_too_old(prop) for prop in [zero, ne]):
+                    if zero_is_too_old and is_too_old(ne):
                         continue
                     vec = ne.points[0].vector(ne.points[1])
                     if same_segment(vec, zero.angle.vector0) or same_segment(vec, zero.angle.vector1):
@@ -662,17 +661,18 @@ class Explainer:
                         self.__reason(prop, 'Transitivity', [ar0, ar1])
 
             for ar in [p for p in self.__explained.list(AnglesRatioProperty) if p.ratio == 1]:
+                ar_is_too_old = is_too_old(ar)
                 set0 = set()
                 set1 = set()
-                for sa in self.__explained.list(SumOfAnglesProperty, keys=[ar.angle0.points]):
-                    if is_too_old(sa) and is_too_old(ar):
+                for sa in self.__explained.list(SumOfAnglesProperty, keys=[ar.angle0]):
+                    if ar_is_too_old and is_too_old(sa):
                         continue
                     if sa.angle0 == ar.angle0:
                         set0.add(sa.angle1)
                     elif sa.angle1 == ar.angle0:
                         set0.add(sa.angle0)
-                for sa in self.__explained.list(SumOfAnglesProperty, keys=[ar.angle1.points]):
-                    if is_too_old(sa) and is_too_old(ar):
+                for sa in self.__explained.list(SumOfAnglesProperty, keys=[ar.angle1]):
+                    if ar_is_too_old and is_too_old(sa):
                         continue
                     if sa.angle0 == ar.angle1:
                         set1.add(sa.angle1)

@@ -222,7 +222,7 @@ class AnglesRatioProperty(Property):
         self.__hash = None
 
     def keys(self):
-        return [self.angle0.points, self.angle1.points]
+        return [self.angle0.points, self.angle1.points, self.angle0, self.angle1]
 
     @property
     def description(self):
@@ -258,7 +258,7 @@ class SumOfAnglesProperty(Property):
         self.angle_set = frozenset([angle0, angle1])
 
     def keys(self):
-        return [self.angle0.points, self.angle1.points]
+        return [self.angle0.points, self.angle1.points, self.angle0, self.angle1]
 
     @property
     def description(self):
