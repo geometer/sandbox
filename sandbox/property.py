@@ -181,7 +181,7 @@ class AngleValueProperty(Property):
 
     def __init__(self, angle, degree):
         self.angle = angle
-        self.degree = normalize_number(degree)
+        self.degree = normalize_number(degree) if degree is not None else None
 
     def keys(self):
         return [self.angle.points]

@@ -60,15 +60,13 @@ class Explainer:
         self.__explanation_time = time.time() - start
 
     def __not_equal_reason(self, pt0, pt1):
-        key = frozenset([pt0, pt1])
-        return next((r for r in self.__explained.list(NotEqualProperty, keys=[key])), None)
+        return self.__explained[NotEqualProperty(pt0, pt1)]
 
     def __not_collinear_reason(self, pt0, pt1, pt2):
-        key = frozenset([pt0, pt1, pt2])
-        return next((r for r in self.__explained.list(NonCollinearProperty, keys=[key])), None)
+        return self.__explained[NonCollinearProperty(pt0, pt1, pt2)]
 
     def __angle_value_reason(self, angle):
-        return self.__explained[AngleValueProperty(angle, 0)]
+        return self.__explained[AngleValueProperty(angle, None)]
 
     def __congruent_segments_reason(self, vec0, vec1):
         return self.__explained[CongruentSegmentProperty(vec0, vec1)]
@@ -147,45 +145,46 @@ class Explainer:
                 return prop.reason.generation < self.__iteration_step_count - 1
 
             for ncl in self.__explained.list(NonCollinearProperty):
-                def extra_comments(pt, pt0, pt1):
-                    return [_comment('%s lies on the line %s %s', pt, pt0, pt1)]
+                if not is_too_old(ncl):
+                    def extra_comments(pt, pt0, pt1):
+                        return [_comment('%s lies on the line %s %s', pt, pt0, pt1)]
 
-                def add_reasons(pt0, pt1, pt2):
-                    line = self.scene.get_line(pt0, pt1)
-                    if line:
-                        for pt in line.all_points:
-                            self.__reason(
-                                NotEqualProperty(pt, pt2),
-                                _comment(
-                                    '%s lies on the line %s %s, %s does not',
-                                    pt, pt0, pt1, pt2
-                                ),
-                                [ncl]
-                            )
-                        for ptX, ptY in itertools.combinations(line.all_points, 2):
-                            ne = self.__not_equal_reason(ptX, ptY)
-                            if ne is None:
-                                continue
-                            comments = [str(ncl)]
-                            if not ptX in (pt0, pt1):
-                                comments += extra_comments(ptX, pt0, pt1)
-                            if not ptY in (pt0, pt1):
-                                comments += extra_comments(ptY, pt0, pt1)
-                            self.__reason(
-                                NonCollinearProperty(ptX, ptY, pt2),
-                                _comment(
-                                    '%s and %s lie on the line %s %s, %s does not',
-                                    ptX, ptY, pt0, pt1, pt2
-                                ),
-                                [ncl, ne]
-                            )
+                    def add_reasons(pt0, pt1, pt2):
+                        line = self.scene.get_line(pt0, pt1)
+                        if line:
+                            for pt in line.all_points:
+                                self.__reason(
+                                    NotEqualProperty(pt, pt2),
+                                    _comment(
+                                        '%s lies on the line %s %s, %s does not',
+                                        pt, pt0, pt1, pt2
+                                    ),
+                                    [ncl]
+                                )
+                            for ptX, ptY in itertools.combinations(line.all_points, 2):
+                                ne = self.__not_equal_reason(ptX, ptY)
+                                if ne is None:
+                                    continue
+                                comments = [str(ncl)]
+                                if not ptX in (pt0, pt1):
+                                    comments += extra_comments(ptX, pt0, pt1)
+                                if not ptY in (pt0, pt1):
+                                    comments += extra_comments(ptY, pt0, pt1)
+                                self.__reason(
+                                    NonCollinearProperty(ptX, ptY, pt2),
+                                    _comment(
+                                        '%s and %s lie on the line %s %s, %s does not',
+                                        ptX, ptY, pt0, pt1, pt2
+                                    ),
+                                    [ncl, ne]
+                                )
 
-                self.__reason(NotEqualProperty(ncl.points[0], ncl.points[1]), str(ncl))
-                self.__reason(NotEqualProperty(ncl.points[0], ncl.points[2]), str(ncl))
-                self.__reason(NotEqualProperty(ncl.points[1], ncl.points[2]), str(ncl))
-                add_reasons(ncl.points[0], ncl.points[1], ncl.points[2])
-                add_reasons(ncl.points[1], ncl.points[2], ncl.points[0])
-                add_reasons(ncl.points[2], ncl.points[0], ncl.points[1])
+                    self.__reason(NotEqualProperty(ncl.points[0], ncl.points[1]), str(ncl))
+                    self.__reason(NotEqualProperty(ncl.points[0], ncl.points[2]), str(ncl))
+                    self.__reason(NotEqualProperty(ncl.points[1], ncl.points[2]), str(ncl))
+                    add_reasons(ncl.points[0], ncl.points[1], ncl.points[2])
+                    add_reasons(ncl.points[1], ncl.points[2], ncl.points[0])
+                    add_reasons(ncl.points[2], ncl.points[0], ncl.points[1])
 
                 ncl_set = set(ncl.points)
                 for col in self.__explained.list(CollinearProperty):
@@ -241,11 +240,15 @@ class Explainer:
                 ne0 = self.__not_equal_reason(*vec0.points)
                 ne1 = self.__not_equal_reason(*vec1.points)
                 if ne0 is not None and ne1 is not None:
+                    if is_too_old(pv) and is_too_old(ne0) and is_too_old(ne1):
+                        continue
                     for prop in AngleValueProperty.generate(vec0.angle(vec1), 0):
                         self.__reason(prop, [], [pv, ne0, ne1])
 
             same_side_reasons = self.__explained.list(SameSideProperty)
             for rsn in same_side_reasons:
+                if is_too_old(rsn):
+                    continue
                 pt0 = rsn.points[0]
                 pt1 = rsn.points[1]
                 line2 = self.scene.get_line(pt0, pt1)
@@ -256,6 +259,8 @@ class Explainer:
                     self.__reason(AngleValueProperty(crossing.angle(pt0, pt1), 0), rsn.reason.comments, [rsn])
 
             for rsn0, rsn1 in itertools.combinations(same_side_reasons, 2):
+                if is_too_old(rsn0) and is_too_old(rsn1):
+                    continue
                 AB = rsn0.line
                 AC = rsn1.line
                 if AB == AC:

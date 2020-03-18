@@ -212,6 +212,8 @@ class CoreScene:
             """
             The current point does not coincide with A.
             """
+            if self.scene.is_frozen:
+                return
             for cnstr in self.scene.constraints(Constraint.Kind.not_equal):
                 if set(cnstr.params) == {self, A}:
                     cnstr.update(kwargs)
