@@ -355,15 +355,15 @@ class Explainer:
                 line = angle.vector1.line()
                 if line is None:
                     return False
-                keys = [frozenset([point, angle.vector0.end, line])]
-                if next((r for r in self.__explained.list(SameSideProperty, keys=keys)), None) is None:
+                ss0 = self.__explained[SameSideProperty(line, point, angle.vector0.end)]
+                if ss0 is None:
                     return False
 
                 line = angle.vector0.line()
                 if line is None:
                     return False
-                keys = [frozenset([point, angle.vector1.end, line])]
-                if next((r for r in self.__explained.list(SameSideProperty, keys=keys)), None) is None:
+                ss1 = self.__explained[SameSideProperty(line, point, angle.vector0.end)]
+                if ss1 is None:
                     return False
 
                 return True
@@ -387,6 +387,7 @@ class Explainer:
                     common_point = a0.vector1.end
                 else:
                     continue
+                #TODO: add reasons of
                 if not point_inside_angle(common_point, angle):
                     #TODO: consider angle difference
                     continue
