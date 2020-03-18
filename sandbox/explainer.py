@@ -442,8 +442,8 @@ class Explainer:
                 )
                 self.__reason(
                     CongruentSegmentProperty(
-                        iso.apex.vector(iso.base[0]),
-                        iso.apex.vector(iso.base[1])
+                        iso.apex.segment(iso.base[0]),
+                        iso.apex.segment(iso.base[1])
                     ),
                     _comment('Legs of isosceles △ %s %s %s', iso.apex, *iso.base),
                     [iso]
