@@ -48,9 +48,14 @@ class PlacementFailedError(Exception):
 
 class BasePlacement:
     def length(self, vector):
-        start = self.location(vector.start)
-        end = self.location(vector.end)
+        start = self.location(vector.points[0])
+        end = self.location(vector.points[1])
         return np.hypot(end.x - start.x, end.y - start.y)
+
+    def length2(self, vector):
+        start = self.location(vector.points[0])
+        end = self.location(vector.points[1])
+        return (end.x - start.x) ** 2 + (end.y - start.y) ** 2
 
     def scalar_product(self, vector0, vector1):
         start0 = self.location(vector0.start)
@@ -391,12 +396,12 @@ class Placement(BasePlacement):
     def radius(self, circle):
         if isinstance(circle, str):
             circle = self.scene.get(circle)
-        return self.length(circle.radius_start.vector(circle.radius_end))
+        return self.length(circle.radius)
 
     def radius2(self, circle):
         if isinstance(circle, str):
             circle = self.scene.get(circle)
-        return self.location(circle.radius_start).distance2_to(self.location(circle.radius_end))
+        return self.length2(circle.radius)
 
     def dump(self):
         if self.params:

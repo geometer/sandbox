@@ -89,17 +89,6 @@ class Explainer:
                         elif prop.angle.vector0 in line1 and prop.angle.vector1 in line0:
                             self.__reason(prop, cnst.comments)
                             break
-                elif isinstance(prop, CongruentSegmentProperty):
-                    points0 = prop.segment0.points
-                    points1 = prop.segment1.points
-                    centre = next((p for p in points0 if p in points1), None)
-                    if centre is not None:
-                        pt0 = next((p for p in points0 if p != centre), None)
-                        pt1 = next((p for p in points1 if p != centre), None)
-                        for circle in self.scene.circles():
-                            if circle.centre == centre and pt0 in circle and pt1 in circle:
-                                self.__reason(prop, 'Two radiuses of the same circle')
-                                break
 
         def iteration():
             def is_too_old(prop):

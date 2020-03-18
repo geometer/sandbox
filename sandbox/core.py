@@ -183,18 +183,13 @@ class CoreScene:
             return line
 
         def circle_through(self, point, **kwargs):
-            self.scene.assert_point(point)
-            assert self != point, 'Cannot create a circle of zero radius'
-            return CoreScene.Circle(
-                self.scene, centre=self, radius_start=self, radius_end=point, **kwargs
-            )
+            return self.circle_with_radius(self.segment(point), **kwargs)
 
-        def circle_with_radius(self, start, end, **kwargs):
-            self.scene.assert_point(start)
-            self.scene.assert_point(end)
-            assert start != end, 'Cannot create a circle of zero radius'
+        def circle_with_radius(self, radius, **kwargs):
+            self.scene.assert_segment(radius)
+            assert radius.points[0] != radius.points[1], 'Cannot create a circle of zero radius'
             return CoreScene.Circle(
-                self.scene, centre=self, radius_start=start, radius_end=end, **kwargs
+                self.scene, centre=self, radius=radius, **kwargs
             )
 
         def vector(self, point):
@@ -393,10 +388,10 @@ class CoreScene:
             CoreScene.Object.__init__(self, scene, **kwargs)
             self.all_points = []
             if not scene.is_frozen:
-                if self.centre == self.radius_start:
-                    self.all_points.append(self.radius_end)
-                elif self.centre == self.radius_end:
-                    self.all_points.append(self.radius_start)
+                if self.centre == self.radius.points[0]:
+                    self.all_points.append(self.radius.points[1])
+                elif self.centre == self.radius.points[1]:
+                    self.all_points.append(self.radius.points[0])
 
         def free_point(self, **kwargs):
             point = CoreScene.Point(self.scene, CoreScene.Point.Origin.circle, circle=self, **kwargs)
@@ -526,6 +521,13 @@ class CoreScene:
             assert pt0.scene == pt1.scene
             self.points = (pt0, pt1)
             self.point_set = frozenset(self.points)
+
+        @property
+        def scene(self):
+            return self.points[0].scene
+
+        def __contains__(self, point):
+            return point in self.points
 
         def __eq__(self, other):
             return self.point_set == other.point_set
@@ -691,7 +693,27 @@ class CoreScene:
             return [cnstr for cnstr in self.adjustment_constraints if cnstr.kind == kind]
 
     def predefined_properties(self):
-        return self.__predefined_properties.copy()
+        properties = self.__predefined_properties.copy()
+        for circle in self.circles():
+            radiuses = [circle.centre.segment(pt) for pt in circle.all_points]
+            if circle.centre not in circle.radius:
+                for rad in radiuses:
+                    prop = CongruentSegmentProperty(rad, circle.radius)
+                    prop.reason = Reason(
+                        len(properties), -1,
+                        [_comment('Distance between centre %s and point %s on the circle of radius |%s|', circle.centre, rad.points[0], circle.radius)],
+                        []
+                    )
+                    properties.add(prop)
+            for rad0, rad1 in itertools.combinations(radiuses, 2):
+                prop = CongruentSegmentProperty(rad0, rad1)
+                prop.reason = Reason(
+                    len(properties), -1,
+                    [_comment('Two radiuses of the same circle with centre %s', circle.centre)],
+                    []
+                )
+                properties.add(prop)
+        return properties
 
     def assert_type(self, obj, *args):
         assert isinstance(obj, args), 'Unexpected type %s' % type(obj)
@@ -708,6 +730,9 @@ class CoreScene:
 
     def assert_vector(self, obj):
         self.assert_type(obj, CoreScene.Vector)
+
+    def assert_segment(self, obj):
+        self.assert_type(obj, CoreScene.Segment)
 
     def assert_angle(self, obj):
         self.assert_type(obj, CoreScene.Angle)
