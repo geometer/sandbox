@@ -62,8 +62,8 @@ class Explainer:
     def __angle_value_reason(self, angle):
         return self.__explained[AngleValueProperty(angle, None)]
 
-    def __congruent_segments_reason(self, vec0, vec1):
-        return self.__explained[CongruentSegmentProperty(vec0, vec1)]
+    def __congruent_segments_reason(self, seg0, seg1):
+        return self.__explained[CongruentSegmentProperty(seg0, seg1)]
 
     def __angle_ratio_reasons(self, angle):
         return self.__explained.list(AnglesRatioProperty, keys=[angle])
@@ -113,8 +113,8 @@ class Explainer:
                             break
                 elif isinstance(prop, CongruentSegmentProperty):
                     found = False
-                    points0 = prop.vector0.points
-                    points1 = prop.vector1.points
+                    points0 = prop.segment0.points
+                    points1 = prop.segment1.points
                     centre = next((p for p in points0 if p in points1), None)
                     if centre is not None:
                         pt0 = next((p for p in points0 if p != centre), None)
@@ -130,7 +130,7 @@ class Explainer:
 
                     for cnst in self.scene.constraints(Constraint.Kind.distances_ratio):
                         if cnst.params[2] == 1:
-                            if same_segment_pair(cnst.params[0:2], (prop.vector0, prop.vector1)):
+                            if {cnst.params[0].as_segment, cnst.params[1].as_segment} == {prop.segment0, prop.segment1}:
                                 self.__reason(prop, 'Given')
                                 break
 
@@ -201,8 +201,8 @@ class Explainer:
                                 )
 
             for cs in self.__explained.list(CongruentSegmentProperty):
-                vec0 = cs.vector0
-                vec1 = cs.vector1
+                vec0 = cs.segment0
+                vec1 = cs.segment1
 
                 ne0 = self.__not_equal_reason(*vec0.points)
                 ne1 = self.__not_equal_reason(*vec1.points)
@@ -212,18 +212,18 @@ class Explainer:
                     self.__reason(NotEqualProperty(*vec0.points), _comment('Otherwise, %s = %s', *vec1.points), [cs, ne1])
                 elif ne0 is None and ne1 is None:
                     ne = None
-                    if vec0.start == vec1.start:
-                        ne = self.__not_equal_reason(vec0.end, vec1.end)
-                        mid = vec0.start
-                    elif vec0.start == vec1.end:
-                        ne = self.__not_equal_reason(vec0.end, vec1.start)
-                        mid = vec0.start
-                    elif vec0.end == vec1.start:
-                        ne = self.__not_equal_reason(vec0.start, vec1.end)
-                        mid = vec0.end
-                    elif vec0.end == vec1.end:
-                        ne = self.__not_equal_reason(vec0.start, vec1.start)
-                        mid = vec0.end
+                    if vec0.points[0] == vec1.points[0]:
+                        ne = self.__not_equal_reason(vec0.points[1], vec1.points[1])
+                        mid = vec0.points[0]
+                    elif vec0.points[0] == vec1.points[1]:
+                        ne = self.__not_equal_reason(vec0.points[1], vec1.points[0])
+                        mid = vec0.points[0]
+                    elif vec0.points[1] == vec1.points[0]:
+                        ne = self.__not_equal_reason(vec0.points[0], vec1.points[1])
+                        mid = vec0.points[1]
+                    elif vec0.points[1] == vec1.points[1]:
+                        ne = self.__not_equal_reason(vec0.points[0], vec1.points[0])
+                        mid = vec0.points[1]
                     if ne:
                         self.__reason(NotEqualProperty(*vec0.points), _comment('Otherwise, %s = %s = %s', ne.points[0], mid, ne.points[1]), [cs, ne])
                         self.__reason(NotEqualProperty(*vec1.points), _comment('Otherwise, %s = %s = %s', ne.points[1], mid, ne.points[0]), [cs, ne])
@@ -464,15 +464,15 @@ class Explainer:
                 )
 
             for cs in self.__explained.list(CongruentSegmentProperty):
-                if cs.vector1.start in cs.vector0.points:
-                    apex = cs.vector1.start
-                    base0 = cs.vector1.end
-                elif cs.vector1.end in cs.vector0.points:
-                    apex = cs.vector1.end
-                    base0 = cs.vector1.start
+                if cs.segment1.points[0] in cs.segment0.points:
+                    apex = cs.segment1.points[0]
+                    base0 = cs.segment1.points[1]
+                elif cs.segment1.points[1] in cs.segment0.points:
+                    apex = cs.segment1.points[1]
+                    base0 = cs.segment1.points[0]
                 else:
                     continue
-                base1 = cs.vector0.start if apex == cs.vector0.end else cs.vector0.end
+                base1 = cs.segment0.points[0] if apex == cs.segment0.points[1] else cs.segment0.points[1]
                 nc = self.__not_collinear_reason(apex, base0, base1)
                 if nc:
                     self.__reason(
@@ -548,7 +548,7 @@ class Explainer:
                 for i in range(0, 3):
                     segment0 = side_of(ct.ABC, i)
                     segment1 = side_of(ct.DEF, i)
-                    if not same_segment(segment0, segment1):
+                    if segment0 != segment1:
                         self.__reason(
                             CongruentSegmentProperty(segment0, segment1),
                             'Corresponding sides in congruent triangles',
@@ -733,7 +733,7 @@ class Explainer:
                     for i in range(0, 3):
                         left = side_of(prop.ABC, i)
                         right = side_of(prop.DEF, i)
-                        if same_segment(left, right):
+                        if left == right:
                             sides.append(left)
                         else:
                             sides.append(self.__congruent_segments_reason(left, right))

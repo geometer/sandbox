@@ -200,6 +200,9 @@ class CoreScene:
         def vector(self, point):
             return CoreScene.Vector(self, point)
 
+        def segment(self, point):
+            return CoreScene.Segment(self, point)
+
         def angle(self, point0, point1):
             return self.vector(point0).angle(self.vector(point1))
 
@@ -440,6 +443,10 @@ class CoreScene:
             self.end = end
             self.points = (start, end)
 
+        @property
+        def as_segment(self):
+            return self.start.segment(self.end)
+
         def line(self, create_if_not_exists=False):
             if create_if_not_exists:
                 return self.start.line_through(self.end)
@@ -507,6 +514,23 @@ class CoreScene:
 
         def __str__(self):
             return str(_comment('%s %s', self.start, self.end))
+
+    class Segment:
+        def __init__(self, pt0, pt1):
+            assert isinstance(pt0, CoreScene.Point)
+            assert isinstance(pt1, CoreScene.Point)
+            assert pt0.scene == pt1.scene
+            self.points = (pt0, pt1)
+            self.point_set = frozenset(self.points)
+
+        def __eq__(self, other):
+            return self.point_set == other.point_set
+
+        def __hash__(self):
+            return hash(self.point_set)
+
+        def __str__(self):
+            return str(_comment('%s %s', *self.points))
 
     class Angle:
         @staticmethod

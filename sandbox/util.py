@@ -1,7 +1,7 @@
 import sympy as sp
 
 def side_of(triangle, index):
-    return triangle[(index + 1) % 3].vector(triangle[(index + 2) % 3])
+    return triangle[(index + 1) % 3].segment(triangle[(index + 2) % 3])
 
 def angle_of(triangle, index):
     return triangle[index].angle(triangle[(index + 1) % 3], triangle[(index + 2) % 3])

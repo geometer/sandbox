@@ -246,8 +246,8 @@ class Hunter:
                 families.append([vec])
 
         for fam in families:
-            for pair in itertools.combinations(fam, 2):
-                self.__add(CongruentSegmentProperty(*pair))
+            for vec0, vec1 in itertools.combinations(fam, 2):
+                self.__add(CongruentSegmentProperty(vec0.as_segment, vec1.as_segment))
 
     def __hunt_proportional_segments(self, vectors):
         families = []

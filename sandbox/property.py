@@ -1,16 +1,15 @@
 import itertools
-from .util import _comment, divide, good_angles, normalize_number, angle_of
+from .util import _comment, divide, good_angles, normalize_number, angle_of, side_of
 
 def keys_for_vector(vector):
-    return [frozenset(vector.points)]
+    return [vector.as_segment]
 
 def keys_for_triangle(triangle, lengths):
     keys = []
     if lengths is None or 3 in lengths:
-        for i in range(0, 3):
-            keys.append(angle_of(triangle, i))
+        keys += [angle_of(triangle, i) for i in range(0, 3)]
     if lengths is None or 2 in lengths:
-        keys += [frozenset(triangle[1:]), frozenset(triangle[:-1]), frozenset([triangle[0], triangle[2]])]
+        keys += [side_of(triangle, i) for i in range(0, 3)]
     return keys
 
 class Property:
@@ -263,27 +262,24 @@ class CongruentSegmentProperty(Property):
     """
     Two segments are congruent
     """
-    def __init__(self, vector0, vector1):
-        self.vector0 = vector0
-        self.vector1 = vector1
-        self.__vector_set = frozenset([
-            frozenset([vector0.start, vector0.end]),
-            frozenset([vector1.start, vector1.end])
-        ])
+    def __init__(self, segment0, segment1):
+        self.segment0 = segment0
+        self.segment1 = segment1
+        self.__segment_set = frozenset([segment0, segment1])
 
     def keys(self):
-        return keys_for_vector(self.vector0) + keys_for_vector(self.vector1)
+        return [self.segment0, self.segment1]
 
     @property
     def description(self):
-        return _comment('|%s| = |%s|', self.vector0, self.vector1)
+        return _comment('|%s| = |%s|', self.segment0, self.segment1)
 
     def __eq__(self, other):
         return isinstance(other, CongruentSegmentProperty) and \
-            self.__vector_set == other.__vector_set
+            self.__segment_set == other.__segment_set
 
     def __hash__(self):
-        return hash(CongruentSegmentProperty) + hash(self.__vector_set)
+        return hash(CongruentSegmentProperty) + hash(self.__segment_set)
 
 class SimilarTrianglesProperty(Property):
     """
