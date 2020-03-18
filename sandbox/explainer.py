@@ -11,20 +11,6 @@ from .util import _comment, divide, side_of, angle_of
 # +++++ utility methods +++++
 def same_segment(vec0, vec1):
     return vec0 == vec1 or vec0 == vec1.reversed
-
-def same_segment_pair(pair0, pair1):
-    return same_segment(pair0[0], pair1[0]) and same_segment(pair0[1], pair1[1]) \
-        or same_segment(pair0[0], pair1[1]) and same_segment(pair0[1], pair1[0])
-
-def side_pairs(prop):
-    if not hasattr(prop, 'side_pairs'):
-        prop.side_pairs = [[side_of(t, i) for t in (prop.ABC, prop.DEF)] for i in range(0, 3)]
-    return prop.side_pairs
-
-def angle_pairs(prop):
-    if not hasattr(prop, 'angle_pairs'):
-        prop.angle_pairs = [{angle_of(t, i) for t in (prop.ABC, prop.DEF)} for i in range(0, 3)]
-    return prop.angle_pairs
 # ----- utility methods -----
 
 class Explainer:
