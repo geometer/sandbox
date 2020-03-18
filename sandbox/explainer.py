@@ -40,9 +40,6 @@ class Explainer:
     def __not_collinear_reason(self, pt0, pt1, pt2):
         return self.__explained[NonCollinearProperty(pt0, pt1, pt2)]
 
-    def __angle_value_reason(self, angle):
-        return self.__explained[AngleValueProperty(angle, None)]
-
     def __congruent_segments_reason(self, seg0, seg1):
         return self.__explained[CongruentSegmentProperty(seg0, seg1)]
 
@@ -355,7 +352,7 @@ class Explainer:
                 if not point_inside_angle(common_point, angle):
                     #TODO: consider angle difference
                     continue
-                sum_reason = self.__angle_value_reason(angle)
+                sum_reason = self.__explained.angle_value_reason(angle)
                 if sum_reason is None:
                     continue
                 value = sum_reason.degree
@@ -378,7 +375,7 @@ class Explainer:
                 s0.remove(a1.vertex)
                 third_vertex = s0.pop()
                 a2 = third_vertex.angle(a0.vertex, a1.vertex)
-                a2_reason = self.__angle_value_reason(a2)
+                a2_reason = self.__explained.angle_value_reason(a2)
                 if a2_reason is None:
                     continue
                 #a0 + a1 + a2 = 180
@@ -400,7 +397,7 @@ class Explainer:
                             if pt in vec0.points:
                                 continue
                             for angle in [pt.angle(vec1.end, p) for p in vec0.points]:
-                                ka2 = self.__angle_value_reason(angle)
+                                ka2 = self.__explained.angle_value_reason(angle)
                                 if ka2 is None:
                                     continue
                                 if ka2.degree > ka.degree:
@@ -468,7 +465,7 @@ class Explainer:
                 )
 
             for ar in self.__explained.list(AnglesRatioProperty):
-                value = self.__angle_value_reason(ar.angle0)
+                value = self.__explained.angle_value_reason(ar.angle0)
                 if value:
                     if ar.ratio == 1:
                         comment = _comment('%s = %s = %sº', ar.angle1, ar.angle0, value.degree)
@@ -478,7 +475,7 @@ class Explainer:
                         AngleValueProperty(ar.angle1, divide(value.degree, ar.ratio)),
                         comment, [ar, value]
                     )
-                value = self.__angle_value_reason(ar.angle1)
+                value = self.__explained.angle_value_reason(ar.angle1)
                 if value:
                     if ar.ratio == 1:
                         comment = _comment('%s = %s = %sº', ar.angle0, ar.angle1, value.degree)
@@ -550,7 +547,7 @@ class Explainer:
                             [av]
                         )
                 else:
-                    second_reason = self.__angle_value_reason(second)
+                    second_reason = self.__explained.angle_value_reason(second)
                     if second_reason:
                         self.__reason(
                             AngleValueProperty(third, 180 - av.degree - second_reason.degree),
@@ -558,7 +555,7 @@ class Explainer:
                             [av, second_reason]
                         )
                     else:
-                        third_reason = self.__angle_value_reason(third)
+                        third_reason = self.__explained.angle_value_reason(third)
                         if third_reason:
                             self.__reason(
                                 AngleValueProperty(second, 180 - av.degree - third_reason.degree),
@@ -650,7 +647,7 @@ class Explainer:
                     self.__reason(prop, 'Transitivity', [sa, ar])
 
             for sa in self.__explained.list(SumOfAnglesProperty):
-                av = self.__angle_value_reason(sa.angle0)
+                av = self.__explained.angle_value_reason(sa.angle0)
                 if av:
                     #TODO: report contradiction if value is already known
                     #TODO: report contradiction if the sum is greater than the summand
@@ -660,7 +657,7 @@ class Explainer:
                         [sa, av]
                     )
                 else:
-                    av = self.__angle_value_reason(sa.angle1)
+                    av = self.__explained.angle_value_reason(sa.angle1)
                     if av:
                         #TODO: report contradiction if the sum is greater than the summand
                         self.__reason(
@@ -810,11 +807,11 @@ class Explainer:
 
     def explained(self, obj):
         if isinstance(obj, Scene.Angle):
-            rsn = self.__angle_value_reason(obj)
+            rsn = self.__explained.angle_value_reason(obj)
             return rsn.degree if rsn else None
         raise Exception('Explanation not supported for objects of type %s' % type(obj).__name__)
 
     def explanation(self, obj):
         if isinstance(obj, Scene.Angle):
-            return self.__angle_value_reason(obj)
+            return self.__explained.angle_value_reason(obj)
         return None
