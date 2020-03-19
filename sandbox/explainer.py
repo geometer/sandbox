@@ -424,6 +424,16 @@ class Explainer:
                     [iso, eq]
                 )
 
+            for equ in self.__explained.list(EquilateralTriangleProperty):
+                if is_too_old(equ):
+                    continue
+                for i in range(0, 3):
+                    self.__reason(
+                        AngleValueProperty(angle_of(equ.ABC, i), 60),
+                        'Angle of an equilateral triangle',
+                        [equ]
+                    )
+
             for cs in self.__explained.list(CongruentSegmentProperty):
                 if cs.segment1.points[0] in cs.segment0.points:
                     apex = cs.segment1.points[0]
