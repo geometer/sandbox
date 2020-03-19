@@ -414,6 +414,16 @@ class Explainer:
                     [iso]
                 )
 
+            for iso in self.__explained.list(IsoscelesTriangleProperty):
+                eq = self.__congruent_segments_reason(iso.base, iso.apex.segment(iso.base.points[0]))
+                if eq is None or is_too_old(iso) and is_too_old(eq):
+                    continue
+                self.__reason(
+                    EquilateralTriangleProperty((iso.apex, *iso.base.points)),
+                    _comment('Isosceles with leg equal to the base'),
+                    [iso, eq]
+                )
+
             for cs in self.__explained.list(CongruentSegmentProperty):
                 if cs.segment1.points[0] in cs.segment0.points:
                     apex = cs.segment1.points[0]
