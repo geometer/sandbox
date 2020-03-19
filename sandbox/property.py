@@ -59,7 +59,7 @@ class ParallelVectorsProperty(Property):
 
 class NotEqualProperty(Property):
     """
-    The distance between two points is non-zero
+    Distance between two points is non-zero
     """
     def __init__(self, point0, point1):
         self.points = [point0, point1]
@@ -97,6 +97,28 @@ class OppositeSideProperty(Property):
     def __hash__(self):
         return hash(OppositeSideProperty) + hash(self.__object_set)
 
+class PointInsideAngleProperty(Property):
+    """
+    Point is inside the angle
+    """
+    def __init__(self, point, angle):
+        self.point = point
+        self.angle = angle
+        self.__key = (point, angle)
+
+    @property
+    def description(self):
+        return _comment('%s lies inside of %s', self.point, self.angle)
+
+    def keys(self):
+        return [self.point, self.angle]
+
+    def __eq__(self, other):
+        return isinstance(other, PointInsideAngleProperty) and self.__key == other.__key
+
+    def __hash__(self):
+        return hash(self.__key)
+
 class SameSideProperty(Property):
     """
     Two points are located on the same side of the line
@@ -118,7 +140,7 @@ class SameSideProperty(Property):
 
 class EquilateralTriangleProperty(Property):
     """
-    A triangle is equilateral
+    Equilateral triangle
     """
     def __init__(self, ABC):
         self.ABC = tuple(ABC)
@@ -328,7 +350,7 @@ class CongruentTrianglesProperty(Property):
 
 class IsoscelesTriangleProperty(Property):
     """
-    A triangle is isosceles
+    Isosceles triangle (maybe degenerated)
     """
     def __init__(self, apex, base):
         self.apex = apex

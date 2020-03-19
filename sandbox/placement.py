@@ -126,7 +126,17 @@ class Placement(BasePlacement):
                 end = self.location(line.point1)
                 clo0 = self.clockwise(start, end, pt0)
                 clo1 = self.clockwise(start, end, pt1)
-                return clo0 != 0 and clo1 != 0 and clo0 == clo1
+                return clo0 != 0 and clo0 == clo1
+            if constraint.kind == Constraint.Kind.inside_angle:
+                pt = self.location(constraint.params[0])
+                angle = constraint.params[1]
+                vertex = self.location(angle.vertex)
+                side_pt0 = self.location(angle.vector0.end)
+                side_pt1 = self.location(angle.vector1.end)
+                clo0 = self.clockwise(vertex, side_pt0, pt)
+                clo1 = self.clockwise(vertex, pt, side_pt1)
+                clo2 = self.clockwise(vertex, side_pt0, side_pt1)
+                return clo0 != 0 and clo0 == clo1 and clo0 == clo2
             if constraint.kind == Constraint.Kind.quadrilateral:
                 pt0 = self.location(constraint.params[0])
                 pt1 = self.location(constraint.params[1])

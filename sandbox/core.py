@@ -298,11 +298,7 @@ class CoreScene:
             """
             The point is inside the ∠ B vertex C
             """
-            assert angle.vertex is not None
-            B = angle.vector0.end
-            C = angle.vector1.end
-            self.same_side_constraint(B, angle.vertex.line_through(C), **kwargs)
-            self.same_side_constraint(C, angle.vertex.line_through(B), **kwargs)
+            self.scene.constraint(Constraint.Kind.inside_angle, self, angle, **kwargs)
 
         def inside_triangle_constraint(self, A, B, C, **kwargs):
             """
@@ -829,6 +825,7 @@ class Constraint:
         opposite_side     = ('opposite_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
         same_side         = ('same_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
         same_direction    = ('same_direction', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point)
+        inside_angle      = ('same_side', Stage.validation, CoreScene.Point, CoreScene.AngleWithVertex)
         quadrilateral     = ('quadrilateral', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         convex_polygon    = ('convex_polygon', Stage.validation, List[CoreScene.Point])
         distance          = ('distance', Stage.adjustment, CoreScene.Vector, int)

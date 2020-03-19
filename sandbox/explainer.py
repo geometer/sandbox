@@ -55,6 +55,11 @@ class Explainer:
                     OppositeSideProperty(cnst.params[2], cnst.params[0], cnst.params[1]),
                     cnst.comments
                 )
+            for cnst in self.scene.constraints(Constraint.Kind.inside_angle):
+                self.__reason(
+                    PointInsideAngleProperty(cnst.params[0], cnst.params[1]),
+                    cnst.comments
+                )
             for cnst in self.scene.constraints(Constraint.Kind.same_side):
                 self.__reason(
                     SameSideProperty(cnst.params[2], cnst.params[0], cnst.params[1]),
@@ -288,20 +293,58 @@ class Explainer:
                         elif pt1 == vector.start:
                             yield (pt0.vector(vertex), [sd])
 
-            def point_inside_angle(point, angle):
-                ss0 = self.__explained[
-                    SameSideProperty(angle.vector1.line(), point, angle.vector0.end)
-                ]
-                if ss0 is None:
-                    return None
+            for pia in self.__explained.list(PointInsideAngleProperty):
+                if is_too_old(pia):
+                    continue
+                self.__reason(
+                    SameSideProperty(pia.angle.vector0.line(), pia.point, pia.angle.vector1.end),
+                    '', #TODO: write comment
+                    [pia]
+                )
+                self.__reason(
+                    SameSideProperty(pia.angle.vector1.line(), pia.point, pia.angle.vector0.end),
+                    '', #TODO: write comment
+                    [pia]
+                )
 
-                ss1 = self.__explained[
-                    SameSideProperty(angle.vector0.line(), point, angle.vector1.end)
-                ]
-                if ss1 is None:
-                    return None
+            for ss0, ss1 in itertools.combinations(self.__explained.list(SameSideProperty), 2):
+                if is_too_old(ss0) and is_too_old(ss1):
+                    continue
 
-                return [ss0, ss1]
+                if ss0.line == ss1.line:
+                    continue
+
+                vertex = self.scene.get_intersection(ss0.line, ss1.line)
+                if vertex is None:
+                    continue
+
+                if ss0.points[0] in ss1.points:
+                    if ss0.points[1] in ss1.points:
+                        continue
+                    common = ss0.points[0]
+                    other0 = ss0.points[1]
+                    other1 = ss1.points[0] if ss1.points[1] == common else ss1.points[1]
+                else:
+                    common = ss0.points[1]
+                    other0 = ss0.points[0]
+                    if ss1.points[0] == common:
+                        other1 = ss1.points[1]
+                    elif ss1.points[1] == common:
+                        other1 = ss1.points[0]
+                    else:
+                        continue
+
+                if other0 not in ss1.line or other1 not in ss0.line:
+                    continue
+
+                if len({vertex, common, other0, other1}) < 4:
+                    continue
+
+                self.__reason(
+                    PointInsideAngleProperty(common, vertex.angle(other0, other1)),
+                    '', #TODO: write comment
+                    [ss0, ss1]
+                )
 
             for ar in self.__explained.list(AnglesRatioProperty):
                 a0 = ar.angle0
@@ -322,8 +365,9 @@ class Explainer:
                     common_point = a0.vector1.end
                 else:
                     continue
-                inside_angle_reasons = point_inside_angle(common_point, angle)
-                if not inside_angle_reasons:
+                inside_angle_reason = \
+                    self.__explained[PointInsideAngleProperty(common_point, angle)]
+                if inside_angle_reason is None:
                     #TODO: consider angle difference
                     continue
                 sum_reason = self.__explained.angle_value_reason(angle)
@@ -333,8 +377,8 @@ class Explainer:
                 second = divide(value, 1 + ar.ratio)
                 first = value - second
                 #TODO: write comments
-                self.__reason(AngleValueProperty(a0, first), [], premises=[ar, sum_reason, *inside_angle_reasons])
-                self.__reason(AngleValueProperty(a1, second), [], premises=[ar, sum_reason, *inside_angle_reasons])
+                self.__reason(AngleValueProperty(a0, first), [], premises=[ar, sum_reason, inside_angle_reason])
+                self.__reason(AngleValueProperty(a1, second), [], premises=[ar, sum_reason, inside_angle_reason])
 
             for ar in self.__explained.list(AnglesRatioProperty):
                 a0 = ar.angle0
