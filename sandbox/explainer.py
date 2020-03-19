@@ -276,43 +276,24 @@ class Explainer:
                         [rsn]
                     )
 
-            for rsn0, rsn1 in itertools.combinations(same_side_reasons, 2):
-                if is_too_old(rsn0) and is_too_old(rsn1):
+            for pia in self.context.list(PointInsideAngleProperty):
+                if is_too_old(pia):
                     continue
-                AB = rsn0.line
-                AC = rsn1.line
-                if AB == AC:
-                    continue
-                A = self.scene.get_intersection(AB, AC)
+                A = pia.angle.vertex
                 if A is None:
                     continue
-                pt00 = rsn0.points[0]
-                pt01 = rsn0.points[1]
-                pt10 = rsn1.points[0]
-                pt11 = rsn1.points[1]
-                if pt00 == pt10:
-                    B, C, D = pt11, pt01, pt00
-                elif pt01 == pt10:
-                    B, C, D = pt11, pt00, pt01
-                elif pt00 == pt11:
-                    B, C, D = pt10, pt01, pt00
-                elif pt01 == pt11:
-                    B, C, D = pt10, pt00, pt01
-                else:
-                    continue
-                if B == C or B not in AB or C not in AC:
-                    continue
-                AD = self.scene.get_line(A, D)
-                BC = self.scene.get_line(B, C)
-                if AD is None or BC is None:
-                    continue
+                B = pia.angle.vector0.end
+                C = pia.angle.vector1.end
+                D = pia.point
+                AD = A.line_through(D)
+                BC = B.line_through(C)
                 X = self.scene.get_intersection(AD, BC)
                 if X is not None and X not in (A, B, C, D):
-                    comment = _comment('%s is intersection of [%s %s) and [%s %s]', X, A, D, B, C)
-                    yield (AngleValueProperty(A.angle(D, X), 0), [comment], [rsn0, rsn1])
-                    yield (AngleValueProperty(B.angle(C, X), 0), [comment], [rsn0, rsn1])
-                    yield (AngleValueProperty(C.angle(B, X), 0), [comment], [rsn0, rsn1])
-                    yield (AngleValueProperty(X.angle(B, C), 180), [comment], [rsn0, rsn1])
+                    comment = _comment('%s is intersection of ray [%s %s) and segment [%s %s]', X, A, D, B, C)
+                    yield (AngleValueProperty(A.angle(D, X), 0), [comment], [pia])
+                    yield (AngleValueProperty(B.angle(C, X), 0), [comment], [pia])
+                    yield (AngleValueProperty(C.angle(B, X), 0), [comment], [pia])
+                    yield (AngleValueProperty(X.angle(B, C), 180), [comment], [pia])
 
             same_direction = [rsn for rsn in self.context.list(AngleValueProperty) if \
                 rsn.degree == 0 and rsn.angle.vertex is not None]
