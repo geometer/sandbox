@@ -6,7 +6,7 @@ from . import Scene, iterative_placement
 from .placement import Placement
 from .property import *
 from .stats import Stats
-from .util import _comment, divide
+from .util import _comment, divide, side_of
 
 ERROR = np.float128(5e-6)
 
@@ -318,15 +318,14 @@ class Hunter:
         equilaterals = [trn for trn in triangles if trn.equilateral()]
         for trn in equilaterals:
             self.__add(EquilateralTriangleProperty(trn.pts))
-            self.__add(IsoscelesTriangleProperty(trn.pts[0], trn.pts[1:]))
-            self.__add(IsoscelesTriangleProperty(trn.pts[2], trn.pts[:-1]))
-            self.__add(IsoscelesTriangleProperty(trn.pts[1], [trn.pts[0], trn.pts[2]]))
+            for i in range(0, 3):
+                self.__add(IsoscelesTriangleProperty(trn.pts[i], side_of(trn.pts, i)))
 
         triangles = [trn for trn in triangles if not trn.equilateral()]
 
         isosceles = list(filter(None, [trn.isosceles() for trn in triangles]))
         for trn in isosceles:
-            self.__add(IsoscelesTriangleProperty(trn.pts[0], trn.pts[1:]))
+            self.__add(IsoscelesTriangleProperty(trn.pts[0], side_of(trn.pts, 0)))
 
         families = []
         for trn in triangles:

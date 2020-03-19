@@ -398,19 +398,19 @@ class Explainer:
                     continue
                 self.__reason(
                     AnglesRatioProperty(
-                        iso.base[0].angle(iso.apex, iso.base[1]),
-                        iso.base[1].angle(iso.apex, iso.base[0]),
+                        iso.base.points[0].angle(iso.apex, iso.base.points[1]),
+                        iso.base.points[1].angle(iso.apex, iso.base.points[0]),
                         1
                     ),
-                    _comment('Base angles of isosceles △ %s %s %s', iso.apex, *iso.base),
+                    _comment('Base angles of isosceles △ %s %s %s', iso.apex, *iso.base.points),
                     [iso]
                 )
                 self.__reason(
                     CongruentSegmentProperty(
-                        iso.apex.segment(iso.base[0]),
-                        iso.apex.segment(iso.base[1])
+                        iso.apex.segment(iso.base.points[0]),
+                        iso.apex.segment(iso.base.points[1])
                     ),
-                    _comment('Legs of isosceles △ %s %s %s', iso.apex, *iso.base),
+                    _comment('Legs of isosceles △ %s %s %s', iso.apex, *iso.base.points),
                     [iso]
                 )
 
@@ -427,7 +427,7 @@ class Explainer:
                 nc = self.__not_collinear_reason(apex, base0, base1)
                 if nc:
                     self.__reason(
-                        IsoscelesTriangleProperty(apex, (base0, base1)),
+                        IsoscelesTriangleProperty(apex, base0.segment(base1)),
                         'Congruent legs',
                         [cs, nc]
                     )
@@ -440,7 +440,7 @@ class Explainer:
                 nc = self.__not_collinear_reason(*ar.angle0.points)
                 if nc is None:
                     continue
-                base = (ar.angle0.vertex, ar.angle1.vertex)
+                base = ar.angle0.vertex.segment(ar.angle1.vertex)
                 apex = next(pt for pt in ar.angle0.points if pt not in base)
                 self.__reason(
                     IsoscelesTriangleProperty(apex, base),

@@ -332,19 +332,18 @@ class IsoscelesTriangleProperty(Property):
     """
     def __init__(self, apex, base):
         self.apex = apex
-        self.base = tuple(base)
-        self.__base_points_set = frozenset(self.base)
+        self.base = base
 
     def keys(self, lengths=None):
-        return keys_for_triangle([self.apex, *self.base], lengths)
+        return keys_for_triangle([self.apex, *self.base.points], lengths)
 
     @property
     def description(self):
-        return _comment('△ %s %s %s is isosceles (with apex %s)', self.apex, *self.base, self.apex)
+        return _comment('△ %s %s %s is isosceles (with apex %s)', self.apex, *self.base.points, self.apex)
 
     def __eq__(self, other):
         return isinstance(other, IsoscelesTriangleProperty) and \
-            self.apex == other.apex and self.__base_points_set == other.__base_points_set
+            self.apex == other.apex and self.base == other.base
 
     def __hash__(self):
-        return hash(IsoscelesTriangleProperty) + hash(self.apex) + hash(self.__base_points_set)
+        return hash(IsoscelesTriangleProperty) + hash(self.apex) + hash(self.base)
