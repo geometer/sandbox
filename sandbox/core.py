@@ -217,7 +217,6 @@ class CoreScene:
                     cnstr.update(kwargs)
                     return
             self.scene.constraint(Constraint.Kind.not_equal, self, A, **kwargs)
-            self.scene.add_property(NotEqualProperty(self, A), kwargs.get('comment'))
 
         def not_collinear_constraint(self, A, B, **kwargs):
             """
@@ -228,7 +227,6 @@ class CoreScene:
                     cnstr.update(kwargs)
                     return
             self.scene.constraint(Constraint.Kind.not_collinear, self, A, B, **kwargs)
-            self.scene.add_property(NonCollinearProperty(self, A, B), kwargs.get('comment'))
 
         def collinear_constraint(self, A, B, **kwargs):
             """
@@ -487,8 +485,6 @@ class CoreScene:
             comment = kwargs.get('comment')
             if not comment:
                 comment = _comment('Given: |%s| == |%s|', self.as_segment, vector.as_segment)
-            if coef == 1:
-                self.scene.add_property(CongruentSegmentProperty(self.as_segment, vector.as_segment), comment)
             return self.scene.constraint(Constraint.Kind.distances_ratio, self, vector, coef, **kwargs)
 
         def parallel_constraint(self, vector, **kwargs):
@@ -619,7 +615,6 @@ class CoreScene:
         self.__objects = []
         self.validation_constraints = []
         self.adjustment_constraints = []
-        self.__predefined_properties = PropertySet()
         self.__frozen = False
 
     def constraint(self, kind, *args, **kwargs):
@@ -630,18 +625,6 @@ class CoreScene:
             else:
                 self.adjustment_constraints.append(cns)
         return cns
-
-    def add_property(self, prop, comments):
-        if self.__frozen:
-            return
-        if not prop in self.__predefined_properties:
-            prop.reason = Reason(
-                len(self.__predefined_properties),
-                -1,
-                comments if isinstance(comments, list) else [comments],
-                []
-            )
-            self.__predefined_properties.add(prop)
 
     def quadrilateral_constraint(self, A, B, C, D, **kwargs):
         """
@@ -694,35 +677,53 @@ class CoreScene:
             return [cnstr for cnstr in self.adjustment_constraints if cnstr.kind == kind]
 
     def predefined_properties(self):
-        properties = self.__predefined_properties.copy()
-        for line in self.lines():
-            for pt0, pt1, pt2 in itertools.combinations(line.all_points, 3):
-                prop = CollinearProperty(pt0, pt1, pt2)
-                prop.reason = Reason(
-                    len(properties), -1,
-                    [_comment('Three points on the line %s', line)],
-                    []
+        properties = PropertySet()
+
+        def add_property(prop, comments):
+            prop.reason = Reason(len(properties), -1, comments, [])
+            properties.add(prop)
+
+        for cnstr in self.constraints(Constraint.Kind.not_equal):
+            if cnstr.params[0].auxiliary or cnstr.params[1].auxiliary:
+                continue
+            add_property(NotEqualProperty(cnstr.params[0], cnstr.params[1]), cnstr.comments)
+
+        for cnstr in self.constraints(Constraint.Kind.not_collinear):
+            if any(param.auxiliary for param in cnstr.params):
+                continue
+            add_property(NonCollinearProperty(*cnstr.params), cnstr.comments)
+
+        for cnstr in self.constraints(Constraint.Kind.distances_ratio):
+            if any(param.auxiliary for param in [*cnstr.params[0].points, *cnstr.params[1].points]):
+                continue
+            if cnstr.params[2] != 1:
+                continue
+            add_property(
+                CongruentSegmentProperty(cnstr.params[0].as_segment, cnstr.params[1].as_segment),
+                cnstr.comments
+            )
+
+        for line in self.lines(skip_auxiliary=True):
+            for pt0, pt1, pt2 in itertools.combinations([p for p in line.all_points if not p.auxiliary], 3):
+                add_property(
+                    CollinearProperty(pt0, pt1, pt2),
+                    [_comment('Three points on the line %s', line)]
                 )
-                properties.add(prop)
-        for circle in self.circles():
+
+        for circle in self.circles(skip_auxiliary=True):
             radiuses = [circle.centre.segment(pt) for pt in circle.all_points]
             if circle.centre not in circle.radius:
                 for rad in radiuses:
-                    prop = CongruentSegmentProperty(rad, circle.radius)
-                    prop.reason = Reason(
-                        len(properties), -1,
-                        [_comment('Distance between centre %s and point %s on the circle of radius |%s|', circle.centre, rad.points[0], circle.radius)],
-                        []
+                    add_property(
+                        CongruentSegmentProperty(rad, circle.radius)
+                        [_comment('Distance between centre %s and point %s on the circle of radius |%s|', circle.centre, rad.points[0], circle.radius)]
                     )
-                    properties.add(prop)
             for rad0, rad1 in itertools.combinations(radiuses, 2):
-                prop = CongruentSegmentProperty(rad0, rad1)
-                prop.reason = Reason(
-                    len(properties), -1,
-                    [_comment('Two radiuses of the same circle with centre %s', circle.centre)],
-                    []
+                add_property(
+                    CongruentSegmentProperty(rad0, rad1),
+                    [_comment('Two radiuses of the same circle with centre %s', circle.centre)]
                 )
-                properties.add(prop)
+
         return properties
 
     def assert_type(self, obj, *args):
