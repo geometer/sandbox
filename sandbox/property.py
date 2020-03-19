@@ -24,6 +24,9 @@ class NonCollinearProperty(Property):
         self.points = (point0, point1, point2)
         self.__point_set = frozenset(self.points)
 
+    def keys(self, lengths=None):
+        return keys_for_triangle(self.points, lengths)
+
     @property
     def description(self):
         return _comment('Points %s, %s, and %s are not collinear', *self.points)
@@ -108,7 +111,7 @@ class PointInsideAngleProperty(Property):
 
     @property
     def description(self):
-        return _comment('%s lies inside of %s', self.point, self.angle)
+        return _comment('%s lies inside %s', self.point, self.angle)
 
     def keys(self):
         return [self.point, self.angle]
@@ -195,9 +198,11 @@ class AngleValueProperty(Property):
 
     @property
     def description(self):
-        if self.degree == 0:
-            if self.angle.vertex is not None:
+        if self.angle.vertex:
+            if self.degree == 0:
                 return _comment('%s, %s in the same direction from %s', self.angle.vector0.end, self.angle.vector1.end, self.angle.vertex)
+            if self.degree == 180:
+                return _comment('%s lies inside segment %s', self.angle.vertex, self.angle.vector0.end.segment(self.angle.vector1.end))
         return _comment('%s = %dº', self.angle, self.degree)
 
     def __eq__(self, other):

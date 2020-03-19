@@ -294,11 +294,16 @@ class CoreScene:
             A.belongs_to(self.line_through(B, auxiliary=True))
             self.scene.constraint(Constraint.Kind.same_direction, self, A, B, **kwargs)
 
-        def inside_angle_constraint(self, angle, **kwargs):
+        def inside_constraint(self, obj, **kwargs):
             """
-            The point is inside the ∠ B vertex C
+            The point is inside the object (angle or segment)
             """
-            self.scene.constraint(Constraint.Kind.inside_angle, self, angle, **kwargs)
+            if isinstance(obj, CoreScene.Segment):
+                self.scene.constraint(Constraint.Kind.inside_segment, self, obj, **kwargs)
+            elif isinstance(obj, CoreScene.AngleWithVertex):
+                self.scene.constraint(Constraint.Kind.inside_angle, self, obj, **kwargs)
+            else:
+                assert False, 'Cannot declare point lying inside an %s' % type(obj).__name__
 
         def inside_triangle_constraint(self, A, B, C, **kwargs):
             """
@@ -310,9 +315,9 @@ class CoreScene:
                 kwargs['comment'] = _comment(
                     'Point %s is inside △ %s %s %s', self, A, B, C
                 )
-            self.inside_angle_constraint(A.angle(B, C), **kwargs)
-            self.inside_angle_constraint(B.angle(A, C), **kwargs)
-            self.inside_angle_constraint(C.angle(B, A), **kwargs)
+            self.inside_constraint(A.angle(B, C), **kwargs)
+            self.inside_constraint(B.angle(A, C), **kwargs)
+            self.inside_constraint(C.angle(B, A), **kwargs)
 
     class Line(Object):
         def __init__(self, scene, **kwargs):
@@ -527,8 +532,10 @@ class CoreScene:
         def scene(self):
             return self.points[0].scene
 
-        def __contains__(self, point):
-            return point in self.points
+        def free_point(self, **kwargs):
+            point = self.points[0].line_through(self.points[1], auxiliary=True).free_point(**kwargs)
+            point.inside_constraint(self)
+            return point
 
         def __eq__(self, other):
             return self.point_set == other.point_set
@@ -580,7 +587,7 @@ class CoreScene:
             Y = X.translated_point(self.vector0, auxiliary=True)
             bisector = self.vertex.line_through(Y, **kwargs)
             comment = _comment('[%s %s) is the bisector of %s', self.vertex, Y, self)
-            Y.inside_angle_constraint(self, comment=comment)
+            Y.inside_constraint(self, comment=comment)
             self.ratio_constraint(self.vertex.angle(B, Y), 2, guaranteed=True, comment=comment)
             self.ratio_constraint(self.vertex.angle(Y, C), 2, guaranteed=True, comment=comment)
             return bisector
@@ -687,15 +694,18 @@ class CoreScene:
             prop.reason = Reason(len(properties), -1, comments, [])
             properties.add(prop)
 
-        for cnstr in self.constraints(Constraint.Kind.not_equal):
-            if cnstr.params[0].auxiliary or cnstr.params[1].auxiliary:
-                continue
-            add_property(NotEqualProperty(cnstr.params[0], cnstr.params[1]), cnstr.comments)
-
         for cnstr in self.constraints(Constraint.Kind.not_collinear):
             if any(param.auxiliary for param in cnstr.params):
                 continue
             add_property(NonCollinearProperty(*cnstr.params), cnstr.comments)
+            add_property(NotEqualProperty(*cnstr.params[0:2]), cnstr.comments)
+            add_property(NotEqualProperty(*cnstr.params[1:3]), cnstr.comments)
+            add_property(NotEqualProperty(cnstr.params[0], cnstr.params[2]), cnstr.comments)
+
+        for cnstr in self.constraints(Constraint.Kind.not_equal):
+            if cnstr.params[0].auxiliary or cnstr.params[1].auxiliary:
+                continue
+            add_property(NotEqualProperty(cnstr.params[0], cnstr.params[1]), cnstr.comments)
 
         for cnstr in self.constraints(Constraint.Kind.distances_ratio):
             if any(param.auxiliary for param in [*cnstr.params[0].points, *cnstr.params[1].points]):
@@ -714,7 +724,18 @@ class CoreScene:
                 cnstr.comments
             )
 
-        for line in self.lines(skip_auxiliary=True):
+        for cnstr in self.constraints(Constraint.Kind.inside_segment):
+            #TODO: filter aux points
+            add_property(
+                NotEqualProperty(*cnstr.params[1].points),
+                cnstr.comments
+            )
+            add_property(
+                AngleValueProperty(cnstr.params[0].angle(*cnstr.params[1].points), 180),
+                cnstr.comments
+            )
+
+        for line in self.lines(skip_auxiliary=False):
             for pt0, pt1, pt2 in itertools.combinations([p for p in line.all_points if not p.auxiliary], 3):
                 add_property(
                     CollinearProperty(pt0, pt1, pt2),
@@ -825,7 +846,8 @@ class Constraint:
         opposite_side     = ('opposite_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
         same_side         = ('same_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
         same_direction    = ('same_direction', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point)
-        inside_angle      = ('same_side', Stage.validation, CoreScene.Point, CoreScene.AngleWithVertex)
+        inside_segment    = ('inside_segment', Stage.validation, CoreScene.Point, CoreScene.Segment)
+        inside_angle      = ('inside_angle', Stage.validation, CoreScene.Point, CoreScene.AngleWithVertex)
         quadrilateral     = ('quadrilateral', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         convex_polygon    = ('convex_polygon', Stage.validation, List[CoreScene.Point])
         distance          = ('distance', Stage.adjustment, CoreScene.Vector, int)

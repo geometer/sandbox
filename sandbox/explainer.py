@@ -381,6 +381,20 @@ class Explainer:
                 yield (AngleValueProperty(a0, first), [], [ar, sum_reason, inside_angle_reason])
                 yield (AngleValueProperty(a1, second), [], [ar, sum_reason, inside_angle_reason])
 
+            for av in [av for av in self.__explained.list(AngleValueProperty) if av.angle.vertex is not None and av.degree == 180]:
+                av_is_too_old = is_too_old(av)
+                segment = av.angle.vector0.end.segment(av.angle.vector1.end)
+                for ncl in self.__explained.list(NonCollinearProperty, [segment]):
+                    if av_is_too_old and is_too_old(ncl):
+                        continue
+                    vertex = next(pt for pt in ncl.points if pt not in segment.points)
+                    angle = vertex.angle(*segment.points)
+                    yield (
+                        PointInsideAngleProperty(av.angle.vertex, angle),
+                        _comment('%s lies inside a segment with endoints on sides of %s', av.angle.vertex, angle),
+                        [av, ncl]
+                    )
+                
             for ar in self.__explained.list(AnglesRatioProperty):
                 a0 = ar.angle0
                 a1 = ar.angle1
@@ -497,7 +511,7 @@ class Explainer:
                 if nc is None:
                     continue
                 base = ar.angle0.vertex.segment(ar.angle1.vertex)
-                apex = next(pt for pt in ar.angle0.points if pt not in base)
+                apex = next(pt for pt in ar.angle0.points if pt not in base.points)
                 yield (
                     IsoscelesTriangleProperty(apex, base),
                     'Congruent base angles',
@@ -787,11 +801,11 @@ class Explainer:
 
             congruent_segments = self.__explained.list(CongruentSegmentProperty)
             def common_point(segment0, segment1):
-                if segment0.points[0] in segment1:
-                    if segment0.points[1] in segment1:
+                if segment0.points[0] in segment1.points:
+                    if segment0.points[1] in segment1.points:
                         return None
                     return segment0.points[0]
-                if segment0.points[1] in segment1:
+                if segment0.points[1] in segment1.points:
                     return segment0.points[1]
                 return None
             def other_point(segment, point):

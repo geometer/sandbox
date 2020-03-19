@@ -19,7 +19,9 @@ class Scene(CoreScene):
         """
         self.assert_point(A)
         self.assert_point(B)
-        return A.ratio_point(B, 1, 1, **kwargs)
+        middle = A.ratio_point(B, 1, 1, **kwargs)
+        middle.inside_constraint(A.segment(B), guaranteed=True)
+        return middle
 
     def gravity_centre_point(self, *points, **kwargs):
         """

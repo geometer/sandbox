@@ -100,6 +100,9 @@ class Placement(BasePlacement):
             return 1 if clo > 0 else -1
 
         def validate(self, constraint):
+            if hasattr(constraint, 'guaranteed') and constraint.guaranteed:
+                return True
+
             if constraint.kind == Constraint.Kind.not_equal:
                 pt0 = self.location(constraint.params[0])
                 pt1 = self.location(constraint.params[1])
@@ -161,7 +164,12 @@ class Placement(BasePlacement):
                 pt = constraint.params[0]
                 vec0 = pt.vector(constraint.params[1])
                 vec1 = pt.vector(constraint.params[2])
-                return self.scalar_product(vec0, vec1) > 0
+                return self.scalar_product(vec0, vec1) >= 0
+            if constraint.kind == Constraint.Kind.inside_segment:
+                pt = constraint.params[0]
+                vec0 = pt.vector(constraint.params[1].points[0])
+                vec1 = pt.vector(constraint.params[1].points[1])
+                return self.scalar_product(vec0, vec1) < 0
 
             assert False, 'Constraint `%s` not supported in placement' % constraint.kind
 
