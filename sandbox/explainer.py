@@ -605,31 +605,39 @@ class Explainer:
                 processed.add(ar0)
                 angle_ratios0 = list(self.__angle_ratio_reasons(ar0.angle0))
                 angle_ratios1 = list(self.__angle_ratio_reasons(ar0.angle1))
-                used0 = {(ar.angle0 if ar.angle1 == ar0.angle0 else ar.angle1) for ar in angle_ratios0}
-                used1 = {(ar.angle0 if ar.angle1 == ar0.angle1 else ar.angle1) for ar in angle_ratios1}
-                for ar1 in angle_ratios0:
-                    if ar1 in processed:
-                        continue
-                    prop = None
+                tuples0 = [
+                    ((ar.angle0, False, ar) \
+                    if ar.angle1 == ar0.angle0 \
+                    else (ar.angle1, True, ar))
+                    for ar in angle_ratios0
+                ]
+                used0 = {p[0] for p in tuples0}
+                tuples1 = [
+                    ((ar.angle0, True, ar) if \
+                    ar.angle1 == ar0.angle1 \
+                    else (ar.angle1, False, ar)) \
+                    for ar in angle_ratios1
+                ]
+                used1 = {p[0] for p in tuples1}
+                tuples0 = [t for t in tuples0 if t[0] not in used1 and t[2] not in processed]
+                for tup in tuples0:
+                    ar1 = tup[2]
                     #TODO: report contradictions if in used and ratio is different
-                    if ar0.angle0 == ar1.angle0 and ar1.angle1 not in used1:
-                        prop = AnglesRatioProperty(ar0.angle1, ar1.angle1, divide(ar1.ratio, ar0.ratio))
-                    elif ar1.angle0 not in used1:
-                        prop = AnglesRatioProperty(ar1.angle0, ar0.angle1, ar0.ratio * ar1.ratio)
-                    if prop:
-                        #TODO: better comment
-                        self.__reason(prop, 'Transitivity', [ar0, ar1])
-                for ar1 in self.__angle_ratio_reasons(ar0.angle1):
-                    if ar1 in processed:
-                        continue
-                    prop = None
-                    if ar0.angle1 == ar1.angle1 and ar1.angle0 not in used0:
-                        prop = AnglesRatioProperty(ar0.angle0, ar1.angle0, divide(ar0.ratio, ar1.ratio))
-                    elif ar1.angle1 not in used0:
-                        prop = AnglesRatioProperty(ar0.angle0, ar1.angle1, ar0.ratio * ar1.ratio)
-                    if prop:
-                        #TODO: better comment
-                        self.__reason(prop, 'Transitivity', [ar0, ar1])
+                    if tup[1]:
+                        prop = AnglesRatioProperty(ar0.angle1, tup[0], divide(ar1.ratio, ar0.ratio))
+                    else:
+                        prop = AnglesRatioProperty(tup[0], ar0.angle1, ar0.ratio * ar1.ratio)
+                    #TODO: better comment
+                    self.__reason(prop, 'Transitivity', [ar0, ar1])
+                tuples1 = [t for t in tuples1 if t[0] not in used0 and t[2] not in processed]
+                for tup in tuples1:
+                    ar1 = tup[2]
+                    if tup[1]:
+                        prop = AnglesRatioProperty(ar0.angle0, tup[0], divide(ar0.ratio, ar1.ratio))
+                    else:
+                        prop = AnglesRatioProperty(ar0.angle0, tup[0], ar0.ratio * ar1.ratio)
+                    #TODO: better comment
+                    self.__reason(prop, 'Transitivity', [ar0, ar1])
 
             for ar in [p for p in self.__explained.list(AnglesRatioProperty) if p.ratio == 1]:
                 ar_is_too_old = is_too_old(ar)
