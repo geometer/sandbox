@@ -289,24 +289,19 @@ class Explainer:
                             yield (pt0.vector(vertex), [sd])
 
             def point_inside_angle(point, angle):
-                if angle.vertex is None:
-                    return False
-
-                line = angle.vector1.line()
-                if line is None:
-                    return False
-                ss0 = self.__explained[SameSideProperty(line, point, angle.vector0.end)]
+                ss0 = self.__explained[
+                    SameSideProperty(angle.vector1.line(), point, angle.vector0.end)
+                ]
                 if ss0 is None:
-                    return False
+                    return None
 
-                line = angle.vector0.line()
-                if line is None:
-                    return False
-                ss1 = self.__explained[SameSideProperty(line, point, angle.vector0.end)]
+                ss1 = self.__explained[
+                    SameSideProperty(angle.vector0.line(), point, angle.vector1.end)
+                ]
                 if ss1 is None:
-                    return False
+                    return None
 
-                return True
+                return [ss0, ss1]
 
             for ar in self.__explained.list(AnglesRatioProperty):
                 a0 = ar.angle0
@@ -327,8 +322,8 @@ class Explainer:
                     common_point = a0.vector1.end
                 else:
                     continue
-                #TODO: add reasons of
-                if not point_inside_angle(common_point, angle):
+                inside_angle_reasons = point_inside_angle(common_point, angle)
+                if not inside_angle_reasons:
                     #TODO: consider angle difference
                     continue
                 sum_reason = self.__explained.angle_value_reason(angle)
@@ -338,8 +333,8 @@ class Explainer:
                 second = divide(value, 1 + ar.ratio)
                 first = value - second
                 #TODO: write comments
-                self.__reason(AngleValueProperty(a0, first), [], premises=[ar, sum_reason])
-                self.__reason(AngleValueProperty(a1, second), [], premises=[ar, sum_reason])
+                self.__reason(AngleValueProperty(a0, first), [], premises=[ar, sum_reason, *inside_angle_reasons])
+                self.__reason(AngleValueProperty(a1, second), [], premises=[ar, sum_reason, *inside_angle_reasons])
 
             for ar in self.__explained.list(AnglesRatioProperty):
                 a0 = ar.angle0
