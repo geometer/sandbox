@@ -51,10 +51,10 @@ explainer.explain()
 explainer.stats().dump()
 print('\tExplained: %s = %s' % (angle, explainer.explained(angle)))
 
-#def dump(explanation, level=0):
-#    print('\t' + '  ' * level + str(explanation.property) + ': ' + ' + '.join([str(com) for com in explanation.comments]))
-#    if explanation.premises:
-#        for premise in explanation.premises:
+#def dump(prop, level=0):
+#    print('\t' + '  ' * level + str(prop) + ': ' + ' + '.join([str(com) for com in prop.reason.comments]))
+#    if prop.reason.premises:
+#        for premise in prop.reason.premises:
 #            dump(premise, level + 1)
 #
 #explanation = explainer.explanation(angle)
