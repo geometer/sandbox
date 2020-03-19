@@ -83,7 +83,7 @@ class NotEqualProperty(Property):
 
 class OppositeSideProperty(Property):
     """
-    Two points are located on opposite sides of the line
+    Two points on opposite sides of the line
     """
     def __init__(self, line, point0, point1):
         self.line = line
@@ -124,7 +124,7 @@ class PointInsideAngleProperty(Property):
 
 class SameSideProperty(Property):
     """
-    Two points are located on the same side of the line
+    Two points on the same side of the line
     """
     def __init__(self, line, point0, point1):
         self.line = line
@@ -169,6 +169,9 @@ class CollinearProperty(Property):
     def __init__(self, A, B, C):
         self.points = (A, B, C)
         self.__point_set = frozenset(self.points)
+
+    def keys(self, lengths=None):
+        return keys_for_triangle(self.points, lengths)
 
     @property
     def description(self):

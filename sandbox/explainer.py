@@ -394,7 +394,23 @@ class Explainer:
                         _comment('%s lies inside a segment with endoints on sides of %s', av.angle.vertex, angle),
                         [av, ncl]
                     )
+                    yield (
+                        OppositeSideProperty(av.angle.vertex.line_through(vertex), *segment.points),
+                        _comment('%s lies inside segment %s, and %s is not on the line %s', av.angle.vertex, segment, vertex, segment),
+                        [av, ncl]
+                    )
                 
+            for ops in self.__explained.list(OppositeSideProperty):
+                if is_too_old(ops):
+                    continue
+                crossing = self.scene.get_intersection(ops.line, ops.points[0].line_through(ops.points[1]))
+                if crossing:
+                    yield (
+                        AngleValueProperty(crossing.angle(*ops.points), 180),
+                        _comment('%s is an intersection of segment %s and line %s', crossing, ops.points[0].segment(ops.points[1]), ops.line),
+                        [ops]
+                    )
+
             for ar in self.__explained.list(AnglesRatioProperty):
                 a0 = ar.angle0
                 a1 = ar.angle1
