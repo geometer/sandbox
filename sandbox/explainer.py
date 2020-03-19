@@ -663,18 +663,18 @@ class Explainer:
                             [sa, av]
                         )
 
-            angle_ratios = [ar for ar in self.__explained.list(AnglesRatioProperty) if ar.ratio == 1 and ar.angle0.vertex and ar.angle1.vertex]
+            congruent_angles = [ar for ar in self.__explained.list(AnglesRatioProperty) if ar.ratio == 1 and ar.angle0.vertex and ar.angle1.vertex]
             def pts(prop):
                 return {prop.angle0.points, prop.angle1.points}
 
             processed = set()
-            for ar0 in angle_ratios:
+            for ar0 in congruent_angles:
                 if is_too_old(ar0):
                     continue
                 processed.add(ar0)
                 pts0 = pts(ar0)
                 angles0 = {ar0.angle0, ar0.angle1}
-                for ar1 in [ar for ar in angle_ratios if ar not in processed and pts(ar) == pts0]:
+                for ar1 in [ar for ar in congruent_angles if ar not in processed and pts(ar) == pts0]:
                     if ar1.angle0 in angles0 or ar1.angle1 in angles0:
                         continue
                     if ar0.angle0.points == ar1.angle0.points:
@@ -691,51 +691,86 @@ class Explainer:
                         [ar0, ar1]
                     )
 
-            for prop in list(self.__unexplained):
-                if isinstance(prop, CongruentTrianglesProperty):
-                    sides = []
-                    for i in range(0, 3):
-                        left = side_of(prop.ABC, i)
-                        right = side_of(prop.DEF, i)
-                        if left == right:
-                            sides.append(left)
-                        else:
-                            sides.append(self.__congruent_segments_reason(left, right))
+            def congruent_vectors(vec0, vec1):
+                if vec0 == vec1:
+                    return True
+                return self.__congruent_segments_reason(vec0.as_segment, vec1.as_segment)
 
-                    if all(e is None for e in sides):
+            for ca in congruent_angles:
+                ca_is_too_old = is_too_old(ca)
+                ang0 = ca.angle0
+                ang1 = ca.angle1
+                for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
+                    rsn0 = congruent_vectors(vec0, ang1.vector0)
+                    if rsn0 is None:
                         continue
-
-                    if all(e is not None for e in sides):
-                        premises = [e for e in sides if isinstance(e, Property)]
-                        common = [e for e in sides if not isinstance(e, Property)]
-                        if len(premises) == 3:
-                            self.__reason(prop, 'Three pairs of congruent sides', premises)
-                        else: # len(premises) == 2
-                            self.__reason(prop, _comment('Common side %s, two pairs of congruent sides', common[0]), premises)
+                    rsn1 = congruent_vectors(vec1, ang1.vector1)
+                    if rsn1 is None:
                         continue
+                    if ca_is_too_old and (rsn0 == True or is_too_old(rsn0)) and (rsn1 == True or is_too_old(rsn1)):
+                        continue
+                    prop = CongruentTrianglesProperty(
+                        (ang0.vertex, vec0.end, vec1.end),
+                        (ang1.vertex, ang1.vector0.end, ang1.vector1.end)
+                    )
+                    if self.__explained[prop] is not None:
+                        continue
+                    if rsn0 == True:
+                        comment = _comment('Common side %s, pair of congruent sides, and angle between the sides', vec0)
+                        premises = [rsn1, ca]
+                    elif rsn1 == True:
+                        comment = _comment('Common side %s, pair of congruent sides, and angle between the sides', vec1)
+                        premises = [rsn0, ca]
+                    else:
+                        comment = 'Two pairs of congruent sides, and angle between the sides'
+                        premises = [rsn0, rsn1, ca]
+                    self.__reason(prop, comment, premises)
 
-                    angles = []
-                    for i in range(0, 3):
-                        left = angle_of(prop.ABC, i)
-                        right = angle_of(prop.DEF, i)
-                        if left == right:
-                            angles.append(left)
+            congruent_segments = self.__explained.list(CongruentSegmentProperty)
+            def common_point(segment0, segment1):
+                if segment0.points[0] in segment1:
+                    if segment0.points[1] in segment1:
+                        return None
+                    return segment0.points[0]
+                if segment0.points[1] in segment1:
+                    return segment0.points[1]
+                return None
+            def other_point(segment, point):
+                return segment.points[0] if point == segment.points[1] else segment.points[1]
+
+            processed = set()
+            for cs0 in congruent_segments:
+                if is_too_old(cs0):
+                    continue
+                processed.add(cs0)
+                pairs = [(cs0.segment0, cs0.segment1), (cs0.segment1, cs0.segment0)]
+                for cs1 in [cs for cs in congruent_segments if cs not in processed]:
+                    for seg0, seg1 in pairs:
+                        common0 = common_point(seg0, cs1.segment0)
+                        if common0 is None:
                             continue
-                        pair = {left, right}
-                        for ca in [ar for ar in self.__explained.list(AnglesRatioProperty, [left]) if ar.ratio == 1]:
-                            if pair == {ca.angle0, ca.angle1}:
-                                angles.append(ca)
-                                break
+                        common1 = common_point(seg1, cs1.segment1)
+                        if common1 is None:
+                            continue
+                        third0 = other_point(seg0, common0).segment(other_point(cs1.segment0, common0))
+                        third1 = other_point(seg1, common1).segment(other_point(cs1.segment1, common1))
+                        prop = CongruentTrianglesProperty(
+                            (common0, *third0.points), (common1, *third1.points)
+                        )
+                        if third0 == third1:
+                            self.__reason(
+                                prop,
+                                _comment('Common side %s, two pairs of congruent sides', third0),
+                                [cs0, cs1]
+                            )
                         else:
-                            angles.append(None)
-
-                    for i in range(0, 3):
-                        reasons = [angles[j] if j == i else sides[j] for j in range(0, 3)]
-                        if all(e is not None for e in reasons):
-                            premises = [e for e in reasons if isinstance(e, Property)]
-                            #TODO: better comment
-                            self.__reason(prop, 'Two sides and angle between the sides', premises)
-                            break
+                            cs2 = self.__congruent_segments_reason(third0, third1)
+                            if cs2:
+                                self.__reason(
+                                    prop,
+                                    'Three pairs of congruent sides',
+                                    [cs0, cs1, cs2]
+                                )
 
         base()
         self.__iteration_step_count = 0
