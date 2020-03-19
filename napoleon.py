@@ -6,9 +6,7 @@ from sandbox.explainer import Explainer
 
 scene = Scene()
 
-A = scene.free_point(label='A')
-B = scene.free_point(label='B')
-C = scene.free_point(label='C')
+A, B, C = scene.triangle(labels=['A', 'B', 'C'])
 
 def napoleonic(A: Scene.Point, B: Scene.Point, C: Scene.Point):
     c0 = A.circle_through(B)
