@@ -69,12 +69,7 @@ class Explainer:
                 )
 
             for prop in list(self.__unexplained):
-                if isinstance(prop, AngleValueProperty) and prop.degree == 0:
-                    for cnst in self.scene.constraints(Constraint.Kind.same_direction):
-                        if prop.angle == cnst.params[0].angle(*cnst.params[1:]):
-                             self.__reason(prop, cnst.comments)
-                             break
-                elif isinstance(prop, AngleValueProperty) and prop.degree == 90:
+                if isinstance(prop, AngleValueProperty) and prop.degree == 90:
                     for cnst in self.scene.constraints(Constraint.Kind.perpendicular):
                         line0 = cnst.params[0]
                         line1 = cnst.params[1]

@@ -8,7 +8,7 @@ import itertools
 import sympy as sp
 from typing import List
 
-from .property import CollinearProperty, NonCollinearProperty, NotEqualProperty, CongruentSegmentProperty
+from .property import AngleValueProperty, CollinearProperty, NonCollinearProperty, NotEqualProperty, CongruentSegmentProperty
 from .propertyset import PropertySet
 from .reason import Reason
 from .util import _comment, divide
@@ -700,6 +700,13 @@ class CoreScene:
                 continue
             add_property(
                 CongruentSegmentProperty(cnstr.params[0].as_segment, cnstr.params[1].as_segment),
+                cnstr.comments
+            )
+
+        for cnstr in self.constraints(Constraint.Kind.same_direction):
+            #TODO: filter aux points
+            add_property(
+                AngleValueProperty(cnstr.params[0].angle(*cnstr.params[1:]), 0),
                 cnstr.comments
             )
 
