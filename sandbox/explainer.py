@@ -69,12 +69,7 @@ class Explainer:
                 )
 
             for prop in list(self.__unexplained):
-                if isinstance(prop, CollinearProperty):
-                    line = self.scene.get_line(*prop.points[:2])
-                    if line and prop.points[2] in line:
-                        self.__reason(prop, 'Given')
-                        continue
-                elif isinstance(prop, AngleValueProperty) and prop.degree == 0:
+                if isinstance(prop, AngleValueProperty) and prop.degree == 0:
                     for cnst in self.scene.constraints(Constraint.Kind.same_direction):
                         if prop.angle == cnst.params[0].angle(*cnst.params[1:]):
                              self.__reason(prop, cnst.comments)

@@ -8,7 +8,7 @@ import itertools
 import sympy as sp
 from typing import List
 
-from .property import NonCollinearProperty, NotEqualProperty, CongruentSegmentProperty
+from .property import CollinearProperty, NonCollinearProperty, NotEqualProperty, CongruentSegmentProperty
 from .propertyset import PropertySet
 from .reason import Reason
 from .util import _comment, divide
@@ -695,6 +695,15 @@ class CoreScene:
 
     def predefined_properties(self):
         properties = self.__predefined_properties.copy()
+        for line in self.lines():
+            for pt0, pt1, pt2 in itertools.combinations(line.all_points, 3):
+                prop = CollinearProperty(pt0, pt1, pt2)
+                prop.reason = Reason(
+                    len(properties), -1,
+                    [_comment('Three points on the line %s', line)],
+                    []
+                )
+                properties.add(prop)
         for circle in self.circles():
             radiuses = [circle.centre.segment(pt) for pt in circle.all_points]
             if circle.centre not in circle.radius:
