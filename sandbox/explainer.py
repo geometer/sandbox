@@ -89,6 +89,74 @@ class Explainer:
             def is_too_old(prop):
                 return prop.reason.generation < self.__iteration_step_count - 1
 
+            processed = set()
+            for ar0 in self.context.list(AnglesRatioProperty):
+                if is_too_old(ar0):
+                    continue
+                processed.add(ar0)
+                angle_ratios0 = list(self.__angle_ratio_reasons(ar0.angle0))
+                angle_ratios1 = list(self.__angle_ratio_reasons(ar0.angle1))
+                tuples0 = [
+                    ((ar.angle0, False, ar) \
+                    if ar.angle1 == ar0.angle0 \
+                    else (ar.angle1, True, ar))
+                    for ar in angle_ratios0
+                ]
+                used0 = {p[0] for p in tuples0}
+                tuples1 = [
+                    ((ar.angle0, True, ar) if \
+                    ar.angle1 == ar0.angle1 \
+                    else (ar.angle1, False, ar)) \
+                    for ar in angle_ratios1
+                ]
+                used1 = {p[0] for p in tuples1}
+                tuples0 = [t for t in tuples0 if t[0] not in used1 and t[2] not in processed]
+                for tup in tuples0:
+                    ar1 = tup[2]
+                    #TODO: report contradictions if in used and ratio is different
+                    if tup[1]:
+                        prop = AnglesRatioProperty(ar0.angle1, tup[0], divide(ar1.ratio, ar0.ratio))
+                    else:
+                        prop = AnglesRatioProperty(tup[0], ar0.angle1, ar0.ratio * ar1.ratio)
+                    #TODO: better comment
+                    yield (prop, 'Transitivity', [ar0, ar1])
+                tuples1 = [t for t in tuples1 if t[0] not in used0 and t[2] not in processed]
+                for tup in tuples1:
+                    ar1 = tup[2]
+                    if tup[1]:
+                        prop = AnglesRatioProperty(ar0.angle0, tup[0], divide(ar0.ratio, ar1.ratio))
+                    else:
+                        prop = AnglesRatioProperty(ar0.angle0, tup[0], ar0.ratio * ar1.ratio)
+                    #TODO: better comment
+                    yield (prop, 'Transitivity', [ar0, ar1])
+
+            for ar in [p for p in self.context.list(AnglesRatioProperty) if p.ratio == 1]:
+                ar_is_too_old = is_too_old(ar)
+                set0 = set()
+                set1 = set()
+                for sa in self.context.list(SumOfAnglesProperty, keys=[ar.angle0]):
+                    if ar_is_too_old and is_too_old(sa):
+                        continue
+                    set0.add(sa.angle1 if sa.angle0 == ar.angle0 else sa.angle0)
+                for sa in self.context.list(SumOfAnglesProperty, keys=[ar.angle1]):
+                    if ar_is_too_old and is_too_old(sa):
+                        continue
+                    set1.add(sa.angle1 if sa.angle0 == ar.angle1 else sa.angle0)
+                for angle in set0.difference(set1):
+                    if ar.angle1 == angle:
+                        #TODO: better comment
+                        prop = AngleValueProperty(angle, divide(sa.degree, 2))
+                    else:
+                        prop = SumOfAnglesProperty(ar.angle1, angle, sa.degree)
+                    yield (prop, 'Transitivity', [sa, ar])
+                for angle in set1.difference(set0):
+                    if ar.angle0 == angle:
+                        #TODO: better comment
+                        prop = AngleValueProperty(angle, divide(sa.degree, 2))
+                    else:
+                        prop = SumOfAnglesProperty(ar.angle0, angle, sa.degree)
+                    yield (prop, 'Transitivity', [sa, ar])
+
             for ncl in self.context.list(NonCollinearProperty):
                 if not is_too_old(ncl):
                     def extra_comments(pt, pt0, pt1):
@@ -411,7 +479,7 @@ class Explainer:
                         _comment('%s lies inside segment %s, and %s is not on the line %s', av.angle.vertex, segment, vertex, segment),
                         [av, ncl]
                     )
-                
+
             for ops in [p for p in self.context.list(SameOrOppositeSideProperty) if not p.same]:
                 if is_too_old(ops):
                     continue
@@ -696,74 +764,6 @@ class Explainer:
                             else:
                                 #TODO: better comment
                                 yield (SumOfAnglesProperty(ngl0, ngl1, 180), 'Pair of parallel and pair of antiparallel sides', [zero, ne])
-
-            processed = set()
-            for ar0 in self.context.list(AnglesRatioProperty):
-                if is_too_old(ar0):
-                    continue
-                processed.add(ar0)
-                angle_ratios0 = list(self.__angle_ratio_reasons(ar0.angle0))
-                angle_ratios1 = list(self.__angle_ratio_reasons(ar0.angle1))
-                tuples0 = [
-                    ((ar.angle0, False, ar) \
-                    if ar.angle1 == ar0.angle0 \
-                    else (ar.angle1, True, ar))
-                    for ar in angle_ratios0
-                ]
-                used0 = {p[0] for p in tuples0}
-                tuples1 = [
-                    ((ar.angle0, True, ar) if \
-                    ar.angle1 == ar0.angle1 \
-                    else (ar.angle1, False, ar)) \
-                    for ar in angle_ratios1
-                ]
-                used1 = {p[0] for p in tuples1}
-                tuples0 = [t for t in tuples0 if t[0] not in used1 and t[2] not in processed]
-                for tup in tuples0:
-                    ar1 = tup[2]
-                    #TODO: report contradictions if in used and ratio is different
-                    if tup[1]:
-                        prop = AnglesRatioProperty(ar0.angle1, tup[0], divide(ar1.ratio, ar0.ratio))
-                    else:
-                        prop = AnglesRatioProperty(tup[0], ar0.angle1, ar0.ratio * ar1.ratio)
-                    #TODO: better comment
-                    yield (prop, 'Transitivity', [ar0, ar1])
-                tuples1 = [t for t in tuples1 if t[0] not in used0 and t[2] not in processed]
-                for tup in tuples1:
-                    ar1 = tup[2]
-                    if tup[1]:
-                        prop = AnglesRatioProperty(ar0.angle0, tup[0], divide(ar0.ratio, ar1.ratio))
-                    else:
-                        prop = AnglesRatioProperty(ar0.angle0, tup[0], ar0.ratio * ar1.ratio)
-                    #TODO: better comment
-                    yield (prop, 'Transitivity', [ar0, ar1])
-
-            for ar in [p for p in self.context.list(AnglesRatioProperty) if p.ratio == 1]:
-                ar_is_too_old = is_too_old(ar)
-                set0 = set()
-                set1 = set()
-                for sa in self.context.list(SumOfAnglesProperty, keys=[ar.angle0]):
-                    if ar_is_too_old and is_too_old(sa):
-                        continue
-                    set0.add(sa.angle1 if sa.angle0 == ar.angle0 else sa.angle0)
-                for sa in self.context.list(SumOfAnglesProperty, keys=[ar.angle1]):
-                    if ar_is_too_old and is_too_old(sa):
-                        continue
-                    set1.add(sa.angle1 if sa.angle0 == ar.angle1 else sa.angle0)
-                for angle in set0.difference(set1):
-                    if ar.angle1 == angle:
-                        #TODO: better comment
-                        prop = AngleValueProperty(angle, divide(sa.degree, 2))
-                    else:
-                        prop = SumOfAnglesProperty(ar.angle1, angle, sa.degree)
-                    yield (prop, 'Transitivity', [sa, ar])
-                for angle in set1.difference(set0):
-                    if ar.angle0 == angle:
-                        #TODO: better comment
-                        prop = AngleValueProperty(angle, divide(sa.degree, 2))
-                    else:
-                        prop = SumOfAnglesProperty(ar.angle0, angle, sa.degree)
-                    yield (prop, 'Transitivity', [sa, ar])
 
             for sa in self.context.list(SumOfAnglesProperty):
                 av = self.context.angle_value_reason(sa.angle0)
