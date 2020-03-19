@@ -487,7 +487,8 @@ class CoreScene:
             comment = kwargs.get('comment')
             if not comment:
                 comment = _comment('Given: |%s| == |%s|', self.as_segment, vector.as_segment)
-            self.scene.add_property(CongruentSegmentProperty(self.as_segment, vector.as_segment), comment)
+            if coef == 1:
+                self.scene.add_property(CongruentSegmentProperty(self.as_segment, vector.as_segment), comment)
             return self.scene.constraint(Constraint.Kind.distances_ratio, self, vector, coef, **kwargs)
 
         def parallel_constraint(self, vector, **kwargs):
