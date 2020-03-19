@@ -81,24 +81,28 @@ class NotEqualProperty(Property):
     def __hash__(self):
         return hash(NotEqualProperty) + hash(self.segment)
 
-class OppositeSideProperty(Property):
+class SameOrOppositeSideProperty(Property):
     """
-    Two points on opposite sides of the line
+    Two points on opposite/same sides of the line
     """
-    def __init__(self, line, point0, point1):
+    def __init__(self, line, point0, point1, same):
         self.line = line
         self.points = (point0, point1)
+        self.same = same
         self.__object_set = frozenset([line, point0, point1])
 
     @property
     def description(self):
-        return _comment('%s, %s located on opposite sides of %s', *self.points, self.line)
+        if self.same:
+            return _comment('%s, %s located on the same side of %s', *self.points, self.line)
+        else:
+            return _comment('%s, %s located on opposite sides of %s', *self.points, self.line)
 
     def __eq__(self, other):
-        return isinstance(other, OppositeSideProperty) and self.__object_set == other.__object_set
+        return isinstance(other, SameOrOppositeSideProperty) and self.__object_set == other.__object_set
 
     def __hash__(self):
-        return hash(OppositeSideProperty) + hash(self.__object_set)
+        return hash(SameOrOppositeSideProperty) + hash(self.__object_set)
 
 class PointInsideAngleProperty(Property):
     """
@@ -121,25 +125,6 @@ class PointInsideAngleProperty(Property):
 
     def __hash__(self):
         return hash(self.__key)
-
-class SameSideProperty(Property):
-    """
-    Two points on the same side of the line
-    """
-    def __init__(self, line, point0, point1):
-        self.line = line
-        self.points = (point0, point1)
-        self.__object_set = frozenset([line, point0, point1])
-
-    @property
-    def description(self):
-        return _comment('%s, %s located on the same side of %s', *self.points, self.line)
-
-    def __eq__(self, other):
-        return isinstance(other, SameSideProperty) and self.__object_set == other.__object_set
-
-    def __hash__(self):
-        return hash(SameSideProperty) + hash(self.__object_set)
 
 class EquilateralTriangleProperty(Property):
     """

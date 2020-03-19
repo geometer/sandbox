@@ -52,7 +52,7 @@ class Explainer:
                 self.__reason(CollinearProperty(*cnst.params), cnst.comments)
             for cnst in self.scene.constraints(Constraint.Kind.opposite_side):
                 self.__reason(
-                    OppositeSideProperty(cnst.params[2], cnst.params[0], cnst.params[1]),
+                    SameOrOppositeSideProperty(cnst.params[2], cnst.params[0], cnst.params[1], False),
                     cnst.comments
                 )
             for cnst in self.scene.constraints(Constraint.Kind.inside_angle):
@@ -62,7 +62,7 @@ class Explainer:
                 )
             for cnst in self.scene.constraints(Constraint.Kind.same_side):
                 self.__reason(
-                    SameSideProperty(cnst.params[2], cnst.params[0], cnst.params[1]),
+                    SameOrOppositeSideProperty(cnst.params[2], cnst.params[0], cnst.params[1], True),
                     cnst.comments
                 )
             for cnst in self.scene.constraints(Constraint.Kind.parallel_vectors):
@@ -191,7 +191,7 @@ class Explainer:
                     for prop in AngleValueProperty.generate(vec0.angle(vec1), 0):
                         yield (prop, [], [pv, ne0, ne1])
 
-            same_side_reasons = self.__explained.list(SameSideProperty)
+            same_side_reasons = [p for p in self.__explained.list(SameOrOppositeSideProperty) if p.same]
             for rsn in same_side_reasons:
                 if is_too_old(rsn):
                     continue
@@ -202,7 +202,11 @@ class Explainer:
                     continue
                 crossing = self.scene.get_intersection(rsn.line, line2)
                 if crossing:
-                    yield (AngleValueProperty(crossing.angle(pt0, pt1), 0), rsn.reason.comments, [rsn])
+                    yield (
+                        AngleValueProperty(crossing.angle(pt0, pt1), 0),
+                        '', #TODO: write comment
+                        [rsn]
+                    )
 
             for rsn0, rsn1 in itertools.combinations(same_side_reasons, 2):
                 if is_too_old(rsn0) and is_too_old(rsn1):
@@ -257,12 +261,20 @@ class Explainer:
                             params.remove(pt0)
                             line = self.scene.get_line(vertex, params.pop())
                             if line:
-                                yield (SameSideProperty(line, pt0, pt1), [str(sd), str(nc)], [sd, nc])
+                                yield (
+                                    SameOrOppositeSideProperty(line, pt0, pt1, True),
+                                    [str(sd), str(nc)], #TODO: better comment
+                                    [sd, nc]
+                                )
                         elif pt1 in params and pt0 not in params:
                             params.remove(pt1)
                             line = self.scene.get_line(vertex, params.pop())
                             if line:
-                                yield (SameSideProperty(line, pt0, pt1), [str(sd), str(nc)], [sd, nc])
+                                yield (
+                                    SameOrOppositeSideProperty(line, pt0, pt1, True),
+                                    [str(sd), str(nc)], #TODO: better comment
+                                    [sd, nc]
+                                )
 
             for sd in same_direction:
                 angle = sd.angle
@@ -298,17 +310,17 @@ class Explainer:
                 if is_too_old(pia):
                     continue
                 yield (
-                    SameSideProperty(pia.angle.vector0.line(), pia.point, pia.angle.vector1.end),
+                    SameOrOppositeSideProperty(pia.angle.vector0.line(), pia.point, pia.angle.vector1.end, True),
                     '', #TODO: write comment
                     [pia]
                 )
                 yield (
-                    SameSideProperty(pia.angle.vector1.line(), pia.point, pia.angle.vector0.end),
+                    SameOrOppositeSideProperty(pia.angle.vector1.line(), pia.point, pia.angle.vector0.end, True),
                     '', #TODO: write comment
                     [pia]
                 )
 
-            for ss0, ss1 in itertools.combinations(self.__explained.list(SameSideProperty), 2):
+            for ss0, ss1 in itertools.combinations([p for p in self.__explained.list(SameOrOppositeSideProperty) if p.same], 2):
                 if is_too_old(ss0) and is_too_old(ss1):
                     continue
 
@@ -395,12 +407,12 @@ class Explainer:
                         [av, ncl]
                     )
                     yield (
-                        OppositeSideProperty(av.angle.vertex.line_through(vertex), *segment.points),
+                        SameOrOppositeSideProperty(av.angle.vertex.line_through(vertex), *segment.points, False),
                         _comment('%s lies inside segment %s, and %s is not on the line %s', av.angle.vertex, segment, vertex, segment),
                         [av, ncl]
                     )
                 
-            for ops in self.__explained.list(OppositeSideProperty):
+            for ops in [p for p in self.__explained.list(SameOrOppositeSideProperty) if not p.same]:
                 if is_too_old(ops):
                     continue
                 crossing = self.scene.get_intersection(ops.line, ops.points[0].line_through(ops.points[1]))
