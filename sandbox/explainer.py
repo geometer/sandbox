@@ -629,10 +629,18 @@ class Explainer:
                         continue
                     set1.add(sa.angle1 if sa.angle0 == ar.angle1 else sa.angle0)
                 for angle in set0.difference(set1):
-                    prop = SumOfAnglesProperty(ar.angle1, angle, sa.degree)
+                    if ar.angle1 == angle:
+                        #TODO: better comment
+                        prop = AngleValueProperty(angle, divide(sa.degree, 2))
+                    else:
+                        prop = SumOfAnglesProperty(ar.angle1, angle, sa.degree)
                     self.__reason(prop, 'Transitivity', [sa, ar])
                 for angle in set1.difference(set0):
-                    prop = SumOfAnglesProperty(ar.angle0, angle, sa.degree)
+                    if ar.angle0 == angle:
+                        #TODO: better comment
+                        prop = AngleValueProperty(angle, divide(sa.degree, 2))
+                    else:
+                        prop = SumOfAnglesProperty(ar.angle0, angle, sa.degree)
                     self.__reason(prop, 'Transitivity', [sa, ar])
 
             for sa in self.__explained.list(SumOfAnglesProperty):
@@ -746,7 +754,7 @@ class Explainer:
             explained = self.__explained.all
             explained.sort(key=lambda p: p.reason.index)
             for prop in explained:
-                print('\t%2d: %s [%s]' % (prop.reason.index, prop, prop.reason))
+                print('\t%2d (%d): %s [%s]' % (prop.reason.index, prop.reason.generation, prop, prop.reason))
         if len(self.__unexplained) > 0:
             print('\nNot explained:')
             for prop in self.__unexplained:
