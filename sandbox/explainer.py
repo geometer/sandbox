@@ -423,6 +423,27 @@ class Explainer:
                         [ops]
                     )
 
+            for sos0, sos1 in itertools.combinations(self.__explained.list(SameOrOppositeSideProperty), 2):
+                if is_too_old(sos0) and is_too_old(sos1):
+                    continue
+                if sos0.line != sos1.line:
+                    continue
+
+                if sos0.points[0] in sos1.points:
+                    common = sos0.points[0]
+                    other0 = sos0.points[1]
+                elif sos0.points[1] in sos1.points:
+                    common = sos0.points[1]
+                    other0 = sos0.points[0]
+                else:
+                    continue
+                other1 = sos1.points[0] if sos1.points[1] == common else sos1.points[1]
+                yield (
+                    SameOrOppositeSideProperty(sos0.line, other0, other1, sos0.same == sos1.same),
+                    'Transitivity', #TODO: better comment
+                    [sos0, sos1]
+                )
+
             for ar in self.__explained.list(AnglesRatioProperty):
                 a0 = ar.angle0
                 a1 = ar.angle1
