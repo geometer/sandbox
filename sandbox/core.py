@@ -744,7 +744,7 @@ class CoreScene:
 
         for circle in self.circles(skip_auxiliary=True):
             radiuses = [circle.centre.segment(pt) for pt in circle.all_points]
-            if circle.centre not in circle.radius:
+            if circle.centre not in circle.radius.points:
                 for rad in radiuses:
                     add_property(
                         CongruentSegmentProperty(rad, circle.radius)

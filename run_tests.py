@@ -2,6 +2,8 @@ import unittest
 
 from tests.scene.midpoint import *
 
+from tests.explainer.inside_triangle import *
+
 from tests.placement.sympy import *
 from tests.placement.intersection import *
 from tests.placement.napoleon import *
