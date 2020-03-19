@@ -444,13 +444,14 @@ class Explainer:
                 else:
                     continue
                 base1 = cs.segment0.points[0] if apex == cs.segment0.points[1] else cs.segment0.points[1]
-                nc = self.__not_collinear_reason(apex, base0, base1)
-                if nc:
-                    self.__reason(
-                        IsoscelesTriangleProperty(apex, base0.segment(base1)),
-                        'Congruent legs',
-                        [cs, nc]
-                    )
+#                nc = self.__not_collinear_reason(apex, base0, base1)
+#                if nc:
+                self.__reason(
+                    IsoscelesTriangleProperty(apex, base0.segment(base1)),
+                    'Congruent legs',
+#                    [cs, nc]
+                    [cs]
+                )
 
             for ar in self.__explained.list(AnglesRatioProperty):
                 if ar.ratio != 1:
