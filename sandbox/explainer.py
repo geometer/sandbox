@@ -296,6 +296,25 @@ class Explainer:
                         [prop]
                     )
 
+            for av in [av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 180]:
+                av_is_too_old = is_too_old(av)
+                ang = av.angle
+                for ne in self.context.list(NotEqualProperty, [ang.vertex]):
+                    if av_is_too_old and is_too_old(ne):
+                        continue
+                    pt = ne.points[0] if ang.vertex == ne.points[1] else ne.points[1]
+                    if pt in ang.points:
+                        continue
+                    yield (
+                        SumOfAnglesProperty(
+                            ang.vertex.angle(ang.vector0.end, pt),
+                            ang.vertex.angle(pt, ang.vector1.end),
+                            180
+                        ),
+                        'Supplementary angles',
+                        [av, ne]
+                    )
+
             for av0, av1 in itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 180], 2):
                 if is_too_old(av0) and is_too_old(av1):
                     continue
@@ -324,7 +343,7 @@ class Explainer:
                     [av0, av1]
                 )
 
-            for av in [av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 180]:
+            for av in [av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 0]:
                 av_is_too_old = is_too_old(av)
                 ang = av.angle
                 for ne in self.context.list(NotEqualProperty, [ang.vertex]):
@@ -334,14 +353,42 @@ class Explainer:
                     if pt in ang.points:
                         continue
                     yield (
-                        SumOfAnglesProperty(
-                            ang.vertex.angle(ang.vector0.end, pt),
+                        AnglesRatioProperty(
+                            ang.vertex.angle(pt, ang.vector0.end),
                             ang.vertex.angle(pt, ang.vector1.end),
-                            180
+                            1
                         ),
-                        'Supplementary angles',
+                        'Same angle',
                         [av, ne]
                     )
+
+            for av0, av1 in itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 0], 2):
+                if is_too_old(av0) and is_too_old(av1):
+                    continue
+                ng0 = av0.angle
+                ng1 = av1.angle
+                if ng0.vertex != ng1.vertex:
+                    continue
+                if len(ng0.points.union(ng1.points)) != 5:
+                    continue
+                yield (
+                    AnglesRatioProperty(
+                        ng0.vertex.angle(ng0.vector0.end, ng1.vector0.end),
+                        ng0.vertex.angle(ng0.vector1.end, ng1.vector1.end),
+                        1
+                    ),
+                    'Same angle',
+                    [av0, av1]
+                )
+                yield (
+                    AnglesRatioProperty(
+                        ng0.vertex.angle(ng0.vector0.end, ng1.vector1.end),
+                        ng0.vertex.angle(ng0.vector1.end, ng1.vector0.end),
+                        1
+                    ),
+                    'Same angle',
+                    [av0, av1]
+                )
 
             for pia in self.context.list(PointInsideAngleProperty):
                 if is_too_old(pia):
