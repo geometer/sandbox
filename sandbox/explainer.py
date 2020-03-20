@@ -324,6 +324,25 @@ class Explainer:
                     [av0, av1]
                 )
 
+            for av in [av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 180]:
+                av_is_too_old = is_too_old(av)
+                ang = av.angle
+                for ne in self.context.list(NotEqualProperty, [ang.vertex]):
+                    if av_is_too_old and is_too_old(ne):
+                        continue
+                    pt = ne.points[0] if ang.vertex == ne.points[1] else ne.points[1]
+                    if pt in ang.points:
+                        continue
+                    yield (
+                        SumOfAnglesProperty(
+                            ang.vertex.angle(ang.vector0.end, pt),
+                            ang.vertex.angle(pt, ang.vector1.end),
+                            180
+                        ),
+                        'Supplementary angles',
+                        [av, ne]
+                    )
+
             for pia in self.context.list(PointInsideAngleProperty):
                 if is_too_old(pia):
                     continue
