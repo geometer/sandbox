@@ -329,19 +329,6 @@ class Explainer:
                                     [sd, nc]
                                 )
 
-            for sd in same_direction:
-                angle = sd.angle
-                vec0 = angle.vector0
-                vec1 = angle.vector1
-
-                for ne in self.context.list(NotEqualProperty, keys=[angle.vertex]):
-                    vector = ne.points[0].vector(ne.points[1])
-                    if vector.start != angle.vertex:
-                        vector = vector.reversed
-                    if len(set(vector.points + vec0.points)) < 3 or len(set(vector.points + vec1.points)) < 3:
-                        continue
-                    yield (AnglesRatioProperty(vec0.angle(vector), vec1.angle(vector), 1), [], [sd])
-
             for pia in self.context.list(PointInsideAngleProperty):
                 if is_too_old(pia):
                     continue
@@ -716,11 +703,16 @@ class Explainer:
                     for ngl0, cmpl0 in good_angles(vec.angle(zero.angle.vector0)):
                         for ngl1, cmpl1 in good_angles(vec.angle(zero.angle.vector1)):
                             if cmpl0 == cmpl1:
-                                #TODO: better comment
-                                yield (AnglesRatioProperty(ngl0, ngl1, 1), 'Same angle', [zero, ne])
+                                prop = AnglesRatioProperty(ngl0, ngl1, 1)
+                                comment = _comment(
+                                    '%s ↑↑ %s', zero.angle.vector0, zero.angle.vector1
+                                )
                             else:
-                                #TODO: better comment
-                                yield (SumOfAnglesProperty(ngl0, ngl1, 180), 'Pair of parallel and pair of antiparallel sides', [zero, ne])
+                                prop = SumOfAnglesProperty(ngl0, ngl1, 180)
+                                comment = _comment(
+                                    '%s ↑↓ %s', zero.angle.vector0, zero.angle.vector1.reversed
+                                )
+                            yield (prop, comment, [zero, ne])
 
             for sa in self.context.list(SumOfAnglesProperty):
                 av = self.context.angle_value_reason(sa.angle0)
