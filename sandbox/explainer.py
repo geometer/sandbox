@@ -296,6 +296,34 @@ class Explainer:
                         [prop]
                     )
 
+            for av0, av1 in itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 180], 2):
+                if is_too_old(av0) and is_too_old(av1):
+                    continue
+                ng0 = av0.angle
+                ng1 = av1.angle
+                if ng0.vertex != ng1.vertex:
+                    continue
+                if len(ng0.points.union(ng1.points)) != 5:
+                    continue
+                yield (
+                    AnglesRatioProperty(
+                        ng0.vertex.angle(ng0.vector0.end, ng1.vector0.end),
+                        ng0.vertex.angle(ng0.vector1.end, ng1.vector1.end),
+                        1
+                    ),
+                    'Vertical angles',
+                    [av0, av1]
+                )
+                yield (
+                    AnglesRatioProperty(
+                        ng0.vertex.angle(ng0.vector0.end, ng1.vector1.end),
+                        ng0.vertex.angle(ng0.vector1.end, ng1.vector0.end),
+                        1
+                    ),
+                    'Vertical angles',
+                    [av0, av1]
+                )
+
             for pia in self.context.list(PointInsideAngleProperty):
                 if is_too_old(pia):
                     continue
