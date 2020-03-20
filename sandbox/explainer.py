@@ -758,15 +758,13 @@ class Explainer:
                         for ngl1, cmpl1 in good_angles(vec.angle(zero.angle.vector1)):
                             if cmpl0 == cmpl1:
                                 prop = AnglesRatioProperty(ngl0, ngl1, 1)
-                                comment = _comment(
-                                    '%s ↑↑ %s', zero.angle.vector0, zero.angle.vector1
-                                )
                             else:
                                 prop = SumOfAnglesProperty(ngl0, ngl1, 180)
-                                comment = _comment(
-                                    '%s ↑↓ %s', zero.angle.vector0, zero.angle.vector1.reversed
-                                )
-                            yield (prop, comment, [zero, ne])
+                            yield (
+                                prop,
+                                _comment('%s ↑↑ %s', zero.angle.vector0, zero.angle.vector1),
+                                [zero, ne]
+                            )
 
             for sa in self.context.list(SumOfAnglesProperty):
                 av = self.context.angle_value_reason(sa.angle0)
