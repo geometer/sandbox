@@ -299,14 +299,15 @@ class Explainer:
                     yield (AngleValueProperty(C.angle(B, X), 0), [comment], [pia])
                     yield (AngleValueProperty(X.angle(B, C), 180), [comment], [pia])
 
-            same_direction = [rsn for rsn in self.context.list(AngleValueProperty) if \
-                rsn.degree == 0 and rsn.angle.vertex is not None]
-
-            for sd in same_direction:
+            for sd in [rsn for rsn in self.context.list(AngleValueProperty) if \
+                    rsn.degree == 0 and rsn.angle.vertex is not None]:
+                sd_is_too_old = is_too_old(sd)
                 vertex = sd.angle.vertex
                 pt0 = sd.angle.vector0.end
                 pt1 = sd.angle.vector1.end
                 for nc in self.context.list(NonCollinearProperty):
+                    if sd_is_too_old and is_too_old(nc):
+                        continue
                     params = set(nc.points)
                     if vertex in params:
                         params.remove(vertex)
