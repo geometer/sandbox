@@ -262,7 +262,7 @@ class SumOfAnglesProperty(Property):
 
     @property
     def description(self):
-        return _comment('%s + %s == %sº', self.angle0, self.angle1, self.degree)
+        return _comment('%s + %s = %sº', self.angle0, self.angle1, self.degree)
 
     def __eq__(self, other):
         return isinstance(other, SumOfAnglesProperty) and self.angle_set == other.angle_set
