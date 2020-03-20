@@ -44,7 +44,9 @@ class Explainer:
         return self.context[CongruentSegmentProperty(seg0, seg1)]
 
     def __angle_ratio_reasons(self, angle):
-        return self.context.list(AnglesRatioProperty, keys=[angle])
+        reasons = self.context.list(AnglesRatioProperty, keys=[angle])
+        reasons.sort(key=lambda prop: len(prop.angle0.points) + len(prop.angle1.points))
+        return reasons
 
     def __explain_all(self):
         def base():
@@ -90,7 +92,9 @@ class Explainer:
                 return prop.reason.generation < self.__iteration_step_count - 1
 
             processed = set()
-            for ar0 in self.context.list(AnglesRatioProperty):
+            angle_ratios = list(self.context.list(AnglesRatioProperty))
+            angle_ratios.sort(key=lambda prop: len(prop.angle0.points) + len(prop.angle1.points))
+            for ar0 in angle_ratios:
                 if is_too_old(ar0):
                     continue
                 processed.add(ar0)
