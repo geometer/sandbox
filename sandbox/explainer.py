@@ -299,37 +299,6 @@ class Explainer:
                     yield (AngleValueProperty(C.angle(B, X), 0), [comment], [pia])
                     yield (AngleValueProperty(X.angle(B, C), 180), [comment], [pia])
 
-            for sd in [rsn for rsn in self.context.list(AngleValueProperty) if \
-                    rsn.degree == 0 and rsn.angle.vertex is not None]:
-                sd_is_too_old = is_too_old(sd)
-                vertex = sd.angle.vertex
-                pt0 = sd.angle.vector0.end
-                pt1 = sd.angle.vector1.end
-                for nc in self.context.list(NonCollinearProperty):
-                    if sd_is_too_old and is_too_old(nc):
-                        continue
-                    params = set(nc.points)
-                    if vertex in params:
-                        params.remove(vertex)
-                        if pt0 in params and pt1 not in params:
-                            params.remove(pt0)
-                            line = self.scene.get_line(vertex, params.pop())
-                            if line:
-                                yield (
-                                    SameOrOppositeSideProperty(line, pt0, pt1, True),
-                                    [str(sd), str(nc)], #TODO: better comment
-                                    [sd, nc]
-                                )
-                        elif pt1 in params and pt0 not in params:
-                            params.remove(pt1)
-                            line = self.scene.get_line(vertex, params.pop())
-                            if line:
-                                yield (
-                                    SameOrOppositeSideProperty(line, pt0, pt1, True),
-                                    [str(sd), str(nc)], #TODO: better comment
-                                    [sd, nc]
-                                )
-
             for pia in self.context.list(PointInsideAngleProperty):
                 if is_too_old(pia):
                     continue
@@ -417,7 +386,28 @@ class Explainer:
                 yield (AngleValueProperty(a0, first), [], [ar, sum_reason, inside_angle_reason])
                 yield (AngleValueProperty(a1, second), [], [ar, sum_reason, inside_angle_reason])
 
-            for av in [av for av in self.context.list(AngleValueProperty) if av.angle.vertex is not None and av.degree == 180]:
+            angle_values = [prop for prop in self.context.list(AngleValueProperty) \
+                if prop.angle.vertex is not None]
+
+            for av in [av for av in angle_values if av.degree == 0]:
+                av_is_too_old = is_too_old(av)
+                vertex = av.angle.vertex
+                pt0 = av.angle.vector0.end
+                pt1 = av.angle.vector1.end
+                for vec in (av.angle.vector0, av.angle.vector1):
+                    for nc in self.context.list(NonCollinearProperty, [vec.as_segment]):
+                        if av_is_too_old and is_too_old(nc):
+                            continue
+                        line = vertex.line_through(
+                            next(pt for pt in nc.points if pt not in vec.points)
+                        )
+                        yield (
+                            SameOrOppositeSideProperty(line, pt0, pt1, True),
+                            [str(av), str(nc)], #TODO: better comment
+                            [av, nc]
+                        )
+
+            for av in [av for av in angle_values if av.degree == 180]:
                 av_is_too_old = is_too_old(av)
                 segment = av.angle.vector0.end.segment(av.angle.vector1.end)
                 for ncl in self.context.list(NonCollinearProperty, [segment]):
