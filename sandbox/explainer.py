@@ -342,23 +342,6 @@ class Explainer:
                         continue
                     yield (AnglesRatioProperty(vec0.angle(vector), vec1.angle(vector), 1), [], [sd])
 
-            def same_dir(vector):
-                yield (vector, [])
-                for sd in same_direction:
-                    vertex = sd.angle.vertex
-                    pt0 = sd.angle.vector0.end
-                    pt1 = sd.angle.vector1.end
-                    if vertex == vector.start:
-                        if pt0 == vector.end:
-                            yield (vertex.vector(pt1), [sd])
-                        elif pt1 == vector.end:
-                            yield (vertex.vector(pt0), [sd])
-                    if vertex == vector.end:
-                        if pt0 == vector.start:
-                            yield (pt1.vector(vertex), [sd])
-                        elif pt1 == vector.start:
-                            yield (pt0.vector(vertex), [sd])
-
             for pia in self.context.list(PointInsideAngleProperty):
                 if is_too_old(pia):
                     continue
