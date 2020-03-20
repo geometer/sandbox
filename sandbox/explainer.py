@@ -259,6 +259,22 @@ class Explainer:
                     for prop in AngleValueProperty.generate(vec0.angle(vec1), 0):
                         yield (prop, [], [pv, ne0, ne1])
 
+            for prop in [p for p in self.context.list(SameOrOppositeSideProperty) if p.same]:
+                prop_is_too_old = is_too_old(prop)
+                for pt in self.scene.points(skip_auxiliary=True):
+                    if pt in prop.points:
+                        continue
+                    value = self.context.angle_value_reason(pt.angle(*prop.points))
+                    if not value or value.degree != 180 or prop_is_too_old and is_too_old(value):
+                        continue
+                    segment = prop.points[0].segment(prop.points[1])
+                    for old in prop.points:
+                        yield (
+                            SameOrOppositeSideProperty(prop.line, old, pt, True),
+                            _comment('The segment %s does not cross line %s', segment, prop.line),
+                            [prop, value]
+                        )
+
             for prop in self.context.list(SameOrOppositeSideProperty):
                 if is_too_old(prop):
                     continue
