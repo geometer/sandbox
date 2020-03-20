@@ -390,6 +390,26 @@ class Explainer:
                     [av0, av1]
                 )
 
+            for zero in [av for av in self.context.list(AngleValueProperty) if av.degree == 0]:
+                zero_is_too_old = is_too_old(zero)
+                for ne in self.context.list(NotEqualProperty):
+                    if zero_is_too_old and is_too_old(ne):
+                        continue
+                    vec = ne.points[0].vector(ne.points[1])
+                    if vec.as_segment in [zero.angle.vector0.as_segment, zero.angle.vector1.as_segment]:
+                        continue
+                    for ngl0, cmpl0 in good_angles(vec.angle(zero.angle.vector0)):
+                        for ngl1, cmpl1 in good_angles(vec.angle(zero.angle.vector1)):
+                            if cmpl0 == cmpl1:
+                                prop = AnglesRatioProperty(ngl0, ngl1, 1)
+                            else:
+                                prop = SumOfAnglesProperty(ngl0, ngl1, 180)
+                            yield (
+                                prop,
+                                _comment('%s ↑↑ %s', zero.angle.vector0, zero.angle.vector1),
+                                [zero, ne]
+                            )
+
             for pia in self.context.list(PointInsideAngleProperty):
                 if is_too_old(pia):
                     continue
@@ -792,26 +812,6 @@ class Explainer:
                     comment,
                     [av0, av1]
                 )
-
-            for zero in [av for av in self.context.list(AngleValueProperty) if av.degree == 0]:
-                zero_is_too_old = is_too_old(zero)
-                for ne in self.context.list(NotEqualProperty):
-                    if zero_is_too_old and is_too_old(ne):
-                        continue
-                    vec = ne.points[0].vector(ne.points[1])
-                    if vec.as_segment in [zero.angle.vector0.as_segment, zero.angle.vector1.as_segment]:
-                        continue
-                    for ngl0, cmpl0 in good_angles(vec.angle(zero.angle.vector0)):
-                        for ngl1, cmpl1 in good_angles(vec.angle(zero.angle.vector1)):
-                            if cmpl0 == cmpl1:
-                                prop = AnglesRatioProperty(ngl0, ngl1, 1)
-                            else:
-                                prop = SumOfAnglesProperty(ngl0, ngl1, 180)
-                            yield (
-                                prop,
-                                _comment('%s ↑↑ %s', zero.angle.vector0, zero.angle.vector1),
-                                [zero, ne]
-                            )
 
             for sa in self.context.list(SumOfAnglesProperty):
                 av = self.context.angle_value_reason(sa.angle0)
