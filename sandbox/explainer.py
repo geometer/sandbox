@@ -605,6 +605,29 @@ class Explainer:
                 yield (AngleValueProperty(a0, a0_value), comment, [ar, a2_reason])
                 yield (AngleValueProperty(a1, a1_value), comment, [ar, a2_reason])
 
+            for so in self.context.list(SameOrOppositeSideProperty):
+                for lp0, lp1 in itertools.combinations(so.line.all_points, 2):
+                    ne = self.__not_equal_reason(lp0, lp1)
+                    if ne is None:
+                        continue
+                    for pt0, pt1 in [so.points, reversed(so.points)]:
+                        if so.same:
+                            sum_reason = self.context[SumOfAnglesProperty(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0), 180)]
+                            if sum_reason and sum_reason.degree == 180:
+                                yield (
+                                    AngleValueProperty(lp0.vector(pt0).angle(lp1.vector(pt1)), 0),
+                                    'Zigzag',
+                                    [so, sum_reason, ne]
+                                )
+                        else:
+                            ratio_reason = self.context.angles_ratio_reason(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0))
+                            if ratio_reason and ratio_reason.ratio == 1:
+                                yield (
+                                    AngleValueProperty(lp0.vector(pt0).angle(pt1.vector(lp1)), 0),
+                                    'Zigzag',
+                                    [so, ratio_reason, ne]
+                                )
+
             for ka in self.context.list(AngleValueProperty):
                 base = ka.angle
                 if ka.degree == 0 or ka.degree >= 90 or base.vertex is None:
