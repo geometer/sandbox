@@ -747,7 +747,7 @@ class CoreScene:
             if circle.centre not in circle.radius.points:
                 for rad in radiuses:
                     add_property(
-                        CongruentSegmentProperty(rad, circle.radius)
+                        CongruentSegmentProperty(rad, circle.radius),
                         [_comment('Distance between centre %s and point %s on the circle of radius |%s|', circle.centre, rad.points[0], circle.radius)]
                     )
             for rad0, rad1 in itertools.combinations(radiuses, 2):
