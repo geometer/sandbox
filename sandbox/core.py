@@ -493,8 +493,11 @@ class CoreScene:
             assert coef != 0
             comment = kwargs.get('comment')
             if not comment:
-                comment = _comment('Given: |%s| == |%s|', self.as_segment, vector.as_segment)
-            return self.scene.constraint(Constraint.Kind.distances_ratio, self, vector, coef, **kwargs)
+                if coef == 1:
+                    comment = _comment('Given: |%s| == |%s|', self.as_segment, vector.as_segment)
+                else:
+                    comment = _comment('Given: |%s| == %s |%s|', self.as_segment, coef, vector.as_segment)
+            return self.scene.constraint(Constraint.Kind.length_ratio, self.as_segment, vector.as_segment, coef, **kwargs)
 
         def parallel_constraint(self, vector, **kwargs):
             """
@@ -707,13 +710,13 @@ class CoreScene:
                 continue
             add_property(NotEqualProperty(cnstr.params[0], cnstr.params[1]), cnstr.comments)
 
-        for cnstr in self.constraints(Constraint.Kind.distances_ratio):
+        for cnstr in self.constraints(Constraint.Kind.length_ratio):
             if any(param.auxiliary for param in [*cnstr.params[0].points, *cnstr.params[1].points]):
                 continue
             if cnstr.params[2] != 1:
                 continue
             add_property(
-                CongruentSegmentProperty(cnstr.params[0].as_segment, cnstr.params[1].as_segment),
+                CongruentSegmentProperty(cnstr.params[0], cnstr.params[1]),
                 cnstr.comments
             )
 
@@ -851,7 +854,7 @@ class Constraint:
         quadrilateral     = ('quadrilateral', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         convex_polygon    = ('convex_polygon', Stage.validation, List[CoreScene.Point])
         distance          = ('distance', Stage.adjustment, CoreScene.Vector, int)
-        distances_ratio   = ('distances_ratio', Stage.adjustment, CoreScene.Vector, CoreScene.Vector, int)
+        length_ratio      = ('length_ratio', Stage.adjustment, CoreScene.Segment, CoreScene.Segment, int)
         parallel_vectors  = ('parallel_vectors', Stage.adjustment, CoreScene.Vector, CoreScene.Vector)
         angles_ratio      = ('angles_ratio', Stage.adjustment, CoreScene.Angle, CoreScene.Angle, int)
         perpendicular     = ('perpendicular', Stage.adjustment, CoreScene.Line, CoreScene.Line)

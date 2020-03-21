@@ -444,11 +444,11 @@ class Placement(BasePlacement):
             if cnstr.kind == Constraint.Kind.distance:
                 has_distance_constraint = True
                 dist_square += (self.length(cnstr.params[0]) - np.float128(cnstr.params[1])) ** 2
-            elif cnstr.kind == Constraint.Kind.distances_ratio:
-                vec0 = cnstr.params[0]
-                vec1 = cnstr.params[1]
+            elif cnstr.kind == Constraint.Kind.length_ratio:
+                seg0 = cnstr.params[0]
+                seg1 = cnstr.params[1]
                 coef = np.float128(cnstr.params[2])
-                numb_square += (self.length(vec0) / self.length(vec1) - coef) ** 2
+                numb_square += (self.length(seg0) / self.length(seg1) - coef) ** 2
             elif cnstr.kind == Constraint.Kind.collinear:
                 pt = cnstr.params[0]
                 vec0 = pt.vector(cnstr.params[1])
