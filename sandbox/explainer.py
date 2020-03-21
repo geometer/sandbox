@@ -860,6 +860,22 @@ class Explainer:
                             [sa, av]
                         )
 
+            for av in self.context.list(AngleValueProperty):
+                if is_too_old(av) or av.angle.vertex is None:
+                    continue
+                if av.degree in (0, 180):
+                    yield (
+                        CollinearProperty(*av.angle.points),
+                        '',#TODO: write comment
+                        [av]
+                    )
+                else:
+                    yield (
+                        NonCollinearProperty(*av.angle.points),
+                        '',#TODO: write comment
+                        [av]
+                    )
+
             congruent_angles = [ar for ar in self.context.list(AnglesRatioProperty) if ar.ratio == 1 and ar.angle0.vertex and ar.angle1.vertex]
             def pts(prop):
                 return {prop.angle0.points, prop.angle1.points}
@@ -892,6 +908,24 @@ class Explainer:
                 if vec0.as_segment == vec1.as_segment:
                     return True
                 return self.__congruent_segments_reason(vec0.as_segment, vec1.as_segment)
+
+            for ca in congruent_angles:
+                ncl = self.__not_collinear_reason(*ca.angle0.points)
+                if ncl:
+                    if not is_too_old(ca) or not is_too_old(ncl):
+                        yield (
+                            NonCollinearProperty(*ca.angle1.points),
+                            'Transitivity',
+                            [ca, ncl]
+                        )
+                else:
+                    ncl = self.__not_collinear_reason(*ca.angle1.points)
+                    if ncl and (not is_too_old(ca) or not is_too_old(ncl)):
+                        yield (
+                            NonCollinearProperty(*ca.angle0.points),
+                            'Transitivity',
+                            [ca, ncl]
+                        )
 
             for ca in congruent_angles:
                 ncl = self.__not_collinear_reason(*ca.angle0.points)
