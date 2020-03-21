@@ -8,7 +8,7 @@ scene = Scene()
 
 A, B, C = scene.triangle(labels=('A', 'B', 'C'))
 scene.perpendicular_constraint((A, C), (B, C), comment='Given: AC ⟂ BC')
-A.segment(C).length_ratio_constraint(B.segment(C), 1, comment='Given: AC = BC')
+A.segment(C).ratio_constraint(B.segment(C), 1, comment='Given: AC = BC')
 bisector = C.angle(A, B).bisector_line()
 D = bisector.intersection_point(A.line_through(B), label='D')
 
