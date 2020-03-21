@@ -9,10 +9,10 @@ class TestSympy1(PlacementTest):
         scene = Scene()
 
         A, B, C = scene.triangle(labels=('A', 'B', 'C'))
-        A.vector(B).length_equal_constraint(A.vector(C))
+        A.segment(B).congruent_constraint(A.segment(C))
         altitude = A.perpendicular_line(B.line_through(C), label='AD')
         D = altitude.intersection_point(B.line_through(C, label='BC'))
-        B.vector(C).length_ratio_constraint(A.vector(D), 2 / sp.sqrt(3))
+        B.segment(C).ratio_constraint(A.segment(D), 2 / sp.sqrt(3))
 
         return iterative_placement(scene)
 
@@ -24,9 +24,9 @@ class TestSympy2(PlacementTest):
         scene = Scene()
 
         A, B, C = scene.triangle(labels=('A', 'B', 'C'))
-        A.vector(B).length_equal_constraint(A.vector(C))
-        A.vector(B).length_equal_constraint(B.vector(C))
-        A.vector(B).length_constraint(1)
+        A.segment(B).congruent_constraint(A.segment(C))
+        A.segment(B).congruent_constraint(B.segment(C))
+        A.segment(B).length_constraint(1)
         altitude = A.perpendicular_line(B.line_through(C), label='AD')
         D = altitude.intersection_point(B.line_through(C, label='BC'), label='D')
 
@@ -40,9 +40,9 @@ class TestSympy3(PlacementTest):
         scene = Scene()
 
         A, B, C = scene.triangle(labels=('A', 'B', 'C'))
-        A.vector(B).length_equal_constraint(A.vector(C))
-        A.vector(B).length_equal_constraint(B.vector(C))
-        A.vector(B).length_constraint(sp.sqrt(3))
+        A.segment(B).congruent_constraint(A.segment(C))
+        A.segment(B).congruent_constraint(B.segment(C))
+        A.segment(B).length_constraint(sp.sqrt(3))
         altitude = A.perpendicular_line(B.line_through(C), label='AD')
         D = altitude.intersection_point(B.line_through(C, label='BC'), label='D')
 

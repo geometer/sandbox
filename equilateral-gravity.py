@@ -7,8 +7,8 @@ from sandbox.explainer import Explainer
 scene = Scene()
 
 A, B, C = scene.triangle(labels=['A', 'B', 'C'])
-A.vector(C).length_equal_constraint(A.vector(B))
-B.vector(C).length_equal_constraint(A.vector(B))
+A.segment(C).congruent_constraint(A.segment(B))
+B.segment(C).congruent_constraint(A.segment(B))
 scene.gravity_centre_point(A, B, C, label='D')
 
 hunter = Hunter(scene)

@@ -71,9 +71,9 @@ class Scene(CoreScene):
         centre = bisector0.intersection_point(bisector1, **kwargs)
         bisector2 = self.perpendicular_bisector_line(triangle[0], triangle[1], auxiliary=True)
         centre.belongs_to(bisector2)
-        for vec0, vec1 in itertools.combinations([centre.vector(pt) for pt in triangle], 2):
-            vec0.length_ratio_constraint(
-                vec1, 1, guaranteed=True,
+        for side0, side1 in itertools.combinations([centre.segment(pt) for pt in triangle], 2):
+            side0.ratio_constraint(
+                side1, 1, guaranteed=True,
                 comment=_comment('%s is circumcentre of △ %s %s %s', centre, *triangle)
             )
         return centre

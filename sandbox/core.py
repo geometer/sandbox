@@ -120,7 +120,7 @@ class CoreScene:
                 self.vector(new_point).parallel_constraint(vector, guaranteed=True)
             else:
                 new_point.vector(self).parallel_constraint(vector, guaranteed=True)
-            self.vector(new_point).length_ratio_constraint(vector, sp.Abs(coef), guaranteed=True)
+            self.segment(new_point).ratio_constraint(vector.as_segment, sp.Abs(coef), guaranteed=True)
             return new_point
 
         def ratio_point(self, point, coef0: int, coef1: int, **kwargs):
@@ -139,7 +139,7 @@ class CoreScene:
                 return self
             new_point = self.translated_point(self.vector(point), divide(coef1, coef0 + coef1), **kwargs)
             new_point.collinear_constraint(self, point, guaranteed=True)
-            self.vector(new_point).length_ratio_constraint(new_point.vector(point), divide(coef1, coef0), guaranteed=True)
+            self.segment(new_point).ratio_constraint(new_point.segment(point), divide(coef1, coef0), guaranteed=True)
             if coef0 > 0 and coef1 > 0 or coef0 < 0 and coef1 < 0:
                 self.vector(point).parallel_constraint(self.vector(new_point), guaranteed=True)
                 point.vector(self).parallel_constraint(point.vector(new_point), guaranteed=True)
@@ -251,7 +251,7 @@ class CoreScene:
             """
             if isinstance(A, str):
                 A = self.scene.get(A)
-            return self.vector(A).length_constraint(distance, **kwargs)
+            return self.segment(A).length_constraint(distance, **kwargs)
 
         def opposite_side_constraint(self, point, line, **kwargs):
             """
@@ -456,8 +456,8 @@ class CoreScene:
 
         def angle(self, other):
             angle = CoreScene.Angle.create(self, other)
-            self.non_zero_length_constraint(comment=_comment('%s is side of %s', self, angle))
-            other.non_zero_length_constraint(comment=_comment('%s is side of %s', other, angle))
+            self.as_segment.non_zero_length_constraint(comment=_comment('%s is side of %s', self, angle))
+            other.as_segment.non_zero_length_constraint(comment=_comment('%s is side of %s', other, angle))
             return angle
 
         @property
@@ -468,37 +468,6 @@ class CoreScene:
         def reversed(self):
             return CoreScene.Vector(self.end, self.start)
 
-        def non_zero_length_constraint(self, **kwargs):
-            """
-            |self| > 0
-            """
-            self.start.not_equal_constraint(self.end, **kwargs)
-
-        def length_constraint(self, length, **kwargs):
-            """
-            |self| == length
-            """
-            if length > 0:
-                self.non_zero_length_constraint(**kwargs)
-            #TODO: equal_constraint otherwise?
-            self.scene.constraint(Constraint.Kind.distance, self, length, **kwargs)
-
-        def length_ratio_constraint(self, vector, coef, **kwargs):
-            """
-            |self| == |vector| * coef
-            coef is a non-zero number
-            """
-            assert isinstance(vector, CoreScene.Vector)
-            assert self.scene == vector.scene
-            assert coef != 0
-            comment = kwargs.get('comment')
-            if not comment:
-                if coef == 1:
-                    comment = _comment('Given: |%s| == |%s|', self.as_segment, vector.as_segment)
-                else:
-                    comment = _comment('Given: |%s| == %s |%s|', self.as_segment, coef, vector.as_segment)
-            return self.scene.constraint(Constraint.Kind.length_ratio, self.as_segment, vector.as_segment, coef, **kwargs)
-
         def parallel_constraint(self, vector, **kwargs):
             """
             Self and vector have the same direction.
@@ -507,12 +476,6 @@ class CoreScene:
             assert isinstance(vector, CoreScene.Vector)
             assert self.scene == vector.scene
             return self.scene.constraint(Constraint.Kind.parallel_vectors, self, vector, **kwargs)
-
-        def length_equal_constraint(self, vector, **kwargs):
-            """
-            |self| == |vector|
-            """
-            self.length_ratio_constraint(vector, 1, **kwargs)
 
         def __eq__(self, other):
             return self.points == other.points
@@ -539,6 +502,45 @@ class CoreScene:
             point = self.points[0].line_through(self.points[1], auxiliary=True).free_point(**kwargs)
             point.inside_constraint(self)
             return point
+
+        def ratio_constraint(self, segment, coef, **kwargs):
+            """
+            |self| == |segment| * coef
+            coef is a non-zero number
+            """
+            assert isinstance(segment, CoreScene.Segment)
+            assert self.scene == segment.scene
+            assert coef != 0
+            args = dict(kwargs)
+            comment = args.get('comment')
+            if not comment:
+                if coef == 1:
+                    comment = _comment('Given: |%s| == |%s|', self, segment)
+                else:
+                    comment = _comment('Given: |%s| == %s |%s|', self, coef, segment)
+                args['comment'] = comment
+            return self.scene.constraint(Constraint.Kind.length_ratio, self, segment, coef, **args)
+
+        def congruent_constraint(self, segment, **kwargs):
+            """
+            |self| == |vector|
+            """
+            self.ratio_constraint(segment, 1, **kwargs)
+
+        def non_zero_length_constraint(self, **kwargs):
+            """
+            |self| > 0
+            """
+            self.points[0].not_equal_constraint(self.points[1], **kwargs)
+
+        def length_constraint(self, length, **kwargs):
+            """
+            |self| == length
+            """
+            if length > 0:
+                self.non_zero_length_constraint(**kwargs)
+            #TODO: equal_constraint otherwise?
+            self.scene.constraint(Constraint.Kind.distance, self, length, **kwargs)
 
         def __eq__(self, other):
             return self.point_set == other.point_set

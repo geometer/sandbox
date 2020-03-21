@@ -14,7 +14,7 @@ D = scene.orthocentre_point((A, B, C), label='D')
 D.inside_triangle_constraint(A, B, C)
 H = A.line_through(D).intersection_point(B.line_through(C), label='H')
 G = C.line_through(D).intersection_point(A.line_through(B), label='G')
-A.vector(B).length_equal_constraint(C.vector(D), comment='Given: |AB| = |CD|')
+A.segment(B).congruent_constraint(C.segment(D), comment='Given: |AB| = |CD|')
 
 #Proof
 # +* 1* |AB| = |CD|                                *given
