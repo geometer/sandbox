@@ -45,7 +45,7 @@ class Explainer:
 
     def __angles_ratio_reasons(self, angle):
         reasons = self.context.list(AnglesRatioProperty, keys=[angle])
-        reasons.sort(key=lambda prop: len(prop.angle0.points) + len(prop.angle1.points))
+        reasons.sort(key=lambda prop: prop.penalty)
         return reasons
 
     def __explain_all(self):
