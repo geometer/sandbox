@@ -903,10 +903,10 @@ class Explainer:
                         [ar0, ar1]
                     )
 
-            def congruent_vectors(vec0, vec1):
-                if vec0.as_segment == vec1.as_segment:
+            def congruent_segments(seg0, seg1):
+                if seg0 == seg1:
                     return True
-                return self.__congruent_segments_reason(vec0.as_segment, vec1.as_segment)
+                return self.__congruent_segments_reason(seg0, seg1)
 
             for ca in congruent_angles:
                 ncl = self.__not_collinear_reason(*ca.angle0.points)
@@ -933,27 +933,27 @@ class Explainer:
                 ca_is_too_old = is_too_old(ca) and is_too_old(ncl)
                 ang0 = ca.angle0
                 ang1 = ca.angle1
-                for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
-                    rsn0 = congruent_vectors(vec0, ang1.vector0)
+                for seg0, seg1 in [(ang0.vector0.as_segment, ang0.vector1.as_segment), (ang0.vector1.as_segment, ang0.vector0.as_segment)]:
+                    rsn0 = congruent_segments(seg0, ang1.vector0.as_segment)
                     if rsn0 is None:
                         continue
-                    rsn1 = congruent_vectors(vec1, ang1.vector1)
+                    rsn1 = congruent_segments(seg1, ang1.vector1.as_segment)
                     if rsn1 is None:
                         continue
                     if ca_is_too_old and (rsn0 == True or is_too_old(rsn0)) and (rsn1 == True or is_too_old(rsn1)):
                         continue
                     if rsn0 == True:
-                        comment = _comment('Common side %s, pair of congruent sides, and angle between the sides', vec0)
+                        comment = _comment('Common side %s, pair of congruent sides, and angle between the sides', seg0)
                         premises = [rsn1, ca, ncl]
                     elif rsn1 == True:
-                        comment = _comment('Common side %s, pair of congruent sides, and angle between the sides', vec1)
+                        comment = _comment('Common side %s, pair of congruent sides, and angle between the sides', seg1)
                         premises = [rsn0, ca, ncl]
                     else:
                         comment = 'Two pairs of congruent sides, and angle between the sides'
                         premises = [rsn0, rsn1, ca, ncl]
                     yield (
                         CongruentTrianglesProperty(
-                            (ang0.vertex, vec0.end, vec1.end),
+                            (ang0.vertex, seg0.points[1], seg1.points[1]),
                             (ang1.vertex, ang1.vector0.end, ang1.vector1.end)
                         ), comment, premises
                     )

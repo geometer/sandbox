@@ -446,10 +446,13 @@ class CoreScene:
             self.start = start
             self.end = end
             self.points = (start, end)
+            self.__segment = None
 
         @property
         def as_segment(self):
-            return self.start.segment(self.end)
+            if self.__segment is None:
+                self.__segment = self.start.segment(self.end)
+            return self.__segment
 
         def line(self, **kwargs):
             return self.start.line_through(self.end, **kwargs)
