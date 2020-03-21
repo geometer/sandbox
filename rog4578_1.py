@@ -2,6 +2,7 @@
 # https://www.facebook.com/groups/parmenides52/permalink/2779763428804012/
 
 import math
+import sys
 
 from sandbox import *
 from sandbox.hunter import Hunter
@@ -47,16 +48,21 @@ hunter.stats().dump()
 explainer = Explainer(scene, hunter.properties)
 print('\tGuessed: %s = %s' % (angle, explainer.guessed(angle)))
 
-explainer.explain()
+if '--profile' in sys.argv[1:]:
+    import cProfile
+    cProfile.run('explainer.explain()')
+else:
+    explainer.explain()
 explainer.stats().dump()
 print('\tExplained: %s = %s' % (angle, explainer.explained(angle)))
 
-#def dump(prop, level=0):
-#    print('\t' + '  ' * level + str(prop) + ': ' + ' + '.join([str(com) for com in prop.reason.comments]))
-#    if prop.reason.premises:
-#        for premise in prop.reason.premises:
-#            dump(premise, level + 1)
-#
-#explanation = explainer.explanation(angle)
-#if explanation:
-#    dump(explanation)
+if '--explain' in sys.argv[1:]:
+    def dump(prop, level=0):
+        print('\t' + '  ' * level + str(prop) + ': ' + ' + '.join([str(com) for com in prop.reason.comments]))
+        if prop.reason.premises:
+            for premise in prop.reason.premises:
+                dump(premise, level + 1)
+
+    explanation = explainer.explanation(angle)
+    if explanation:
+        dump(explanation)
