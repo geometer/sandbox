@@ -337,7 +337,7 @@ class CongruentTrianglesProperty(Property):
 
 class IsoscelesTriangleProperty(Property):
     """
-    Isosceles triangle (might have zero apex or base angle)
+    Isosceles triangle
     """
     def __init__(self, apex, base):
         self.apex = apex
