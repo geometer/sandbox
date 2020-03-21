@@ -866,7 +866,7 @@ class Explainer:
                     )
 
             def congruent_vectors(vec0, vec1):
-                if vec0 == vec1:
+                if vec0.as_segment == vec1.as_segment:
                     return True
                 return self.__congruent_segments_reason(vec0.as_segment, vec1.as_segment)
 
