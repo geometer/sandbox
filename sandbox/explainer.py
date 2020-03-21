@@ -883,12 +883,6 @@ class Explainer:
                         continue
                     if ca_is_too_old and (rsn0 == True or is_too_old(rsn0)) and (rsn1 == True or is_too_old(rsn1)):
                         continue
-                    prop = CongruentTrianglesProperty(
-                        (ang0.vertex, vec0.end, vec1.end),
-                        (ang1.vertex, ang1.vector0.end, ang1.vector1.end)
-                    )
-                    if self.context[prop] is not None:
-                        continue
                     if rsn0 == True:
                         comment = _comment('Common side %s, pair of congruent sides, and angle between the sides', vec0)
                         premises = [rsn1, ca]
@@ -898,7 +892,12 @@ class Explainer:
                     else:
                         comment = 'Two pairs of congruent sides, and angle between the sides'
                         premises = [rsn0, rsn1, ca]
-                    yield (prop, comment, premises)
+                    yield (
+                        CongruentTrianglesProperty(
+                            (ang0.vertex, vec0.end, vec1.end),
+                            (ang1.vertex, ang1.vector0.end, ang1.vector1.end)
+                        ), comment, premises
+                    )
 
             congruent_segments = self.context.list(CongruentSegmentProperty)
             def common_point(segment0, segment1):
