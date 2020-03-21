@@ -219,6 +219,7 @@ class AnglesRatioProperty(Property):
             self.angle1 = angle0
             self.ratio = divide(1, ratio)
 
+        self.angle_set = frozenset([angle0, angle1])
         self.__hash = None
 
     def keys(self):
@@ -232,19 +233,11 @@ class AnglesRatioProperty(Property):
             return _comment('%s = %s %s', self.angle0, self.ratio, self.angle1)
 
     def __eq__(self, other):
-        if not isinstance(other, AnglesRatioProperty):
-            return False
-
-        if self.angle0 == other.angle0:
-            return self.angle1 == other.angle1
-        if self.ratio == 1:
-            if self.angle0 == other.angle1:
-                return self.angle1 == other.angle0
-        return False
+        return isinstance(other, AnglesRatioProperty) and self.angle_set == other.angle_set
 
     def __hash__(self):
         if self.__hash is None:
-            self.__hash = hash(AnglesRatioProperty) + hash(self.angle0) + hash(self.angle1)
+            self.__hash = hash(AnglesRatioProperty) + hash(self.angle_set)
         return self.__hash
 
 class SumOfAnglesProperty(Property):
