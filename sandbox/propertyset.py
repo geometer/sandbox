@@ -55,13 +55,13 @@ class PropertySet:
     def __getitem__(self, prop):
         return self.__full_set.get(prop)
 
-    def angle_value_reason(self, angle):
+    def angle_value_property(self, angle):
         return self.__angle_values.get(angle)
 
-    def angles_ratio_reason(self, angle0, angle1):
+    def angles_ratio_property(self, angle0, angle1):
         return self.__angle_ratios.get(frozenset([angle0, angle1]))
 
-    def lengths_ratio_reason(self, segment0, segment1):
+    def lengths_ratio_property(self, segment0, segment1):
         return self.__length_ratios.get(frozenset([segment0, segment1]))
 
     def keys_num(self):

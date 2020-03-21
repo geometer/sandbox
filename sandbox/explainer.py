@@ -41,7 +41,7 @@ class Explainer:
         return self.context[NonCollinearProperty(pt0, pt1, pt2)]
 
     def __congruent_segments_reason(self, seg0, seg1):
-        reason = self.context.lengths_ratio_reason(seg0, seg1)
+        reason = self.context.lengths_ratio_property(seg0, seg1)
         if reason and reason.ratio == 1:
             return reason
         return None
@@ -271,7 +271,7 @@ class Explainer:
                 for pt in self.scene.points(skip_auxiliary=True):
                     if pt in prop.points:
                         continue
-                    value = self.context.angle_value_reason(pt.angle(*prop.points))
+                    value = self.context.angle_value_property(pt.angle(*prop.points))
                     if not value or value.degree != 180 or prop_is_too_old and is_too_old(value):
                         continue
                     segment = prop.points[0].segment(prop.points[1])
@@ -513,7 +513,7 @@ class Explainer:
                 if inside_angle_reason is None:
                     #TODO: consider angle difference
                     continue
-                sum_reason = self.context.angle_value_reason(angle)
+                sum_reason = self.context.angle_value_property(angle)
                 if sum_reason is None:
                     continue
                 value = sum_reason.degree
@@ -597,7 +597,7 @@ class Explainer:
                 s0.remove(a1.vertex)
                 third_vertex = s0.pop()
                 a2 = third_vertex.angle(a0.vertex, a1.vertex)
-                a2_reason = self.context.angle_value_reason(a2)
+                a2_reason = self.context.angle_value_property(a2)
                 if a2_reason is None:
                     continue
                 #a0 + a1 + a2 = 180
@@ -623,7 +623,7 @@ class Explainer:
                                     [so, sum_reason, ne]
                                 )
                         else:
-                            ratio_reason = self.context.angles_ratio_reason(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0))
+                            ratio_reason = self.context.angles_ratio_property(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0))
                             if ratio_reason and ratio_reason.ratio == 1:
                                 yield (
                                     AngleValueProperty(lp0.vector(pt0).angle(pt1.vector(lp1)), 0),
@@ -642,7 +642,7 @@ class Explainer:
                             if pt in vec0.points:
                                 continue
                             for angle in [pt.angle(vec1.end, p) for p in vec0.points]:
-                                ka2 = self.context.angle_value_reason(angle)
+                                ka2 = self.context.angle_value_property(angle)
                                 if ka2 is None:
                                     continue
                                 if ka2.degree > ka.degree:
@@ -731,7 +731,7 @@ class Explainer:
                 )
 
             for ar in self.context.list(AnglesRatioProperty):
-                value = self.context.angle_value_reason(ar.angle0)
+                value = self.context.angle_value_property(ar.angle0)
                 if value:
                     if ar.ratio == 1:
                         comment = _comment('%s = %s = %sº', ar.angle1, ar.angle0, value.degree)
@@ -741,7 +741,7 @@ class Explainer:
                         AngleValueProperty(ar.angle1, divide(value.degree, ar.ratio)),
                         comment, [ar, value]
                     )
-                value = self.context.angle_value_reason(ar.angle1)
+                value = self.context.angle_value_property(ar.angle1)
                 if value:
                     if ar.ratio == 1:
                         comment = _comment('%s = %s = %sº', ar.angle0, ar.angle1, value.degree)
@@ -813,7 +813,7 @@ class Explainer:
                             [av]
                         )
                 else:
-                    second_reason = self.context.angle_value_reason(second)
+                    second_reason = self.context.angle_value_property(second)
                     if second_reason:
                         yield (
                             AngleValueProperty(third, 180 - av.degree - second_reason.degree),
@@ -821,7 +821,7 @@ class Explainer:
                             [av, second_reason]
                         )
                     else:
-                        third_reason = self.context.angle_value_reason(third)
+                        third_reason = self.context.angle_value_property(third)
                         if third_reason:
                             yield (
                                 AngleValueProperty(second, 180 - av.degree - third_reason.degree),
@@ -844,7 +844,7 @@ class Explainer:
                 )
 
             for sa in self.context.list(SumOfAnglesProperty):
-                av = self.context.angle_value_reason(sa.angle0)
+                av = self.context.angle_value_property(sa.angle0)
                 if av:
                     #TODO: report contradiction if value is already known
                     #TODO: report contradiction if the sum is greater than the summand
@@ -854,7 +854,7 @@ class Explainer:
                         [sa, av]
                     )
                 else:
-                    av = self.context.angle_value_reason(sa.angle1)
+                    av = self.context.angle_value_property(sa.angle1)
                     if av:
                         #TODO: report contradiction if the sum is greater than the summand
                         yield (
@@ -1076,11 +1076,11 @@ class Explainer:
 
     def explained(self, obj):
         if isinstance(obj, Scene.Angle):
-            rsn = self.context.angle_value_reason(obj)
+            rsn = self.context.angle_value_property(obj)
             return rsn.degree if rsn else None
         raise Exception('Explanation not supported for objects of type %s' % type(obj).__name__)
 
     def explanation(self, obj):
         if isinstance(obj, Scene.Angle):
-            return self.context.angle_value_reason(obj)
+            return self.context.angle_value_property(obj)
         return None
