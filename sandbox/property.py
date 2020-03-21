@@ -174,7 +174,7 @@ class AngleValueProperty(Property):
     """
     @staticmethod
     def generate(angle, value):
-        for ngl, complementary in good_angles(angle):
+        for ngl, complementary in good_angles(angle, include_four_point=value == 0 or value == 180):
             yield AngleValueProperty(ngl, 180 - value if complementary else value)
 
     def __init__(self, angle, degree):

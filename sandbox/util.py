@@ -19,7 +19,7 @@ def normalize_number(num):
         return num
     return int(num) if num.is_integer else num
 
-def good_angles(angle):
+def good_angles(angle, include_four_point=False):
     """
     Returns list of pairs (ang, complementary) where ang is an angle
     consisting of the same segments as the given angle, and
@@ -42,10 +42,12 @@ def good_angles(angle):
         return [(rev(True, False), True)]
     if angle.vector0.end == angle.vector1.end:
         return [(rev(True, True), False)]
-    return [
-        (angle, False),
-        (rev(False, True), True)
-    ]
+    if include_four_point:
+        return [
+            (angle, False),
+            (rev(False, True), True)
+        ]
+    return []
 
 class ParametrizedString:
     def __init__(self, format_string, *params):
