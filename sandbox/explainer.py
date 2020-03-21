@@ -43,7 +43,7 @@ class Explainer:
     def __congruent_segments_reason(self, seg0, seg1):
         return self.context[CongruentSegmentProperty(seg0, seg1)]
 
-    def __angle_ratio_reasons(self, angle):
+    def __angles_ratio_reasons(self, angle):
         reasons = self.context.list(AnglesRatioProperty, keys=[angle])
         reasons.sort(key=lambda prop: len(prop.angle0.points) + len(prop.angle1.points))
         return reasons
@@ -98,8 +98,8 @@ class Explainer:
                 if is_too_old(ar0):
                     continue
                 processed.add(ar0)
-                angle_ratios0 = list(self.__angle_ratio_reasons(ar0.angle0))
-                angle_ratios1 = list(self.__angle_ratio_reasons(ar0.angle1))
+                angle_ratios0 = list(self.__angles_ratio_reasons(ar0.angle0))
+                angle_ratios1 = list(self.__angles_ratio_reasons(ar0.angle1))
                 tuples0 = [
                     ((ar.angle0, False, ar) \
                     if ar.angle1 == ar0.angle0 \
