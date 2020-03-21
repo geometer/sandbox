@@ -207,9 +207,6 @@ class AnglesRatioProperty(Property):
     """
     def __init__(self, angle0, angle1, ratio):
         # angle0 / angle1 = ratio
-        if ratio < 0:
-            ratio = -ratio
-
         if ratio >= 1:
             self.angle0 = angle0
             self.angle1 = angle1
@@ -264,13 +261,19 @@ class SumOfAnglesProperty(Property):
     def __hash__(self):
         return hash(SumOfAnglesProperty) + hash(self.angle_set)
 
-class CongruentSegmentProperty(Property):
+class SegmentLengthRatioProperty(Property):
     """
-    Two segments are congruent
+    Two segment lengths ratio
     """
-    def __init__(self, segment0, segment1):
-        self.segment0 = segment0
-        self.segment1 = segment1
+    def __init__(self, segment0, segment1, ratio):
+        if ratio >= 1:
+            self.segment0 = segment0
+            self.segment1 = segment1
+            self.ratio = normalize_number(ratio)
+        else:
+            self.segment0 = segment1
+            self.segment1 = segment0
+            self.ratio = divide(1, ratio)
         self.__segment_set = frozenset([segment0, segment1])
 
     def keys(self):
@@ -278,14 +281,16 @@ class CongruentSegmentProperty(Property):
 
     @property
     def description(self):
-        return _comment('|%s| = |%s|', self.segment0, self.segment1)
+        if self.ratio == 1:
+            return _comment('|%s| = |%s|', self.segment0, self.segment1)
+        return _comment('|%s| = %s |%s|', self.segment0, self.ratio, self.segment1)
 
     def __eq__(self, other):
-        return isinstance(other, CongruentSegmentProperty) and \
+        return isinstance(other, SegmentLengthRatioProperty) and \
             self.__segment_set == other.__segment_set
 
     def __hash__(self):
-        return hash(CongruentSegmentProperty) + hash(self.__segment_set)
+        return hash(SegmentLengthRatioProperty) + hash(self.__segment_set)
 
 class SimilarTrianglesProperty(Property):
     """

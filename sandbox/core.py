@@ -8,7 +8,7 @@ import itertools
 import sympy as sp
 from typing import List
 
-from .property import AngleValueProperty, CollinearProperty, NonCollinearProperty, NotEqualProperty, CongruentSegmentProperty
+from .property import AngleValueProperty, CollinearProperty, NonCollinearProperty, NotEqualProperty, SegmentLengthRatioProperty
 from .propertyset import PropertySet
 from .reason import Reason
 from .util import _comment, divide
@@ -719,10 +719,8 @@ class CoreScene:
         for cnstr in self.constraints(Constraint.Kind.length_ratio):
             if any(param.auxiliary for param in [*cnstr.params[0].points, *cnstr.params[1].points]):
                 continue
-            if cnstr.params[2] != 1:
-                continue
             add_property(
-                CongruentSegmentProperty(cnstr.params[0], cnstr.params[1]),
+                SegmentLengthRatioProperty(cnstr.params[0], cnstr.params[1], cnstr.params[2]),
                 cnstr.comments
             )
 
@@ -756,12 +754,12 @@ class CoreScene:
             if circle.centre not in circle.radius.points:
                 for rad in radiuses:
                     add_property(
-                        CongruentSegmentProperty(rad, circle.radius),
+                        SegmentLengthRatioProperty(rad, circle.radius, 1),
                         [_comment('Distance between centre %s and point %s on the circle of radius |%s|', circle.centre, rad.points[0], circle.radius)]
                     )
             for rad0, rad1 in itertools.combinations(radiuses, 2):
                 add_property(
-                    CongruentSegmentProperty(rad0, rad1),
+                    SegmentLengthRatioProperty(rad0, rad1, 1),
                     [_comment('Two radiuses of the same circle with centre %s', circle.centre)]
                 )
 

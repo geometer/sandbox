@@ -41,7 +41,10 @@ class Explainer:
         return self.context[NonCollinearProperty(pt0, pt1, pt2)]
 
     def __congruent_segments_reason(self, seg0, seg1):
-        return self.context[CongruentSegmentProperty(seg0, seg1)]
+        reason = self.context[SegmentLengthRatioProperty(seg0, seg1, 1)]
+        if reason and reason.ratio == 1:
+            return reason
+        return None
 
     def __angles_ratio_reasons(self, angle):
         reasons = self.context.list(AnglesRatioProperty, keys=[angle])
@@ -224,7 +227,7 @@ class Explainer:
                                     [ncl, col, ne]
                                 )
 
-            for cs in self.context.list(CongruentSegmentProperty):
+            for cs in self.context.list(SegmentLengthRatioProperty):
                 vec0 = cs.segment0
                 vec1 = cs.segment1
 
@@ -234,7 +237,7 @@ class Explainer:
                     yield (NotEqualProperty(*vec1.points), _comment('Otherwise, %s = %s', *vec0.points), [cs, ne0])
                 elif ne1 is not None and ne0 is None:
                     yield (NotEqualProperty(*vec0.points), _comment('Otherwise, %s = %s', *vec1.points), [cs, ne1])
-                elif ne0 is None and ne1 is None:
+                elif ne0 is None and ne1 is None and cs.ratio == 1:
                     ne = None
                     if vec0.points[0] == vec1.points[0]:
                         ne = self.__not_equal_reason(vec0.points[1], vec1.points[1])
@@ -664,9 +667,10 @@ class Explainer:
                     [iso]
                 )
                 yield (
-                    CongruentSegmentProperty(
+                    SegmentLengthRatioProperty(
                         iso.apex.segment(iso.base.points[0]),
-                        iso.apex.segment(iso.base.points[1])
+                        iso.apex.segment(iso.base.points[1]),
+                        1
                     ),
                     _comment('Legs of isosceles △ %s %s %s', iso.apex, *iso.base.points),
                     [iso]
@@ -692,7 +696,7 @@ class Explainer:
                         [equ]
                     )
 
-            for cs in self.context.list(CongruentSegmentProperty):
+            for cs in [p for p in self.context.list(SegmentLengthRatioProperty) if p.ratio == 1]:
                 if cs.segment1.points[0] in cs.segment0.points:
                     apex = cs.segment1.points[0]
                     base0 = cs.segment1.points[1]
@@ -779,7 +783,7 @@ class Explainer:
                     segment1 = side_of(ct.DEF, i)
                     if segment0 != segment1:
                         yield (
-                            CongruentSegmentProperty(segment0, segment1),
+                            SegmentLengthRatioProperty(segment0, segment1, 1),
                             'Corresponding sides in congruent triangles',
                             [ct]
                         )
@@ -958,7 +962,7 @@ class Explainer:
                         ), comment, premises
                     )
 
-            congruent_segments = self.context.list(CongruentSegmentProperty)
+            congruent_segments = [p for p in self.context.list(SegmentLengthRatioProperty) if p.ratio == 1]
             def common_point(segment0, segment1):
                 if segment0.points[0] in segment1.points:
                     if segment0.points[1] in segment1.points:
