@@ -261,7 +261,7 @@ class SumOfAnglesProperty(Property):
     def __hash__(self):
         return hash(SumOfAnglesProperty) + hash(self.angle_set)
 
-class SegmentLengthRatioProperty(Property):
+class LengthsRatioProperty(Property):
     """
     Two segment lengths ratio
     """
@@ -274,7 +274,7 @@ class SegmentLengthRatioProperty(Property):
             self.segment0 = segment1
             self.segment1 = segment0
             self.ratio = divide(1, ratio)
-        self.__segment_set = frozenset([segment0, segment1])
+        self.segment_set = frozenset([segment0, segment1])
 
     def keys(self):
         return [self.segment0, self.segment1]
@@ -286,11 +286,10 @@ class SegmentLengthRatioProperty(Property):
         return _comment('|%s| = %s |%s|', self.segment0, self.ratio, self.segment1)
 
     def __eq__(self, other):
-        return isinstance(other, SegmentLengthRatioProperty) and \
-            self.__segment_set == other.__segment_set
+        return isinstance(other, LengthsRatioProperty) and self.segment_set == other.segment_set
 
     def __hash__(self):
-        return hash(SegmentLengthRatioProperty) + hash(self.__segment_set)
+        return hash(LengthsRatioProperty) + hash(self.segment_set)
 
 class SimilarTrianglesProperty(Property):
     """

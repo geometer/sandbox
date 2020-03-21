@@ -41,7 +41,7 @@ class Explainer:
         return self.context[NonCollinearProperty(pt0, pt1, pt2)]
 
     def __congruent_segments_reason(self, seg0, seg1):
-        reason = self.context[SegmentLengthRatioProperty(seg0, seg1, 1)]
+        reason = self.context.lengths_ratio_reason(seg0, seg1)
         if reason and reason.ratio == 1:
             return reason
         return None
@@ -227,7 +227,7 @@ class Explainer:
                                     [ncl, col, ne]
                                 )
 
-            for cs in self.context.list(SegmentLengthRatioProperty):
+            for cs in self.context.list(LengthsRatioProperty):
                 vec0 = cs.segment0
                 vec1 = cs.segment1
 
@@ -667,7 +667,7 @@ class Explainer:
                     [iso]
                 )
                 yield (
-                    SegmentLengthRatioProperty(
+                    LengthsRatioProperty(
                         iso.apex.segment(iso.base.points[0]),
                         iso.apex.segment(iso.base.points[1]),
                         1
@@ -696,7 +696,7 @@ class Explainer:
                         [equ]
                     )
 
-            for cs in [p for p in self.context.list(SegmentLengthRatioProperty) if p.ratio == 1]:
+            for cs in [p for p in self.context.list(LengthsRatioProperty) if p.ratio == 1]:
                 if cs.segment1.points[0] in cs.segment0.points:
                     apex = cs.segment1.points[0]
                     base0 = cs.segment1.points[1]
@@ -783,7 +783,7 @@ class Explainer:
                     segment1 = side_of(ct.DEF, i)
                     if segment0 != segment1:
                         yield (
-                            SegmentLengthRatioProperty(segment0, segment1, 1),
+                            LengthsRatioProperty(segment0, segment1, 1),
                             'Corresponding sides in congruent triangles',
                             [ct]
                         )
@@ -962,7 +962,7 @@ class Explainer:
                         ), comment, premises
                     )
 
-            congruent_segments = [p for p in self.context.list(SegmentLengthRatioProperty) if p.ratio == 1]
+            congruent_segments = [p for p in self.context.list(LengthsRatioProperty) if p.ratio == 1]
             def common_point(segment0, segment1):
                 if segment0.points[0] in segment1.points:
                     if segment0.points[1] in segment1.points:

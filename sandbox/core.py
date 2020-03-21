@@ -8,7 +8,7 @@ import itertools
 import sympy as sp
 from typing import List
 
-from .property import AngleValueProperty, CollinearProperty, NonCollinearProperty, NotEqualProperty, SegmentLengthRatioProperty
+from .property import AngleValueProperty, CollinearProperty, NonCollinearProperty, NotEqualProperty, LengthsRatioProperty
 from .propertyset import PropertySet
 from .reason import Reason
 from .util import _comment, divide
@@ -720,7 +720,7 @@ class CoreScene:
             if any(param.auxiliary for param in [*cnstr.params[0].points, *cnstr.params[1].points]):
                 continue
             add_property(
-                SegmentLengthRatioProperty(cnstr.params[0], cnstr.params[1], cnstr.params[2]),
+                LengthsRatioProperty(cnstr.params[0], cnstr.params[1], cnstr.params[2]),
                 cnstr.comments
             )
 
@@ -754,12 +754,12 @@ class CoreScene:
             if circle.centre not in circle.radius.points:
                 for rad in radiuses:
                     add_property(
-                        SegmentLengthRatioProperty(rad, circle.radius, 1),
+                        LengthsRatioProperty(rad, circle.radius, 1),
                         [_comment('Distance between centre %s and point %s on the circle of radius |%s|', circle.centre, rad.points[0], circle.radius)]
                     )
             for rad0, rad1 in itertools.combinations(radiuses, 2):
                 add_property(
-                    SegmentLengthRatioProperty(rad0, rad1, 1),
+                    LengthsRatioProperty(rad0, rad1, 1),
                     [_comment('Two radiuses of the same circle with centre %s', circle.centre)]
                 )
 

@@ -1,6 +1,6 @@
 import itertools
 
-from .property import AngleValueProperty, AnglesRatioProperty
+from .property import AngleValueProperty, AnglesRatioProperty, LengthsRatioProperty
 
 class PropertySet:
     def __init__(self):
@@ -8,6 +8,7 @@ class PropertySet:
         self.__full_set = {} # prop => prop
         self.__angle_values = {} # angle => prop
         self.__angle_ratios = {} # {angle0,angle1} => prop
+        self.__length_ratios = {} # {segment0,segment1} => prop
 
     def add(self, prop):
         def put(key):
@@ -26,6 +27,8 @@ class PropertySet:
             self.__angle_values[prop.angle] = prop
         elif type_key == AnglesRatioProperty:
             self.__angle_ratios[prop.angle_set] = prop
+        elif type_key == LengthsRatioProperty:
+            self.__length_ratios[prop.segment_set] = prop
 
     def list(self, property_type, keys=None):
         if keys:
@@ -57,6 +60,9 @@ class PropertySet:
 
     def angles_ratio_reason(self, angle0, angle1):
         return self.__angle_ratios.get(frozenset([angle0, angle1]))
+
+    def lengths_ratio_reason(self, segment0, segment1):
+        return self.__length_ratios.get(frozenset([segment0, segment1]))
 
     def keys_num(self):
         return len(self.__combined)
