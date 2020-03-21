@@ -456,8 +456,9 @@ class CoreScene:
 
         def angle(self, other):
             angle = CoreScene.Angle.create(self, other)
-            self.as_segment.non_zero_length_constraint(comment=_comment('%s is side of %s', self, angle))
-            other.as_segment.non_zero_length_constraint(comment=_comment('%s is side of %s', other, angle))
+            if not self.scene.is_frozen:
+                self.as_segment.non_zero_length_constraint(comment=_comment('%s is side of %s', self, angle))
+                other.as_segment.non_zero_length_constraint(comment=_comment('%s is side of %s', other, angle))
             return angle
 
         @property
