@@ -894,7 +894,10 @@ class Explainer:
                 return self.__congruent_segments_reason(vec0.as_segment, vec1.as_segment)
 
             for ca in congruent_angles:
-                ca_is_too_old = is_too_old(ca)
+                ncl = self.__not_collinear_reason(*ca.angle0.points)
+                if ncl is None:
+                    continue
+                ca_is_too_old = is_too_old(ca) and is_too_old(ncl)
                 ang0 = ca.angle0
                 ang1 = ca.angle1
                 for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
@@ -908,13 +911,13 @@ class Explainer:
                         continue
                     if rsn0 == True:
                         comment = _comment('Common side %s, pair of congruent sides, and angle between the sides', vec0)
-                        premises = [rsn1, ca]
+                        premises = [rsn1, ca, ncl]
                     elif rsn1 == True:
                         comment = _comment('Common side %s, pair of congruent sides, and angle between the sides', vec1)
-                        premises = [rsn0, ca]
+                        premises = [rsn0, ca, ncl]
                     else:
                         comment = 'Two pairs of congruent sides, and angle between the sides'
-                        premises = [rsn0, rsn1, ca]
+                        premises = [rsn0, rsn1, ca, ncl]
                     yield (
                         CongruentTrianglesProperty(
                             (ang0.vertex, vec0.end, vec1.end),
