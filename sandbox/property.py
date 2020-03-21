@@ -22,7 +22,7 @@ class NonCollinearProperty(Property):
     """
     def __init__(self, point0, point1, point2):
         self.points = (point0, point1, point2)
-        self.__point_set = frozenset(self.points)
+        self.point_set = frozenset(self.points)
 
     def keys(self, lengths=None):
         return keys_for_triangle(self.points, lengths)
@@ -32,10 +32,10 @@ class NonCollinearProperty(Property):
         return _comment('Points %s, %s, and %s are not collinear', *self.points)
 
     def __eq__(self, other):
-        return isinstance(other, NonCollinearProperty) and self.__point_set == other.__point_set
+        return isinstance(other, NonCollinearProperty) and self.point_set == other.point_set
 
     def __hash__(self):
-        return hash(NonCollinearProperty) + hash(self.__point_set)
+        return hash(NonCollinearProperty) + hash(self.point_set)
 
 class ParallelVectorsProperty(Property):
     """
@@ -66,20 +66,20 @@ class NotEqualProperty(Property):
     """
     def __init__(self, point0, point1):
         self.points = [point0, point1]
-        self.segment = point0.segment(point1)
+        self.point_set = frozenset(self.points)
 
     def keys(self):
-        return [self.segment, *self.points]
+        return [self.points[0].segment(self.points[1]), *self.points]
 
     @property
     def description(self):
         return _comment('%s != %s', *self.points)
 
     def __eq__(self, other):
-        return isinstance(other, NotEqualProperty) and self.segment == other.segment
+        return isinstance(other, NotEqualProperty) and self.point_set == other.point_set
 
     def __hash__(self):
-        return hash(NotEqualProperty) + hash(self.segment)
+        return hash(NotEqualProperty) + hash(self.point_set)
 
 class SameOrOppositeSideProperty(Property):
     """

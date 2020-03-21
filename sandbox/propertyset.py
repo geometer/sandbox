@@ -1,14 +1,16 @@
 import itertools
 
-from .property import AngleValueProperty, AnglesRatioProperty, LengthsRatioProperty
+from .property import AngleValueProperty, AnglesRatioProperty, LengthsRatioProperty, NonCollinearProperty, NotEqualProperty
 
 class PropertySet:
     def __init__(self):
         self.__combined = {} # (type, key) => [prop] and type => prop
         self.__full_set = {} # prop => prop
         self.__angle_values = {} # angle => prop
-        self.__angle_ratios = {} # {angle0,angle1} => prop
-        self.__length_ratios = {} # {segment0,segment1} => prop
+        self.__angle_ratios = {} # {angle, angle} => prop
+        self.__length_ratios = {} # {segment, segment} => prop
+        self.__not_equal = {} # {point, point} => prop
+        self.__not_collinear = {} # {point, point, point} => prop
 
     def add(self, prop):
         def put(key):
@@ -29,6 +31,10 @@ class PropertySet:
             self.__angle_ratios[prop.angle_set] = prop
         elif type_key == LengthsRatioProperty:
             self.__length_ratios[prop.segment_set] = prop
+        elif type_key == NotEqualProperty:
+            self.__not_equal[prop.point_set] = prop
+        elif type_key == NonCollinearProperty:
+            self.__not_collinear[prop.point_set] = prop
 
     def list(self, property_type, keys=None):
         if keys:
@@ -54,6 +60,12 @@ class PropertySet:
 
     def __getitem__(self, prop):
         return self.__full_set.get(prop)
+
+    def not_collinear_property(self, pt0, pt1, pt2):
+        return self.__not_collinear.get(frozenset([pt0, pt1, pt2]))
+
+    def not_equal_property(self, pt0, pt1):
+        return self.__not_equal.get(frozenset([pt0, pt1]))
 
     def angle_value_property(self, angle):
         return self.__angle_values.get(angle)

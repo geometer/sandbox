@@ -34,12 +34,6 @@ class Explainer:
             self.scene.unfreeze()
         self.__explanation_time = time.time() - start
 
-    def __not_equal_reason(self, pt0, pt1):
-        return self.context[NotEqualProperty(pt0, pt1)]
-
-    def __not_collinear_reason(self, pt0, pt1, pt2):
-        return self.context[NonCollinearProperty(pt0, pt1, pt2)]
-
     def __congruent_segments_reason(self, seg0, seg1):
         reason = self.context.lengths_ratio_property(seg0, seg1)
         if reason and reason.ratio == 1:
@@ -182,7 +176,7 @@ class Explainer:
                                     [ncl]
                                 )
                             for ptX, ptY in itertools.combinations(line.all_points, 2):
-                                ne = self.__not_equal_reason(ptX, ptY)
+                                ne = self.context.not_equal_property(ptX, ptY)
                                 if ne is None:
                                     continue
                                 comments = [str(ncl)]
@@ -216,7 +210,7 @@ class Explainer:
                         pt1 = ncl_set.difference(col_set).pop()
                         yield (NotEqualProperty(pt0, pt1), [], [ncl, col])
                         for common in intr:
-                            ne = self.__not_equal_reason(common, pt1)
+                            ne = self.context.not_equal_property(common, pt1)
                             if ne:
                                 yield (
                                     NonCollinearProperty(common, pt0, pt1),
@@ -231,8 +225,8 @@ class Explainer:
                 vec0 = cs.segment0
                 vec1 = cs.segment1
 
-                ne0 = self.__not_equal_reason(*vec0.points)
-                ne1 = self.__not_equal_reason(*vec1.points)
+                ne0 = self.context.not_equal_property(*vec0.points)
+                ne1 = self.context.not_equal_property(*vec1.points)
                 if ne0 is not None and ne1 is None:
                     yield (NotEqualProperty(*vec1.points), _comment('Otherwise, %s = %s', *vec0.points), [cs, ne0])
                 elif ne1 is not None and ne0 is None:
@@ -240,16 +234,16 @@ class Explainer:
                 elif ne0 is None and ne1 is None and cs.ratio == 1:
                     ne = None
                     if vec0.points[0] == vec1.points[0]:
-                        ne = self.__not_equal_reason(vec0.points[1], vec1.points[1])
+                        ne = self.context.not_equal_property(vec0.points[1], vec1.points[1])
                         mid = vec0.points[0]
                     elif vec0.points[0] == vec1.points[1]:
-                        ne = self.__not_equal_reason(vec0.points[1], vec1.points[0])
+                        ne = self.context.not_equal_property(vec0.points[1], vec1.points[0])
                         mid = vec0.points[0]
                     elif vec0.points[1] == vec1.points[0]:
-                        ne = self.__not_equal_reason(vec0.points[0], vec1.points[1])
+                        ne = self.context.not_equal_property(vec0.points[0], vec1.points[1])
                         mid = vec0.points[1]
                     elif vec0.points[1] == vec1.points[1]:
-                        ne = self.__not_equal_reason(vec0.points[0], vec1.points[0])
+                        ne = self.context.not_equal_property(vec0.points[0], vec1.points[0])
                         mid = vec0.points[1]
                     if ne:
                         yield (NotEqualProperty(*vec0.points), _comment('Otherwise, %s = %s = %s', ne.points[0], mid, ne.points[1]), [cs, ne])
@@ -258,8 +252,8 @@ class Explainer:
             for pv in self.context.list(ParallelVectorsProperty):
                 vec0 = pv.vector0
                 vec1 = pv.vector1
-                ne0 = self.__not_equal_reason(*vec0.points)
-                ne1 = self.__not_equal_reason(*vec1.points)
+                ne0 = self.context.not_equal_property(*vec0.points)
+                ne1 = self.context.not_equal_property(*vec1.points)
                 if ne0 is not None and ne1 is not None:
                     if is_too_old(pv) and is_too_old(ne0) and is_too_old(ne1):
                         continue
@@ -610,7 +604,7 @@ class Explainer:
 
             for so in self.context.list(SameOrOppositeSideProperty):
                 for lp0, lp1 in itertools.combinations(so.line.all_points, 2):
-                    ne = self.__not_equal_reason(lp0, lp1)
+                    ne = self.context.not_equal_property(lp0, lp1)
                     if ne is None:
                         continue
                     for pt0, pt1 in [so.points, reversed(so.points)]:
@@ -706,7 +700,7 @@ class Explainer:
                 else:
                     continue
                 base1 = cs.segment0.points[0] if apex == cs.segment0.points[1] else cs.segment0.points[1]
-                nc = self.__not_collinear_reason(apex, base0, base1)
+                nc = self.context.not_collinear_property(apex, base0, base1)
                 if nc:
                     yield (
                         IsoscelesTriangleProperty(apex, base0.segment(base1)),
@@ -719,7 +713,7 @@ class Explainer:
                     continue
                 if len(ar.angle0.points) != 3 or ar.angle0.points != ar.angle1.points:
                     continue
-                nc = self.__not_collinear_reason(*ar.angle0.points)
+                nc = self.context.not_collinear_property(*ar.angle0.points)
                 if nc is None:
                     continue
                 base = ar.angle0.vertex.segment(ar.angle1.vertex)
@@ -913,7 +907,7 @@ class Explainer:
                 return self.__congruent_segments_reason(seg0, seg1)
 
             for ca in congruent_angles:
-                ncl = self.__not_collinear_reason(*ca.angle0.points)
+                ncl = self.context.not_collinear_property(*ca.angle0.points)
                 if ncl:
                     if not is_too_old(ca) or not is_too_old(ncl):
                         yield (
@@ -922,7 +916,7 @@ class Explainer:
                             [ca, ncl]
                         )
                 else:
-                    ncl = self.__not_collinear_reason(*ca.angle1.points)
+                    ncl = self.context.not_collinear_property(*ca.angle1.points)
                     if ncl and (not is_too_old(ca) or not is_too_old(ncl)):
                         yield (
                             NonCollinearProperty(*ca.angle0.points),
@@ -931,7 +925,7 @@ class Explainer:
                         )
 
             for ca in congruent_angles:
-                ncl = self.__not_collinear_reason(*ca.angle0.points)
+                ncl = self.context.not_collinear_property(*ca.angle0.points)
                 if ncl is None:
                     continue
                 ca_is_too_old = is_too_old(ca) and is_too_old(ncl)
