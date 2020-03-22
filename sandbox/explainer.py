@@ -391,6 +391,23 @@ class Explainer:
                     [av0, av1]
                 )
 
+            for so in self.context.list(SameOrOppositeSideProperty):
+                for lp0, lp1 in itertools.combinations(so.line.all_points, 2):
+                    ne = self.context.not_equal_property(lp0, lp1)
+                    if ne is None:
+                        continue
+                    for pt0, pt1 in [so.points, reversed(so.points)]:
+                        if so.same:
+                            sum_reason = self.context[SumOfAnglesProperty(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0), 180)]
+                            if sum_reason and sum_reason.degree == 180:
+                                for prop in AngleValueProperty.generate(lp0.vector(pt0).angle(lp1.vector(pt1)), 0):
+                                    yield (prop, 'Zigzag', [so, sum_reason, ne])
+                        else:
+                            ratio_reason = self.context.angles_ratio_property(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0))
+                            if ratio_reason and ratio_reason.ratio == 1:
+                                for prop in AngleValueProperty.generate(lp0.vector(pt0).angle(pt1.vector(lp1)), 0):
+                                    yield (prop, 'Zigzag', [so, ratio_reason, ne])
+
             for zero in [av for av in self.context.list(AngleValueProperty) if av.degree == 0]:
                 zero_is_too_old = is_too_old(zero)
                 for ne in self.context.list(NotEqualProperty):
@@ -601,29 +618,6 @@ class Explainer:
                 comment = _comment('%s + %s + %s = 180º', a0, a1, a2)
                 yield (AngleValueProperty(a0, a0_value), comment, [ar, a2_reason])
                 yield (AngleValueProperty(a1, a1_value), comment, [ar, a2_reason])
-
-            for so in self.context.list(SameOrOppositeSideProperty):
-                for lp0, lp1 in itertools.combinations(so.line.all_points, 2):
-                    ne = self.context.not_equal_property(lp0, lp1)
-                    if ne is None:
-                        continue
-                    for pt0, pt1 in [so.points, reversed(so.points)]:
-                        if so.same:
-                            sum_reason = self.context[SumOfAnglesProperty(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0), 180)]
-                            if sum_reason and sum_reason.degree == 180:
-                                yield (
-                                    AngleValueProperty(lp0.vector(pt0).angle(lp1.vector(pt1)), 0),
-                                    'Zigzag',
-                                    [so, sum_reason, ne]
-                                )
-                        else:
-                            ratio_reason = self.context.angles_ratio_property(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0))
-                            if ratio_reason and ratio_reason.ratio == 1:
-                                yield (
-                                    AngleValueProperty(lp0.vector(pt0).angle(pt1.vector(lp1)), 0),
-                                    'Zigzag',
-                                    [so, ratio_reason, ne]
-                                )
 
             for ka in self.context.list(AngleValueProperty):
                 base = ka.angle
@@ -922,6 +916,36 @@ class Explainer:
                             NonCollinearProperty(*ca.angle0.points),
                             'Transitivity',
                             [ca, ncl]
+                        )
+
+            for zero in [p for p in self.context.list(AngleValueProperty) if p.angle.vertex is None and p.degree == 0]:
+                zero_is_too_old = is_too_old(zero)
+                ang = zero.angle
+
+                for vec0, vec1 in [(ang.vector0, ang.vector1), (ang.vector1, ang.vector0)]:
+                    for i, j in [(0, 1), (1, 0)]:
+                        ncl = self.context.not_collinear_property(*vec0.points, vec1.points[i])
+                        if ncl is None:
+                            continue
+                        ne = self.context.not_equal_property(*vec1.points)
+                        if ne is None:
+                            continue
+                        if zero_is_too_old and is_too_old(ncl) and is_too_old(ne):
+                            continue
+                        yield (
+                            NonCollinearProperty(*vec0.points, vec1.points[j]),
+                            'Transitivity',
+                            [ncl, zero, ne]
+                        )
+                        yield (
+                            NonCollinearProperty(*vec1.points, vec0.points[i]),
+                            'Transitivity',
+                            [ncl, zero, ne]
+                        )
+                        yield (
+                            NonCollinearProperty(*vec1.points, vec0.points[j]),
+                            'Transitivity',
+                            [ncl, zero, ne]
                         )
 
             for zero in [p for p in self.context.list(AngleValueProperty) if p.angle.vertex is None and p.degree == 0]:
