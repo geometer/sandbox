@@ -700,8 +700,9 @@ class CoreScene:
         properties = PropertySet()
 
         def add_property(prop, comments):
-            prop.reason = Reason(len(properties), -1, comments, [])
-            properties.add(prop)
+            if prop not in properties:
+                prop.reason = Reason(len(properties), -1, comments, [])
+                properties.add(prop)
 
         for cnstr in self.constraints(Constraint.Kind.not_collinear):
             if any(param.auxiliary for param in cnstr.params):
