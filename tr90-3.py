@@ -8,8 +8,8 @@ scene = Scene()
 
 A, B, C = scene.triangle(labels=('A', 'B', 'C'))
 scene.perpendicular_constraint((A, C), (B, C), comment='Given: AC ⟂ BC')
-D = scene.middle_point(A, B, label='D')
-E = D.translated_point(C.vector(D), label='E')
+E = A.translated_point(C.vector(B), label='E')
+D = A.line_through(B).intersection_point(C.line_through(E), label='D')
 
 placement = iterative_placement(scene)
 

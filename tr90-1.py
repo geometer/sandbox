@@ -21,4 +21,5 @@ explainer = Explainer(scene, hunter.properties)
 explainer.explain()
 explainer.dump()
 
+hunter.stats().dump()
 explainer.stats().dump()
