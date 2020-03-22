@@ -924,6 +924,41 @@ class Explainer:
                             [ca, ncl]
                         )
 
+            for zero in [p for p in self.context.list(AngleValueProperty) if p.angle.vertex is None and p.degree == 0]:
+                ang = zero.angle
+                ne = self.context.not_equal_property(*ang.vector0.points)
+                if ne is None:
+                    continue
+                ncl = self.context.not_collinear_property(*ang.vector0.points, ang.vector1.points[0])
+                if ncl is None:
+                    continue
+                if is_too_old(zero) and is_too_old(ne) and is_too_old(ncl):
+                    continue
+                comment = _comment('%s ↑↑ %s', ang.vector0, ang.vector1)
+                premises = [zero, ncl, ne]
+                yield (
+                    SameOrOppositeSideProperty(ang.vector0.line(), *ang.vector1.points, True),
+                    comment, premises
+                )
+                yield (
+                    SameOrOppositeSideProperty(ang.vector1.line(), *ang.vector0.points, True),
+                    comment, premises
+                )
+                yield (
+                    SameOrOppositeSideProperty(
+                        ang.vector0.start.line_through(ang.vector1.end),
+                        ang.vector0.end, ang.vector1.start, False
+                    ),
+                    comment, premises
+                )
+                yield (
+                    SameOrOppositeSideProperty(
+                        ang.vector1.start.line_through(ang.vector0.end),
+                        ang.vector1.end, ang.vector0.start, False
+                    ),
+                    comment, premises
+                )
+
             for ca in congruent_angles:
                 ncl = self.context.not_collinear_property(*ca.angle0.points)
                 if ncl is None:
