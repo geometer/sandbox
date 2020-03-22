@@ -926,13 +926,13 @@ class Explainer:
 
             for zero in [p for p in self.context.list(AngleValueProperty) if p.angle.vertex is None and p.degree == 0]:
                 ang = zero.angle
-                ne = self.context.not_equal_property(*ang.vector0.points)
-                if ne is None:
-                    continue
                 ncl = self.context.not_collinear_property(*ang.vector0.points, ang.vector1.points[0])
                 if ncl is None:
                     continue
-                if is_too_old(zero) and is_too_old(ne) and is_too_old(ncl):
+                ne = self.context.not_equal_property(*ang.vector1.points)
+                if ne is None:
+                    continue
+                if is_too_old(zero) and is_too_old(ncl) and is_too_old(ne):
                     continue
                 comment = _comment('%s ↑↑ %s', ang.vector0, ang.vector1)
                 premises = [zero, ncl, ne]
