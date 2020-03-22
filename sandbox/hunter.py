@@ -298,21 +298,22 @@ class Hunter:
         triangles = list(self.__triangles())
         families = []
         for trn in triangles:
+            found = False
             for fam in families:
                 for variation in range(0, 6):
                     var = trn.variation(variation)
                     if fam[0].equal(var):
                         fam.append(var)
-                        break
-                else:
-                    continue
-                break
+                        found = True
+                if found:
+                    break
             else:
                 families.append([trn])
 
         for fam in families:
             for pair in itertools.combinations(fam, 2):
-                self.__add(CongruentTrianglesProperty(pair[0].pts, pair[1].pts))
+                if set(pair[0].pts) != set(pair[1].pts):
+                    self.__add(CongruentTrianglesProperty(pair[0].pts, pair[1].pts))
 
     def __hunt_similar_triangles(self):
         triangles = list(self.__triangles())
@@ -331,21 +332,22 @@ class Hunter:
 
         families = []
         for trn in triangles:
+            found = False
             for fam in families:
                 for variation in range(0, 6):
                     var = trn.variation(variation)
                     if fam[0].similar(var):
                         fam.append(var)
-                        break
-                else:
-                    continue
-                break
+                        found = True
+                if found:
+                    break
             else:
                 families.append([trn])
 
         for fam in families:
             for pair in itertools.combinations(fam, 2):
-                self.__add(SimilarTrianglesProperty(pair[0].pts, pair[1].pts))
+                if set(pair[0].pts) != set(pair[1].pts):
+                    self.__add(SimilarTrianglesProperty(pair[0].pts, pair[1].pts))
 
     def stats(self):
         return Stats([
