@@ -210,7 +210,7 @@ class Explainer:
                         pt1 = ncl_set.difference(col_set).pop()
                         yield (NotEqualProperty(pt0, pt1), [], [ncl, col])
                         for common in intr:
-                            ne = self.context.not_equal_property(common, pt1)
+                            ne = self.context.not_equal_property(common, pt0)
                             if ne:
                                 yield (
                                     NonCollinearProperty(common, pt0, pt1),
@@ -850,6 +850,22 @@ class Explainer:
                             _comment('%sº - %sº', sa.degree, av.degree),
                             [sa, av]
                         )
+
+            for ar in [p for p in self.context.list(SumOfAnglesProperty) if p.angle0.vertex is not None and p.angle0.vertex == p.angle1.vertex and p.degree == 180]:
+                try:
+                    common = next(pt for pt in ar.angle0.endpoints if pt in ar.angle1.endpoints)
+                    pt0 = next(pt for pt in ar.angle0.endpoints if pt not in ar.angle1.endpoints)
+                    pt1 = next(pt for pt in ar.angle1.endpoints if pt not in ar.angle0.endpoints)
+                except StopIteration:
+                    continue
+                oppo = self.context[SameOrOppositeSideProperty(ar.angle0.vertex.line_through(common), pt0, pt1, False)]
+                if not oppo or oppo.same or is_too_old(ar) and is_too_old(oppo):
+                    continue
+                yield (
+                    AngleValueProperty(ar.angle0.vertex.angle(pt0, pt1), 180),
+                    _comment('%s + %s', ar.angle0, ar.angle1),
+                    [ar, oppo]
+                )
 
             for av in self.context.list(AngleValueProperty):
                 if is_too_old(av) or av.angle.vertex is None:

@@ -586,6 +586,10 @@ class CoreScene:
             self.vertex = self.vector0.start
             self.vectors = frozenset([vector0, vector1])
 
+        @property
+        def endpoints(self):
+            return (self.vector0.end, self.vector1.end)
+
         def bisector_line(self, **kwargs):
             B = self.vector0.end
             C = self.vector1.end
