@@ -3,17 +3,17 @@
 from sandbox import Scene
 from sandbox.hunter import Hunter
 from sandbox.explainer import Explainer
+from sandbox.util import _comment
 
 scene = Scene()
 
 A, B, C = scene.triangle(labels=['A', 'B', 'C'])
 
 def napoleonic(A: Scene.Point, B: Scene.Point, C: Scene.Point):
-    c0 = A.circle_through(B)
-    c1 = B.circle_through(A)
+    V = A.scene.free_point(label=C.label + '1')
+    A.scene.is_equilateral_constraint((A, B, V), comment=_comment('Given: △ %s %s %s is equilateral', A, B, V))
     line = A.line_through(B, auxiliary=True)
-    V = c0.intersection_point(c1, label=C.label + '1')
-    V.opposite_side_constraint(C, line)
+    V.opposite_side_constraint(C, line, comment=_comment('Given: %s is outward of △ %s %s %s', V, A, B, C))
     scene.gravity_centre_point(A, B, V, label=C.label + '2')
 
 napoleonic(A, B, C)

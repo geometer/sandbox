@@ -23,9 +23,18 @@ class Scene(CoreScene):
         middle.inside_constraint(A.segment(B), guaranteed=True)
         return middle
 
+    def is_equilateral_constraint(self, triangle, **kwargs):
+        self.triangle_constraint(triangle, **kwargs)
+        side0 = triangle[1].segment(triangle[2])
+        side1 = triangle[0].segment(triangle[2])
+        side2 = triangle[0].segment(triangle[1])
+        side0.congruent_constraint(side1, **kwargs)
+        side0.congruent_constraint(side2, **kwargs)
+        side1.congruent_constraint(side2, **kwargs)
+
     def gravity_centre_point(self, *points, **kwargs):
         """
-        Constructs the gravity centre of the points, with equal weghts.
+        Constructs the gravity centre of the points, with equal weights.
         """
         assert len(points) > 0
         for pnt in points:
