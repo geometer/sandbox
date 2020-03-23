@@ -93,18 +93,18 @@ class SameOrOppositeSideProperty(Property):
     """
     Two points on opposite/same sides of the line
     """
-    def __init__(self, line, point0, point1, same):
-        self.line = line
+    def __init__(self, segment, point0, point1, same):
+        self.segment = segment
         self.points = (point0, point1)
         self.same = same
-        self.__object_set = frozenset([line, point0, point1])
+        self.__object_set = frozenset([segment, point0, point1])
 
     @property
     def description(self):
         if self.same:
-            return _comment('%s, %s located on the same side of %s', *self.points, self.line)
+            return _comment('%s, %s located on the same side of line %s', *self.points, self.segment)
         else:
-            return _comment('%s, %s located on opposite sides of %s', *self.points, self.line)
+            return _comment('%s, %s located on opposite sides of line %s', *self.points, self.segment)
 
     def __eq__(self, other):
         return isinstance(other, SameOrOppositeSideProperty) and self.__object_set == other.__object_set

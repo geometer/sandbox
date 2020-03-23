@@ -48,8 +48,9 @@ class Explainer:
     def __explain_all(self):
         def base():
             for cnst in self.scene.constraints(Constraint.Kind.opposite_side):
+                line = cnst.params[2]
                 self.__reason(
-                    SameOrOppositeSideProperty(cnst.params[2], cnst.params[0], cnst.params[1], False),
+                    SameOrOppositeSideProperty(line.point0.segment(line.point1), cnst.params[0], cnst.params[1], False),
                     cnst.comments
                 )
             for cnst in self.scene.constraints(Constraint.Kind.inside_angle):
@@ -58,8 +59,9 @@ class Explainer:
                     cnst.comments
                 )
             for cnst in self.scene.constraints(Constraint.Kind.same_side):
+                line = cnst.params[2]
                 self.__reason(
-                    SameOrOppositeSideProperty(cnst.params[2], cnst.params[0], cnst.params[1], True),
+                    SameOrOppositeSideProperty(line.point0.segment(line.point1), cnst.params[0], cnst.params[1], True),
                     cnst.comments
                 )
             for cnst in self.scene.constraints(Constraint.Kind.parallel_vectors):
@@ -327,8 +329,8 @@ class Explainer:
                     segment = prop.points[0].segment(prop.points[1])
                     for old in prop.points:
                         yield (
-                            SameOrOppositeSideProperty(prop.line, old, pt, True),
-                            _comment('The segment %s does not cross line %s', segment, prop.line),
+                            SameOrOppositeSideProperty(prop.segment, old, pt, True),
+                            _comment('The segment %s does not cross line %s', segment, prop.segment),
                             [prop, value]
                         )
 
@@ -337,19 +339,19 @@ class Explainer:
                     continue
                 pt0 = prop.points[0]
                 pt1 = prop.points[1]
-                crossing = self.scene.get_intersection(prop.line, pt0.line_through(pt1))
+                crossing = self.scene.get_intersection(prop.segment.line(), pt0.line_through(pt1))
                 if not crossing:
                     continue
                 if prop.same:
                     yield (
                         AngleValueProperty(crossing.angle(pt0, pt1), 0),
-                        _comment('%s is an intersection of straighit line containing segment %s and line %s', crossing, pt0.segment(pt1), prop.line),
+                        _comment('%s is an intersection of straighit line containing segment %s and line %s', crossing, pt0.segment(pt1), prop.segment),
                         [prop]
                     )
                 else:
                     yield (
                         AngleValueProperty(crossing.angle(pt0, pt1), 180),
-                        _comment('%s is an intersection of segment %s and line %s', crossing, pt0.segment(pt1), prop.line),
+                        _comment('%s is an intersection of segment %s and line %s', crossing, pt0.segment(pt1), prop.segment),
                         [prop]
                     )
 
@@ -448,21 +450,22 @@ class Explainer:
                 )
 
             for so in self.context.list(SameOrOppositeSideProperty):
-                for lp0, lp1 in itertools.combinations(so.line.all_points, 2):
-                    ne = self.context.not_equal_property(lp0, lp1)
-                    if ne is None:
-                        continue
-                    for pt0, pt1 in [so.points, reversed(so.points)]:
-                        if so.same:
-                            sum_reason = self.context[SumOfAnglesProperty(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0), 180)]
-                            if sum_reason and sum_reason.degree == 180:
-                                for prop in AngleValueProperty.generate(lp0.vector(pt0).angle(lp1.vector(pt1)), 0):
-                                    yield (prop, 'Zigzag', [so, sum_reason, ne])
-                        else:
-                            ratio_reason = self.context.angles_ratio_property(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0))
-                            if ratio_reason and ratio_reason.ratio == 1:
-                                for prop in AngleValueProperty.generate(lp0.vector(pt0).angle(pt1.vector(lp1)), 0):
-                                    yield (prop, 'Zigzag', [so, ratio_reason, ne])
+                lp0 = so.segment.points[0]
+                lp1 = so.segment.points[1]
+                ne = self.context.not_equal_property(lp0, lp1)
+                if ne is None:
+                    continue
+                for pt0, pt1 in [so.points, reversed(so.points)]:
+                    if so.same:
+                        sum_reason = self.context[SumOfAnglesProperty(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0), 180)]
+                        if sum_reason and sum_reason.degree == 180:
+                            for prop in AngleValueProperty.generate(lp0.vector(pt0).angle(lp1.vector(pt1)), 0):
+                                yield (prop, 'Zigzag', [so, sum_reason, ne])
+                    else:
+                        ratio_reason = self.context.angles_ratio_property(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0))
+                        if ratio_reason and ratio_reason.ratio == 1:
+                            for prop in AngleValueProperty.generate(lp0.vector(pt0).angle(pt1.vector(lp1)), 0):
+                                yield (prop, 'Zigzag', [so, ratio_reason, ne])
 
             for zero in [av for av in self.context.list(AngleValueProperty) if av.degree == 0]:
                 zero_is_too_old = is_too_old(zero)
@@ -507,12 +510,12 @@ class Explainer:
                 if is_too_old(pia):
                     continue
                 yield (
-                    SameOrOppositeSideProperty(pia.angle.vector0.line(), pia.point, pia.angle.vector1.end, True),
+                    SameOrOppositeSideProperty(pia.angle.vector0.as_segment, pia.point, pia.angle.vector1.end, True),
                     '', #TODO: write comment
                     [pia]
                 )
                 yield (
-                    SameOrOppositeSideProperty(pia.angle.vector1.line(), pia.point, pia.angle.vector0.end, True),
+                    SameOrOppositeSideProperty(pia.angle.vector1.as_segment, pia.point, pia.angle.vector0.end, True),
                     '', #TODO: write comment
                     [pia]
                 )
@@ -521,10 +524,10 @@ class Explainer:
                 if is_too_old(ss0) and is_too_old(ss1):
                     continue
 
-                if ss0.line == ss1.line:
+                if ss0.segment.line() == ss1.segment.line():
                     continue
 
-                vertex = self.scene.get_intersection(ss0.line, ss1.line)
+                vertex = self.scene.get_intersection(ss0.segment.line(), ss1.segment.line())
                 if vertex is None:
                     continue
 
@@ -544,7 +547,7 @@ class Explainer:
                     else:
                         continue
 
-                if other0 not in ss1.line or other1 not in ss0.line:
+                if other0 not in ss1.segment.points or other1 not in ss0.segment.points:
                     continue
 
                 if len({vertex, common, other0, other1}) < 4:
@@ -602,11 +605,11 @@ class Explainer:
                     for nc in self.context.list(PointsCollinearityProperty, [vec.as_segment]):
                         if nc.collinear or av_is_too_old and is_too_old(nc):
                             continue
-                        line = vertex.line_through(
+                        segment = vertex.segment(
                             next(pt for pt in nc.points if pt not in vec.points)
                         )
                         yield (
-                            SameOrOppositeSideProperty(line, pt0, pt1, True),
+                            SameOrOppositeSideProperty(segment, pt0, pt1, True),
                             [str(av), str(nc)], #TODO: better comment
                             [av, nc]
                         )
@@ -625,7 +628,7 @@ class Explainer:
                         [av, ncl]
                     )
                     yield (
-                        SameOrOppositeSideProperty(av.angle.vertex.line_through(vertex), *segment.points, False),
+                        SameOrOppositeSideProperty(av.angle.vertex.segment(vertex), *segment.points, False),
                         _comment('%s lies inside segment %s, and %s is not on the line %s', av.angle.vertex, segment, vertex, segment),
                         [av, ncl]
                     )
@@ -633,7 +636,7 @@ class Explainer:
             for sos0, sos1 in itertools.combinations(self.context.list(SameOrOppositeSideProperty), 2):
                 if is_too_old(sos0) and is_too_old(sos1):
                     continue
-                if sos0.line != sos1.line:
+                if sos0.segment != sos1.segment:
                     continue
 
                 if sos0.points[0] in sos1.points:
@@ -645,8 +648,10 @@ class Explainer:
                 else:
                     continue
                 other1 = sos1.points[0] if sos1.points[1] == common else sos1.points[1]
+                if other0 == other1:
+                    break
                 yield (
-                    SameOrOppositeSideProperty(sos0.line, other0, other1, sos0.same == sos1.same),
+                    SameOrOppositeSideProperty(sos0.segment, other0, other1, sos0.same == sos1.same),
                     'Transitivity', #TODO: better comment
                     [sos0, sos1]
                 )
@@ -914,7 +919,7 @@ class Explainer:
                     pt1 = next(pt for pt in ar.angle1.endpoints if pt not in ar.angle0.endpoints)
                 except StopIteration:
                     continue
-                oppo = self.context[SameOrOppositeSideProperty(ar.angle0.vertex.line_through(common), pt0, pt1, False)]
+                oppo = self.context[SameOrOppositeSideProperty(ar.angle0.vertex.segment(common), pt0, pt1, False)]
                 if not oppo or oppo.same or is_too_old(ar) and is_too_old(oppo):
                     continue
                 yield (
@@ -1026,23 +1031,23 @@ class Explainer:
                 comment = _comment('%s ↑↑ %s', ang.vector0, ang.vector1)
                 premises = [zero, ncl, ne]
                 yield (
-                    SameOrOppositeSideProperty(ang.vector0.line(), *ang.vector1.points, True),
+                    SameOrOppositeSideProperty(ang.vector0.as_segment, *ang.vector1.points, True),
                     comment, premises
                 )
                 yield (
-                    SameOrOppositeSideProperty(ang.vector1.line(), *ang.vector0.points, True),
+                    SameOrOppositeSideProperty(ang.vector1.as_segment, *ang.vector0.points, True),
                     comment, premises
                 )
                 yield (
                     SameOrOppositeSideProperty(
-                        ang.vector0.start.line_through(ang.vector1.end),
+                        ang.vector0.start.segment(ang.vector1.end),
                         ang.vector0.end, ang.vector1.start, False
                     ),
                     comment, premises
                 )
                 yield (
                     SameOrOppositeSideProperty(
-                        ang.vector1.start.line_through(ang.vector0.end),
+                        ang.vector1.start.segment(ang.vector0.end),
                         ang.vector1.end, ang.vector0.start, False
                     ),
                     comment, premises
@@ -1129,10 +1134,10 @@ class Explainer:
                 ne2 = self.context.not_equal_property(vertex, pt2)
                 if ne1 is None or ne2 is None:
                     continue
-                oppo1 = self.context[SameOrOppositeSideProperty(vertex.line_through(pt1), pt0, pt2, False)]
+                oppo1 = self.context[SameOrOppositeSideProperty(vertex.segment(pt1), pt0, pt2, False)]
                 if oppo1 is None or oppo1.same:
                     continue
-                oppo2 = self.context[SameOrOppositeSideProperty(vertex.line_through(pt2), pt1, pt3, False)]
+                oppo2 = self.context[SameOrOppositeSideProperty(vertex.segment(pt2), pt1, pt3, False)]
                 if oppo2 is None or oppo2.same:
                     continue
                 ar = self.context.angles_ratio_property(vertex.angle(pt0, pt1), vertex.angle(pt2, pt3))
@@ -1146,6 +1151,23 @@ class Explainer:
                     '',
                     [oppo1, oppo2, ar]
                 )
+
+            for sos in self.context.list(SameOrOppositeSideProperty):
+                for col in [p for p in self.context.list(PointsCollinearityProperty) if p.collinear]:
+                    if sos.segment.points[0] not in col.points:
+                        continue
+                    if sos.segment.points[1] not in col.points:
+                        continue
+                    too_old = is_too_old(sos) and is_too_old(col)
+                    other = next(pt for pt in col.points if pt not in sos.segment.points)
+                    for pt in sos.segment.points:
+                        ne = self.context.not_equal_property(other, pt)
+                        if ne is not None and (not too_old or not is_too_old(ne)):
+                            yield (
+                                SameOrOppositeSideProperty(other.segment(pt), *sos.points, sos.same),
+                                _comment('%s is same line as %s', other.segment(pt), sos.segment),
+                                [sos, col, ne]
+                            )
 
         base()
         self.__iteration_step_count = 0

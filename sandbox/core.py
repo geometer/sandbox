@@ -504,6 +504,9 @@ class CoreScene:
         def scene(self):
             return self.points[0].scene
 
+        def line(self, **kwargs):
+            return self.points[0].line_through(self.points[1], **kwargs)
+
         def free_point(self, **kwargs):
             point = self.points[0].line_through(self.points[1], auxiliary=True).free_point(**kwargs)
             point.inside_constraint(self)
