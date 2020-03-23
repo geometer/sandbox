@@ -377,6 +377,13 @@ class Hunter:
         if 'collinears' in options or 'default' in options:
             self.__hunt_collinears()
 
+        if 'coincident_points' in options or 'default' in options:
+            points = self.placement.scene.points(skip_auxiliary=True)
+            for point0, point1 in itertools.combinations(points, 2):
+                vec = point0.vector(point1)
+                if self.placement.length(vec) < ERROR:
+                    self.__add(CoincidentPointsProperty(point0, point1, True))
+
         if 'equal_segments' in options or 'default' in options:
             self.__hunt_equal_segments()
 
