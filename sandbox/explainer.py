@@ -1124,6 +1124,29 @@ class Explainer:
                                 [cs0, cs1, cs2, ncl]
                             )
 
+            for vertex, pt0, pt1, pt2, pt3 in itertools.permutations(self.scene.points(skip_auxiliary=True), 5):
+                ne1 = self.context.not_equal_property(vertex, pt1)
+                ne2 = self.context.not_equal_property(vertex, pt2)
+                if ne1 is None or ne2 is None:
+                    continue
+                oppo1 = self.context[SameOrOppositeSideProperty(vertex.line_through(pt1), pt0, pt2, False)]
+                if oppo1 is None or oppo1.same:
+                    continue
+                oppo2 = self.context[SameOrOppositeSideProperty(vertex.line_through(pt2), pt1, pt3, False)]
+                if oppo2 is None or oppo2.same:
+                    continue
+                ar = self.context.angles_ratio_property(vertex.angle(pt0, pt1), vertex.angle(pt2, pt3))
+                if ar is None or ar.ratio != 1:
+                    continue
+                if is_too_old(ne1) and is_too_old(ne2) and is_too_old(oppo1) and is_too_old(oppo2) and is_too_old(ar):
+                    continue
+
+                yield (
+                    AnglesRatioProperty(vertex.angle(pt0, pt2), vertex.angle(pt1, pt3), 1),
+                    '',
+                    [oppo1, oppo2, ar]
+                )
+
         base()
         self.__iteration_step_count = 0
         self.__refresh_unexplained()

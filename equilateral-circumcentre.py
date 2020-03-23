@@ -8,7 +8,8 @@ scene = Scene()
 
 A, B, C = scene.triangle(labels=['A', 'B', 'C'])
 scene.is_equilateral_constraint((A, B, C))
-scene.circumcentre_point((A, B, C), label='D')
+D = scene.circumcentre_point((A, B, C), label='D')
+D.inside_triangle_constraint(A, B, C)
 
 hunter = Hunter(scene)
 hunter.hunt()

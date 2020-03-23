@@ -302,6 +302,8 @@ class CoreScene:
                 self.scene.constraint(Constraint.Kind.inside_segment, self, obj, **kwargs)
             elif isinstance(obj, CoreScene.AngleWithVertex):
                 self.scene.constraint(Constraint.Kind.inside_angle, self, obj, **kwargs)
+                for pt in obj.endpoints:
+                    self.not_collinear_constraint(obj.vertex, pt, **kwargs)
             else:
                 assert False, 'Cannot declare point lying inside an %s' % type(obj).__name__
 

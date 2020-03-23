@@ -14,7 +14,14 @@ def napoleonic(A: Scene.Point, B: Scene.Point, C: Scene.Point):
     A.scene.is_equilateral_constraint((A, B, V), comment=_comment('Given: △ %s %s %s is equilateral', A, B, V))
     line = A.line_through(B, auxiliary=True)
     V.opposite_side_constraint(C, line, comment=_comment('Given: %s is outward of △ %s %s %s', V, A, B, C))
-    scene.gravity_centre_point(A, B, V, label=C.label + '2')
+    D = scene.gravity_centre_point(A, B, V, label=C.label + '2')
+    segmentA = A.segment(D)
+    segmentB = B.segment(D)
+    segmentV = V.segment(D)
+    segmentA.congruent_constraint(segmentB, guaranteed=True)
+    segmentA.congruent_constraint(segmentV, guaranteed=True)
+    D.inside_triangle_constraint(A, B, V, guaranteed=True)
+
 
 napoleonic(A, B, C)
 napoleonic(C, A, B)
@@ -29,5 +36,6 @@ explainer = Explainer(scene, hunter.properties)
 print('\tGuessed: %s = %s' % (angle, explainer.guessed(angle)))
 
 explainer.explain()
+explainer.dump()
 explainer.stats().dump()
 print('\tExplained: %s = %s' % (angle, explainer.explained(angle)))
