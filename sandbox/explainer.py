@@ -88,6 +88,45 @@ class Explainer:
             def is_too_old(prop):
                 return prop.reason.generation < self.__iteration_step_count - 1
 
+            def _cs(coef):
+                return '' if coef == 1 else ('%s ' % coef)
+
+            for lr0, lr1 in itertools.combinations(self.context.list(LengthsRatioProperty), 2):
+                if is_too_old(lr0) and is_too_old(lr1):
+                    continue
+                if lr0.segment0 == lr1.segment0:
+                    coef = divide(lr1.ratio, lr0.ratio)
+                    yield (
+                        LengthsRatioProperty(lr0.segment1, lr1.segment1, coef),
+                        _comment('|%s| = %s|%s| = %s|%s|', lr0.segment1, _cs(divide(1, lr0.ratio)), lr0.segment0, _cs(coef), lr1.segment1),
+                        [lr0, lr1]
+                    )
+                    pass
+                elif lr0.segment0 == lr1.segment1:
+                    coef = lr1.ratio * lr0.ratio
+                    yield (
+                        LengthsRatioProperty(lr1.segment0, lr0.segment1, coef),
+                        _comment('|%s| = %s|%s| = %s|%s|', lr1.segment0, _cs(lr1.ratio), lr0.segment0, _cs(coef), lr0.segment1),
+                        [lr1, lr0]
+                    )
+                    pass
+                elif lr0.segment1 == lr1.segment0:
+                    coef = lr1.ratio * lr0.ratio
+                    yield (
+                        LengthsRatioProperty(lr0.segment0, lr1.segment1, coef),
+                        _comment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.ratio), lr0.segment1, _cs(coef), lr1.segment1),
+                        [lr0, lr1]
+                    )
+                    pass
+                elif lr0.segment1 == lr1.segment1:
+                    coef = divide(lr0.ratio, lr1.ratio)
+                    yield (
+                        LengthsRatioProperty(lr0.segment0, lr1.segment0, coef),
+                        _comment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.ratio), lr0.segment1, _cs(coef), lr1.segment0),
+                        [lr0, lr1]
+                    )
+                    pass
+
             processed = set()
             angle_ratios = list(self.context.list(AnglesRatioProperty))
             angle_ratios.sort(key=lambda prop: len(prop.angle0.points) + len(prop.angle1.points))
