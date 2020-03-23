@@ -47,8 +47,6 @@ class Explainer:
 
     def __explain_all(self):
         def base():
-            for cnst in self.scene.constraints(Constraint.Kind.collinear):
-                self.__reason(CollinearProperty(*cnst.params), cnst.comments)
             for cnst in self.scene.constraints(Constraint.Kind.opposite_side):
                 self.__reason(
                     SameOrOppositeSideProperty(cnst.params[2], cnst.params[0], cnst.params[1], False),
@@ -197,7 +195,7 @@ class Explainer:
                         prop = SumOfAnglesProperty(ar.angle0, angle, sa.degree)
                     yield (prop, 'Transitivity', [sa, ar])
 
-            for ncl in self.context.list(NonCollinearProperty):
+            for ncl in [p for p in self.context.list(PointsCollinearityProperty) if not p.collinear]:
                 if not is_too_old(ncl):
                     def extra_comments(pt, pt0, pt1):
                         return [_comment('%s lies on the line %s %s', pt, pt0, pt1)]
@@ -224,7 +222,7 @@ class Explainer:
                                 if not ptY in (pt0, pt1):
                                     comments += extra_comments(ptY, pt0, pt1)
                                 yield (
-                                    NonCollinearProperty(ptX, ptY, pt2),
+                                    PointsCollinearityProperty(ptX, ptY, pt2, False),
                                     _comment(
                                         '%s and %s lie on the line %s %s, %s does not',
                                         ptX, ptY, pt0, pt1, pt2
@@ -241,7 +239,7 @@ class Explainer:
                     add_reasons(ncl.points[2], ncl.points[0], ncl.points[1])
 
                 ncl_set = set(ncl.points)
-                for col in self.context.list(CollinearProperty):
+                for col in [p for p in self.context.list(PointsCollinearityProperty) if p.collinear]:
                     col_set = set(col.points)
                     intr = col_set.intersection(ncl_set)
                     if len(intr) == 2:
@@ -252,7 +250,7 @@ class Explainer:
                             ne = self.context.not_equal_property(common, pt0)
                             if ne:
                                 yield (
-                                    NonCollinearProperty(common, pt0, pt1),
+                                    PointsCollinearityProperty(common, pt0, pt1, False),
                                     _comment(
                                         '%s and %s lie on the line %s %s, %s does not',
                                         common, pt0, *intr, pt1
@@ -582,8 +580,8 @@ class Explainer:
                 pt0 = av.angle.vector0.end
                 pt1 = av.angle.vector1.end
                 for vec in (av.angle.vector0, av.angle.vector1):
-                    for nc in self.context.list(NonCollinearProperty, [vec.as_segment]):
-                        if av_is_too_old and is_too_old(nc):
+                    for nc in self.context.list(PointsCollinearityProperty, [vec.as_segment]):
+                        if nc.collinear or av_is_too_old and is_too_old(nc):
                             continue
                         line = vertex.line_through(
                             next(pt for pt in nc.points if pt not in vec.points)
@@ -597,8 +595,8 @@ class Explainer:
             for av in [av for av in angle_values if av.degree == 180]:
                 av_is_too_old = is_too_old(av)
                 segment = av.angle.vector0.end.segment(av.angle.vector1.end)
-                for ncl in self.context.list(NonCollinearProperty, [segment]):
-                    if av_is_too_old and is_too_old(ncl):
+                for ncl in self.context.list(PointsCollinearityProperty, [segment]):
+                    if ncl.collinear or av_is_too_old and is_too_old(ncl):
                         continue
                     vertex = next(pt for pt in ncl.points if pt not in segment.points)
                     angle = vertex.angle(*segment.points)
@@ -909,18 +907,11 @@ class Explainer:
             for av in self.context.list(AngleValueProperty):
                 if is_too_old(av) or av.angle.vertex is None:
                     continue
-                if av.degree in (0, 180):
-                    yield (
-                        CollinearProperty(*av.angle.points),
-                        '',#TODO: write comment
-                        [av]
-                    )
-                else:
-                    yield (
-                        NonCollinearProperty(*av.angle.points),
-                        '',#TODO: write comment
-                        [av]
-                    )
+                yield (
+                    PointsCollinearityProperty(*av.angle.points, av.degree in (0, 180)),
+                    '',#TODO: write comment
+                    [av]
+                )
 
             congruent_angles = [ar for ar in self.context.list(AnglesRatioProperty) if ar.ratio == 1 and ar.angle0.vertex and ar.angle1.vertex]
             def pts(prop):
@@ -960,7 +951,7 @@ class Explainer:
                 if ncl:
                     if not is_too_old(ca) or not is_too_old(ncl):
                         yield (
-                            NonCollinearProperty(*ca.angle1.points),
+                            PointsCollinearityProperty(*ca.angle1.points, False),
                             'Transitivity',
                             [ca, ncl]
                         )
@@ -968,7 +959,7 @@ class Explainer:
                     ncl = self.context.not_collinear_property(*ca.angle1.points)
                     if ncl and (not is_too_old(ca) or not is_too_old(ncl)):
                         yield (
-                            NonCollinearProperty(*ca.angle0.points),
+                            PointsCollinearityProperty(*ca.angle0.points, False),
                             'Transitivity',
                             [ca, ncl]
                         )
@@ -988,17 +979,17 @@ class Explainer:
                         if zero_is_too_old and is_too_old(ncl) and is_too_old(ne):
                             continue
                         yield (
-                            NonCollinearProperty(*vec0.points, vec1.points[j]),
+                            PointsCollinearityProperty(*vec0.points, vec1.points[j], False),
                             'Transitivity',
                             [ncl, zero, ne]
                         )
                         yield (
-                            NonCollinearProperty(*vec1.points, vec0.points[i]),
+                            PointsCollinearityProperty(*vec1.points, vec0.points[i], False),
                             'Transitivity',
                             [ncl, zero, ne]
                         )
                         yield (
-                            NonCollinearProperty(*vec1.points, vec0.points[j]),
+                            PointsCollinearityProperty(*vec1.points, vec0.points[j], False),
                             'Transitivity',
                             [ncl, zero, ne]
                         )

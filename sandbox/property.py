@@ -16,26 +16,30 @@ class Property:
     def __str__(self):
         return str(self.description)
 
-class NonCollinearProperty(Property):
+class PointsCollinearityProperty(Property):
     """
     Three points are not collinear
     """
-    def __init__(self, point0, point1, point2):
+    def __init__(self, point0, point1, point2, collinear):
         self.points = (point0, point1, point2)
         self.point_set = frozenset(self.points)
+        self.collinear = collinear
 
     def keys(self, lengths=None):
         return keys_for_triangle(self.points, lengths)
 
     @property
     def description(self):
-        return _comment('Points %s, %s, and %s are not collinear', *self.points)
+        if self.collinear:
+            return _comment('Points %s, %s, and %s are collinear', *self.points)
+        else:
+            return _comment('Points %s, %s, and %s are not collinear', *self.points)
 
     def __eq__(self, other):
-        return isinstance(other, NonCollinearProperty) and self.point_set == other.point_set
+        return isinstance(other, PointsCollinearityProperty) and self.point_set == other.point_set
 
     def __hash__(self):
-        return hash(NonCollinearProperty) + hash(self.point_set)
+        return hash(PointsCollinearityProperty) + hash(self.point_set)
 
 class ParallelVectorsProperty(Property):
     """
@@ -150,27 +154,6 @@ class EquilateralTriangleProperty(Property):
 
     def __hash__(self):
         return hash(EquilateralTriangleProperty) + hash(self.__point_set)
-
-class CollinearProperty(Property):
-    """
-    Three points are collinear
-    """
-    def __init__(self, A, B, C):
-        self.points = (A, B, C)
-        self.__point_set = frozenset(self.points)
-
-    def keys(self, lengths=None):
-        return keys_for_triangle(self.points, lengths)
-
-    @property
-    def description(self):
-        return _comment('Points %s, %s, and %s are collinear', *self.points)
-
-    def __eq__(self, other):
-        return isinstance(other, CollinearProperty) and self.__point_set == other.__point_set
-
-    def __hash__(self):
-        return hash(CollinearProperty) + hash(self.__point_set)
 
 class AngleValueProperty(Property):
     """

@@ -8,7 +8,7 @@ import itertools
 import sympy as sp
 from typing import List
 
-from .property import AngleValueProperty, CollinearProperty, NonCollinearProperty, PointsCoincidenceProperty, LengthsRatioProperty
+from .property import AngleValueProperty, PointsCoincidenceProperty, PointsCollinearityProperty, LengthsRatioProperty
 from .propertyset import PropertySet
 from .reason import Reason
 from .util import _comment, divide
@@ -708,10 +708,13 @@ class CoreScene:
                 prop.reason = Reason(len(properties), -1, comments, [])
                 properties.add(prop)
 
+        for cnstr in self.constraints(Constraint.Kind.collinear):
+            add_property(PointsCollinearityProperty(*cnstr.params, True), cnstr.comments)
+
         for cnstr in self.constraints(Constraint.Kind.not_collinear):
             if any(param.auxiliary for param in cnstr.params):
                 continue
-            add_property(NonCollinearProperty(*cnstr.params), cnstr.comments)
+            add_property(PointsCollinearityProperty(*cnstr.params, False), cnstr.comments)
             add_property(PointsCoincidenceProperty(*cnstr.params[0:2], False), cnstr.comments)
             add_property(PointsCoincidenceProperty(*cnstr.params[1:3], False), cnstr.comments)
             add_property(PointsCoincidenceProperty(cnstr.params[0], cnstr.params[2], False), cnstr.comments)
@@ -750,7 +753,7 @@ class CoreScene:
         for line in self.lines(skip_auxiliary=False):
             for pt0, pt1, pt2 in itertools.combinations([p for p in line.all_points if not p.auxiliary], 3):
                 add_property(
-                    CollinearProperty(pt0, pt1, pt2),
+                    PointsCollinearityProperty(pt0, pt1, pt2, True),
                     [_comment('Three points on the line %s', line)]
                 )
 

@@ -234,7 +234,7 @@ class Hunter:
     def __hunt_collinears(self):
         for line in self.__lines():
             for triple in itertools.combinations(line, 3):
-                self.__add(CollinearProperty(triple[0], triple[1], triple[2]))
+                self.__add(PointsCollinearityProperty(*triple, True))
 
     def __hunt_equal_segments(self):
         vectors = self.__vectors()
