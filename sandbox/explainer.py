@@ -231,7 +231,7 @@ class Explainer:
                     yield (NotEqualProperty(*vec1.points), _comment('Otherwise, %s = %s', *vec0.points), [cs, ne0])
                 elif ne1 is not None and ne0 is None:
                     yield (NotEqualProperty(*vec0.points), _comment('Otherwise, %s = %s', *vec1.points), [cs, ne1])
-                elif ne0 is None and ne1 is None and cs.ratio == 1:
+                elif ne0 is None and ne1 is None:
                     ne = None
                     if vec0.points[0] == vec1.points[0]:
                         ne = self.context.not_equal_property(vec0.points[1], vec1.points[1])
