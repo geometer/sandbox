@@ -703,26 +703,6 @@ class Explainer:
                     [iso]
                 )
 
-            for iso in self.context.list(IsoscelesTriangleProperty):
-                eq = self.__congruent_segments_reason(iso.base, iso.apex.segment(iso.base.points[0]))
-                if eq is None or is_too_old(iso) and is_too_old(eq):
-                    continue
-                yield (
-                    EquilateralTriangleProperty((iso.apex, *iso.base.points)),
-                    _comment('Isosceles with leg equal to the base'),
-                    [iso, eq]
-                )
-
-            for equ in self.context.list(EquilateralTriangleProperty):
-                if is_too_old(equ):
-                    continue
-                for i in range(0, 3):
-                    yield (
-                        AngleValueProperty(angle_of(equ.ABC, i), 60),
-                        'Angle of an equilateral triangle',
-                        [equ]
-                    )
-
             for cs in [p for p in self.context.list(LengthsRatioProperty) if p.ratio == 1]:
                 if cs.segment1.points[0] in cs.segment0.points:
                     apex = cs.segment1.points[0]
@@ -756,6 +736,26 @@ class Explainer:
                     'Congruent base angles',
                     [cs]
                 )
+
+            for iso in self.context.list(IsoscelesTriangleProperty):
+                eq = self.__congruent_segments_reason(iso.base, iso.apex.segment(iso.base.points[0]))
+                if eq is None or is_too_old(iso) and is_too_old(eq):
+                    continue
+                yield (
+                    EquilateralTriangleProperty((iso.apex, *iso.base.points)),
+                    _comment('Isosceles with leg equal to the base'),
+                    [iso, eq]
+                )
+
+            for equ in self.context.list(EquilateralTriangleProperty):
+                if is_too_old(equ):
+                    continue
+                for i in range(0, 3):
+                    yield (
+                        AngleValueProperty(angle_of(equ.ABC, i), 60),
+                        'Angle of an equilateral triangle',
+                        [equ]
+                    )
 
             for ar in self.context.list(AnglesRatioProperty):
                 value = self.context.angle_value_property(ar.angle0)
