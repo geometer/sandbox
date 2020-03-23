@@ -1,6 +1,6 @@
 import itertools
 
-from .property import AngleValueProperty, AnglesRatioProperty, LengthsRatioProperty, NonCollinearProperty, NotEqualProperty
+from .property import AngleValueProperty, AnglesRatioProperty, LengthsRatioProperty, NonCollinearProperty, CoincidentPointsProperty
 
 class PropertySet:
     def __init__(self):
@@ -9,7 +9,7 @@ class PropertySet:
         self.__angle_values = {} # angle => prop
         self.__angle_ratios = {} # {angle, angle} => prop
         self.__length_ratios = {} # {segment, segment} => prop
-        self.__not_equal = {} # {point, point} => prop
+        self.__coincidence = {} # {point, point} => prop
         self.__not_collinear = {} # {point, point, point} => prop
 
     def add(self, prop):
@@ -31,8 +31,8 @@ class PropertySet:
             self.__angle_ratios[prop.angle_set] = prop
         elif type_key == LengthsRatioProperty:
             self.__length_ratios[prop.segment_set] = prop
-        elif type_key == NotEqualProperty:
-            self.__not_equal[prop.point_set] = prop
+        elif type_key == CoincidentPointsProperty:
+            self.__coincidence[prop.point_set] = prop
         elif type_key == NonCollinearProperty:
             self.__not_collinear[prop.point_set] = prop
 
@@ -65,7 +65,8 @@ class PropertySet:
         return self.__not_collinear.get(frozenset([pt0, pt1, pt2]))
 
     def not_equal_property(self, pt0, pt1):
-        return self.__not_equal.get(frozenset([pt0, pt1]))
+        prop = self.__coincidence.get(frozenset([pt0, pt1]))
+        return prop if prop and not prop.coincident else None
 
     def angle_value_property(self, angle):
         return self.__angle_values.get(angle)

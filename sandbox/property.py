@@ -60,26 +60,30 @@ class ParallelVectorsProperty(Property):
     def __hash__(self):
         return hash(ParallelVectorsProperty) + hash(self.__vector_set)
 
-class NotEqualProperty(Property):
+class CoincidentPointsProperty(Property):
     """
-    Distance between two points is non-zero
+    [Not] coincident points
     """
-    def __init__(self, point0, point1):
+    def __init__(self, point0, point1, coincident):
         self.points = [point0, point1]
         self.point_set = frozenset(self.points)
+        self.coincident = coincident
 
     def keys(self):
         return [self.points[0].segment(self.points[1]), *self.points]
 
     @property
     def description(self):
-        return _comment('%s != %s', *self.points)
+        if self.coincident:
+            return _comment('Points %s and %s are coincident', *self.points)
+        else:
+            return _comment('Points %s and %s are not coincident', *self.points)
 
     def __eq__(self, other):
-        return isinstance(other, NotEqualProperty) and self.point_set == other.point_set
+        return isinstance(other, CoincidentPointsProperty) and self.point_set == other.point_set
 
     def __hash__(self):
-        return hash(NotEqualProperty) + hash(self.point_set)
+        return hash(CoincidentPointsProperty) + hash(self.point_set)
 
 class SameOrOppositeSideProperty(Property):
     """

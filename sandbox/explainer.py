@@ -207,7 +207,7 @@ class Explainer:
                         if line:
                             for pt in line.all_points:
                                 yield (
-                                    NotEqualProperty(pt, pt2),
+                                    CoincidentPointsProperty(pt, pt2, False),
                                     _comment(
                                         '%s lies on the line %s %s, %s does not',
                                         pt, pt0, pt1, pt2
@@ -233,9 +233,9 @@ class Explainer:
                                 )
 
                     #TODO: better comments
-                    yield (NotEqualProperty(ncl.points[0], ncl.points[1]), str(ncl), [ncl])
-                    yield (NotEqualProperty(ncl.points[0], ncl.points[2]), str(ncl), [ncl])
-                    yield (NotEqualProperty(ncl.points[1], ncl.points[2]), str(ncl), [ncl])
+                    yield (CoincidentPointsProperty(ncl.points[0], ncl.points[1], False), str(ncl), [ncl])
+                    yield (CoincidentPointsProperty(ncl.points[0], ncl.points[2], False), str(ncl), [ncl])
+                    yield (CoincidentPointsProperty(ncl.points[1], ncl.points[2], False), str(ncl), [ncl])
                     add_reasons(ncl.points[0], ncl.points[1], ncl.points[2])
                     add_reasons(ncl.points[1], ncl.points[2], ncl.points[0])
                     add_reasons(ncl.points[2], ncl.points[0], ncl.points[1])
@@ -247,7 +247,7 @@ class Explainer:
                     if len(intr) == 2:
                         pt0 = col_set.difference(ncl_set).pop()
                         pt1 = ncl_set.difference(col_set).pop()
-                        yield (NotEqualProperty(pt0, pt1), [], [ncl, col])
+                        yield (CoincidentPointsProperty(pt0, pt1, False), [], [ncl, col])
                         for common in intr:
                             ne = self.context.not_equal_property(common, pt0)
                             if ne:
@@ -267,9 +267,9 @@ class Explainer:
                 ne0 = self.context.not_equal_property(*vec0.points)
                 ne1 = self.context.not_equal_property(*vec1.points)
                 if ne0 is not None and ne1 is None:
-                    yield (NotEqualProperty(*vec1.points), _comment('Otherwise, %s = %s', *vec0.points), [cs, ne0])
+                    yield (CoincidentPointsProperty(*vec1.points, False), _comment('Otherwise, %s = %s', *vec0.points), [cs, ne0])
                 elif ne1 is not None and ne0 is None:
-                    yield (NotEqualProperty(*vec0.points), _comment('Otherwise, %s = %s', *vec1.points), [cs, ne1])
+                    yield (CoincidentPointsProperty(*vec0.points, False), _comment('Otherwise, %s = %s', *vec1.points), [cs, ne1])
                 elif ne0 is None and ne1 is None:
                     ne = None
                     if vec0.points[0] == vec1.points[0]:
@@ -285,8 +285,8 @@ class Explainer:
                         ne = self.context.not_equal_property(vec0.points[0], vec1.points[0])
                         mid = vec0.points[1]
                     if ne:
-                        yield (NotEqualProperty(*vec0.points), _comment('Otherwise, %s = %s = %s', ne.points[0], mid, ne.points[1]), [cs, ne])
-                        yield (NotEqualProperty(*vec1.points), _comment('Otherwise, %s = %s = %s', ne.points[1], mid, ne.points[0]), [cs, ne])
+                        yield (CoincidentPointsProperty(*vec0.points, False), _comment('Otherwise, %s = %s = %s', ne.points[0], mid, ne.points[1]), [cs, ne])
+                        yield (CoincidentPointsProperty(*vec1.points, False), _comment('Otherwise, %s = %s = %s', ne.points[1], mid, ne.points[0]), [cs, ne])
 
             for pv in self.context.list(ParallelVectorsProperty):
                 vec0 = pv.vector0
@@ -339,8 +339,8 @@ class Explainer:
             for av in [av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 180]:
                 av_is_too_old = is_too_old(av)
                 ang = av.angle
-                for ne in self.context.list(NotEqualProperty, [ang.vertex]):
-                    if av_is_too_old and is_too_old(ne):
+                for ne in self.context.list(CoincidentPointsProperty, [ang.vertex]):
+                    if ne.coincident or av_is_too_old and is_too_old(ne):
                         continue
                     pt = ne.points[0] if ang.vertex == ne.points[1] else ne.points[1]
                     if pt in ang.points:
@@ -386,8 +386,8 @@ class Explainer:
             for av in [av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 0]:
                 av_is_too_old = is_too_old(av)
                 ang = av.angle
-                for ne in self.context.list(NotEqualProperty, [ang.vertex]):
-                    if av_is_too_old and is_too_old(ne):
+                for ne in self.context.list(CoincidentPointsProperty, [ang.vertex]):
+                    if ne.coincident or av_is_too_old and is_too_old(ne):
                         continue
                     pt = ne.points[0] if ang.vertex == ne.points[1] else ne.points[1]
                     if pt in ang.points:
@@ -449,8 +449,8 @@ class Explainer:
 
             for zero in [av for av in self.context.list(AngleValueProperty) if av.degree == 0]:
                 zero_is_too_old = is_too_old(zero)
-                for ne in self.context.list(NotEqualProperty):
-                    if zero_is_too_old and is_too_old(ne):
+                for ne in self.context.list(CoincidentPointsProperty):
+                    if ne.coincident or zero_is_too_old and is_too_old(ne):
                         continue
                     vec = ne.points[0].vector(ne.points[1])
                     if vec.as_segment in [zero.angle.vector0.as_segment, zero.angle.vector1.as_segment]:

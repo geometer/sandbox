@@ -8,7 +8,7 @@ import itertools
 import sympy as sp
 from typing import List
 
-from .property import AngleValueProperty, CollinearProperty, NonCollinearProperty, NotEqualProperty, LengthsRatioProperty
+from .property import AngleValueProperty, CollinearProperty, NonCollinearProperty, CoincidentPointsProperty, LengthsRatioProperty
 from .propertyset import PropertySet
 from .reason import Reason
 from .util import _comment, divide
@@ -712,14 +712,14 @@ class CoreScene:
             if any(param.auxiliary for param in cnstr.params):
                 continue
             add_property(NonCollinearProperty(*cnstr.params), cnstr.comments)
-            add_property(NotEqualProperty(*cnstr.params[0:2]), cnstr.comments)
-            add_property(NotEqualProperty(*cnstr.params[1:3]), cnstr.comments)
-            add_property(NotEqualProperty(cnstr.params[0], cnstr.params[2]), cnstr.comments)
+            add_property(CoincidentPointsProperty(*cnstr.params[0:2], False), cnstr.comments)
+            add_property(CoincidentPointsProperty(*cnstr.params[1:3], False), cnstr.comments)
+            add_property(CoincidentPointsProperty(cnstr.params[0], cnstr.params[2], False), cnstr.comments)
 
         for cnstr in self.constraints(Constraint.Kind.not_equal):
             if cnstr.params[0].auxiliary or cnstr.params[1].auxiliary:
                 continue
-            add_property(NotEqualProperty(cnstr.params[0], cnstr.params[1]), cnstr.comments)
+            add_property(CoincidentPointsProperty(cnstr.params[0], cnstr.params[1], False), cnstr.comments)
 
         for cnstr in self.constraints(Constraint.Kind.length_ratio):
             if any(param.auxiliary for param in [*cnstr.params[0].points, *cnstr.params[1].points]):
@@ -739,7 +739,7 @@ class CoreScene:
         for cnstr in self.constraints(Constraint.Kind.inside_segment):
             #TODO: filter aux points
             add_property(
-                NotEqualProperty(*cnstr.params[1].points),
+                CoincidentPointsProperty(*cnstr.params[1].points, False),
                 cnstr.comments
             )
             add_property(
