@@ -1,6 +1,6 @@
 import itertools
 
-from .property import AngleValueProperty, AnglesRatioProperty, LengthsRatioProperty, NonCollinearProperty, CoincidentPointsProperty
+from .property import AngleValueProperty, AnglesRatioProperty, LengthsRatioProperty, NonCollinearProperty, PointsCoincidenceProperty
 
 class PropertySet:
     def __init__(self):
@@ -31,7 +31,7 @@ class PropertySet:
             self.__angle_ratios[prop.angle_set] = prop
         elif type_key == LengthsRatioProperty:
             self.__length_ratios[prop.segment_set] = prop
-        elif type_key == CoincidentPointsProperty:
+        elif type_key == PointsCoincidenceProperty:
             self.__coincidence[prop.point_set] = prop
         elif type_key == NonCollinearProperty:
             self.__not_collinear[prop.point_set] = prop

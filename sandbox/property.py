@@ -60,7 +60,7 @@ class ParallelVectorsProperty(Property):
     def __hash__(self):
         return hash(ParallelVectorsProperty) + hash(self.__vector_set)
 
-class CoincidentPointsProperty(Property):
+class PointsCoincidenceProperty(Property):
     """
     [Not] coincident points
     """
@@ -80,10 +80,10 @@ class CoincidentPointsProperty(Property):
             return _comment('Points %s and %s are not coincident', *self.points)
 
     def __eq__(self, other):
-        return isinstance(other, CoincidentPointsProperty) and self.point_set == other.point_set
+        return isinstance(other, PointsCoincidenceProperty) and self.point_set == other.point_set
 
     def __hash__(self):
-        return hash(CoincidentPointsProperty) + hash(self.point_set)
+        return hash(PointsCoincidenceProperty) + hash(self.point_set)
 
 class SameOrOppositeSideProperty(Property):
     """
