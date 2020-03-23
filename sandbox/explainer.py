@@ -1082,39 +1082,37 @@ class Explainer:
             def other_point(segment, point):
                 return segment.points[0] if point == segment.points[1] else segment.points[1]
 
-            processed = set()
-            for cs0 in congruent_segments:
-                if is_too_old(cs0):
-                    continue
-                processed.add(cs0)
-                pairs = [(cs0.segment0, cs0.segment1), (cs0.segment1, cs0.segment0)]
-                for cs1 in [cs for cs in congruent_segments if cs not in processed]:
-                    for seg0, seg1 in pairs:
-                        common0 = common_point(seg0, cs1.segment0)
-                        if common0 is None:
-                            continue
-                        common1 = common_point(seg1, cs1.segment1)
-                        if common1 is None:
-                            continue
-                        third0 = other_point(seg0, common0).segment(other_point(cs1.segment0, common0))
-                        third1 = other_point(seg1, common1).segment(other_point(cs1.segment1, common1))
-                        prop = CongruentTrianglesProperty(
-                            (common0, *third0.points), (common1, *third1.points)
+            for cs0, cs1 in itertools.combinations(congruent_segments, 2):
+                cs_are_too_old = is_too_old(cs0) and is_too_old(cs1)
+                for seg0, seg1 in [(cs0.segment0, cs0.segment1), (cs0.segment1, cs0.segment0)]:
+                    common0 = common_point(seg0, cs1.segment0)
+                    if common0 is None:
+                        continue
+                    common1 = common_point(seg1, cs1.segment1)
+                    if common1 is None:
+                        continue
+                    third0 = other_point(seg0, common0).segment(other_point(cs1.segment0, common0))
+                    third1 = other_point(seg1, common1).segment(other_point(cs1.segment1, common1))
+                    ncl = self.context.not_collinear_property(common0, *third0.points)
+                    if ncl is None or cs_are_too_old and is_too_old(ncl):
+                        continue
+                    prop = CongruentTrianglesProperty(
+                        (common0, *third0.points), (common1, *third1.points)
+                    )
+                    if third0 == third1:
+                        yield (
+                            prop,
+                            _comment('Common side %s, two pairs of congruent sides', third0),
+                            [cs0, cs1, ncl]
                         )
-                        if third0 == third1:
+                    else:
+                        cs2 = self.__congruent_segments_reason(third0, third1)
+                        if cs2:
                             yield (
                                 prop,
-                                _comment('Common side %s, two pairs of congruent sides', third0),
-                                [cs0, cs1]
+                                'Three pairs of congruent sides',
+                                [cs0, cs1, cs2, ncl]
                             )
-                        else:
-                            cs2 = self.__congruent_segments_reason(third0, third1)
-                            if cs2:
-                                yield (
-                                    prop,
-                                    'Three pairs of congruent sides',
-                                    [cs0, cs1, cs2]
-                                )
 
         base()
         self.__iteration_step_count = 0
