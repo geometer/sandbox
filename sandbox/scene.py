@@ -72,17 +72,13 @@ class Scene(CoreScene):
 
     def circumcentre_point(self, triangle, **kwargs):
         """
-        Circumcentre of the triangle (perpendicular bisectors intersection point)
+        Circumcentre of the triangle (i.e., centre of the circumcircle)
         """
         self.triangle_constraint(triangle)
-        bisector0 = self.perpendicular_bisector_line(triangle[1], triangle[2], auxiliary=True)
-        bisector1 = self.perpendicular_bisector_line(triangle[0], triangle[2], auxiliary=True)
-        centre = bisector0.intersection_point(bisector1, **kwargs)
-        bisector2 = self.perpendicular_bisector_line(triangle[0], triangle[1], auxiliary=True)
-        centre.belongs_to(bisector2)
-        for side0, side1 in itertools.combinations([centre.segment(pt) for pt in triangle], 2):
-            side0.ratio_constraint(
-                side1, 1, guaranteed=True,
+        centre = self.free_point(**kwargs)
+        for seg0, seg1 in itertools.combinations([centre.segment(v) for v in triangle], 2):
+            seg0.congruent_constraint(
+                seg1,
                 comment=_comment('%s is circumcentre of △ %s %s %s', centre, *triangle)
             )
         return centre
