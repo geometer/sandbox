@@ -258,6 +258,25 @@ class Explainer:
                                     [ncl, col, ne]
                                 )
 
+            for cl0, cl1 in itertools.combinations([p for p in self.context.list(PointsCollinearityProperty) if p.collinear], 2):
+                if len(cl0.point_set.union(cl1.point_set)) != 4:
+                    continue
+                pt0 = next(pt for pt in cl0.points if pt not in cl1.point_set)
+                pt1 = next(pt for pt in cl1.points if pt not in cl0.point_set)
+                others = [pt for pt in cl0.points if pt != pt0]
+                ncl_pt = others[0]
+                ncl = self.context.collinearity_property(pt0, pt1, ncl_pt)
+                if ncl is None:
+                    ncl_pt = others[1]
+                    ncl = self.context.collinearity_property(pt0, pt1, ncl_pt)
+                if ncl is None or ncl.collinear or is_too_old(cl0) and is_too_old(cl1) and is_too_old(ncl):
+                    continue
+                yield (
+                    PointsCoincidenceProperty(*others, True),
+                    _comment('%s and %s belong to two different lines %s and %s', *others, pt0.line_through(ncl_pt), pt1.line_through(ncl_pt)),
+                    [cl0, cl1, ncl]
+                )
+
             for cs in self.context.list(LengthsRatioProperty):
                 vec0 = cs.segment0
                 vec1 = cs.segment1

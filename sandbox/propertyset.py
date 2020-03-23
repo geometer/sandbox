@@ -61,6 +61,9 @@ class PropertySet:
     def __getitem__(self, prop):
         return self.__full_set.get(prop)
 
+    def collinearity_property(self, pt0, pt1, pt2):
+        return self.__collinearity.get(frozenset([pt0, pt1, pt2]))
+
     def not_collinear_property(self, pt0, pt1, pt2):
         prop = self.__collinearity.get(frozenset([pt0, pt1, pt2]))
         return prop if prop and not prop.collinear else None
