@@ -18,7 +18,7 @@ class Property:
 
 class PointsCollinearityProperty(Property):
     """
-    Three points are not collinear
+    [Not] collinear points
     """
     def __init__(self, point0, point1, point2, collinear):
         self.points = (point0, point1, point2)
