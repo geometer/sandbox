@@ -501,14 +501,6 @@ class Explainer:
                 else:
                     continue
 
-                vertex, reasons = self.context.intersection_of_lines(ss0.segment, ss1.segment)
-                if vertex is None:
-                    continue
-
-                reasons = [ss0, ss1, ncl] + reasons
-                if all(is_too_old(p) for p in reasons):
-                    continue
-
                 if ss0.points[0] in ss1.points:
                     if ss0.points[1] in ss1.points:
                         continue
@@ -528,7 +520,12 @@ class Explainer:
                 if other0 not in ss1.segment.points or other1 not in ss0.segment.points:
                     continue
 
-                if len({vertex, common, other0, other1}) < 4:
+                vertex, reasons = self.context.intersection_of_lines(ss0.segment, ss1.segment)
+                if vertex is None or vertex in [common, other0, other1]:
+                    continue
+
+                reasons = [ss0, ss1, ncl] + reasons
+                if all(is_too_old(p) for p in reasons):
                     continue
 
                 yield (
