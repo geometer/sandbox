@@ -96,6 +96,7 @@ class CoreScene:
         def __init__(self, scene, origin, **kwargs):
             assert isinstance(origin, CoreScene.Point.Origin), 'origin must be a Point.Origin, not %s' % type(origin)
             CoreScene.Object.__init__(self, scene, origin=origin, **kwargs)
+            self.__vectors = {}
 
         def translated_point(self, vector, coef=1, **kwargs):
             self.scene.assert_vector(vector)
@@ -192,7 +193,11 @@ class CoreScene:
             )
 
         def vector(self, point):
-            return CoreScene.Vector(self, point)
+            vec = self.__vectors.get(point)
+            if vec is None:
+                vec = CoreScene.Vector(self, point)
+                self.__vectors[point] = vec
+            return vec
 
         def segment(self, point):
             return CoreScene.Segment(self, point)
@@ -465,7 +470,7 @@ class CoreScene:
 
         @property
         def reversed(self):
-            return CoreScene.Vector(self.end, self.start)
+            return self.end.vector(self.start)
 
         def parallel_constraint(self, vector, **kwargs):
             """
@@ -475,12 +480,6 @@ class CoreScene:
             assert isinstance(vector, CoreScene.Vector)
             assert self.scene == vector.scene
             return self.scene.constraint(Constraint.Kind.parallel_vectors, self, vector, **kwargs)
-
-        def __eq__(self, other):
-            return self.points == other.points
-
-        def __hash__(self):
-            return hash(self.points)
 
         def __str__(self):
             return str(_comment('%s %s', self.start, self.end))
