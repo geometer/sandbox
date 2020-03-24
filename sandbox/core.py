@@ -203,7 +203,7 @@ class CoreScene:
             return self.scene._get_segment(self, point)
 
         def angle(self, point0, point1):
-            return self.vector(point0).angle(self.vector(point1))
+            return self.scene._get_angle(self.vector(point0), self.vector(point1))
 
         def belongs_to(self, line_or_circle):
             self.scene.assert_line_or_circle(line_or_circle)
