@@ -1,7 +1,6 @@
 import itertools
 
 from .property import AngleValueProperty, AnglesRatioProperty, LengthsRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty
-from .util import _comment
 
 class PropertySet:
     def __init__(self):
@@ -12,6 +11,7 @@ class PropertySet:
         self.__length_ratios = {} # {segment, segment} => prop
         self.__coincidence = {} # {point, point} => prop
         self.__collinearity = {} # {point, point, point} => prop
+        self.__intersections = {} # {segment, segment} => point, [reasons]
 
     def add(self, prop):
         def put(key):
@@ -83,6 +83,15 @@ class PropertySet:
         return self.__length_ratios.get(frozenset([segment0, segment1]))
 
     def intersection_of_lines(self, segment0, segment1):
+        key = frozenset([segment0, segment1])
+        value = self.__intersections.get(key)
+        if value is None:
+            value = self.__intersection_of_lines(segment0, segment1)
+            if value:
+                self.__intersections[key] = value
+        return value
+
+    def __intersection_of_lines(self, segment0, segment1):
         common = next((pt for pt in segment0.points if pt in segment1.points), None)
         if common:
             return (common, [])
