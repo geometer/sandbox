@@ -301,10 +301,10 @@ class CoreScene:
             """
             if isinstance(obj, CoreScene.Segment):
                 self.scene.constraint(Constraint.Kind.inside_segment, self, obj, **kwargs)
-            elif isinstance(obj, CoreScene.AngleWithVertex):
+            elif isinstance(obj, CoreScene.Angle) and obj.vertex:
                 self.scene.constraint(Constraint.Kind.inside_angle, self, obj, **kwargs)
             else:
-                assert False, 'Cannot declare point lying inside an %s' % type(obj).__name__
+                assert False, 'Cannot declare point lying inside %s' % obj
 
         def inside_triangle_constraint(self, A, B, C, **kwargs):
             """
@@ -560,13 +560,10 @@ class CoreScene:
         key = frozenset([vector0, vector1])
         angle = self.__angles.get(key)
         if angle is None:
-            if vector0.start == vector1.start:
-                angle = CoreScene.AngleWithVertex(vector0, vector1)
-                self.__angles[key] = angle
-            else:
+            angle = CoreScene.Angle(vector0, vector1)
+            self.__angles[key] = angle
+            if vector0.start != vector1.start:
                 assert vector0.end != vector1.end
-                angle = CoreScene.AngleWithNoVertex(vector0, vector1)
-                self.__angles[key] = angle
                 self.__angles[frozenset([vector0.reversed, vector1.reversed])] = angle
         return angle
 
@@ -581,22 +578,13 @@ class CoreScene:
         def scene(self):
             return self.vector0.scene
 
-        def ratio_constraint(self, angle, ratio, **kwargs):
-            # self = angle * ratio
-            self.scene.assert_angle(angle)
-            self.scene.constraint(Constraint.Kind.angles_ratio, self, angle, ratio, **kwargs)
-
-    class AngleWithVertex(Angle):
-        def __init__(self, vector0, vector1):
-            super().__init__(vector0, vector1)
-            self.vertex = self.vector0.start
-            self.vectors = frozenset([vector0, vector1])
-
         @property
         def endpoints(self):
+            assert self.vertex, 'Cannot locate endpoints of angle with no vertex'
             return (self.vector0.end, self.vector1.end)
 
         def bisector_line(self, **kwargs):
+            assert self.vertex, 'Cannot construct bisector of angle %s with no vertex' % self
             B = self.vector0.end
             C = self.vector1.end
             circle = self.vertex.circle_through(B, auxiliary=True)
@@ -611,22 +599,14 @@ class CoreScene:
             self.ratio_constraint(self.vertex.angle(Y, C), 2, guaranteed=True, comment=comment)
             return bisector
 
-        def __str__(self):
-            return str(_comment('∠ %s %s %s', self.vector0.end, self.vertex, self.vector1.end))
-
-    class AngleWithNoVertex(Angle):
-        def __init__(self, vector0, vector1):
-            super().__init__(vector0, vector1)
-            self.vertex = None
-            self.vectors_variants = frozenset([
-                frozenset([vector0, vector1]),
-                frozenset([vector0.reversed, vector1.reversed])
-            ])
-
-        def bisector_line(self, **kwargs):
-            assert False, 'There is no bisector in angle %s with no vertex' % self
+        def ratio_constraint(self, angle, ratio, **kwargs):
+            # self = angle * ratio
+            self.scene.assert_angle(angle)
+            self.scene.constraint(Constraint.Kind.angles_ratio, self, angle, ratio, **kwargs)
 
         def __str__(self):
+            if self.vertex:
+                return str(_comment('∠ %s %s %s', self.vector0.end, self.vertex, self.vector1.end))
             return '∠(%s, %s)' % (self.vector0, self.vector1)
 
     def __init__(self):
@@ -841,7 +821,7 @@ class Constraint:
         same_side         = ('same_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
         same_direction    = ('same_direction', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         inside_segment    = ('inside_segment', Stage.validation, CoreScene.Point, CoreScene.Segment)
-        inside_angle      = ('inside_angle', Stage.validation, CoreScene.Point, CoreScene.AngleWithVertex)
+        inside_angle      = ('inside_angle', Stage.validation, CoreScene.Point, CoreScene.Angle)
         quadrilateral     = ('quadrilateral', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         convex_polygon    = ('convex_polygon', Stage.validation, List[CoreScene.Point])
         distance          = ('distance', Stage.adjustment, CoreScene.Vector, int)
