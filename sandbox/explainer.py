@@ -1139,6 +1139,23 @@ class Explainer:
                                 [sos, col, ne]
                             )
 
+            right_angles = [p for p in self.context.list(AngleValueProperty) if p.angle.vertex and p.degree == 90]
+            for ra0, ra1 in itertools.combinations(right_angles, 2):
+                vertex = ra0.angle.vertex
+                if vertex != ra1.angle.vertex or is_too_old(ra0) and is_too_old(ra1):
+                    continue
+                try:
+                    common = next(pt for pt in ra0.angle.endpoints if pt in ra1.angle.endpoints)
+                    first = next(pt for pt in ra0.angle.endpoints if pt != common)
+                    second = next(pt for pt in ra1.angle.endpoints if pt != common)
+                    yield (
+                        PointsCollinearityProperty(vertex, first, second, True),
+                        _comment('There is only one perpendicular to %s at point %s', vertex.segment(common), vertex),
+                        [ra0, ra1]
+                    )
+                except StopIteration:
+                    pass
+
         base()
         self.__iteration_step_count = 0
         self.__refresh_unexplained()
