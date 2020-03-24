@@ -482,6 +482,19 @@ class CoreScene:
         def __str__(self):
             return str(_comment('%s %s', self.start, self.end))
 
+    def _get_segment(self, point0, point1):
+        assert isinstance(point0, CoreScene.Point)
+        assert isinstance(point1, CoreScene.Point)
+        assert point0.scene == self
+        assert point1.scene == self
+        key = frozenset([point0, point1])
+        #key = (point0, point1)
+        segment = self.__segments.get(key)
+        if segment is None:
+            segment = CoreScene.Segment(point0, point1)
+            self.__segments[key] = segment
+        return segment
+
     class Segment:
         def __init__(self, pt0, pt1):
             self.points = (pt0, pt1)
@@ -538,19 +551,6 @@ class CoreScene:
         def __str__(self):
             return str(_comment('%s %s', *self.points))
 
-    def _get_segment(self, point0, point1):
-        assert isinstance(point0, CoreScene.Point)
-        assert isinstance(point1, CoreScene.Point)
-        assert point0.scene == self
-        assert point1.scene == self
-        key = frozenset([point0, point1])
-        #key = (point0, point1)
-        segment = self.__segments.get(key)
-        if segment is None:
-            segment = CoreScene.Segment(point0, point1)
-            self.__segments[key] = segment
-        return segment
-
     def _get_angle(self, vector0, vector1):
         assert isinstance(vector0, CoreScene.Vector)
         assert isinstance(vector1, CoreScene.Vector)
@@ -569,7 +569,6 @@ class CoreScene:
                 self.__angles[key] = angle
                 self.__angles[frozenset([vector0.reversed, vector1.reversed])] = angle
         return angle
-
 
     class Angle:
         def __init__(self, vector0, vector1):
