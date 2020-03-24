@@ -284,13 +284,12 @@ class Explainer:
 
             for prop in [p for p in self.context.list(SameOrOppositeSideProperty) if p.same]:
                 prop_is_too_old = is_too_old(prop)
-                for pt in self.scene.points(skip_auxiliary=True):
-                    if pt in prop.points:
-                        continue
+                segment = prop.points[0].segment(prop.points[1])
+                for col in [p for p in self.context.list(PointsCollinearityProperty, [segment]) if p.collinear]:
+                    pt = next(p for p in col.points if p not in prop.points)
                     value = self.context.angle_value_property(pt.angle(*prop.points))
                     if not value or value.degree != 180 or prop_is_too_old and is_too_old(value):
                         continue
-                    segment = prop.points[0].segment(prop.points[1])
                     for old in prop.points:
                         yield (
                             SameOrOppositeSideProperty(prop.segment, old, pt, True),
