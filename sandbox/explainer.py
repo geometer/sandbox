@@ -1165,36 +1165,6 @@ class Explainer:
                         [ps0, ps1, ps2, ncl]
                     )
 
-            for oppo1 in [p for p in self.context.list(SameOrOppositeSideProperty) if not p.same]:
-                oppo1_is_too_old = is_too_old(oppo1)
-                for vertex, pt1 in [oppo1.segment.points, reversed(oppo1.segment.points)]:
-                    for pt0, pt2 in [oppo1.points, reversed(oppo1.points)]:
-                        for oppo2 in [p for p in self.context.list(SameOrOppositeSideProperty, [vertex.segment(pt2)]) if not p.same]:
-                            if pt1 not in oppo2.points:
-                                continue
-                            oppos_are_too_old = oppo1_is_too_old and is_too_old(oppo2)
-                            pt3 = next(p for p in oppo2.points if p != pt1)
-                            angles1 = (vertex.angle(pt0, pt1), vertex.angle(pt2, pt3))
-                            angles2 = (vertex.angle(pt0, pt2), vertex.angle(pt1, pt3))
-                            ar = self.context.angles_ratio_property(*angles1)
-                            if ar:
-                                if ar.ratio != 1 or oppos_are_too_old and is_too_old(ar):
-                                    continue
-                                yield (
-                                    AnglesRatioProperty(*angles2, 1),
-                                    '',
-                                    [oppo1, oppo2, ar]
-                                )
-                            else:
-                                ar = self.context.angles_ratio_property(*angles2)
-                                if ar is None or ar.ratio != 1 or oppos_are_too_old and is_too_old(ar):
-                                    continue
-                                yield (
-                                    AnglesRatioProperty(*angles1, 1),
-                                    '',
-                                    [oppo1, oppo2, ar]
-                                )
-
             for sos in self.context.list(SameOrOppositeSideProperty):
                 for col in [p for p in self.context.list(PointsCollinearityProperty) if p.collinear]:
                     if sos.segment.points[0] not in col.points:
