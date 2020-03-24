@@ -409,20 +409,26 @@ class Explainer:
                 )
 
             for so in self.context.list(SameOrOppositeSideProperty):
+                so_is_too_old = is_too_old(so)
                 lp0 = so.segment.points[0]
                 lp1 = so.segment.points[1]
                 ne = self.context.not_equal_property(lp0, lp1)
                 if ne is None:
                     continue
+                reasons_are_too_old = so_is_too_old and is_too_old(ne)
                 for pt0, pt1 in [so.points, reversed(so.points)]:
                     if so.same:
                         sum_reason = self.context[SumOfAnglesProperty(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0), 180)]
-                        if sum_reason and sum_reason.degree == 180:
+                        if sum_reason is None or reasons_are_too_old and is_too_old(sum_reason):
+                            continue
+                        if sum_reason.degree == 180:
                             for prop in AngleValueProperty.generate(lp0.vector(pt0).angle(lp1.vector(pt1)), 0):
                                 yield (prop, 'Zigzag', [so, sum_reason, ne])
                     else:
                         ratio_reason = self.context.angles_ratio_property(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0))
-                        if ratio_reason and ratio_reason.ratio == 1:
+                        if ratio_reason is None or reasons_are_too_old and is_too_old(ratio_reason):
+                            continue
+                        if ratio_reason.ratio == 1:
                             for prop in AngleValueProperty.generate(lp0.vector(pt0).angle(pt1.vector(lp1)), 0):
                                 yield (prop, 'Zigzag', [so, ratio_reason, ne])
 
@@ -556,7 +562,7 @@ class Explainer:
                     #TODO: consider angle difference
                     continue
                 sum_reason = self.context.angle_value_property(angle)
-                if sum_reason is None:
+                if sum_reason is None or is_too_old(ar) and is_too_old(sum_reason) and is_too_old(inside_angle_reason):
                     continue
                 value = sum_reason.degree
                 second = divide(value, 1 + ar.ratio)
@@ -642,7 +648,7 @@ class Explainer:
                 third_vertex = s0.pop()
                 a2 = third_vertex.angle(a0.vertex, a1.vertex)
                 a2_reason = self.context.angle_value_property(a2)
-                if a2_reason is None:
+                if a2_reason is None or is_too_old(ar) and is_too_old(a2_reason):
                     continue
                 #a0 + a1 + a2 = 180
                 #a0 + a1 = 180 - a2
@@ -751,8 +757,11 @@ class Explainer:
                     )
 
             for ar in self.context.list(AnglesRatioProperty):
+                ar_is_too_old = is_too_old(ar)
                 value = self.context.angle_value_property(ar.angle0)
                 if value:
+                    if ar_is_too_old and is_too_old(value):
+                        continue
                     if ar.ratio == 1:
                         comment = _comment('%s = %s = %sº', ar.angle1, ar.angle0, value.degree)
                     else:
@@ -761,8 +770,10 @@ class Explainer:
                         AngleValueProperty(ar.angle1, divide(value.degree, ar.ratio)),
                         comment, [ar, value]
                     )
-                value = self.context.angle_value_property(ar.angle1)
-                if value:
+                else:
+                    value = self.context.angle_value_property(ar.angle1)
+                    if value is None or ar_is_too_old and is_too_old(value):
+                        continue
                     if ar.ratio == 1:
                         comment = _comment('%s = %s = %sº', ar.angle0, ar.angle1, value.degree)
                     else:
@@ -818,14 +829,15 @@ class Explainer:
                 )
 
             for av in self.context.list(AngleValueProperty):
-                if is_too_old(av):
-                    continue
                 if av.angle.vertex is None:
                     continue
+                av_is_too_old = is_too_old(av)
 
                 second = av.angle.vector0.end.angle(av.angle.vertex, av.angle.vector1.end)
                 third = av.angle.vector1.end.angle(av.angle.vertex, av.angle.vector0.end)
                 if av.degree == 180:
+                    if av_is_too_old:
+                        continue
                     for ang in second, third:
                         yield (
                             AngleValueProperty(ang, 0),
@@ -835,6 +847,8 @@ class Explainer:
                 else:
                     second_reason = self.context.angle_value_property(second)
                     if second_reason:
+                        if av_is_too_old and is_too_old(second_reason):
+                            continue
                         yield (
                             AngleValueProperty(third, 180 - av.degree - second_reason.degree),
                             _comment('%s + %s + %s = 180º', third, av.angle, second),
@@ -842,16 +856,17 @@ class Explainer:
                         )
                     else:
                         third_reason = self.context.angle_value_property(third)
-                        if third_reason:
-                            yield (
-                                AngleValueProperty(second, 180 - av.degree - third_reason.degree),
-                                _comment('%s + %s + %s = 180º', second, av.angle, third),
-                                [av, third_reason]
-                            )
+                        if third_reason is None or av_is_too_old and is_too_old(third_reason):
+                            continue
+                        yield (
+                            AngleValueProperty(second, 180 - av.degree - third_reason.degree),
+                            _comment('%s + %s + %s = 180º', second, av.angle, third),
+                            [av, third_reason]
+                        )
 
             for av0, av1 in itertools.combinations( \
                 [av for av in self.context.list(AngleValueProperty) if av.degree not in (0, 180)], 2):
-                if all(is_too_old(prop) for prop in [av0, av1]):
+                if is_too_old(av0) and is_too_old(av1):
                     continue
                 if av0.degree == av1.degree:
                     comment = _comment('Both angle values = %sº', av0.degree)
@@ -864,10 +879,11 @@ class Explainer:
                 )
 
             for sa in self.context.list(SumOfAnglesProperty):
+                sa_is_too_old = is_too_old(sa)
                 av = self.context.angle_value_property(sa.angle0)
                 if av:
-                    #TODO: report contradiction if value is already known
-                    #TODO: report contradiction if the sum is greater than the summand
+                    if sa_is_too_old and is_too_old(av):
+                        continue
                     yield (
                         AngleValueProperty(sa.angle1, sa.degree - av.degree),
                         _comment('%sº - %sº', sa.degree, av.degree),
@@ -875,21 +891,20 @@ class Explainer:
                     )
                 else:
                     av = self.context.angle_value_property(sa.angle1)
-                    if av:
-                        #TODO: report contradiction if the sum is greater than the summand
-                        yield (
-                            AngleValueProperty(sa.angle0, sa.degree - av.degree),
-                            _comment('%sº - %sº', sa.degree, av.degree),
-                            [sa, av]
-                        )
+                    if av is None or sa_is_too_old and is_too_old(av):
+                        continue
+                    yield (
+                        AngleValueProperty(sa.angle0, sa.degree - av.degree),
+                        _comment('%sº - %sº', sa.degree, av.degree),
+                        [sa, av]
+                    )
 
             for ar in [p for p in self.context.list(SumOfAnglesProperty) if p.angle0.vertex is not None and p.angle0.vertex == p.angle1.vertex and p.degree == 180]:
-                try:
-                    common = next(pt for pt in ar.angle0.endpoints if pt in ar.angle1.endpoints)
-                    pt0 = next(pt for pt in ar.angle0.endpoints if pt not in ar.angle1.endpoints)
-                    pt1 = next(pt for pt in ar.angle1.endpoints if pt not in ar.angle0.endpoints)
-                except StopIteration:
+                common = next((pt for pt in ar.angle0.endpoints if pt in ar.angle1.endpoints), None)
+                if common is None:
                     continue
+                pt0 = next(pt for pt in ar.angle0.endpoints if pt not in ar.angle1.endpoints)
+                pt1 = next(pt for pt in ar.angle1.endpoints if pt not in ar.angle0.endpoints)
                 oppo = self.context[SameOrOppositeSideProperty(ar.angle0.vertex.segment(common), pt0, pt1, False)]
                 if not oppo or oppo.same or is_too_old(ar) and is_too_old(oppo):
                     continue
@@ -1140,29 +1155,29 @@ class Explainer:
                     other = next(pt for pt in col.points if pt not in sos.segment.points)
                     for pt in sos.segment.points:
                         ne = self.context.not_equal_property(other, pt)
-                        if ne is not None and (not too_old or not is_too_old(ne)):
-                            yield (
-                                SameOrOppositeSideProperty(other.segment(pt), *sos.points, sos.same),
-                                _comment('%s is same line as %s', other.segment(pt), sos.segment),
-                                [sos, col, ne]
-                            )
+                        if ne is None or too_old and is_too_old(ne):
+                            continue
+                        yield (
+                            SameOrOppositeSideProperty(other.segment(pt), *sos.points, sos.same),
+                            _comment('%s is same line as %s', other.segment(pt), sos.segment),
+                            [sos, col, ne]
+                        )
 
             right_angles = [p for p in self.context.list(AngleValueProperty) if p.angle.vertex and p.degree == 90]
             for ra0, ra1 in itertools.combinations(right_angles, 2):
                 vertex = ra0.angle.vertex
                 if vertex != ra1.angle.vertex or is_too_old(ra0) and is_too_old(ra1):
                     continue
-                try:
-                    common = next(pt for pt in ra0.angle.endpoints if pt in ra1.angle.endpoints)
-                    first = next(pt for pt in ra0.angle.endpoints if pt != common)
-                    second = next(pt for pt in ra1.angle.endpoints if pt != common)
-                    yield (
-                        PointsCollinearityProperty(vertex, first, second, True),
-                        _comment('There is only one perpendicular to %s at point %s', vertex.segment(common), vertex),
-                        [ra0, ra1]
-                    )
-                except StopIteration:
-                    pass
+                common = next((pt for pt in ra0.angle.endpoints if pt in ra1.angle.endpoints), None)
+                if common is None:
+                    continue
+                first = next(pt for pt in ra0.angle.endpoints if pt != common)
+                second = next(pt for pt in ra1.angle.endpoints if pt != common)
+                yield (
+                    PointsCollinearityProperty(vertex, first, second, True),
+                    _comment('There is only one perpendicular to %s at point %s', vertex.segment(common), vertex),
+                    [ra0, ra1]
+                )
 
         for prop, comment in self.scene.enumerate_predefined_properties():
             self.__reason(prop, comment, [])

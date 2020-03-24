@@ -1,6 +1,7 @@
 import itertools
 
 from .property import AngleValueProperty, AnglesRatioProperty, LengthsRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty
+from .util import _comment
 
 class PropertySet:
     def __init__(self):
@@ -82,39 +83,26 @@ class PropertySet:
         return self.__length_ratios.get(frozenset([segment0, segment1]))
 
     def intersection_of_lines(self, segment0, segment1):
-        ne0 = self.not_equal_property(*segment0.points)
-        if ne0 is None:
-            return (None, [])
-        ne1 = self.not_equal_property(*segment1.points)
-        if ne1 is None:
-            return (None, [])
+        common = next((pt for pt in segment0.points if pt in segment1.points), None)
+        if common:
+            return (common, [])
 
-        try:
-            return (next(pt for pt in segment0.points if pt in segment1.points), [ne0, ne1])
-        except StopIteration:
-            pass
+        for index in range(0, 2):
+            col = self.collinearity_property(*segment0.points, segment1.points[index])
+            if col and col.collinear:
+                return (segment1.points[index], [col])
+            col = self.collinearity_property(*segment1.points, segment0.points[index])
+            if col and col.collinear:
+                return (segment0.points[index], [col])
 
         first_list = [p for p in self.list(PointsCollinearityProperty, [segment0]) if p.collinear]
-        second_list = [p for p in self.list(PointsCollinearityProperty, [segment1]) if p.collinear]
-        if len(first_list) == 0:
-            for col in second_list:
-                try:
-                    return (next(pt for pt in segment0.points if pt in col.points), [col, ne0, ne1])
-                except StopIteration:
-                    pass
-        elif len(second_list) == 0:
-            for col in first_list:
-                try:
-                    return (next(pt for pt in segment1.points if pt in col.points), [col, ne0, ne1])
-                except StopIteration:
-                    pass
-        else:
+        if first_list:
+            second_list = [p for p in self.list(PointsCollinearityProperty, [segment1]) if p.collinear]
             for col0 in first_list:
                 for col1 in second_list:
-                    try:
-                        return (next(pt for pt in col0.points if pt in col1.points), [col0, col1, ne0, ne1])
-                    except StopIteration:
-                        pass
+                    common = next((pt for pt in col0.points if pt in col1.points), None)
+                    if common:
+                        return (common, [col0, col1])
         return (None, [])
 
     def keys_num(self):
