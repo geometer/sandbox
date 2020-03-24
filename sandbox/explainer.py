@@ -240,32 +240,32 @@ class Explainer:
                 )
 
             for cs in self.context.list(LengthsRatioProperty):
-                vec0 = cs.segment0
-                vec1 = cs.segment1
+                seg0 = cs.segment0
+                seg1 = cs.segment1
 
-                ne0 = self.context.not_equal_property(*vec0.points)
-                ne1 = self.context.not_equal_property(*vec1.points)
+                ne0 = self.context.not_equal_property(*seg0.points)
+                ne1 = self.context.not_equal_property(*seg1.points)
                 if ne0 is not None and ne1 is None:
-                    yield (PointsCoincidenceProperty(*vec1.points, False), _comment('Otherwise, %s = %s', *vec0.points), [cs, ne0])
+                    yield (PointsCoincidenceProperty(*seg1.points, False), _comment('Otherwise, %s = %s', *seg0.points), [cs, ne0])
                 elif ne1 is not None and ne0 is None:
-                    yield (PointsCoincidenceProperty(*vec0.points, False), _comment('Otherwise, %s = %s', *vec1.points), [cs, ne1])
+                    yield (PointsCoincidenceProperty(*seg0.points, False), _comment('Otherwise, %s = %s', *seg1.points), [cs, ne1])
                 elif ne0 is None and ne1 is None:
                     ne = None
-                    if vec0.points[0] == vec1.points[0]:
-                        ne = self.context.not_equal_property(vec0.points[1], vec1.points[1])
-                        mid = vec0.points[0]
-                    elif vec0.points[0] == vec1.points[1]:
-                        ne = self.context.not_equal_property(vec0.points[1], vec1.points[0])
-                        mid = vec0.points[0]
-                    elif vec0.points[1] == vec1.points[0]:
-                        ne = self.context.not_equal_property(vec0.points[0], vec1.points[1])
-                        mid = vec0.points[1]
-                    elif vec0.points[1] == vec1.points[1]:
-                        ne = self.context.not_equal_property(vec0.points[0], vec1.points[0])
-                        mid = vec0.points[1]
+                    if seg0.points[0] == seg1.points[0]:
+                        ne = self.context.not_equal_property(seg0.points[1], seg1.points[1])
+                        mid = seg0.points[0]
+                    elif seg0.points[0] == seg1.points[1]:
+                        ne = self.context.not_equal_property(seg0.points[1], seg1.points[0])
+                        mid = seg0.points[0]
+                    elif seg0.points[1] == seg1.points[0]:
+                        ne = self.context.not_equal_property(seg0.points[0], seg1.points[1])
+                        mid = seg0.points[1]
+                    elif seg0.points[1] == seg1.points[1]:
+                        ne = self.context.not_equal_property(seg0.points[0], seg1.points[0])
+                        mid = seg0.points[1]
                     if ne:
-                        yield (PointsCoincidenceProperty(*vec0.points, False), _comment('Otherwise, %s = %s = %s', ne.points[0], mid, ne.points[1]), [cs, ne])
-                        yield (PointsCoincidenceProperty(*vec1.points, False), _comment('Otherwise, %s = %s = %s', ne.points[1], mid, ne.points[0]), [cs, ne])
+                        yield (PointsCoincidenceProperty(*seg0.points, False), _comment('Otherwise, %s = %s = %s', ne.points[0], mid, ne.points[1]), [cs, ne])
+                        yield (PointsCoincidenceProperty(*seg1.points, False), _comment('Otherwise, %s = %s = %s', ne.points[1], mid, ne.points[0]), [cs, ne])
 
             for pv in self.context.list(ParallelVectorsProperty):
                 vec0 = pv.vector0
@@ -1045,27 +1045,27 @@ class Explainer:
                 ca_is_too_old = is_too_old(ca) and is_too_old(ncl)
                 ang0 = ca.angle0
                 ang1 = ca.angle1
-                for seg0, seg1 in [(ang0.vector0.as_segment, ang0.vector1.as_segment), (ang0.vector1.as_segment, ang0.vector0.as_segment)]:
-                    rsn0 = congruent_segments(seg0, ang1.vector0.as_segment)
+                for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
+                    rsn0 = congruent_segments(vec0.as_segment, ang1.vector0.as_segment)
                     if rsn0 is None:
                         continue
-                    rsn1 = congruent_segments(seg1, ang1.vector1.as_segment)
+                    rsn1 = congruent_segments(vec1.as_segment, ang1.vector1.as_segment)
                     if rsn1 is None:
                         continue
                     if ca_is_too_old and (rsn0 == True or is_too_old(rsn0)) and (rsn1 == True or is_too_old(rsn1)):
                         continue
                     if rsn0 == True:
-                        comment = _comment('Common side %s, pair of congruent sides, and angle between the sides', seg0)
+                        comment = _comment('Common side %s, pair of congruent sides, and angle between the sides', vec0)
                         premises = [rsn1, ca, ncl]
                     elif rsn1 == True:
-                        comment = _comment('Common side %s, pair of congruent sides, and angle between the sides', seg1)
+                        comment = _comment('Common side %s, pair of congruent sides, and angle between the sides', vec1)
                         premises = [rsn0, ca, ncl]
                     else:
                         comment = 'Two pairs of congruent sides, and angle between the sides'
                         premises = [rsn0, rsn1, ca, ncl]
                     yield (
                         CongruentTrianglesProperty(
-                            (ang0.vertex, seg0.points[1], seg1.points[1]),
+                            (ang0.vertex, vec0.points[1], vec1.points[1]),
                             (ang1.vertex, ang1.vector0.end, ang1.vector1.end)
                         ), comment, premises
                     )

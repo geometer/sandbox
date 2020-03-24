@@ -200,7 +200,7 @@ class CoreScene:
             return vec
 
         def segment(self, point):
-            return CoreScene.Segment(self, point)
+            return self.scene._get_segment(self, point)
 
         def angle(self, point0, point1):
             return self.vector(point0).angle(self.vector(point1))
@@ -458,7 +458,7 @@ class CoreScene:
             return self.__segment
 
         def angle(self, other):
-            angle = self.scene.create_angle(self, other)
+            angle = self.scene._get_angle(self, other)
             if not self.scene.is_frozen:
                 self.as_segment.non_zero_length_constraint(comment=_comment('%s is side of %s', self, angle))
                 other.as_segment.non_zero_length_constraint(comment=_comment('%s is side of %s', other, angle))
@@ -486,9 +486,6 @@ class CoreScene:
 
     class Segment:
         def __init__(self, pt0, pt1):
-            assert isinstance(pt0, CoreScene.Point)
-            assert isinstance(pt1, CoreScene.Point)
-            assert pt0.scene == pt1.scene
             self.points = (pt0, pt1)
             self.point_set = frozenset(self.points)
 
@@ -540,16 +537,23 @@ class CoreScene:
             #TODO: equal_constraint otherwise?
             self.scene.constraint(Constraint.Kind.distance, self, length, **kwargs)
 
-        def __eq__(self, other):
-            return self.point_set == other.point_set
-
-        def __hash__(self):
-            return hash(self.point_set)
-
         def __str__(self):
             return str(_comment('%s %s', *self.points))
 
-    def create_angle(self, vector0, vector1):
+    def _get_segment(self, point0, point1):
+        assert isinstance(point0, CoreScene.Point)
+        assert isinstance(point1, CoreScene.Point)
+        assert point0.scene == self
+        assert point1.scene == self
+        key = frozenset([point0, point1])
+        #key = (point0, point1)
+        segment = self.__segments.get(key)
+        if segment is None:
+            segment = CoreScene.Segment(point0, point1)
+            self.__segments[key] = segment
+        return segment
+
+    def _get_angle(self, vector0, vector1):
         assert isinstance(vector0, CoreScene.Vector)
         assert isinstance(vector1, CoreScene.Vector)
         assert vector0.scene == self
@@ -633,7 +637,8 @@ class CoreScene:
         self.validation_constraints = []
         self.adjustment_constraints = []
         self.__frozen = False
-        self.__angles = {} # (vector, vector) => angle
+        self.__angles = {} # {vector, vector} => angle
+        self.__segments = {} # {point, point} => angle
 
     def constraint(self, kind, *args, **kwargs):
         cns = Constraint(kind, self, *args, **kwargs)
