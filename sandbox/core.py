@@ -8,7 +8,7 @@ import itertools
 import sympy as sp
 from typing import List
 
-from .property import AngleValueProperty, PointsCoincidenceProperty, PointsCollinearityProperty, LengthsRatioProperty
+from .property import AngleValueProperty, PointsCoincidenceProperty, PointsCollinearityProperty, LengthsRatioProperty, PointInsideAngleProperty
 from .propertyset import PropertySet
 from .reason import Reason
 from .util import _comment, divide
@@ -732,6 +732,14 @@ class CoreScene:
             #TODO: filter aux points
             add_property(
                 AngleValueProperty(cnstr.params[0].angle(*cnstr.params[1:]), 0),
+                cnstr.comments
+            )
+
+        for cnstr in self.constraints(Constraint.Kind.inside_angle):
+            point = cnstr.params[0]
+            angle = cnstr.params[1]
+            add_property(
+                PointInsideAngleProperty(point, angle),
                 cnstr.comments
             )
 

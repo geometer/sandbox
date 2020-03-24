@@ -53,11 +53,6 @@ class Explainer:
                     SameOrOppositeSideProperty(line.point0.segment(line.point1), cnst.params[0], cnst.params[1], False),
                     cnst.comments
                 )
-            for cnst in self.scene.constraints(Constraint.Kind.inside_angle):
-                self.__reason(
-                    PointInsideAngleProperty(cnst.params[0], cnst.params[1]),
-                    cnst.comments
-                )
             for cnst in self.scene.constraints(Constraint.Kind.same_side):
                 line = cnst.params[2]
                 self.__reason(
@@ -474,6 +469,12 @@ class Explainer:
             for pia in self.context.list(PointInsideAngleProperty):
                 if is_too_old(pia):
                     continue
+                for endpoint in pia.angle.endpoints:
+                    yield (
+                        PointsCollinearityProperty(pia.point, pia.angle.vertex, endpoint, False),
+                        '', #TODO: write comment
+                        [pia]
+                    )
                 yield (
                     SameOrOppositeSideProperty(pia.angle.vector0.as_segment, pia.point, pia.angle.vector1.end, True),
                     '', #TODO: write comment
