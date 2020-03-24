@@ -275,7 +275,7 @@ class Explainer:
                 if ne0 is not None and ne1 is not None:
                     if is_too_old(pv) and is_too_old(ne0) and is_too_old(ne1):
                         continue
-                    for prop in AngleValueProperty.generate(vec0.angle(vec1), 0):
+                    for prop in AngleValueProperty.generate(vec0, vec1, 0):
                         yield (prop, [], [pv, ne0, ne1])
 
             for prop in [p for p in self.context.list(SameOrOppositeSideProperty) if p.same]:
@@ -422,14 +422,14 @@ class Explainer:
                         if sum_reason is None or reasons_are_too_old and is_too_old(sum_reason):
                             continue
                         if sum_reason.degree == 180:
-                            for prop in AngleValueProperty.generate(lp0.vector(pt0).angle(lp1.vector(pt1)), 0):
+                            for prop in AngleValueProperty.generate(lp0.vector(pt0), lp1.vector(pt1), 0):
                                 yield (prop, 'Zigzag', [so, sum_reason, ne])
                     else:
                         ratio_reason = self.context.angles_ratio_property(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0))
                         if ratio_reason is None or reasons_are_too_old and is_too_old(ratio_reason):
                             continue
                         if ratio_reason.ratio == 1:
-                            for prop in AngleValueProperty.generate(lp0.vector(pt0).angle(pt1.vector(lp1)), 0):
+                            for prop in AngleValueProperty.generate(lp0.vector(pt0), pt1.vector(lp1), 0):
                                 yield (prop, 'Zigzag', [so, ratio_reason, ne])
 
             for zero in [av for av in self.context.list(AngleValueProperty) if av.degree == 0]:
@@ -440,8 +440,8 @@ class Explainer:
                     vec = ne.points[0].vector(ne.points[1])
                     if vec.as_segment in [zero.angle.vector0.as_segment, zero.angle.vector1.as_segment]:
                         continue
-                    for ngl0, cmpl0 in good_angles(vec.angle(zero.angle.vector0)):
-                        for ngl1, cmpl1 in good_angles(vec.angle(zero.angle.vector1)):
+                    for ngl0, cmpl0 in good_angles(vec, zero.angle.vector0):
+                        for ngl1, cmpl1 in good_angles(vec, zero.angle.vector1):
                             if cmpl0 == cmpl1:
                                 prop = AnglesRatioProperty(ngl0, ngl1, 1)
                             else:

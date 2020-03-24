@@ -458,7 +458,7 @@ class CoreScene:
             return self.__segment
 
         def angle(self, other):
-            angle = CoreScene.Angle.create(self, other)
+            angle = self.scene.create_angle(self, other)
             if not self.scene.is_frozen:
                 self.as_segment.non_zero_length_constraint(comment=_comment('%s is side of %s', self, angle))
                 other.as_segment.non_zero_length_constraint(comment=_comment('%s is side of %s', other, angle))
@@ -549,16 +549,27 @@ class CoreScene:
         def __str__(self):
             return str(_comment('%s %s', *self.points))
 
-    class Angle:
-        @staticmethod
-        def create(vector0, vector1):
-            assert isinstance(vector0, CoreScene.Vector)
-            assert isinstance(vector1, CoreScene.Vector)
-            assert vector0.scene == vector1.scene
-            if vector0.start == vector1.start:
-                return CoreScene.AngleWithVertex(vector0, vector1)
-            return CoreScene.AngleWithNoVertex(vector0, vector1)
+    def create_angle(self, vector0, vector1):
+        assert isinstance(vector0, CoreScene.Vector)
+        assert isinstance(vector1, CoreScene.Vector)
+        assert vector0.scene == self
+        assert vector1.scene == self
 
+        key = frozenset([vector0, vector1])
+        angle = self.__angles.get(key)
+        if angle is None:
+            if vector0.start == vector1.start:
+                angle = CoreScene.AngleWithVertex(vector0, vector1)
+                self.__angles[key] = angle
+            else:
+                assert vector0.end != vector1.end
+                angle = CoreScene.AngleWithNoVertex(vector0, vector1)
+                self.__angles[key] = angle
+                self.__angles[frozenset([vector0.reversed, vector1.reversed])] = angle
+        return angle
+
+
+    class Angle:
         def __init__(self, vector0, vector1):
             self.vector0 = vector0
             self.vector1 = vector1
@@ -602,12 +613,6 @@ class CoreScene:
         def __str__(self):
             return str(_comment('∠ %s %s %s', self.vector0.end, self.vertex, self.vector1.end))
 
-        def __eq__(self, other):
-            return type(other) == CoreScene.AngleWithVertex and self.vectors == other.vectors
-
-        def __hash__(self):
-            return hash(self.vectors)
-
     class AngleWithNoVertex(Angle):
         def __init__(self, vector0, vector1):
             super().__init__(vector0, vector1)
@@ -623,17 +628,12 @@ class CoreScene:
         def __str__(self):
             return '∠(%s, %s)' % (self.vector0, self.vector1)
 
-        def __eq__(self, other):
-            return type(other) == CoreScene.AngleWithNoVertex and self.vectors_variants == other.vectors_variants
-
-        def __hash__(self):
-            return hash(self.vectors_variants)
-
     def __init__(self):
         self.__objects = []
         self.validation_constraints = []
         self.adjustment_constraints = []
         self.__frozen = False
+        self.__angles = {} # (vector, vector) => angle
 
     def constraint(self, kind, *args, **kwargs):
         cns = Constraint(kind, self, *args, **kwargs)
