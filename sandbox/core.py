@@ -9,7 +9,6 @@ import sympy as sp
 from typing import List
 
 from .property import AngleValueProperty, PointsCoincidenceProperty, PointsCollinearityProperty, LengthsRatioProperty, PointInsideAngleProperty
-from .propertyset import PropertySet
 from .reason import Reason
 from .util import _comment, divide
 
@@ -696,41 +695,34 @@ class CoreScene:
         else:
             return [cnstr for cnstr in self.adjustment_constraints if cnstr.kind == kind]
 
-    def predefined_properties(self):
-        properties = PropertySet()
-
-        def add_property(prop, comments):
-            if prop not in properties:
-                prop.reason = Reason(len(properties), -1, comments, [])
-                properties.add(prop)
-
+    def enumerate_predefined_properties(self):
         for cnstr in self.constraints(Constraint.Kind.collinear):
-            add_property(PointsCollinearityProperty(*cnstr.params, True), cnstr.comments)
+            yield (PointsCollinearityProperty(*cnstr.params, True), cnstr.comments)
 
         for cnstr in self.constraints(Constraint.Kind.not_collinear):
             if any(param.auxiliary for param in cnstr.params):
                 continue
-            add_property(PointsCollinearityProperty(*cnstr.params, False), cnstr.comments)
-            add_property(PointsCoincidenceProperty(*cnstr.params[0:2], False), cnstr.comments)
-            add_property(PointsCoincidenceProperty(*cnstr.params[1:3], False), cnstr.comments)
-            add_property(PointsCoincidenceProperty(cnstr.params[0], cnstr.params[2], False), cnstr.comments)
+            yield (PointsCollinearityProperty(*cnstr.params, False), cnstr.comments)
+            yield (PointsCoincidenceProperty(*cnstr.params[0:2], False), cnstr.comments)
+            yield (PointsCoincidenceProperty(*cnstr.params[1:3], False), cnstr.comments)
+            yield (PointsCoincidenceProperty(cnstr.params[0], cnstr.params[2], False), cnstr.comments)
 
         for cnstr in self.constraints(Constraint.Kind.not_equal):
             if cnstr.params[0].auxiliary or cnstr.params[1].auxiliary:
                 continue
-            add_property(PointsCoincidenceProperty(cnstr.params[0], cnstr.params[1], False), cnstr.comments)
+            yield (PointsCoincidenceProperty(cnstr.params[0], cnstr.params[1], False), cnstr.comments)
 
         for cnstr in self.constraints(Constraint.Kind.length_ratio):
             if any(param.auxiliary for param in [*cnstr.params[0].points, *cnstr.params[1].points]):
                 continue
-            add_property(
+            yield (
                 LengthsRatioProperty(cnstr.params[0], cnstr.params[1], cnstr.params[2]),
                 cnstr.comments
             )
 
         for cnstr in self.constraints(Constraint.Kind.same_direction):
             #TODO: filter aux points
-            add_property(
+            yield (
                 AngleValueProperty(cnstr.params[0].angle(*cnstr.params[1:]), 0),
                 cnstr.comments
             )
@@ -738,25 +730,25 @@ class CoreScene:
         for cnstr in self.constraints(Constraint.Kind.inside_angle):
             point = cnstr.params[0]
             angle = cnstr.params[1]
-            add_property(
+            yield (
                 PointInsideAngleProperty(point, angle),
                 cnstr.comments
             )
 
         for cnstr in self.constraints(Constraint.Kind.inside_segment):
             #TODO: filter aux points
-            add_property(
+            yield (
                 PointsCoincidenceProperty(*cnstr.params[1].points, False),
                 cnstr.comments
             )
-            add_property(
+            yield (
                 AngleValueProperty(cnstr.params[0].angle(*cnstr.params[1].points), 180),
                 cnstr.comments
             )
 
         for line in self.lines(skip_auxiliary=False):
             for pt0, pt1, pt2 in itertools.combinations([p for p in line.all_points], 3):
-                add_property(
+                yield (
                     PointsCollinearityProperty(pt0, pt1, pt2, True),
                     [_comment('Three points on the line %s', line)]
                 )
@@ -765,17 +757,15 @@ class CoreScene:
             radiuses = [circle.centre.segment(pt) for pt in circle.all_points]
             if circle.centre not in circle.radius.points:
                 for rad in radiuses:
-                    add_property(
+                    yield (
                         LengthsRatioProperty(rad, circle.radius, 1),
                         [_comment('Distance between centre %s and point %s on the circle of radius |%s|', circle.centre, rad.points[0], circle.radius)]
                     )
             for rad0, rad1 in itertools.combinations(radiuses, 2):
-                add_property(
+                yield (
                     LengthsRatioProperty(rad0, rad1, 1),
                     [_comment('Two radiuses of the same circle with centre %s', circle.centre)]
                 )
-
-        return properties
 
     def assert_type(self, obj, *args):
         assert isinstance(obj, args), 'Unexpected type %s' % type(obj)

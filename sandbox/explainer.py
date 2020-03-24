@@ -3,6 +3,7 @@ import time
 
 from .core import Constraint
 from .property import *
+from .propertyset import PropertySet
 from .reason import Reason
 from .scene import Scene
 from .stats import Stats
@@ -11,7 +12,7 @@ from .util import _comment, divide, side_of, angle_of
 class Explainer:
     def __init__(self, scene, properties):
         self.scene = scene
-        self.context = self.scene.predefined_properties()
+        self.context = PropertySet()
         self.__unexplained = list(properties)
         self.__explanation_time = None
         self.__iteration_step_count = -1
@@ -1162,6 +1163,9 @@ class Explainer:
                     )
                 except StopIteration:
                     pass
+
+        for prop, comment in self.scene.enumerate_predefined_properties():
+            self.__reason(prop, comment, [])
 
         base()
         self.__iteration_step_count = 0
