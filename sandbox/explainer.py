@@ -299,24 +299,24 @@ class Explainer:
                         )
 
             for prop in self.context.list(SameOrOppositeSideProperty):
-                if is_too_old(prop):
-                    continue
                 pt0 = prop.points[0]
                 pt1 = prop.points[1]
-                crossing = self.scene.get_intersection(prop.segment.line(), pt0.line_through(pt1))
+                crossing, reasons = self.context.intersection_of_lines(prop.segment, pt0.segment(pt1))
                 if not crossing:
+                    continue
+                if is_too_old(prop) and all(is_too_old(p) for p in reasons):
                     continue
                 if prop.same:
                     yield (
                         AngleValueProperty(crossing.angle(pt0, pt1), 0),
-                        _comment('%s is an intersection of straighit line containing segment %s and line %s', crossing, pt0.segment(pt1), prop.segment),
-                        [prop]
+                        _comment('%s is an intersection of lines %s and %s', crossing, pt0.segment(pt1), prop.segment),
+                        [prop] + reasons
                     )
                 else:
                     yield (
                         AngleValueProperty(crossing.angle(pt0, pt1), 180),
                         _comment('%s is an intersection of segment %s and line %s', crossing, pt0.segment(pt1), prop.segment),
-                        [prop]
+                        [prop] + reasons
                     )
 
             for av in [av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 180]:
@@ -452,23 +452,25 @@ class Explainer:
                             )
 
             for pia in self.context.list(PointInsideAngleProperty):
-                if is_too_old(pia):
-                    continue
                 A = pia.angle.vertex
                 if A is None:
                     continue
                 B = pia.angle.vector0.end
                 C = pia.angle.vector1.end
                 D = pia.point
-                AD = A.line_through(D)
-                BC = B.line_through(C)
-                X = self.scene.get_intersection(AD, BC)
-                if X is not None and X not in (A, B, C, D):
-                    comment = _comment('%s is intersection of ray [%s %s) and segment [%s %s]', X, A, D, B, C)
-                    yield (AngleValueProperty(A.angle(D, X), 0), [comment], [pia])
-                    yield (AngleValueProperty(B.angle(C, X), 0), [comment], [pia])
-                    yield (AngleValueProperty(C.angle(B, X), 0), [comment], [pia])
-                    yield (AngleValueProperty(X.angle(B, C), 180), [comment], [pia])
+                AD = A.segment(D)
+                BC = B.segment(C)
+                X, reasons = self.context.intersection_of_lines(AD, BC)
+                if X is None or X in (A, B, C, D):
+                    continue
+                if is_too_old(pia) and all(is_too_old(p) for p in reasons):
+                    continue
+
+                comment = _comment('%s is intersection of ray [%s %s) and segment [%s %s]', X, A, D, B, C)
+                yield (AngleValueProperty(A.angle(D, X), 0), [comment], [pia] + reasons)
+                yield (AngleValueProperty(B.angle(C, X), 0), [comment], [pia] + reasons)
+                yield (AngleValueProperty(C.angle(B, X), 0), [comment], [pia] + reasons)
+                yield (AngleValueProperty(X.angle(B, C), 180), [comment], [pia] + reasons)
 
             for pia in self.context.list(PointInsideAngleProperty):
                 if is_too_old(pia):
@@ -485,14 +487,19 @@ class Explainer:
                 )
 
             for ss0, ss1 in itertools.combinations([p for p in self.context.list(SameOrOppositeSideProperty) if p.same], 2):
-                if is_too_old(ss0) and is_too_old(ss1):
+                for pts in itertools.combinations(ss0.segment.points + ss1.segment.points, 3):
+                    ncl = self.context.not_collinear_property(*pts)
+                    if ncl:
+                        break
+                else:
                     continue
 
-                if ss0.segment.line() == ss1.segment.line():
-                    continue
-
-                vertex = self.scene.get_intersection(ss0.segment.line(), ss1.segment.line())
+                vertex, reasons = self.context.intersection_of_lines(ss0.segment, ss1.segment)
                 if vertex is None:
+                    continue
+
+                reasons = [ss0, ss1, ncl] + reasons
+                if all(is_too_old(p) for p in reasons):
                     continue
 
                 if ss0.points[0] in ss1.points:
@@ -520,7 +527,7 @@ class Explainer:
                 yield (
                     PointInsideAngleProperty(common, vertex.angle(other0, other1)),
                     '', #TODO: write comment
-                    [ss0, ss1]
+                    reasons
                 )
 
             for ar in self.context.list(AnglesRatioProperty):

@@ -81,6 +81,42 @@ class PropertySet:
     def lengths_ratio_property(self, segment0, segment1):
         return self.__length_ratios.get(frozenset([segment0, segment1]))
 
+    def intersection_of_lines(self, segment0, segment1):
+        ne0 = self.not_equal_property(*segment0.points)
+        if ne0 is None:
+            return (None, [])
+        ne1 = self.not_equal_property(*segment1.points)
+        if ne1 is None:
+            return (None, [])
+
+        try:
+            return (next(pt for pt in segment0.points if pt in segment1.points), [ne0, ne1])
+        except StopIteration:
+            pass
+
+        first_list = [p for p in self.list(PointsCollinearityProperty, [segment0]) if p.collinear]
+        second_list = [p for p in self.list(PointsCollinearityProperty, [segment1]) if p.collinear]
+        if len(first_list) == 0:
+            for col in second_list:
+                try:
+                    return (next(pt for pt in segment0.points if pt in col.points), [col, ne0, ne1])
+                except StopIteration:
+                    pass
+        elif len(second_list) == 0:
+            for col in first_list:
+                try:
+                    return (next(pt for pt in segment1.points if pt in col.points), [col, ne0, ne1])
+                except StopIteration:
+                    pass
+        else:
+            for col0 in first_list:
+                for col1 in second_list:
+                    try:
+                        return (next(pt for pt in col0.points if pt in col1.points), [col0, col1, ne0, ne1])
+                    except StopIteration:
+                        pass
+        return (None, [])
+
     def keys_num(self):
         return len(self.__combined)
 

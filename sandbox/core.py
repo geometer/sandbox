@@ -756,7 +756,7 @@ class CoreScene:
             )
 
         for line in self.lines(skip_auxiliary=False):
-            for pt0, pt1, pt2 in itertools.combinations([p for p in line.all_points if not p.auxiliary], 3):
+            for pt0, pt1, pt2 in itertools.combinations([p for p in line.all_points], 3):
                 add_property(
                     PointsCollinearityProperty(pt0, pt1, pt2, True),
                     [_comment('Three points on the line %s', line)]
