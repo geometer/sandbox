@@ -111,9 +111,6 @@ class CoreScene:
                 CoreScene.Point.Origin.translated,
                 base=self, delta=vector, coef=coef, **kwargs
             )
-            line = vector.line(auxiliary=True)
-            if self in line:
-                new_point.belongs_to(line)
             if self in {vector.start, vector.end}:
                 new_point.collinear_constraint(vector.start, vector.end)
             if coef > 0:
@@ -171,9 +168,9 @@ class CoreScene:
             assert self != point, 'Cannot create a line by a single point'
             self.not_equal_constraint(point)
 
-            existing = self.scene.get_line(self, point)
-            if existing:
-                return existing.with_extra_args(**kwargs)
+            for existing in self.scene.lines():
+                if self in existing and point in existing:
+                    return existing.with_extra_args(**kwargs)
 
             line = CoreScene.Line(self.scene, point0=self, point1=point, **kwargs)
             if not self.scene.is_frozen:
@@ -361,7 +358,7 @@ class CoreScene:
                     circle=obj, line=self, **kwargs
                 )
             else:
-                existing = self.scene.get_intersection(self, obj)
+                existing = next((pt for pt in self.all_points if pt in obj), None)
                 if existing:
                     return existing.with_extra_args(**kwargs)
 
@@ -503,9 +500,6 @@ class CoreScene:
         @property
         def scene(self):
             return self.points[0].scene
-
-        def line(self, **kwargs):
-            return self.points[0].line_through(self.points[1], **kwargs)
 
         def free_point(self, **kwargs):
             point = self.points[0].line_through(self.points[1], auxiliary=True).free_point(**kwargs)
@@ -812,22 +806,6 @@ class CoreScene:
             if obj.label == label or label in obj.extra_labels:
                 return obj
         return None
-
-    def get_line(self, point0, point1):
-        """
-        Returns *existing* line through point0 and point1.
-        Does not require point0 != point1, returns first found line that meets the condition.
-        """
-        for line in self.lines():
-            if point0 in line and point1 in line:
-                return line
-        return None
-
-    def get_intersection(self, line0, line1):
-        """
-        Returns *existing* intersection point of line0 and line1.
-        """
-        return next((pt for pt in line0.all_points if pt in line1), None)
 
     def freeze(self):
         self.__frozen = True
