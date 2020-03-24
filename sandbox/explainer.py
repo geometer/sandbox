@@ -1,5 +1,6 @@
 import itertools
 import time
+import sympy as sp
 
 from .core import Constraint
 from .property import *
@@ -1177,6 +1178,24 @@ class Explainer:
                     _comment('There is only one perpendicular to %s at point %s', vertex.segment(common), vertex),
                     [ra0, ra1]
                 )
+
+            for av0 in [p for p in self.context.list(AngleValueProperty) if p.angle.vertex and p.degree not in (0, 180)]:
+                triangle = (av0.angle.vertex, *av0.angle.endpoints)
+                av1 = self.context.angle_value_property(angle_of(triangle, 1))
+                if av1 is None or is_too_old(av0) and is_too_old(av1):
+                    continue
+                sines = (
+                    sp.sin(sp.pi * av0.degree / 180),
+                    sp.sin(sp.pi * av1.degree / 180),
+                    sp.sin(sp.pi * (180 - av0.degree - av1.degree) / 180)
+                )
+                sides = [side_of(triangle, i) for i in range(0, 3)]
+                for (sine0, side0), (sine1, side1) in itertools.combinations(zip(sines, sides), 2):
+                    yield (
+                        LengthsRatioProperty(side0, side1, sine0 / sine1),
+                        _comment('Law of sines for △ %s %s %s', *triangle),
+                        [av0, av1]
+                    )
 
         for prop, comment in self.scene.enumerate_predefined_properties():
             self.__reason(prop, comment, [])
