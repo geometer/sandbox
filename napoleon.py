@@ -10,18 +10,17 @@ scene = Scene()
 A, B, C = scene.triangle(labels=['A', 'B', 'C'])
 
 def napoleonic(A: Scene.Point, B: Scene.Point, C: Scene.Point):
-    V = A.scene.free_point(label=C.label + '1')
-    A.scene.is_equilateral_constraint((A, B, V), comment=_comment('Given: △ %s %s %s is equilateral', A, B, V))
+    V = A.circle_through(B).intersection_point(B.circle_through(A), label=C.label + '1')
     line = A.line_through(B, auxiliary=True)
     V.opposite_side_constraint(C, line, comment=_comment('Given: %s is outward of △ %s %s %s', V, A, B, C))
     D = scene.gravity_centre_point(A, B, V, label=C.label + '2')
+    #D = scene.free_point(label=C.label + '2')
     segmentA = A.segment(D)
     segmentB = B.segment(D)
     segmentV = V.segment(D)
-    segmentA.congruent_constraint(segmentB, guaranteed=True)
-    segmentA.congruent_constraint(segmentV, guaranteed=True)
-    D.inside_triangle_constraint(A, B, V, guaranteed=True)
-
+    segmentA.congruent_constraint(segmentB)
+    segmentA.congruent_constraint(segmentV)
+    D.inside_triangle_constraint(A, B, V)
 
 napoleonic(A, B, C)
 napoleonic(C, A, B)
