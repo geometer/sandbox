@@ -239,7 +239,7 @@ class Explainer:
                     continue
                 yield (
                     PointsCoincidenceProperty(*others, True),
-                    _comment('%s and %s belong to two different lines %s and %s', *others, pt0.line_through(ncl_pt), pt1.line_through(ncl_pt)),
+                    _comment('%s and %s belong to two different lines %s and %s', *others, pt0.segment(ncl_pt), pt1.segment(ncl_pt)),
                     [cl0, cl1, ncl]
                 )
 
