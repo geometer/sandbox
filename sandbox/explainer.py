@@ -199,46 +199,10 @@ class Explainer:
 
             for ncl in [p for p in self.context.list(PointsCollinearityProperty) if not p.collinear]:
                 if not is_too_old(ncl):
-                    def extra_comments(pt, pt0, pt1):
-                        return [_comment('%s lies on the line %s %s', pt, pt0, pt1)]
-
-                    def add_reasons(pt0, pt1, pt2):
-                        line = self.scene.get_line(pt0, pt1)
-                        if line:
-                            for pt in line.all_points:
-                                yield (
-                                    PointsCoincidenceProperty(pt, pt2, False),
-                                    _comment(
-                                        '%s lies on the line %s %s, %s does not',
-                                        pt, pt0, pt1, pt2
-                                    ),
-                                    [ncl]
-                                )
-                            for ptX, ptY in itertools.combinations(line.all_points, 2):
-                                ne = self.context.not_equal_property(ptX, ptY)
-                                if ne is None:
-                                    continue
-                                comments = [str(ncl)]
-                                if not ptX in (pt0, pt1):
-                                    comments += extra_comments(ptX, pt0, pt1)
-                                if not ptY in (pt0, pt1):
-                                    comments += extra_comments(ptY, pt0, pt1)
-                                yield (
-                                    PointsCollinearityProperty(ptX, ptY, pt2, False),
-                                    _comment(
-                                        '%s and %s lie on the line %s %s, %s does not',
-                                        ptX, ptY, pt0, pt1, pt2
-                                    ),
-                                    [ncl, ne]
-                                )
-
                     #TODO: better comments
                     yield (PointsCoincidenceProperty(ncl.points[0], ncl.points[1], False), str(ncl), [ncl])
                     yield (PointsCoincidenceProperty(ncl.points[0], ncl.points[2], False), str(ncl), [ncl])
                     yield (PointsCoincidenceProperty(ncl.points[1], ncl.points[2], False), str(ncl), [ncl])
-                    add_reasons(ncl.points[0], ncl.points[1], ncl.points[2])
-                    add_reasons(ncl.points[1], ncl.points[2], ncl.points[0])
-                    add_reasons(ncl.points[2], ncl.points[0], ncl.points[1])
 
                 ncl_set = set(ncl.points)
                 for col in [p for p in self.context.list(PointsCollinearityProperty) if p.collinear]:
