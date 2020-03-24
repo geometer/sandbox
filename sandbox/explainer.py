@@ -125,7 +125,7 @@ class Explainer:
 
             processed = set()
             angle_ratios = list(self.context.list(AnglesRatioProperty))
-            angle_ratios.sort(key=lambda prop: len(prop.angle0.points) + len(prop.angle1.points))
+            angle_ratios.sort(key=lambda prop: prop.penalty)
             for ar0 in angle_ratios:
                 if is_too_old(ar0):
                     continue
@@ -921,18 +921,20 @@ class Explainer:
                 )
 
             congruent_angles = [ar for ar in self.context.list(AnglesRatioProperty) if ar.ratio == 1 and ar.angle0.vertex and ar.angle1.vertex]
-            def pts(prop):
-                return {prop.angle0.points, prop.angle1.points}
+            congruent_angles_groups = {}
+            for ca in congruent_angles:
+                key = frozenset([frozenset(ca.angle0.points), frozenset(ca.angle1.points)])
+                lst = congruent_angles_groups.get(key)
+                if lst:
+                    lst.append(ca)
+                else:
+                    congruent_angles_groups[key] = [ca]
 
-            processed = set()
-            for ar0 in congruent_angles:
-                if is_too_old(ar0):
-                    continue
-                processed.add(ar0)
-                pts0 = pts(ar0)
-                angles0 = {ar0.angle0, ar0.angle1}
-                for ar1 in [ar for ar in congruent_angles if ar not in processed and pts(ar) == pts0]:
-                    if ar1.angle0 in angles0 or ar1.angle1 in angles0:
+            for group in congruent_angles_groups.values():
+                for ar0, ar1 in itertools.combinations(group, 2):
+                    if ar1.angle0 in ar0.angle_set or ar1.angle1 in ar0.angle_set:
+                        continue
+                    if is_too_old(ar0) and is_too_old(ar1):
                         continue
                     if ar0.angle0.points == ar1.angle0.points:
                         tr0 = [ar0.angle0.vertex, ar1.angle0.vertex]
