@@ -1071,6 +1071,31 @@ class Explainer:
                         ), comment, premises
                     )
 
+            for ca in congruent_angles:
+                ncl = self.context.not_collinear_property(*ca.angle0.points)
+                if ncl is None:
+                    continue
+                ca_is_too_old = is_too_old(ca) and is_too_old(ncl)
+                ang0 = ca.angle0
+                ang1 = ca.angle1
+                for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
+                    rsn0 = self.context.lengths_ratio_property(vec0.as_segment, ang1.vector0.as_segment)
+                    if rsn0 is None:
+                        continue
+                    rsn1 = self.context.lengths_ratio_property(vec1.as_segment, ang1.vector1.as_segment)
+                    if rsn1 is None or rsn0.ratio != rsn1.ratio:
+                        continue
+                    if ca_is_too_old and is_too_old(rsn0) and is_too_old(rsn1):
+                        continue
+                    yield (
+                        SimilarTrianglesProperty(
+                            (ang0.vertex, vec0.points[1], vec1.points[1]),
+                            (ang1.vertex, ang1.vector0.end, ang1.vector1.end)
+                        ),
+                        'Two pairs of sides with the same ratio, and angle between the sides',
+                        [rsn0, rsn1, ca, ncl]
+                    )
+
             congruent_segments = [p for p in self.context.list(LengthsRatioProperty) if p.ratio == 1]
             def common_point(segment0, segment1):
                 if segment0.points[0] in segment1.points:
@@ -1114,6 +1139,31 @@ class Explainer:
                                 'Three pairs of congruent sides',
                                 [cs0, cs1, cs2, ncl]
                             )
+
+            for ps0, ps1 in itertools.combinations(self.context.list(LengthsRatioProperty), 2):
+                if ps0.ratio == 1 or ps0.ratio != ps1.ratio:
+                    continue
+                ps_are_too_old = is_too_old(ps0) and is_too_old(ps1)
+                common0 = common_point(ps0.segment0, ps1.segment0)
+                if common0 is None:
+                    continue
+                common1 = common_point(ps0.segment1, ps1.segment1)
+                if common1 is None:
+                    continue
+                third0 = other_point(ps0.segment0, common0).segment(other_point(ps1.segment0, common0))
+                third1 = other_point(ps0.segment1, common1).segment(other_point(ps1.segment1, common1))
+                ncl = self.context.not_collinear_property(common0, *third0.points)
+                if ncl is None or ps_are_too_old and is_too_old(ncl):
+                    continue
+                ps2 = self.__congruent_segments_reason(third0, third1)
+                if ps2 and ps2.ratio == ps0.ratio:
+                    yield (
+                        SimilarTrianglesProperty(
+                            (common0, *third0.points), (common1, *third1.points)
+                        ),
+                        'Three of sides with the same ratio',
+                        [ps0, ps1, ps2, ncl]
+                    )
 
             for oppo1 in [p for p in self.context.list(SameOrOppositeSideProperty) if not p.same]:
                 oppo1_is_too_old = is_too_old(oppo1)
