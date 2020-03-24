@@ -1098,28 +1098,35 @@ class Explainer:
                                 [cs0, cs1, cs2, ncl]
                             )
 
-            for vertex, pt0, pt1, pt2, pt3 in itertools.permutations(self.scene.points(skip_auxiliary=True), 5):
-                ne1 = self.context.not_equal_property(vertex, pt1)
-                ne2 = self.context.not_equal_property(vertex, pt2)
-                if ne1 is None or ne2 is None:
-                    continue
-                oppo1 = self.context[SameOrOppositeSideProperty(vertex.segment(pt1), pt0, pt2, False)]
-                if oppo1 is None or oppo1.same:
-                    continue
-                oppo2 = self.context[SameOrOppositeSideProperty(vertex.segment(pt2), pt1, pt3, False)]
-                if oppo2 is None or oppo2.same:
-                    continue
-                ar = self.context.angles_ratio_property(vertex.angle(pt0, pt1), vertex.angle(pt2, pt3))
-                if ar is None or ar.ratio != 1:
-                    continue
-                if is_too_old(ne1) and is_too_old(ne2) and is_too_old(oppo1) and is_too_old(oppo2) and is_too_old(ar):
-                    continue
-
-                yield (
-                    AnglesRatioProperty(vertex.angle(pt0, pt2), vertex.angle(pt1, pt3), 1),
-                    '',
-                    [oppo1, oppo2, ar]
-                )
+            for oppo1 in [p for p in self.context.list(SameOrOppositeSideProperty) if not p.same]:
+                oppo1_is_too_old = is_too_old(oppo1)
+                for vertex, pt1 in [oppo1.segment.points, reversed(oppo1.segment.points)]:
+                    for pt0, pt2 in [oppo1.points, reversed(oppo1.points)]:
+                        for oppo2 in [p for p in self.context.list(SameOrOppositeSideProperty, [vertex.segment(pt2)]) if not p.same]:
+                            if pt1 not in oppo2.points:
+                                continue
+                            oppos_are_too_old = oppo1_is_too_old and is_too_old(oppo2)
+                            pt3 = next(p for p in oppo2.points if p != pt1)
+                            angles1 = (vertex.angle(pt0, pt1), vertex.angle(pt2, pt3))
+                            angles2 = (vertex.angle(pt0, pt2), vertex.angle(pt1, pt3))
+                            ar = self.context.angles_ratio_property(*angles1)
+                            if ar:
+                                if ar.ratio != 1 or oppos_are_too_old and is_too_old(ar):
+                                    continue
+                                yield (
+                                    AnglesRatioProperty(*angles2, 1),
+                                    '',
+                                    [oppo1, oppo2, ar]
+                                )
+                            else:
+                                ar = self.context.angles_ratio_property(*angles2)
+                                if ar is None or ar.ratio != 1 or oppos_are_too_old and is_too_old(ar):
+                                    continue
+                                yield (
+                                    AnglesRatioProperty(*angles1, 1),
+                                    '',
+                                    [oppo1, oppo2, ar]
+                                )
 
             for sos in self.context.list(SameOrOppositeSideProperty):
                 for col in [p for p in self.context.list(PointsCollinearityProperty) if p.collinear]:

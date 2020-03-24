@@ -99,6 +99,9 @@ class SameOrOppositeSideProperty(Property):
         self.same = same
         self.__object_set = frozenset([segment, point0, point1])
 
+    def keys(self):
+        return [self.segment]
+
     @property
     def description(self):
         if self.same:
