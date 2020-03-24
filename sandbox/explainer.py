@@ -198,31 +198,31 @@ class Explainer:
                     yield (prop, 'Transitivity', [sa, ar])
 
             for ncl in [p for p in self.context.list(PointsCollinearityProperty) if not p.collinear]:
-                if not is_too_old(ncl):
+                ncl_is_too_old = is_too_old(ncl)
+                if not ncl_is_too_old:
                     #TODO: better comments
                     yield (PointsCoincidenceProperty(ncl.points[0], ncl.points[1], False), str(ncl), [ncl])
                     yield (PointsCoincidenceProperty(ncl.points[0], ncl.points[2], False), str(ncl), [ncl])
                     yield (PointsCoincidenceProperty(ncl.points[1], ncl.points[2], False), str(ncl), [ncl])
 
-                ncl_set = set(ncl.points)
-                for col in [p for p in self.context.list(PointsCollinearityProperty) if p.collinear]:
-                    col_set = set(col.points)
-                    intr = col_set.intersection(ncl_set)
-                    if len(intr) == 2:
-                        pt0 = col_set.difference(ncl_set).pop()
-                        pt1 = ncl_set.difference(col_set).pop()
-                        yield (PointsCoincidenceProperty(pt0, pt1, False), [], [ncl, col])
-                        for common in intr:
-                            ne = self.context.not_equal_property(common, pt0)
-                            if ne:
-                                yield (
-                                    PointsCollinearityProperty(common, pt0, pt1, False),
-                                    _comment(
-                                        '%s and %s lie on the line %s %s, %s does not',
-                                        common, pt0, *intr, pt1
-                                    ),
-                                    [ncl, col, ne]
-                                )
+                for segment, pt_ncl in [(side_of(ncl.points, i), ncl.points[i]) for i in range(0, 3)]:
+                    for col in [p for p in self.context.list(PointsCollinearityProperty, [segment]) if p.collinear]:
+                        reasons_are_too_old = ncl_is_too_old and is_too_old(col)
+                        pt_col = next(pt for pt in col.points if pt not in segment.points)
+                        if not reasons_are_too_old:
+                            yield (PointsCoincidenceProperty(pt_col, pt_ncl, False), [], [ncl, col])
+                        for common in segment.points:
+                            ne = self.context.not_equal_property(common, pt_col)
+                            if ne is None or reasons_are_too_old and is_too_old(ne):
+                                continue
+                            yield (
+                                PointsCollinearityProperty(common, pt_col, pt_ncl, False),
+                                _comment(
+                                    '%s and %s lie on the line %s %s, %s does not',
+                                    common, pt_col, *segment.points, pt_ncl
+                                ),
+                                [ncl, col, ne]
+                            )
 
             for cl0, cl1 in itertools.combinations([p for p in self.context.list(PointsCollinearityProperty) if p.collinear], 2):
                 if len(cl0.point_set.union(cl1.point_set)) != 4:
