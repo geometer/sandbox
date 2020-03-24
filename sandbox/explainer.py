@@ -655,24 +655,23 @@ class Explainer:
                 base = ka.angle
                 if ka.degree == 0 or ka.degree >= 90 or base.vertex is None:
                     continue
+                ka_is_too_old = is_too_old(ka)
                 for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
-                    line = vec0.line()
-                    if line:
-                        for pt in line.all_points:
-                            if pt in vec0.points:
+                    for col in [p for p in self.context.list(PointsCollinearityProperty, [vec0.as_segment]) if p.collinear]:
+                        reasons_are_too_old = ka_is_too_old and is_too_old(col)
+                        pt = next(pt for pt in col.points if pt not in vec0.points)
+                        for angle in [pt.angle(vec1.end, p) for p in vec0.points]:
+                            ka2 = self.context.angle_value_property(angle)
+                            if ka2 is None or reasons_are_too_old and is_too_old(ka2):
                                 continue
-                            for angle in [pt.angle(vec1.end, p) for p in vec0.points]:
-                                ka2 = self.context.angle_value_property(angle)
-                                if ka2 is None:
-                                    continue
-                                if ka2.degree > ka.degree:
-                                    comment = _comment(
-                                        '%s, %s, %s are collinear, %s is acute, and %s > %s',
-                                        pt, *vec0.points, base, angle, base
-                                    )
-                                    zero = base.vertex.angle(vec0.end, pt)
-                                    yield (AngleValueProperty(zero, 0), comment, [ka, ka2])
-                                break
+                            if ka2.degree > ka.degree:
+                                comment = _comment(
+                                    '%s, %s, %s are collinear, %s is acute, and %s > %s',
+                                    pt, *vec0.points, base, angle, base
+                                )
+                                zero = base.vertex.angle(vec0.end, pt)
+                                yield (AngleValueProperty(zero, 0), comment, [ka, col, ka2])
+                            break
 
             for iso in self.context.list(IsoscelesTriangleProperty):
                 if is_too_old(iso):

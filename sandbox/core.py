@@ -453,9 +453,6 @@ class CoreScene:
                 self.__segment = self.start.segment(self.end)
             return self.__segment
 
-        def line(self, **kwargs):
-            return self.start.line_through(self.end, **kwargs)
-
         def angle(self, other):
             angle = CoreScene.Angle.create(self, other)
             if not self.scene.is_frozen:
