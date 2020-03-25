@@ -364,6 +364,9 @@ class Cycle:
             self.__reversed.__reversed = self
         return self.__reversed
 
+    def __str__(self):
+        return '%s %s %s' % self.points
+
     def __eq__(self, other):
         return self.__key == other.__key
 
@@ -374,13 +377,16 @@ class SameCyclicOrderProperty(Property):
     """
     Two triples of points have the same cyclic order
     """
-
     def __init__(self, cycle0, cycle1):
         self.cycle0 = cycle0
         self.cycle1 = cycle1
         self.__key = frozenset([
             frozenset([cycle0, cycle1]), frozenset([cycle0.reversed, cycle1.reversed])
         ])
+
+    @property
+    def description(self):
+        return _comment('Cycles %s and %s have the same order', self.cycle0, self.cycle1)
 
     def __eq__(self, other):
         return isinstance(other, SameCyclicOrderProperty) and self.__key == other.__key

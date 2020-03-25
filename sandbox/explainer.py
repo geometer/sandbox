@@ -1150,12 +1150,12 @@ class Explainer:
                 common1 = common_point(ps0.segment1, ps1.segment1)
                 if common1 is None:
                     continue
-                third0 = other_point(ps0.segment0, common0).segment(other_point(ps1.segment0, common0))
-                third1 = other_point(ps0.segment1, common1).segment(other_point(ps1.segment1, common1))
+                third0 = other_point(ps0.segment0, common0).vector(other_point(ps1.segment0, common0))
+                third1 = other_point(ps0.segment1, common1).vector(other_point(ps1.segment1, common1))
                 ncl = self.context.not_collinear_property(common0, *third0.points)
                 if ncl is None or ps_are_too_old and is_too_old(ncl):
                     continue
-                ps2 = self.__congruent_segments_reason(third0, third1)
+                ps2 = self.__congruent_segments_reason(third0.as_segment, third1.as_segment)
                 if ps2 and ps2.ratio == ps0.ratio:
                     yield (
                         SimilarTrianglesProperty(
@@ -1209,10 +1209,6 @@ class Explainer:
                     sp.sin(sp.pi * av1.degree / 180),
                     sp.sin(sp.pi * (180 - av0.degree - av1.degree) / 180)
                 )
-                print('DEBUG %s' % av0)
-                print('DEBUG %s' % av1)
-                print('DEBUG %s %s' % (av0.degree, av1.degree))
-                print('DEBUG %s %s %s' % sines)
                 sides = [side_of(triangle, i) for i in range(0, 3)]
                 for (sine0, side0), (sine1, side1) in itertools.combinations(zip(sines, sides), 2):
                     yield (
@@ -1222,7 +1218,7 @@ class Explainer:
                     )
 
             for sos in self.context.list(SameOrOppositeSideProperty):
-                if (is_too_old(sos)):
+                if is_too_old(sos):
                     continue
                 cycle0 = Cycle(*sos.segment.points, sos.points[0])
                 cycle1 = Cycle(*sos.segment.points, sos.points[1])
@@ -1233,6 +1229,58 @@ class Explainer:
                     '', #TODO: write comment
                     [sos]
                 )
+
+            for sco0, sco1 in itertools.combinations(self.context.list(SameCyclicOrderProperty), 2):
+                if is_too_old(sco0) and is_too_old(sco1):
+                    continue
+                if sco0.cycle0 == sco1.cycle0:
+                    yield (
+                        SameCyclicOrderProperty(sco0.cycle1, sco1.cycle1),
+                        'Transitivity',
+                        [sco0, sco1]
+                    )
+                elif sco0.cycle0 == sco1.cycle1:
+                    yield (
+                        SameCyclicOrderProperty(sco0.cycle1, sco1.cycle0),
+                        'Transitivity',
+                        [sco0, sco1]
+                    )
+                elif sco0.cycle1 == sco1.cycle0:
+                    yield (
+                        SameCyclicOrderProperty(sco0.cycle0, sco1.cycle1),
+                        'Transitivity',
+                        [sco0, sco1]
+                    )
+                elif sco0.cycle1 == sco1.cycle1:
+                    yield (
+                        SameCyclicOrderProperty(sco0.cycle0, sco1.cycle0),
+                        'Transitivity',
+                        [sco0, sco1]
+                    )
+                elif sco0.cycle0 == sco1.cycle0.reversed:
+                    yield (
+                        SameCyclicOrderProperty(sco0.cycle1, sco1.cycle1.reversed),
+                        'Transitivity',
+                        [sco0, sco1]
+                    )
+                elif sco0.cycle0 == sco1.cycle1.reversed:
+                    yield (
+                        SameCyclicOrderProperty(sco0.cycle1, sco1.cycle0.reversed),
+                        'Transitivity',
+                        [sco0, sco1]
+                    )
+                elif sco0.cycle1 == sco1.cycle0.reversed:
+                    yield (
+                        SameCyclicOrderProperty(sco0.cycle0, sco1.cycle1.reversed),
+                        'Transitivity',
+                        [sco0, sco1]
+                    )
+                elif sco0.cycle1 == sco1.cycle1.reversed:
+                    yield (
+                        SameCyclicOrderProperty(sco0.cycle0, sco1.cycle0.reversed),
+                        'Transitivity',
+                        [sco0, sco1]
+                    )
 
         for prop, comment in self.scene.enumerate_predefined_properties():
             self.__reason(prop, comment, [])
