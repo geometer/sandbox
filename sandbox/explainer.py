@@ -788,7 +788,10 @@ class Explainer:
                     )
 
             for st in self.context.list(SimilarTrianglesProperty):
-                if is_too_old(st):
+                ncl = self.context.not_collinear_property(*st.ABC)
+                if ncl is None:
+                    ncl = self.context.not_collinear_property(*st.DEF)
+                if ncl is None or is_too_old(st) and is_too_old(ncl):
                     continue
                 for i in range(0, 3):
                     angle0 = angle_of(st.ABC, i)
@@ -796,8 +799,8 @@ class Explainer:
                     if angle0 != angle1:
                         yield (
                             AnglesRatioProperty(angle0, angle1, 1),
-                            'Corresponding angles in similar triangles',
-                            [st]
+                            'Corresponding angles in similar non-degenerate triangles',
+                            [st, ncl]
                         )
 
             for st in self.context.list(SimilarTrianglesProperty):
@@ -962,7 +965,10 @@ class Explainer:
                 for ar0, ar1 in itertools.combinations(group, 2):
                     if ar1.angle0 in ar0.angle_set or ar1.angle1 in ar0.angle_set:
                         continue
-                    if is_too_old(ar0) and is_too_old(ar1):
+                    ncl = self.context.not_collinear_property(*ca.angle0.points)
+                    if ncl is None:
+                        ncl = self.context.not_collinear_property(*ca.angle1.points)
+                    if ncl is None or is_too_old(ar0) and is_too_old(ar1) and is_too_old(ncl):
                         continue
                     if ar0.angle0.points == ar1.angle0.points:
                         tr0 = [ar0.angle0.vertex, ar1.angle0.vertex]
@@ -974,8 +980,8 @@ class Explainer:
                     tr1.append(next(p for p in ar0.angle1.points if p not in tr1))
                     yield (
                         SimilarTrianglesProperty(tr0, tr1),
-                        'Two pairs of congruent angles',
-                        [ar0, ar1]
+                        'Two pairs of congruent angles, and the triangles are non-degenerate',
+                        [ar0, ar1, ncl]
                     )
 
             def congruent_segments(seg0, seg1):
@@ -1067,10 +1073,7 @@ class Explainer:
                 )
 
             for ca in congruent_angles:
-                ncl = self.context.not_collinear_property(*ca.angle0.points)
-                if ncl is None:
-                    continue
-                ca_is_too_old = is_too_old(ca) and is_too_old(ncl)
+                ca_is_too_old = is_too_old(ca)
                 ang0 = ca.angle0
                 ang1 = ca.angle1
                 for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
@@ -1084,13 +1087,13 @@ class Explainer:
                         continue
                     if rsn0 == True:
                         comment = _comment('Common side %s, pair of congruent sides, and angle between the sides', vec0)
-                        premises = [rsn1, ca, ncl]
+                        premises = [rsn1, ca]
                     elif rsn1 == True:
                         comment = _comment('Common side %s, pair of congruent sides, and angle between the sides', vec1)
-                        premises = [rsn0, ca, ncl]
+                        premises = [rsn0, ca]
                     else:
                         comment = 'Two pairs of congruent sides, and angle between the sides'
-                        premises = [rsn0, rsn1, ca, ncl]
+                        premises = [rsn0, rsn1, ca]
                     yield (
                         CongruentTrianglesProperty(
                             (ang0.vertex, vec0.points[1], vec1.points[1]),
@@ -1099,12 +1102,7 @@ class Explainer:
                     )
 
             for ca in congruent_angles:
-                ncl = self.context.not_collinear_property(*ca.angle0.points)
-                if ncl is None:
-                    ncl = self.context.not_collinear_property(*ca.angle1.points)
-                if ncl is None:
-                    continue
-                ca_is_too_old = is_too_old(ca) and is_too_old(ncl)
+                ca_is_too_old = is_too_old(ca)
                 ang0 = ca.angle0
                 ang1 = ca.angle1
                 for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
@@ -1122,7 +1120,7 @@ class Explainer:
                             (ang1.vertex, ang1.vector0.end, ang1.vector1.end)
                         ),
                         'Two pairs of sides with the same ratio, and angle between the sides',
-                        [rsn0, rsn1, ca, ncl]
+                        [rsn0, rsn1, ca]
                     )
 
             congruent_segments = [p for p in self.context.list(LengthsRatioProperty) if p.ratio == 1]
@@ -1138,7 +1136,8 @@ class Explainer:
                 return segment.points[0] if point == segment.points[1] else segment.points[1]
 
             for cs0, cs1 in itertools.combinations(congruent_segments, 2):
-                cs_are_too_old = is_too_old(cs0) and is_too_old(cs1)
+                if is_too_old(cs0) and is_too_old(cs1):
+                    continue
                 for seg0, seg1 in [(cs0.segment0, cs0.segment1), (cs0.segment1, cs0.segment0)]:
                     common0 = common_point(seg0, cs1.segment0)
                     if common0 is None:
@@ -1148,9 +1147,6 @@ class Explainer:
                         continue
                     third0 = other_point(seg0, common0).vector(other_point(cs1.segment0, common0))
                     third1 = other_point(seg1, common1).vector(other_point(cs1.segment1, common1))
-                    ncl = self.context.not_collinear_property(common0, *third0.points)
-                    if ncl is None or cs_are_too_old and is_too_old(ncl):
-                        continue
                     prop = CongruentTrianglesProperty(
                         (common0, *third0.points), (common1, *third1.points)
                     )
@@ -1158,7 +1154,7 @@ class Explainer:
                         yield (
                             prop,
                             _comment('Common side %s, two pairs of congruent sides', third0),
-                            [cs0, cs1, ncl]
+                            [cs0, cs1]
                         )
                     else:
                         cs2 = self.__congruent_segments_reason(third0.as_segment, third1.as_segment)
@@ -1166,7 +1162,7 @@ class Explainer:
                             yield (
                                 prop,
                                 'Three pairs of congruent sides',
-                                [cs0, cs1, cs2, ncl]
+                                [cs0, cs1, cs2]
                             )
 
             for ps0, ps1 in itertools.combinations(self.context.list(LengthsRatioProperty), 2):
@@ -1190,7 +1186,7 @@ class Explainer:
                         SimilarTrianglesProperty(
                             (common0, *third0.points), (common1, *third1.points)
                         ),
-                        'Three of sides with the same ratio',
+                        'Three pairs of sides with the same ratio',
                         [ps0, ps1, ps2, ncl]
                     )
 

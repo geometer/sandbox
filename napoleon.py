@@ -1,5 +1,7 @@
 #!/var/www/sandbox/virtualenv/bin/python
 
+import sys
+
 from sandbox import Scene
 from sandbox.hunter import Hunter
 from sandbox.explainer import Explainer
@@ -34,7 +36,23 @@ angle = scene.get('A2').angle(scene.get('B2'), scene.get('C2'))
 explainer = Explainer(scene, hunter.properties)
 print('\tGuessed: %s = %s' % (angle, explainer.guessed(angle)))
 
-explainer.explain()
-explainer.dump()
+if '--profile' in sys.argv[1:]:
+    import cProfile
+    cProfile.run('explainer.explain()')
+else:
+    explainer.explain()
+if '--dump' in sys.argv[1:]:
+    explainer.dump()
 explainer.stats().dump()
 print('\tExplained: %s = %s' % (angle, explainer.explained(angle)))
+
+if '--explain' in sys.argv[1:]:
+    def dump(prop, level=0):
+        print('\t' + '  ' * level + str(prop) + ': ' + ' + '.join([str(com) for com in prop.reason.comments]))
+        if prop.reason.premises:
+            for premise in prop.reason.premises:
+                dump(premise, level + 1)
+
+    explanation = explainer.explanation(angle)
+    if explanation:
+        dump(explanation)
