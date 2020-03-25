@@ -7,7 +7,7 @@ from sandbox.explainer import Explainer
 scene = Scene()
 
 A, B, C = scene.triangle(labels=['A', 'B', 'C'])
-scene.is_equilateral_constraint((A, B, C))
+scene.equilateral_constraint((A, B, C))
 D = scene.circumcentre_point((A, B, C), label='D')
 #D.inside_triangle_constraint(A, B, C)
 

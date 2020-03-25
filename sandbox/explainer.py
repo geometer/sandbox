@@ -754,7 +754,13 @@ class Explainer:
                 for i in range(0, 3):
                     yield (
                         AngleValueProperty(angle_of(equ.ABC, i), 60),
-                        'Angle of an equilateral triangle',
+                        _comment('Angle of equilateral △ %s %s %s', *equ.ABC),
+                        [equ]
+                    )
+                for i, j in itertools.combinations(range(0, 3), 2):
+                    yield (
+                        LengthsRatioProperty(side_of(equ.ABC, i), side_of(equ.ABC, j), 1),
+                        _comment('Sides of equilateral △ %s %s %s', *equ.ABC),
                         [equ]
                     )
 

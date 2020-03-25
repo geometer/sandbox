@@ -449,6 +449,10 @@ class Placement(BasePlacement):
                 seg1 = cnstr.params[1]
                 coef = np.float128(cnstr.params[2])
                 numb_square += (self.length(seg0) / self.length(seg1) - coef) ** 2
+            elif cnstr.kind == Constraint.Kind.equilateral:
+                lens = [self.length(cnstr.params[i].vector(cnstr.params[(i + 1) % 3])) for i in range(0, 3)]
+                numb_square += (lens[0] / lens[1] - 1) ** 2
+                numb_square += (lens[1] / lens[2] - 1) ** 2
             elif cnstr.kind == Constraint.Kind.collinear:
                 pt = cnstr.params[0]
                 vec0 = pt.vector(cnstr.params[1])

@@ -8,7 +8,7 @@ import itertools
 import sympy as sp
 from typing import List
 
-from .property import AngleValueProperty, PointsCoincidenceProperty, PointsCollinearityProperty, LengthsRatioProperty, PointInsideAngleProperty
+from .property import AngleValueProperty, PointsCoincidenceProperty, PointsCollinearityProperty, LengthsRatioProperty, PointInsideAngleProperty, EquilateralTriangleProperty
 from .reason import Reason
 from .util import _comment, divide
 
@@ -633,6 +633,10 @@ class CoreScene:
                 self.adjustment_constraints.append(cns)
         return cns
 
+    def equilateral_constraint(self, triangle, **kwargs):
+        self.triangle_constraint(triangle, **kwargs)
+        self.constraint(Constraint.Kind.equilateral, *triangle, **kwargs)
+
     def quadrilateral_constraint(self, A, B, C, D, **kwargs):
         """
         ABDC is a quadrilateral.
@@ -734,6 +738,12 @@ class CoreScene:
                 cnstr.comments
             )
 
+        for cnstr in self.constraints(Constraint.Kind.equilateral):
+            yield (
+                EquilateralTriangleProperty(cnstr.params),
+                cnstr.comments
+            )
+
         for line in self.lines(skip_auxiliary=False):
             for pt0, pt1, pt2 in itertools.combinations([p for p in line.all_points], 3):
                 yield (
@@ -830,6 +840,7 @@ class Constraint:
         inside_segment    = ('inside_segment', Stage.validation, CoreScene.Point, CoreScene.Segment)
         inside_angle      = ('inside_angle', Stage.validation, CoreScene.Point, CoreScene.Angle)
         quadrilateral     = ('quadrilateral', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
+        equilateral       = ('equilateral', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point)
         convex_polygon    = ('convex_polygon', Stage.validation, List[CoreScene.Point])
         distance          = ('distance', Stage.adjustment, CoreScene.Vector, int)
         length_ratio      = ('length_ratio', Stage.adjustment, CoreScene.Segment, CoreScene.Segment, int)
