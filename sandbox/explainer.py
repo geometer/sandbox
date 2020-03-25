@@ -1074,6 +1074,8 @@ class Explainer:
             for ca in congruent_angles:
                 ncl = self.context.not_collinear_property(*ca.angle0.points)
                 if ncl is None:
+                    ncl = self.context.not_collinear_property(*ca.angle1.points)
+                if ncl is None:
                     continue
                 ca_is_too_old = is_too_old(ca) and is_too_old(ncl)
                 ang0 = ca.angle0
@@ -1215,6 +1217,16 @@ class Explainer:
                         LengthsRatioProperty(side0, side1, sine0 / sine1),
                         _comment('Law of sines for △ %s %s %s', *triangle),
                         [av0, av1]
+                    )
+
+            for sos in self.context.list(SameOrOppositeSideProperty):
+                if is_too_old(sos):
+                    continue
+                for triple in itertools.combinations([*sos.segment.points, *sos.points], 3):
+                    yield (
+                        PointsCollinearityProperty(*triple, False),
+                        '', #TODO: write comment
+                        [sos]
                     )
 
             for sos in self.context.list(SameOrOppositeSideProperty):
