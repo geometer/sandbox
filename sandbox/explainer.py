@@ -1117,22 +1117,22 @@ class Explainer:
                     common1 = common_point(seg1, cs1.segment1)
                     if common1 is None:
                         continue
-                    third0 = other_point(seg0, common0).segment(other_point(cs1.segment0, common0))
-                    third1 = other_point(seg1, common1).segment(other_point(cs1.segment1, common1))
+                    third0 = other_point(seg0, common0).vector(other_point(cs1.segment0, common0))
+                    third1 = other_point(seg1, common1).vector(other_point(cs1.segment1, common1))
                     ncl = self.context.not_collinear_property(common0, *third0.points)
                     if ncl is None or cs_are_too_old and is_too_old(ncl):
                         continue
                     prop = CongruentTrianglesProperty(
                         (common0, *third0.points), (common1, *third1.points)
                     )
-                    if third0 == third1:
+                    if third0.as_segment == third1.as_segment:
                         yield (
                             prop,
                             _comment('Common side %s, two pairs of congruent sides', third0),
                             [cs0, cs1, ncl]
                         )
                     else:
-                        cs2 = self.__congruent_segments_reason(third0, third1)
+                        cs2 = self.__congruent_segments_reason(third0.as_segment, third1.as_segment)
                         if cs2:
                             yield (
                                 prop,
