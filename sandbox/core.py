@@ -66,10 +66,11 @@ class CoreScene:
         def __str__(self):
             return self.name
 
+        @property
         def description(self):
             dct = {}
             for key in self.__dict__:
-                if key in ('label', 'scene'):
+                if key in ('label', 'scene') or key.startswith('_'):
                     continue
                 value = self.__dict__[key]
                 if value is None:
@@ -801,7 +802,7 @@ class CoreScene:
 
     def dump(self):
         print('Objects:')
-        print('\n'.join(['\t' + str(obj) for obj in self.__objects]))
+        print('\n'.join(['\t' + obj.description for obj in self.__objects]))
         count = len(self.__objects)
         aux = len([o for o in self.__objects if o.auxiliary])
         print('Total: %s objects (+ %s auxiliary)' % (count - aux, aux))
