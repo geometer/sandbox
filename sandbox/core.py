@@ -64,6 +64,9 @@ class CoreScene:
             return self.label
 
         def __str__(self):
+            return self.name
+
+        def description(self):
             dct = {}
             for key in self.__dict__:
                 if key in ('label', 'scene'):
