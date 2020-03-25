@@ -1249,9 +1249,9 @@ class Explainer:
             for sos in self.context.list(SameOrOppositeSideProperty):
                 if is_too_old(sos):
                     continue
-                for triple in itertools.combinations([*sos.segment.points, *sos.points], 3):
+                for pt in sos.points:
                     yield (
-                        PointsCollinearityProperty(*triple, False),
+                        PointsCollinearityProperty(*sos.segment.points, pt, False),
                         '', #TODO: write comment
                         [sos]
                     )
