@@ -1209,6 +1209,10 @@ class Explainer:
                     sp.sin(sp.pi * av1.degree / 180),
                     sp.sin(sp.pi * (180 - av0.degree - av1.degree) / 180)
                 )
+                print('DEBUG %s' % av0)
+                print('DEBUG %s' % av1)
+                print('DEBUG %s %s' % (av0.degree, av1.degree))
+                print('DEBUG %s %s %s' % sines)
                 sides = [side_of(triangle, i) for i in range(0, 3)]
                 for (sine0, side0), (sine1, side1) in itertools.combinations(zip(sines, sides), 2):
                     yield (
@@ -1216,6 +1220,19 @@ class Explainer:
                         _comment('Law of sines for △ %s %s %s', *triangle),
                         [av0, av1]
                     )
+
+            for sos in self.context.list(SameOrOppositeSideProperty):
+                if (is_too_old(sos)):
+                    continue
+                cycle0 = Cycle(*sos.segment.points, sos.points[0])
+                cycle1 = Cycle(*sos.segment.points, sos.points[1])
+                if not sos.same:
+                    cycle1 = cycle1.reversed
+                yield (
+                    SameCyclicOrderProperty(cycle0, cycle1),
+                    '', #TODO: write comment
+                    [sos]
+                )
 
         for prop, comment in self.scene.enumerate_predefined_properties():
             self.__reason(prop, comment, [])

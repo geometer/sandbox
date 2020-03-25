@@ -350,3 +350,40 @@ class IsoscelesTriangleProperty(Property):
 
     def __hash__(self):
         return hash(IsoscelesTriangleProperty) + hash(self.apex) + hash(self.base)
+
+class Cycle:
+    def __init__(self, pt0, pt1, pt2):
+        self.points = (pt0, pt1, pt2)
+        self.__key = frozenset([(pt0, pt1, pt2), (pt1, pt2, pt0), (pt2, pt0, pt1)])
+        self.__reversed = None
+
+    @property
+    def reversed(self):
+        if self.__reversed is None:
+            self.__reversed = Cycle(*reversed(self.points))
+            self.__reversed.__reversed = self
+        return self.__reversed
+
+    def __eq__(self, other):
+        return self.__key == other.__key
+
+    def __hash__(self):
+        return hash(self.__key)
+
+class SameCyclicOrderProperty(Property):
+    """
+    Two triples of points have the same cyclic order
+    """
+
+    def __init__(self, cycle0, cycle1):
+        self.cycle0 = cycle0
+        self.cycle1 = cycle1
+        self.__key = frozenset([
+            frozenset([cycle0, cycle1]), frozenset([cycle0.reversed, cycle1.reversed])
+        ])
+
+    def __eq__(self, other):
+        return isinstance(other, SameCyclicOrderProperty) and self.__key == other.__key
+
+    def __hash__(self):
+        return hash(self.__key)
