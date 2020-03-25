@@ -701,6 +701,22 @@ class Explainer:
                 )
 
             for cs in [p for p in self.context.list(LengthsRatioProperty) if p.ratio == 1]:
+                if is_too_old(cs):
+                    continue
+                common = next((p for p in cs.segment0.points if p in cs.segment1.points), None)
+                if common is None:
+                    continue
+                pt0 = next(p for p in cs.segment0.points if p != common)
+                pt1 = next(p for p in cs.segment1.points if p != common)
+                cs2 = self.__congruent_segments_reason(common.segment(pt0), pt0.segment(pt1))
+                if cs2 and cs2.ratio == 1:
+                    yield (
+                        EquilateralTriangleProperty((common, pt0, pt1)),
+                        'Congruent sides',
+                        [cs, cs2]
+                    )
+
+            for cs in [p for p in self.context.list(LengthsRatioProperty) if p.ratio == 1]:
                 if cs.segment1.points[0] in cs.segment0.points:
                     apex = cs.segment1.points[0]
                     base0 = cs.segment1.points[1]
@@ -711,7 +727,7 @@ class Explainer:
                     continue
                 base1 = cs.segment0.points[0] if apex == cs.segment0.points[1] else cs.segment0.points[1]
                 nc = self.context.not_collinear_property(apex, base0, base1)
-                if nc:
+                if nc and not (is_too_old(cs) and is_too_old(nc)):
                     yield (
                         IsoscelesTriangleProperty(apex, base0.segment(base1)),
                         'Congruent legs',
@@ -732,16 +748,6 @@ class Explainer:
                     IsoscelesTriangleProperty(apex, base),
                     'Congruent base angles',
                     [cs]
-                )
-
-            for iso in self.context.list(IsoscelesTriangleProperty):
-                eq = self.__congruent_segments_reason(iso.base, iso.apex.segment(iso.base.points[0]))
-                if eq is None or is_too_old(iso) and is_too_old(eq):
-                    continue
-                yield (
-                    EquilateralTriangleProperty((iso.apex, *iso.base.points)),
-                    _comment('Isosceles with leg equal to the base'),
-                    [iso, eq]
                 )
 
             for equ in self.context.list(EquilateralTriangleProperty):
@@ -795,14 +801,35 @@ class Explainer:
                         )
 
             for st in self.context.list(SimilarTrianglesProperty):
+                st_is_too_old = is_too_old(st)
                 for i in range(0, 3):
                     cs = self.__congruent_segments_reason(side_of(st.ABC, i), side_of(st.DEF, i))
-                    if cs:
+                    if cs is None:
+                        continue
+                    if st_is_too_old and is_too_old(cs):
+                        break
+                    yield (
+                        CongruentTrianglesProperty(st.ABC, st.DEF),
+                        'Similar triangles with congruent corresponding sides',
+                        [st, cs]
+                    )
+                    break
+
+            for st in self.context.list(SimilarTrianglesProperty):
+                st_is_too_old = is_too_old(st)
+                for i in range(0, 3):
+                    lr = self.context.lengths_ratio_property(side_of(st.ABC, i), side_of(st.DEF, i))
+                    if lr is None:
+                        continue
+                    if lr.ratio == 1 or st_is_too_old and is_too_old(lr):
+                        break
+                    for j in [j for j in range(0, 3) if j != i]:
                         yield (
-                            CongruentTrianglesProperty(st.ABC, st.DEF),
-                            'Similar triangles with congruent corresponding sides',
-                            [st, cs]
+                            LengthsRatioProperty(side_of(st.ABC, j), side_of(st.DEF, j), lr.ratio),
+                            'Equal sides ratio in similar triangles',
+                            [st, lr]
                         )
+                    break
 
             for ct in self.context.list(CongruentTrianglesProperty):
                 if is_too_old(ct):
