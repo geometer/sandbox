@@ -1380,13 +1380,6 @@ class Explainer:
         def type_presentation(kind):
             return kind.__doc__.strip() if kind.__doc__ else kind.__name__
 
-        explained_by_kind = {}
-        for rsn in self.context.all:
-            kind = type(rsn)
-            explained_by_kind[kind] = explained_by_kind.get(kind, 0) + 1
-        explained_by_kind = [(type_presentation(k), v) for k, v in explained_by_kind.items()]
-        explained_by_kind.sort(key=lambda pair: -pair[1])
-
         unexplained_by_kind = {}
         for prop in self.__unexplained:
             kind = type(prop)
@@ -1397,7 +1390,7 @@ class Explainer:
         return Stats([
             ('Total properties', len(self.context) + len(self.__unexplained)),
             ('Explained properties', len(self.context)),
-            Stats(explained_by_kind),
+            self.context.stats(),
             ('Explained property keys', self.context.keys_num()),
             ('Unexplained properties', len(self.__unexplained)),
             Stats(unexplained_by_kind),

@@ -7,6 +7,7 @@ import sys
 from sandbox import *
 from sandbox.hunter import Hunter
 from sandbox.explainer import Explainer
+from sandbox.propertyset import PropertySet
 
 scene = Scene()
 
@@ -63,6 +64,24 @@ if '--explain' in sys.argv[1:]:
             for premise in prop.reason.premises:
                 dump(premise, level + 1)
 
+    def depth(prop):
+        if prop.reason.premises:
+            return 1 + max(depth(p) for p in prop.reason.premises)
+        return 0
+
+    def all_premises(prop):
+        premises = PropertySet()
+        def collect(p):
+            premises.add(p)
+            if p.reason.premises:
+                for pre in p.reason.premises:
+                    collect(pre)
+        collect(prop)
+        return premises
+
     explanation = explainer.explanation(angle)
     if explanation:
         dump(explanation)
+        print('Depth = %s' % depth(explanation))
+        print('Props = %s' % len(all_premises(explanation)))
+        all_premises(explanation).stats().dump()

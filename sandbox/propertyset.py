@@ -1,6 +1,7 @@
 import itertools
 
 from .property import AngleValueProperty, AnglesRatioProperty, LengthsRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty
+from .stats import Stats
 from .util import divide
 
 class PropertySet:
@@ -118,11 +119,17 @@ class PropertySet:
                         return (common, [col0, col1])
         return (None, [])
 
+    def stats(self):
+        def type_presentation(kind):
+            return kind.__doc__.strip() if kind.__doc__ else kind.__name__
+
+        by_type = {}
+        for prop in self.all:
+            key = type(prop)
+            by_type[key] = by_type.get(key, 0) + 1
+        by_type = [(type_presentation(k), v) for k, v in by_type.items()]
+        by_type.sort(key=lambda pair: -pair[1])
+        return Stats(by_type)
+
     def keys_num(self):
         return len(self.__combined)
-
-    def copy(self):
-        copy = PropertySet()
-        for prop in self.all:
-            copy.add(prop)
-        return copy
