@@ -37,10 +37,8 @@ class Explainer:
         self.__explanation_time = time.time() - start
 
     def __congruent_segments_reason(self, seg0, seg1):
-        reason = self.context.lengths_ratio_property(seg0, seg1)
-        if reason and reason.ratio == 1:
-            return reason
-        return None
+        reason, ratio = self.context.lengths_ratio_property_and_value(seg0, seg1)
+        return reason if ratio == 1 else None
 
     def __angles_ratio_reasons(self, angle):
         reasons = self.context.list(AnglesRatioProperty, keys=[angle])
@@ -821,14 +819,14 @@ class Explainer:
             for st in self.context.list(SimilarTrianglesProperty):
                 st_is_too_old = is_too_old(st)
                 for i in range(0, 3):
-                    lr = self.context.lengths_ratio_property(side_of(st.ABC, i), side_of(st.DEF, i))
+                    lr, ratio = self.context.lengths_ratio_property_and_value(side_of(st.ABC, i), side_of(st.DEF, i))
                     if lr is None:
                         continue
-                    if lr.ratio == 1 or st_is_too_old and is_too_old(lr):
+                    if ratio == 1 or st_is_too_old and is_too_old(lr):
                         break
                     for j in [j for j in range(0, 3) if j != i]:
                         yield (
-                            LengthsRatioProperty(side_of(st.ABC, j), side_of(st.DEF, j), lr.ratio),
+                            LengthsRatioProperty(side_of(st.ABC, j), side_of(st.DEF, j), ratio),
                             'Equal sides ratio in similar triangles',
                             [st, lr]
                         )
@@ -1106,17 +1104,18 @@ class Explainer:
                 ang0 = ca.angle0
                 ang1 = ca.angle1
                 for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
-                    rsn0 = self.context.lengths_ratio_property(vec0.as_segment, ang1.vector0.as_segment)
+                    rsn0, ratio0 = self.context.lengths_ratio_property_and_value(vec0.as_segment, ang1.vector0.as_segment)
                     if rsn0 is None:
                         continue
-                    rsn1 = self.context.lengths_ratio_property(vec1.as_segment, ang1.vector1.as_segment)
-                    if rsn1 is None or rsn0.ratio != rsn1.ratio:
+                    rsn1, ratio1 = self.context.lengths_ratio_property_and_value(vec1.as_segment, ang1.vector1.as_segment)
+                    # TODO: fix ratio comparison
+                    if rsn1 is None or ratio0 != ratio1:
                         continue
                     if ca_is_too_old and is_too_old(rsn0) and is_too_old(rsn1):
                         continue
                     yield (
                         SimilarTrianglesProperty(
-                            (ang0.vertex, vec0.points[1], vec1.points[1]),
+                            (ang0.vertex, vec0.end, vec1.end),
                             (ang1.vertex, ang1.vector0.end, ang1.vector1.end)
                         ),
                         'Two pairs of sides with the same ratio, and angle between the sides',
@@ -1234,6 +1233,10 @@ class Explainer:
                     sp.sin(sp.pi * av1.degree / 180),
                     sp.sin(sp.pi * (180 - av0.degree - av1.degree) / 180)
                 )
+                if sines[2] == 0:
+                    print('DEBUG %s %s' % (av0, av1))
+                    print('DEBUG %s %s %s' % sines)
+                    self.dump()
                 sides = [side_of(triangle, i) for i in range(0, 3)]
                 for (sine0, side0), (sine1, side1) in itertools.combinations(zip(sines, sides), 2):
                     yield (
