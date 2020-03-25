@@ -1282,6 +1282,35 @@ class Explainer:
                         [sco0, sco1]
                     )
 
+            for ca in [p for p in self.context.list(AnglesRatioProperty) if p.ratio == 1]:
+                vertex = ca.angle0.vertex
+                if vertex is None or vertex != ca.angle1.vertex:
+                    continue
+                pts0 = ca.angle0.endpoints
+                pts1 = ca.angle1.endpoints
+                if next((p for p in pts0 if p in pts1), None) is not None:
+                    continue
+                cycle0 = Cycle(vertex, *pts0)
+                cycle1 = Cycle(vertex, *pts1)
+                co = self.context[SameCyclicOrderProperty(cycle0, cycle1)]
+                if co:
+                    if is_too_old(ca) and is_too_old(co):
+                        continue
+                    yield (
+                        AnglesRatioProperty(vertex.angle(pts0[0], pts1[0]), vertex.angle(pts0[1], pts1[1]), 1),
+                        'Rotated', #TODO: better comment
+                        [ca, co]
+                    )
+                else:
+                    co = self.context[SameCyclicOrderProperty(cycle0, cycle1.reversed)]
+                    if co is None or is_too_old(ca) and is_too_old(co):
+                        continue
+                    yield (
+                        AnglesRatioProperty(vertex.angle(pts0[0], pts1[1]), vertex.angle(pts0[1], pts1[0]), 1),
+                        'Rotated', #TODO: better comment
+                        [ca, co]
+                    )
+
         for prop, comment in self.scene.enumerate_predefined_properties():
             self.__reason(prop, comment, [])
 
