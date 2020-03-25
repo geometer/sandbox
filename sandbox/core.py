@@ -193,6 +193,7 @@ class CoreScene:
             )
 
         def vector(self, point):
+            assert self != point, 'Cannot create vector from a single point'
             vec = self.__vectors.get(point)
             if vec is None:
                 vec = CoreScene.Vector(self, point)
@@ -200,9 +201,11 @@ class CoreScene:
             return vec
 
         def segment(self, point):
+            assert self != point, 'Cannot create segment from a single point'
             return self.scene._get_segment(self, point)
 
         def angle(self, point0, point1):
+            assert point0 != point1, 'Angle endpoints should be different'
             return self.scene._get_angle(self.vector(point0), self.vector(point1))
 
         def belongs_to(self, line_or_circle):
