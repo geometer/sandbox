@@ -719,6 +719,16 @@ class CoreScene:
                 cnstr.comments
             )
 
+        for cnstr in self.constraints(Constraint.Kind.perpendicular):
+            line0 = cnstr.params[0]
+            line1 = cnstr.params[1]
+            vector0 = line0.point0.vector(line0.point1)
+            vector1 = line1.point0.vector(line1.point1)
+            yield (
+                AngleValueProperty(vector0.angle(vector1), 90),
+                cnstr.comments
+            )
+
         for cnstr in self.constraints(Constraint.Kind.inside_angle):
             point = cnstr.params[0]
             angle = cnstr.params[1]

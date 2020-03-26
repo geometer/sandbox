@@ -63,18 +63,6 @@ class Explainer:
                     cnst.comments
                 )
 
-            for prop in list(self.__unexplained):
-                if isinstance(prop, AngleValueProperty) and prop.degree == 90:
-                    for cnst in self.scene.constraints(Constraint.Kind.perpendicular):
-                        line0 = cnst.params[0]
-                        line1 = cnst.params[1]
-                        if prop.angle.vector0 in line0 and prop.angle.vector1 in line1:
-                            self.__reason(prop, cnst.comments)
-                            break
-                        elif prop.angle.vector0 in line1 and prop.angle.vector1 in line0:
-                            self.__reason(prop, cnst.comments)
-                            break
-
         def iteration():
             def is_too_old(prop):
                 return prop.reason.generation < self.__iteration_step_count
