@@ -902,14 +902,14 @@ class Explainer:
                     if side00 == side10:
                         yield (
                             LengthsRatioProperty(side01, side11, 1),
-                            'Equal sides ratio in similar triangles',
+                            'Ratios of sides in similar triangles',
                             [st]
                         )
                         continue
                     if side01 == side11:
                         yield (
                             LengthsRatioProperty(side00, side10, 1),
-                            'Equal sides ratio in similar triangles',
+                            'Ratios of sides in similar triangles',
                             [st]
                         )
                         continue
@@ -917,7 +917,7 @@ class Explainer:
                     if cs:
                         yield (
                             LengthsRatioProperty(side01, side11, 1),
-                            'Equal sides ratio in similar triangles',
+                            'Ratios of sides in similar triangles',
                             [st, cs]
                         )
                         continue
@@ -925,13 +925,13 @@ class Explainer:
                     if cs:
                         yield (
                             LengthsRatioProperty(side00, side10, 1),
-                            'Equal sides ratio in similar triangles',
+                            'Ratios of sides in similar triangles',
                             [st, cs]
                         )
                         continue
                     yield (
                         EqualLengthsRatiosProperty(side00, side10, side01, side11),
-                        'Equal sides ratio in similar triangles',
+                        'Ratios of sides in similar triangles',
                         [st]
                     )
 

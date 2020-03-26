@@ -13,7 +13,7 @@ A, B, C = scene.triangle(labels=['A', 'B', 'C'])
 
 def napoleonic(A, B, C):
     V = A.scene.free_point(label=C.label + '1')
-    A.scene.equilateral_constraint((A, B, V))
+    A.scene.equilateral_constraint((A, B, V), comment='Given')
     line = A.line_through(B)
     V.opposite_side_constraint(C, line, comment=_comment('Given: %s is outward of △ %s %s %s', V, A, B, C))
     D = scene.circumcentre_point((A, B, V), label=C.label + '2')
