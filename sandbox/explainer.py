@@ -849,8 +849,8 @@ class Explainer:
                 if len(st0.segment_set.intersection(st1.segment_set)) < 2:
                     continue
 
-                for s0, s1, s2, s3 in all_combinations(st0.segments):
-                    for t0, t1, t2, t3 in half_combinations(st1.segments):
+                for s0, s1, s2, s3 in half_combinations(st0.segments):
+                    for t0, t1, t2, t3 in all_combinations(st1.segments):
                         if (s0, s1) == (t0, t1):
                             if s2 == s3:
                                 yield (
