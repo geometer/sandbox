@@ -822,33 +822,6 @@ class Explainer:
                     )
                     break
 
-            for st in self.context.list(SimilarTrianglesProperty):
-                if is_too_old(st):
-                    continue
-                for i, j in itertools.combinations(range(0, 3), 2):
-                    side00 = side_of(st.ABC, i)
-                    side01 = side_of(st.ABC, j)
-                    side10 = side_of(st.DEF, i)
-                    side11 = side_of(st.DEF, j)
-                    if side00 == side10:
-                        yield (
-                            LengthsRatioProperty(side01, side11, 1),
-                            'Equal sides ratio in similar triangles',
-                            [st]
-                        )
-                    elif side01 == side11:
-                        yield (
-                            LengthsRatioProperty(side00, side10, 1),
-                            'Equal sides ratio in similar triangles',
-                            [st]
-                        )
-                    else:
-                        yield (
-                            EqualLengthsRatiosProperty(side00, side10, side01, side11),
-                            'Equal sides ratio in similar triangles',
-                            [st]
-                        )
-
             def all_combinations(four):
                 return (
                     (four[0], four[1], four[2], four[3]),
@@ -898,6 +871,33 @@ class Explainer:
                                         s2, s3, t2, t3
                                     ), 'Transitivity', [st0, st1]
                                 )
+
+            for st in self.context.list(SimilarTrianglesProperty):
+                if is_too_old(st):
+                    continue
+                for i, j in itertools.combinations(range(0, 3), 2):
+                    side00 = side_of(st.ABC, i)
+                    side01 = side_of(st.ABC, j)
+                    side10 = side_of(st.DEF, i)
+                    side11 = side_of(st.DEF, j)
+                    if side00 == side10:
+                        yield (
+                            LengthsRatioProperty(side01, side11, 1),
+                            'Equal sides ratio in similar triangles',
+                            [st]
+                        )
+                    elif side01 == side11:
+                        yield (
+                            LengthsRatioProperty(side00, side10, 1),
+                            'Equal sides ratio in similar triangles',
+                            [st]
+                        )
+                    else:
+                        yield (
+                            EqualLengthsRatiosProperty(side00, side10, side01, side11),
+                            'Equal sides ratio in similar triangles',
+                            [st]
+                        )
 
             for st in self.context.list(SimilarTrianglesProperty):
                 st_is_too_old = is_too_old(st)
