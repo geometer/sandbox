@@ -20,7 +20,8 @@ class Explainer:
 
     def __reason(self, prop, comments, premises=None):
         if prop not in self.context:
-            prop.reason = Reason(len(self.context), self.__iteration_step_count + 1, comments, premises)
+            prop.reason = Reason(len(self.context), self.__iteration_step_count, comments, premises)
+            prop.reason.obsolete = False
             self.context.add(prop)
 
     def __refresh_unexplained(self):
@@ -64,11 +65,8 @@ class Explainer:
                 )
 
         def iteration():
-            def is_too_old(prop):
-                return prop.reason.generation < self.__iteration_step_count
-
             for av0, av1 in itertools.combinations(self.context.list(AngleValueProperty), 2):
-                if av0.degree == av1.degree or is_too_old(av0) and is_too_old(av1):
+                if av0.degree == av1.degree or av0.reason.obsolete and av1.reason.obsolete:
                     continue
                 ang0 = av0.angle
                 ang1 = av1.angle
@@ -97,7 +95,7 @@ class Explainer:
                 return '' if coef == 1 else ('%s ' % coef)
 
             for lr0, lr1 in itertools.combinations(self.context.list(LengthsRatioProperty), 2):
-                if is_too_old(lr0) and is_too_old(lr1):
+                if lr0.reason.obsolete and lr1.reason.obsolete:
                     continue
                 if lr0.segment0 == lr1.segment0:
                     coef = divide(lr1.ratio, lr0.ratio)
@@ -136,7 +134,7 @@ class Explainer:
             angle_ratios = list(self.context.list(AnglesRatioProperty))
             angle_ratios.sort(key=lambda prop: prop.penalty)
             for ar0 in angle_ratios:
-                if is_too_old(ar0):
+                if ar0.reason.obsolete:
                     continue
                 processed.add(ar0)
                 angle_ratios0 = list(self.__angles_ratio_reasons(ar0.angle0))
@@ -176,15 +174,14 @@ class Explainer:
                     yield (prop, 'Transitivity', [ar0, ar1])
 
             for ar in [p for p in self.context.list(AnglesRatioProperty) if p.ratio == 1]:
-                ar_is_too_old = is_too_old(ar)
                 set0 = set()
                 set1 = set()
                 for sa in self.context.list(SumOfAnglesProperty, keys=[ar.angle0]):
-                    if ar_is_too_old and is_too_old(sa):
+                    if ar.reason.obsolete and sa.reason.obsolete:
                         continue
                     set0.add(sa.angle1 if sa.angle0 == ar.angle0 else sa.angle0)
                 for sa in self.context.list(SumOfAnglesProperty, keys=[ar.angle1]):
-                    if ar_is_too_old and is_too_old(sa):
+                    if ar.reason.obsolete and sa.reason.obsolete:
                         continue
                     set1.add(sa.angle1 if sa.angle0 == ar.angle1 else sa.angle0)
                 for angle in set0.difference(set1):
@@ -203,8 +200,7 @@ class Explainer:
                     yield (prop, 'Transitivity', [sa, ar])
 
             for ncl in [p for p in self.context.list(PointsCollinearityProperty) if not p.collinear]:
-                ncl_is_too_old = is_too_old(ncl)
-                if not ncl_is_too_old:
+                if not ncl.reason.obsolete:
                     #TODO: better comments
                     yield (PointsCoincidenceProperty(ncl.points[0], ncl.points[1], False), str(ncl), [ncl])
                     yield (PointsCoincidenceProperty(ncl.points[0], ncl.points[2], False), str(ncl), [ncl])
@@ -212,13 +208,13 @@ class Explainer:
 
                 for segment, pt_ncl in [(side_of(ncl.points, i), ncl.points[i]) for i in range(0, 3)]:
                     for col in [p for p in self.context.list(PointsCollinearityProperty, [segment]) if p.collinear]:
-                        reasons_are_too_old = ncl_is_too_old and is_too_old(col)
+                        reasons_are_too_old = ncl.reason.obsolete and col.reason.obsolete
                         pt_col = next(pt for pt in col.points if pt not in segment.points)
                         if not reasons_are_too_old:
                             yield (PointsCoincidenceProperty(pt_col, pt_ncl, False), [], [ncl, col])
                         for common in segment.points:
                             ne = self.context.not_equal_property(common, pt_col)
-                            if ne is None or reasons_are_too_old and is_too_old(ne):
+                            if ne is None or reasons_are_too_old and ne.reason.obsolete:
                                 continue
                             yield (
                                 PointsCollinearityProperty(common, pt_col, pt_ncl, False),
@@ -240,7 +236,7 @@ class Explainer:
                 if ncl is None:
                     ncl_pt = others[1]
                     ncl = self.context.collinearity_property(pt0, pt1, ncl_pt)
-                if ncl is None or ncl.collinear or is_too_old(cl0) and is_too_old(cl1) and is_too_old(ncl):
+                if ncl is None or ncl.collinear or cl0.reason.obsolete and cl1.reason.obsolete and ncl.reason.obsolete:
                     continue
                 yield (
                     PointsCoincidenceProperty(*others, True),
@@ -282,18 +278,18 @@ class Explainer:
                 ne0 = self.context.not_equal_property(*vec0.points)
                 ne1 = self.context.not_equal_property(*vec1.points)
                 if ne0 is not None and ne1 is not None:
-                    if is_too_old(pv) and is_too_old(ne0) and is_too_old(ne1):
+                    if pv.reason.obsolete and ne0.reason.obsolete and ne1.reason.obsolete:
                         continue
                     for prop in AngleValueProperty.generate(vec0, vec1, 0):
                         yield (prop, [], [pv, ne0, ne1])
 
             for prop in [p for p in self.context.list(SameOrOppositeSideProperty) if p.same]:
-                prop_is_too_old = is_too_old(prop)
+                prop_is_too_old = prop.reason.obsolete
                 segment = prop.points[0].segment(prop.points[1])
                 for col in [p for p in self.context.list(PointsCollinearityProperty, [segment]) if p.collinear]:
                     pt = next(p for p in col.points if p not in prop.points)
                     value = self.context.angle_value_property(pt.angle(*prop.points))
-                    if not value or value.degree != 180 or prop_is_too_old and is_too_old(value):
+                    if not value or value.degree != 180 or prop_is_too_old and value.reason.obsolete:
                         continue
                     for old in prop.points:
                         yield (
@@ -308,7 +304,7 @@ class Explainer:
                 crossing, reasons = self.context.intersection_of_lines(prop.segment, pt0.segment(pt1))
                 if not crossing:
                     continue
-                if is_too_old(prop) and all(is_too_old(p) for p in reasons):
+                if prop.reason.obsolete and all(p.reason.obsolete for p in reasons):
                     continue
                 if prop.same:
                     yield (
@@ -324,23 +320,23 @@ class Explainer:
                     )
 
             for ra in [av for av in self.context.list(AngleValueProperty) if av.degree == 90]:
-                ra_is_too_old = is_too_old(ra)
+                ra_is_too_old = ra.reason.obsolete
                 vectors = (ra.angle.vector0, ra.angle.vector1)
                 for vec0, vec1 in (vectors, reversed(vectors)):
                     for col in [p for p in self.context.list(PointsCollinearityProperty, [vec0.as_segment]) if p.collinear]:
-                        reasons_are_too_old = ra_is_too_old and is_too_old(col)
+                        reasons_are_too_old = ra_is_too_old and col.reason.obsolete
                         pt0 = next(p for p in col.points if p not in vec0.points)
                         for pt1 in vec0.points:
                             ne = self.context.not_equal_property(pt0, pt1)
-                            if ne is not None and not (reasons_are_too_old and is_too_old(ne)):
+                            if ne is not None and not (reasons_are_too_old and ne.reason.obsolete):
                                 for prop in AngleValueProperty.generate(vec1, pt0.vector(pt1), 90):
                                     yield (prop, '', [ra, col, ne]) #TODO: write comment
 
             for av in [av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 180]:
-                av_is_too_old = is_too_old(av)
+                av_is_too_old = av.reason.obsolete
                 ang = av.angle
                 for ne in self.context.list(PointsCoincidenceProperty, [ang.vertex]):
-                    if ne.coincident or av_is_too_old and is_too_old(ne):
+                    if ne.coincident or av_is_too_old and ne.reason.obsolete:
                         continue
                     pt = ne.points[0] if ang.vertex == ne.points[1] else ne.points[1]
                     if pt in ang.points:
@@ -356,7 +352,7 @@ class Explainer:
                     )
 
             for av0, av1 in itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 180], 2):
-                if is_too_old(av0) and is_too_old(av1):
+                if av0.reason.obsolete and av1.reason.obsolete:
                     continue
                 ng0 = av0.angle
                 ng1 = av1.angle
@@ -384,10 +380,10 @@ class Explainer:
                 )
 
             for av in [av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 0]:
-                av_is_too_old = is_too_old(av)
+                av_is_too_old = av.reason.obsolete
                 ang = av.angle
                 for ne in self.context.list(PointsCoincidenceProperty, [ang.vertex]):
-                    if ne.coincident or av_is_too_old and is_too_old(ne):
+                    if ne.coincident or av_is_too_old and ne.reason.obsolete:
                         continue
                     pt = ne.points[0] if ang.vertex == ne.points[1] else ne.points[1]
                     if pt in ang.points:
@@ -403,7 +399,7 @@ class Explainer:
                     )
 
             for av0, av1 in itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 0], 2):
-                if is_too_old(av0) and is_too_old(av1):
+                if av0.reason.obsolete and av1.reason.obsolete:
                     continue
                 ng0 = av0.angle
                 ng1 = av1.angle
@@ -431,33 +427,33 @@ class Explainer:
                 )
 
             for so in self.context.list(SameOrOppositeSideProperty):
-                so_is_too_old = is_too_old(so)
+                so_is_too_old = so.reason.obsolete
                 lp0 = so.segment.points[0]
                 lp1 = so.segment.points[1]
                 ne = self.context.not_equal_property(lp0, lp1)
                 if ne is None:
                     continue
-                reasons_are_too_old = so_is_too_old and is_too_old(ne)
+                reasons_are_too_old = so_is_too_old and ne.reason.obsolete
                 for pt0, pt1 in [so.points, reversed(so.points)]:
                     if so.same:
                         sum_reason = self.context[SumOfAnglesProperty(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0), 180)]
-                        if sum_reason is None or reasons_are_too_old and is_too_old(sum_reason):
+                        if sum_reason is None or reasons_are_too_old and sum_reason.reason.obsolete:
                             continue
                         if sum_reason.degree == 180:
                             for prop in AngleValueProperty.generate(lp0.vector(pt0), lp1.vector(pt1), 0):
                                 yield (prop, 'Zigzag', [so, sum_reason, ne])
                     else:
                         ratio_reason = self.context.angles_ratio_property(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0))
-                        if ratio_reason is None or reasons_are_too_old and is_too_old(ratio_reason):
+                        if ratio_reason is None or reasons_are_too_old and ratio_reason.reason.obsolete:
                             continue
                         if ratio_reason.ratio == 1:
                             for prop in AngleValueProperty.generate(lp0.vector(pt0), pt1.vector(lp1), 0):
                                 yield (prop, 'Zigzag', [so, ratio_reason, ne])
 
             for zero in [av for av in self.context.list(AngleValueProperty) if av.degree == 0]:
-                zero_is_too_old = is_too_old(zero)
+                zero_is_too_old = zero.reason.obsolete
                 for ne in self.context.list(PointsCoincidenceProperty):
-                    if ne.coincident or zero_is_too_old and is_too_old(ne):
+                    if ne.coincident or zero_is_too_old and ne.reason.obsolete:
                         continue
                     vec = ne.points[0].vector(ne.points[1])
                     if vec.as_segment in [zero.angle.vector0.as_segment, zero.angle.vector1.as_segment]:
@@ -486,7 +482,7 @@ class Explainer:
                 X, reasons = self.context.intersection_of_lines(AD, BC)
                 if X is None or X in (A, B, C, D):
                     continue
-                if is_too_old(pia) and all(is_too_old(p) for p in reasons):
+                if pia.reason.obsolete and all(p.reason.obsolete for p in reasons):
                     continue
 
                 comment = _comment('%s is intersection of ray [%s %s) and segment [%s %s]', X, A, D, B, C)
@@ -496,7 +492,7 @@ class Explainer:
                 yield (AngleValueProperty(X.angle(B, C), 180), [comment], [pia] + reasons)
 
             for pia in self.context.list(PointInsideAngleProperty):
-                if is_too_old(pia):
+                if pia.reason.obsolete:
                     continue
                 for endpoint in pia.angle.endpoints:
                     yield (
@@ -547,7 +543,7 @@ class Explainer:
                     continue
 
                 reasons = [ss0, ss1, ncl] + reasons
-                if all(is_too_old(p) for p in reasons):
+                if all(p.reason.obsolete for p in reasons):
                     continue
 
                 yield (
@@ -581,7 +577,7 @@ class Explainer:
                     #TODO: consider angle difference
                     continue
                 sum_reason = self.context.angle_value_property(angle)
-                if sum_reason is None or is_too_old(ar) and is_too_old(sum_reason) and is_too_old(inside_angle_reason):
+                if sum_reason is None or ar.reason.obsolete and sum_reason.reason.obsolete and inside_angle_reason.reason.obsolete:
                     continue
                 value = sum_reason.degree
                 second = divide(value, 1 + ar.ratio)
@@ -594,13 +590,13 @@ class Explainer:
                 if prop.angle.vertex is not None]
 
             for av in [av for av in angle_values if av.degree == 0]:
-                av_is_too_old = is_too_old(av)
+                av_is_too_old = av.reason.obsolete
                 vertex = av.angle.vertex
                 pt0 = av.angle.vector0.end
                 pt1 = av.angle.vector1.end
                 for vec in (av.angle.vector0, av.angle.vector1):
                     for nc in self.context.list(PointsCollinearityProperty, [vec.as_segment]):
-                        if nc.collinear or av_is_too_old and is_too_old(nc):
+                        if nc.collinear or av_is_too_old and nc.reason.obsolete:
                             continue
                         segment = vertex.segment(
                             next(pt for pt in nc.points if pt not in vec.points)
@@ -612,10 +608,10 @@ class Explainer:
                         )
 
             for av in [av for av in angle_values if av.degree == 180]:
-                av_is_too_old = is_too_old(av)
+                av_is_too_old = av.reason.obsolete
                 segment = av.angle.vector0.end.segment(av.angle.vector1.end)
                 for ncl in self.context.list(PointsCollinearityProperty, [segment]):
-                    if ncl.collinear or av_is_too_old and is_too_old(ncl):
+                    if ncl.collinear or av_is_too_old and ncl.reason.obsolete:
                         continue
                     vertex = next(pt for pt in ncl.points if pt not in segment.points)
                     angle = vertex.angle(*segment.points)
@@ -631,7 +627,7 @@ class Explainer:
                     )
 
             for sos0, sos1 in itertools.combinations(self.context.list(SameOrOppositeSideProperty), 2):
-                if is_too_old(sos0) and is_too_old(sos1):
+                if sos0.reason.obsolete and sos1.reason.obsolete:
                     continue
                 if sos0.segment != sos1.segment:
                     continue
@@ -667,7 +663,7 @@ class Explainer:
                 third_vertex = s0.pop()
                 a2 = third_vertex.angle(a0.vertex, a1.vertex)
                 a2_reason = self.context.angle_value_property(a2)
-                if a2_reason is None or is_too_old(ar) and is_too_old(a2_reason):
+                if a2_reason is None or ar.reason.obsolete and a2_reason.reason.obsolete:
                     continue
                 #a0 + a1 + a2 = 180
                 #a0 + a1 = 180 - a2
@@ -681,14 +677,14 @@ class Explainer:
                 base = ka.angle
                 if ka.degree == 0 or ka.degree >= 90 or base.vertex is None:
                     continue
-                ka_is_too_old = is_too_old(ka)
+                ka_is_too_old = ka.reason.obsolete
                 for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
                     for col in [p for p in self.context.list(PointsCollinearityProperty, [vec0.as_segment]) if p.collinear]:
-                        reasons_are_too_old = ka_is_too_old and is_too_old(col)
+                        reasons_are_too_old = ka_is_too_old and col.reason.obsolete
                         pt = next(pt for pt in col.points if pt not in vec0.points)
                         for angle in [pt.angle(vec1.end, p) for p in vec0.points]:
                             ka2 = self.context.angle_value_property(angle)
-                            if ka2 is None or reasons_are_too_old and is_too_old(ka2):
+                            if ka2 is None or reasons_are_too_old and ka2.reason.obsolete:
                                 continue
                             if ka2.degree > ka.degree:
                                 comment = _comment(
@@ -700,7 +696,7 @@ class Explainer:
                             break
 
             for iso in self.context.list(IsoscelesTriangleProperty):
-                if is_too_old(iso):
+                if iso.reason.obsolete:
                     continue
                 yield (
                     AnglesRatioProperty(
@@ -722,7 +718,7 @@ class Explainer:
                 )
 
             for cs in [p for p in self.context.list(LengthsRatioProperty) if p.ratio == 1]:
-                if is_too_old(cs):
+                if cs.reason.obsolete:
                     continue
                 common = next((p for p in cs.segment0.points if p in cs.segment1.points), None)
                 if common is None:
@@ -748,7 +744,7 @@ class Explainer:
                     continue
                 base1 = cs.segment0.points[0] if apex == cs.segment0.points[1] else cs.segment0.points[1]
                 nc = self.context.not_collinear_property(apex, base0, base1)
-                if nc and not (is_too_old(cs) and is_too_old(nc)):
+                if nc and not (cs.reason.obsolete and nc.reason.obsolete):
                     yield (
                         IsoscelesTriangleProperty(apex, base0.segment(base1)),
                         'Congruent legs',
@@ -772,7 +768,7 @@ class Explainer:
                 )
 
             for equ in self.context.list(EquilateralTriangleProperty):
-                if is_too_old(equ):
+                if equ.reason.obsolete:
                     continue
                 for i in range(0, 3):
                     yield (
@@ -788,10 +784,10 @@ class Explainer:
                     )
 
             for ar in self.context.list(AnglesRatioProperty):
-                ar_is_too_old = is_too_old(ar)
+                ar_is_too_old = ar.reason.obsolete
                 value = self.context.angle_value_property(ar.angle0)
                 if value:
-                    if ar_is_too_old and is_too_old(value):
+                    if ar_is_too_old and value.reason.obsolete:
                         continue
                     if ar.ratio == 1:
                         comment = _comment('%s = %s = %sº', ar.angle1, ar.angle0, value.degree)
@@ -803,7 +799,7 @@ class Explainer:
                     )
                 else:
                     value = self.context.angle_value_property(ar.angle1)
-                    if value is None or ar_is_too_old and is_too_old(value):
+                    if value is None or ar_is_too_old and value.reason.obsolete:
                         continue
                     if ar.ratio == 1:
                         comment = _comment('%s = %s = %sº', ar.angle0, ar.angle1, value.degree)
@@ -818,7 +814,7 @@ class Explainer:
                 ncl = self.context.not_collinear_property(*ct.ABC)
                 if ncl is None:
                     ncl = self.context.not_collinear_property(*ct.DEF)
-                if ncl is None or is_too_old(ct) and is_too_old(ncl):
+                if ncl is None or ct.reason.obsolete and ncl.reason.obsolete:
                     continue
                 for i in range(0, 3):
                     angle0 = angle_of(ct.ABC, i)
@@ -834,7 +830,7 @@ class Explainer:
                 ncl = self.context.not_collinear_property(*st.ABC)
                 if ncl is None:
                     ncl = self.context.not_collinear_property(*st.DEF)
-                if ncl is None or is_too_old(st) and is_too_old(ncl):
+                if ncl is None or st.reason.obsolete and ncl.reason.obsolete:
                     continue
                 for i in range(0, 3):
                     angle0 = angle_of(st.ABC, i)
@@ -847,12 +843,12 @@ class Explainer:
                         )
 
             for st in self.context.list(SimilarTrianglesProperty):
-                st_is_too_old = is_too_old(st)
+                st_is_too_old = st.reason.obsolete
                 for i in range(0, 3):
                     cs = self.context.congruent_segments_property(side_of(st.ABC, i), side_of(st.DEF, i))
                     if cs is None:
                         continue
-                    if st_is_too_old and is_too_old(cs):
+                    if st_is_too_old and cs.reason.obsolete:
                         break
                     yield (
                         CongruentTrianglesProperty(st.ABC, st.DEF),
@@ -882,7 +878,7 @@ class Explainer:
                 )
 
             for st0, st1 in itertools.combinations(self.context.list(EqualLengthsRatiosProperty), 2):
-                if is_too_old(st0) and is_too_old(st1):
+                if st0.reason.obsolete and st1.reason.obsolete:
                     continue
 
                 if len(st0.segment_set.intersection(st1.segment_set)) < 2:
@@ -915,7 +911,7 @@ class Explainer:
                                 )
 
             for st in self.context.list(SimilarTrianglesProperty):
-                if is_too_old(st):
+                if st.reason.obsolete:
                     continue
                 for i, j in itertools.combinations(range(0, 3), 2):
                     side00 = side_of(st.ABC, i)
@@ -959,12 +955,12 @@ class Explainer:
                     )
 
             for st in self.context.list(SimilarTrianglesProperty):
-                st_is_too_old = is_too_old(st)
+                st_is_too_old = st.reason.obsolete
                 for i in range(0, 3):
                     lr, ratio = self.context.lengths_ratio_property_and_value(side_of(st.ABC, i), side_of(st.DEF, i))
                     if lr is None:
                         continue
-                    if ratio == 1 or st_is_too_old and is_too_old(lr):
+                    if ratio == 1 or st_is_too_old and lr.reason.obsolete:
                         break
                     for j in [j for j in range(0, 3) if j != i]:
                         yield (
@@ -975,7 +971,7 @@ class Explainer:
                     break
 
             for ct in self.context.list(CongruentTrianglesProperty):
-                if is_too_old(ct):
+                if ct.reason.obsolete:
                     continue
                 for i in range(0, 3):
                     segment0 = side_of(ct.ABC, i)
@@ -988,7 +984,7 @@ class Explainer:
                         )
 
             for ct in self.context.list(CongruentTrianglesProperty):
-                if is_too_old(ct):
+                if ct.reason.obsolete:
                     continue
                 yield (
                     SimilarTrianglesProperty(ct.ABC, ct.DEF),
@@ -999,7 +995,7 @@ class Explainer:
             for av in self.context.list(AngleValueProperty):
                 if av.angle.vertex is None:
                     continue
-                av_is_too_old = is_too_old(av)
+                av_is_too_old = av.reason.obsolete
 
                 second = av.angle.vector0.end.angle(av.angle.vertex, av.angle.vector1.end)
                 third = av.angle.vector1.end.angle(av.angle.vertex, av.angle.vector0.end)
@@ -1015,7 +1011,7 @@ class Explainer:
                 else:
                     second_reason = self.context.angle_value_property(second)
                     if second_reason:
-                        if av_is_too_old and is_too_old(second_reason):
+                        if av_is_too_old and second_reason.reason.obsolete:
                             continue
                         yield (
                             AngleValueProperty(third, 180 - av.degree - second_reason.degree),
@@ -1024,7 +1020,7 @@ class Explainer:
                         )
                     else:
                         third_reason = self.context.angle_value_property(third)
-                        if third_reason is None or av_is_too_old and is_too_old(third_reason):
+                        if third_reason is None or av_is_too_old and third_reason.reason.obsolete:
                             continue
                         yield (
                             AngleValueProperty(second, 180 - av.degree - third_reason.degree),
@@ -1034,7 +1030,7 @@ class Explainer:
 
             for av0, av1 in itertools.combinations( \
                 [av for av in self.context.list(AngleValueProperty) if av.degree not in (0, 180)], 2):
-                if is_too_old(av0) and is_too_old(av1):
+                if av0.reason.obsolete and av1.reason.obsolete:
                     continue
                 if av0.degree == av1.degree:
                     comment = _comment('Both angle values = %sº', av0.degree)
@@ -1047,10 +1043,10 @@ class Explainer:
                 )
 
             for sa in self.context.list(SumOfAnglesProperty):
-                sa_is_too_old = is_too_old(sa)
+                sa_is_too_old = sa.reason.obsolete
                 av = self.context.angle_value_property(sa.angle0)
                 if av:
-                    if sa_is_too_old and is_too_old(av):
+                    if sa_is_too_old and av.reason.obsolete:
                         continue
                     yield (
                         AngleValueProperty(sa.angle1, sa.degree - av.degree),
@@ -1059,7 +1055,7 @@ class Explainer:
                     )
                 else:
                     av = self.context.angle_value_property(sa.angle1)
-                    if av is None or sa_is_too_old and is_too_old(av):
+                    if av is None or sa_is_too_old and av.reason.obsolete:
                         continue
                     yield (
                         AngleValueProperty(sa.angle0, sa.degree - av.degree),
@@ -1074,7 +1070,7 @@ class Explainer:
                 pt0 = next(pt for pt in ar.angle0.endpoints if pt not in ar.angle1.endpoints)
                 pt1 = next(pt for pt in ar.angle1.endpoints if pt not in ar.angle0.endpoints)
                 oppo = self.context[SameOrOppositeSideProperty(ar.angle0.vertex.segment(common), pt0, pt1, False)]
-                if not oppo or oppo.same or is_too_old(ar) and is_too_old(oppo):
+                if not oppo or oppo.same or ar.reason.obsolete and oppo.reason.obsolete:
                     continue
                 yield (
                     AngleValueProperty(ar.angle0.vertex.angle(pt0, pt1), 180),
@@ -1083,7 +1079,7 @@ class Explainer:
                 )
 
             for av in self.context.list(AngleValueProperty):
-                if is_too_old(av) or av.angle.vertex is None:
+                if av.reason.obsolete or av.angle.vertex is None:
                     continue
                 yield (
                     PointsCollinearityProperty(*av.angle.points, av.degree in (0, 180)),
@@ -1108,7 +1104,7 @@ class Explainer:
                     ncl = self.context.not_collinear_property(*ca.angle0.points)
                     if ncl is None:
                         ncl = self.context.not_collinear_property(*ca.angle1.points)
-                    if ncl is None or is_too_old(ar0) and is_too_old(ar1) and is_too_old(ncl):
+                    if ncl is None or ar0.reason.obsolete and ar1.reason.obsolete and ncl.reason.obsolete:
                         continue
                     if ar0.angle0.points == ar1.angle0.points:
                         tr0 = [ar0.angle0.vertex, ar1.angle0.vertex]
@@ -1132,7 +1128,7 @@ class Explainer:
             for ca in congruent_angles:
                 ncl = self.context.not_collinear_property(*ca.angle0.points)
                 if ncl:
-                    if not is_too_old(ca) or not is_too_old(ncl):
+                    if not ca.reason.obsolete or not ncl.reason.obsolete:
                         yield (
                             PointsCollinearityProperty(*ca.angle1.points, False),
                             'Transitivity',
@@ -1140,7 +1136,7 @@ class Explainer:
                         )
                 else:
                     ncl = self.context.not_collinear_property(*ca.angle1.points)
-                    if ncl and (not is_too_old(ca) or not is_too_old(ncl)):
+                    if ncl and (not ca.reason.obsolete or not ncl.reason.obsolete):
                         yield (
                             PointsCollinearityProperty(*ca.angle0.points, False),
                             'Transitivity',
@@ -1148,7 +1144,7 @@ class Explainer:
                         )
 
             for zero in [p for p in self.context.list(AngleValueProperty) if p.angle.vertex is None and p.degree == 0]:
-                zero_is_too_old = is_too_old(zero)
+                zero_is_too_old = zero.reason.obsolete
                 ang = zero.angle
 
                 for vec0, vec1 in [(ang.vector0, ang.vector1), (ang.vector1, ang.vector0)]:
@@ -1159,7 +1155,7 @@ class Explainer:
                         ne = self.context.not_equal_property(*vec1.points)
                         if ne is None:
                             continue
-                        if zero_is_too_old and is_too_old(ncl) and is_too_old(ne):
+                        if zero_is_too_old and ncl.reason.obsolete and ne.reason.obsolete:
                             continue
                         yield (
                             PointsCollinearityProperty(*vec0.points, vec1.points[j], False),
@@ -1185,7 +1181,7 @@ class Explainer:
                 ne = self.context.not_equal_property(*ang.vector1.points)
                 if ne is None:
                     continue
-                if is_too_old(zero) and is_too_old(ncl) and is_too_old(ne):
+                if zero.reason.obsolete and ncl.reason.obsolete and ne.reason.obsolete:
                     continue
                 comment = _comment('%s ↑↑ %s', ang.vector0, ang.vector1)
                 premises = [zero, ncl, ne]
@@ -1213,7 +1209,7 @@ class Explainer:
                 )
 
             for ca in congruent_angles:
-                ca_is_too_old = is_too_old(ca)
+                ca_is_too_old = ca.reason.obsolete
                 ang0 = ca.angle0
                 ang1 = ca.angle1
                 for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
@@ -1223,7 +1219,7 @@ class Explainer:
                     rsn1 = congruent_segments(vec1.as_segment, ang1.vector1.as_segment)
                     if rsn1 is None:
                         continue
-                    if ca_is_too_old and (rsn0 == True or is_too_old(rsn0)) and (rsn1 == True or is_too_old(rsn1)):
+                    if ca_is_too_old and (rsn0 == True or rsn0.reason.obsolete) and (rsn1 == True or rsn1.reason.obsolete):
                         continue
                     if rsn0 == True:
                         comment = _comment('Common side %s, pair of congruent sides, and angle between the sides', vec0)
@@ -1242,12 +1238,12 @@ class Explainer:
                     )
 
             for ca in congruent_angles:
-                ca_is_too_old = is_too_old(ca)
+                ca_is_too_old = ca.reason.obsolete
                 ang0 = ca.angle0
                 ang1 = ca.angle1
                 for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
                     elr = self.context.equal_length_ratios_property(vec0.as_segment, vec1.as_segment, ang1.vector0.as_segment, ang1.vector1.as_segment)
-                    if elr is None or ca_is_too_old and is_too_old(elr):
+                    if elr is None or ca_is_too_old and elr.reason.obsolete:
                         continue
                     yield (
                         SimilarTrianglesProperty(
@@ -1259,7 +1255,7 @@ class Explainer:
                     )
 
             for ca in congruent_angles:
-                ca_is_too_old = is_too_old(ca)
+                ca_is_too_old = ca.reason.obsolete
                 ang0 = ca.angle0
                 ang1 = ca.angle1
                 for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
@@ -1269,7 +1265,7 @@ class Explainer:
                     rsn1, ratio1 = self.context.lengths_ratio_property_and_value(vec1.as_segment, ang1.vector1.as_segment)
                     if rsn1 is None or ratio0 != ratio1:
                         continue
-                    if ca_is_too_old and is_too_old(rsn0) and is_too_old(rsn1):
+                    if ca_is_too_old and rsn0.reason.obsolete and rsn1.reason.obsolete:
                         continue
                     yield (
                         SimilarTrianglesProperty(
@@ -1293,7 +1289,7 @@ class Explainer:
                 return segment.points[0] if point == segment.points[1] else segment.points[1]
 
             for cs0, cs1 in itertools.combinations(congruent_segments, 2):
-                if is_too_old(cs0) and is_too_old(cs1):
+                if cs0.reason.obsolete and cs1.reason.obsolete:
                     continue
                 for seg0, seg1 in [(cs0.segment0, cs0.segment1), (cs0.segment1, cs0.segment0)]:
                     common0 = common_point(seg0, cs1.segment0)
@@ -1325,7 +1321,7 @@ class Explainer:
             for ps0, ps1 in itertools.combinations(self.context.list(LengthsRatioProperty), 2):
                 if ps0.ratio == 1 or ps0.ratio != ps1.ratio:
                     continue
-                ps_are_too_old = is_too_old(ps0) and is_too_old(ps1)
+                ps_are_too_old = ps0.reason.obsolete and ps1.reason.obsolete
                 common0 = common_point(ps0.segment0, ps1.segment0)
                 if common0 is None:
                     continue
@@ -1335,7 +1331,7 @@ class Explainer:
                 third0 = other_point(ps0.segment0, common0).vector(other_point(ps1.segment0, common0))
                 third1 = other_point(ps0.segment1, common1).vector(other_point(ps1.segment1, common1))
                 ncl = self.context.not_collinear_property(common0, *third0.points)
-                if ncl is None or ps_are_too_old and is_too_old(ncl):
+                if ncl is None or ps_are_too_old and ncl.reason.obsolete:
                     continue
                 ps2 = self.context.congruent_segments_property(third0.as_segment, third1.as_segment)
                 if ps2 and ps2.ratio == ps0.ratio:
@@ -1353,11 +1349,11 @@ class Explainer:
                         continue
                     if sos.segment.points[1] not in col.points:
                         continue
-                    too_old = is_too_old(sos) and is_too_old(col)
+                    too_old = sos.reason.obsolete and col.reason.obsolete
                     other = next(pt for pt in col.points if pt not in sos.segment.points)
                     for pt in sos.segment.points:
                         ne = self.context.not_equal_property(other, pt)
-                        if ne is None or too_old and is_too_old(ne):
+                        if ne is None or too_old and ne.reason.obsolete:
                             continue
                         yield (
                             SameOrOppositeSideProperty(other.segment(pt), *sos.points, sos.same),
@@ -1368,7 +1364,7 @@ class Explainer:
             right_angles = [p for p in self.context.list(AngleValueProperty) if p.angle.vertex and p.degree == 90]
             for ra0, ra1 in itertools.combinations(right_angles, 2):
                 vertex = ra0.angle.vertex
-                if vertex != ra1.angle.vertex or is_too_old(ra0) and is_too_old(ra1):
+                if vertex != ra1.angle.vertex or ra0.reason.obsolete and ra1.reason.obsolete:
                     continue
                 common = next((pt for pt in ra0.angle.endpoints if pt in ra1.angle.endpoints), None)
                 if common is None:
@@ -1384,7 +1380,7 @@ class Explainer:
             for av0 in [p for p in self.context.list(AngleValueProperty) if p.angle.vertex and p.degree not in (0, 180)]:
                 triangle = (av0.angle.vertex, *av0.angle.endpoints)
                 av1 = self.context.angle_value_property(angle_of(triangle, 1))
-                if av1 is None or is_too_old(av0) and is_too_old(av1):
+                if av1 is None or av0.reason.obsolete and av1.reason.obsolete:
                     continue
                 sines = (
                     sp.sin(sp.pi * av0.degree / 180),
@@ -1400,7 +1396,7 @@ class Explainer:
                     )
 
             for sos in self.context.list(SameOrOppositeSideProperty):
-                if is_too_old(sos):
+                if sos.reason.obsolete:
                     continue
                 for pt in sos.points:
                     yield (
@@ -1410,7 +1406,7 @@ class Explainer:
                     )
 
             for sos in self.context.list(SameOrOppositeSideProperty):
-                if is_too_old(sos):
+                if sos.reason.obsolete:
                     continue
                 cycle0 = Cycle(*sos.segment.points, sos.points[0])
                 cycle1 = Cycle(*sos.segment.points, sos.points[1])
@@ -1423,7 +1419,7 @@ class Explainer:
                 )
 
             for sco0, sco1 in itertools.combinations(self.context.list(SameCyclicOrderProperty), 2):
-                if is_too_old(sco0) and is_too_old(sco1):
+                if sco0.reason.obsolete and sco1.reason.obsolete:
                     continue
                 if sco0.cycle0 == sco1.cycle0:
                     yield (
@@ -1486,7 +1482,7 @@ class Explainer:
                 cycle1 = Cycle(vertex, *pts1)
                 co = self.context[SameCyclicOrderProperty(cycle0, cycle1)]
                 if co:
-                    if is_too_old(ca) and is_too_old(co):
+                    if ca.reason.obsolete and co.reason.obsolete:
                         continue
                     yield (
                         AnglesRatioProperty(vertex.angle(pts0[0], pts1[0]), vertex.angle(pts0[1], pts1[1]), 1),
@@ -1495,7 +1491,7 @@ class Explainer:
                     )
                 else:
                     co = self.context[SameCyclicOrderProperty(cycle0, cycle1.reversed)]
-                    if co is None or is_too_old(ca) and is_too_old(co):
+                    if co is None or ca.reason.obsolete and co.reason.obsolete:
                         continue
                     yield (
                         AnglesRatioProperty(vertex.angle(pts0[0], pts1[1]), vertex.angle(pts0[1], pts1[0]), 1),
@@ -1513,6 +1509,8 @@ class Explainer:
             explained_size = len(self.context)
             for prop, comment, premises in iteration():
                 self.__reason(prop, comment, premises)
+            for prop in self.context.all:
+                prop.reason.obsolete = prop.reason.generation < self.__iteration_step_count
             self.__iteration_step_count += 1
             self.__refresh_unexplained()
             if len(self.context) == explained_size:
