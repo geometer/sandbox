@@ -823,6 +823,67 @@ class Explainer:
                     break
 
             for st in self.context.list(SimilarTrianglesProperty):
+                if is_too_old(st):
+                    continue
+                for i, j in itertools.combinations(range(0, 3), 2):
+                    yield (
+                        EqualLengthsRatiosProperty(
+                            side_of(st.ABC, i), side_of(st.DEF, i),
+                            side_of(st.ABC, j), side_of(st.DEF, j)
+                        ),
+                        'Equal sides ratio in similar triangles',
+                        [st]
+                    )
+
+            def all_combinations(four):
+                yield (four[0], four[1], four[2], four[3])
+                yield (four[0], four[2], four[1], four[3])
+                yield (four[1], four[0], four[3], four[2])
+                yield (four[1], four[3], four[0], four[2])
+                yield (four[2], four[0], four[3], four[1])
+                yield (four[2], four[3], four[0], four[1])
+                yield (four[3], four[1], four[2], four[0])
+                yield (four[3], four[2], four[1], four[0])
+
+            def half_combinations(four):
+                yield (four[0], four[1], four[2], four[3])
+                yield (four[0], four[2], four[1], four[3])
+                yield (four[1], four[3], four[0], four[2])
+                yield (four[2], four[3], four[0], four[1])
+
+            for st0, st1 in itertools.combinations(self.context.list(EqualLengthsRatiosProperty), 2):
+                if is_too_old(st0) and is_too_old(st1):
+                    continue
+
+                for s0, s1, s2, s3 in all_combinations(st0.segments):
+                    for t0, t1, t2, t3 in half_combinations(st1.segments):
+                        if (s0, s1) == (t0, t1):
+                            if s2 == s3:
+                                if t2 != t3:
+                                    yield (
+                                        LengthsRatioProperty(t2, t3, 1), 'Transitivity', [st0, st1]
+                                    )
+                            elif s2 == t2:
+                                if s3 != t3:
+                                    yield (
+                                        LengthsRatioProperty(s3, t3, 1), 'Transitivity', [st0, st1]
+                                    )
+                            elif s3 == t3:
+                                yield (
+                                    LengthsRatioProperty(s2, t2, 1), 'Transitivity', [st0, st1]
+                                )
+                            elif t2 == t3:
+                                yield (
+                                    LengthsRatioProperty(s2, s3, 1), 'Transitivity', [st0, st1]
+                                )
+                            else:
+                                yield (
+                                    EqualLengthsRatiosProperty(
+                                        s2, s3, t2, t3
+                                    ), 'Transitivity', [st0, st1]
+                                )
+
+            for st in self.context.list(SimilarTrianglesProperty):
                 st_is_too_old = is_too_old(st)
                 for i in range(0, 3):
                     lr, ratio = self.context.lengths_ratio_property_and_value(side_of(st.ABC, i), side_of(st.DEF, i))
@@ -1110,11 +1171,28 @@ class Explainer:
                 ang0 = ca.angle0
                 ang1 = ca.angle1
                 for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
+                    pattern = EqualLengthsRatiosProperty(vec0.as_segment, vec1.as_segment, ang1.vector0.as_segment, ang1.vector1.as_segment)
+                    elr = self.context[EqualLengthsRatiosProperty(vec0.as_segment, vec1.as_segment, ang1.vector0.as_segment, ang1.vector1.as_segment)]
+                    if elr is None or ca_is_too_old and is_too_old(elr):
+                        continue
+                    yield (
+                        SimilarTrianglesProperty(
+                            (ang0.vertex, vec0.end, vec1.end),
+                            (ang1.vertex, ang1.vector0.end, ang1.vector1.end)
+                        ),
+                        'Two pairs of sides with the same ratio, and angle between the sides',
+                        [elr, ca]
+                    )
+
+            for ca in congruent_angles:
+                ca_is_too_old = is_too_old(ca)
+                ang0 = ca.angle0
+                ang1 = ca.angle1
+                for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
                     rsn0, ratio0 = self.context.lengths_ratio_property_and_value(vec0.as_segment, ang1.vector0.as_segment)
                     if rsn0 is None:
                         continue
                     rsn1, ratio1 = self.context.lengths_ratio_property_and_value(vec1.as_segment, ang1.vector1.as_segment)
-                    # TODO: fix ratio comparison
                     if rsn1 is None or ratio0 != ratio1:
                         continue
                     if ca_is_too_old and is_too_old(rsn0) and is_too_old(rsn1):
@@ -1229,27 +1307,23 @@ class Explainer:
                     [ra0, ra1]
                 )
 
-            for av0 in [p for p in self.context.list(AngleValueProperty) if p.angle.vertex and p.degree not in (0, 180)]:
-                triangle = (av0.angle.vertex, *av0.angle.endpoints)
-                av1 = self.context.angle_value_property(angle_of(triangle, 1))
-                if av1 is None or is_too_old(av0) and is_too_old(av1):
-                    continue
-                sines = (
-                    sp.sin(sp.pi * av0.degree / 180),
-                    sp.sin(sp.pi * av1.degree / 180),
-                    sp.sin(sp.pi * (180 - av0.degree - av1.degree) / 180)
-                )
-                if sines[2] == 0:
-                    print('DEBUG %s %s' % (av0, av1))
-                    print('DEBUG %s %s %s' % sines)
-                    self.dump()
-                sides = [side_of(triangle, i) for i in range(0, 3)]
-                for (sine0, side0), (sine1, side1) in itertools.combinations(zip(sines, sides), 2):
-                    yield (
-                        LengthsRatioProperty(side0, side1, sine0 / sine1),
-                        _comment('Law of sines for △ %s %s %s', *triangle),
-                        [av0, av1]
-                    )
+#            for av0 in [p for p in self.context.list(AngleValueProperty) if p.angle.vertex and p.degree not in (0, 180)]:
+#                triangle = (av0.angle.vertex, *av0.angle.endpoints)
+#                av1 = self.context.angle_value_property(angle_of(triangle, 1))
+#                if av1 is None or is_too_old(av0) and is_too_old(av1):
+#                    continue
+#                sines = (
+#                    sp.sin(sp.pi * av0.degree / 180),
+#                    sp.sin(sp.pi * av1.degree / 180),
+#                    sp.sin(sp.pi * (180 - av0.degree - av1.degree) / 180)
+#                )
+#                sides = [side_of(triangle, i) for i in range(0, 3)]
+#                for (sine0, side0), (sine1, side1) in itertools.combinations(zip(sines, sides), 2):
+#                    yield (
+#                        LengthsRatioProperty(side0, side1, sine0 / sine1),
+#                        _comment('Law of sines for △ %s %s %s', *triangle),
+#                        [av0, av1]
+#                    )
 
             for sos in self.context.list(SameOrOppositeSideProperty):
                 if is_too_old(sos):
