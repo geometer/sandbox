@@ -889,18 +889,35 @@ class Explainer:
                             'Equal sides ratio in similar triangles',
                             [st]
                         )
-                    elif side01 == side11:
+                        continue
+                    if side01 == side11:
                         yield (
                             LengthsRatioProperty(side00, side10, 1),
                             'Equal sides ratio in similar triangles',
                             [st]
                         )
-                    else:
+                        continue
+                    cs = self.__congruent_segments_reason(side00, side10)
+                    if cs:
                         yield (
-                            EqualLengthsRatiosProperty(side00, side10, side01, side11),
+                            LengthsRatioProperty(side01, side11, 1),
                             'Equal sides ratio in similar triangles',
-                            [st]
+                            [st, cs]
                         )
+                        continue
+                    cs = self.__congruent_segments_reason(side01, side11)
+                    if cs:
+                        yield (
+                            LengthsRatioProperty(side00, side10, 1),
+                            'Equal sides ratio in similar triangles',
+                            [st, cs]
+                        )
+                        continue
+                    yield (
+                        EqualLengthsRatiosProperty(side00, side10, side01, side11),
+                        'Equal sides ratio in similar triangles',
+                        [st]
+                    )
 
             for st in self.context.list(SimilarTrianglesProperty):
                 st_is_too_old = is_too_old(st)
