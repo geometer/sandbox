@@ -826,30 +826,48 @@ class Explainer:
                 if is_too_old(st):
                     continue
                 for i, j in itertools.combinations(range(0, 3), 2):
-                    yield (
-                        EqualLengthsRatiosProperty(
-                            side_of(st.ABC, i), side_of(st.DEF, i),
-                            side_of(st.ABC, j), side_of(st.DEF, j)
-                        ),
-                        'Equal sides ratio in similar triangles',
-                        [st]
-                    )
+                    side00 = side_of(st.ABC, i)
+                    side01 = side_of(st.ABC, j)
+                    side10 = side_of(st.DEF, i)
+                    side11 = side_of(st.DEF, j)
+                    if side00 == side10:
+                        yield (
+                            LengthsRatioProperty(side01, side11, 1),
+                            'Equal sides ratio in similar triangles',
+                            [st]
+                        )
+                    elif side01 == side11:
+                        yield (
+                            LengthsRatioProperty(side00, side10, 1),
+                            'Equal sides ratio in similar triangles',
+                            [st]
+                        )
+                    else:
+                        yield (
+                            EqualLengthsRatiosProperty(side00, side10, side01, side11),
+                            'Equal sides ratio in similar triangles',
+                            [st]
+                        )
 
             def all_combinations(four):
-                yield (four[0], four[1], four[2], four[3])
-                yield (four[0], four[2], four[1], four[3])
-                yield (four[1], four[0], four[3], four[2])
-                yield (four[1], four[3], four[0], four[2])
-                yield (four[2], four[0], four[3], four[1])
-                yield (four[2], four[3], four[0], four[1])
-                yield (four[3], four[1], four[2], four[0])
-                yield (four[3], four[2], four[1], four[0])
+                return (
+                    (four[0], four[1], four[2], four[3]),
+                    (four[0], four[2], four[1], four[3]),
+                    (four[1], four[0], four[3], four[2]),
+                    (four[1], four[3], four[0], four[2]),
+                    (four[2], four[0], four[3], four[1]),
+                    (four[2], four[3], four[0], four[1]),
+                    (four[3], four[1], four[2], four[0]),
+                    (four[3], four[2], four[1], four[0])
+                )
 
             def half_combinations(four):
-                yield (four[0], four[1], four[2], four[3])
-                yield (four[0], four[2], four[1], four[3])
-                yield (four[1], four[3], four[0], four[2])
-                yield (four[2], four[3], four[0], four[1])
+                return (
+                    (four[0], four[1], four[2], four[3]),
+                    (four[0], four[2], four[1], four[3]),
+                    (four[1], four[3], four[0], four[2]),
+                    (four[2], four[3], four[0], four[1])
+                )
 
             for st0, st1 in itertools.combinations(self.context.list(EqualLengthsRatiosProperty), 2):
                 if is_too_old(st0) and is_too_old(st1):
@@ -859,15 +877,13 @@ class Explainer:
                     for t0, t1, t2, t3 in half_combinations(st1.segments):
                         if (s0, s1) == (t0, t1):
                             if s2 == s3:
-                                if t2 != t3:
-                                    yield (
-                                        LengthsRatioProperty(t2, t3, 1), 'Transitivity', [st0, st1]
-                                    )
+                                yield (
+                                    LengthsRatioProperty(t2, t3, 1), 'Transitivity', [st0, st1]
+                                )
                             elif s2 == t2:
-                                if s3 != t3:
-                                    yield (
-                                        LengthsRatioProperty(s3, t3, 1), 'Transitivity', [st0, st1]
-                                    )
+                                yield (
+                                    LengthsRatioProperty(s3, t3, 1), 'Transitivity', [st0, st1]
+                                )
                             elif s3 == t3:
                                 yield (
                                     LengthsRatioProperty(s2, t2, 1), 'Transitivity', [st0, st1]
@@ -1171,7 +1187,6 @@ class Explainer:
                 ang0 = ca.angle0
                 ang1 = ca.angle1
                 for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
-                    pattern = EqualLengthsRatiosProperty(vec0.as_segment, vec1.as_segment, ang1.vector0.as_segment, ang1.vector1.as_segment)
                     elr = self.context[EqualLengthsRatiosProperty(vec0.as_segment, vec1.as_segment, ang1.vector0.as_segment, ang1.vector1.as_segment)]
                     if elr is None or ca_is_too_old and is_too_old(elr):
                         continue
