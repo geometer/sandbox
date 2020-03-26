@@ -824,7 +824,7 @@ class Explainer:
 
             def all_combinations(four):
                 return (
-                    (four[0], four[1], four[2], four[3]),
+                    four,
                     (four[0], four[2], four[1], four[3]),
                     (four[1], four[0], four[3], four[2]),
                     (four[1], four[3], four[0], four[2]),
@@ -836,7 +836,7 @@ class Explainer:
 
             def half_combinations(four):
                 return (
-                    (four[0], four[1], four[2], four[3]),
+                    four,
                     (four[0], four[2], four[1], four[3]),
                     (four[1], four[3], four[0], four[2]),
                     (four[2], four[3], four[0], four[1])
@@ -844,6 +844,9 @@ class Explainer:
 
             for st0, st1 in itertools.combinations(self.context.list(EqualLengthsRatiosProperty), 2):
                 if is_too_old(st0) and is_too_old(st1):
+                    continue
+
+                if len(st0.segment_set.intersection(st1.segment_set)) < 2:
                     continue
 
                 for s0, s1, s2, s3 in all_combinations(st0.segments):

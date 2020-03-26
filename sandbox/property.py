@@ -302,6 +302,7 @@ class EqualLengthsRatiosProperty(Property):
         self.segment2 = segment2
         self.segment3 = segment3
         self.segments = (segment0, segment1, segment2, segment3)
+        self.segment_set = frozenset(self.segments)
         self.__key = EqualLengthsRatiosProperty.unique_key(segment0, segment1, segment2, segment3)
 
     @property
