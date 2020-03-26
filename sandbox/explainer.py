@@ -36,10 +36,6 @@ class Explainer:
             self.scene.unfreeze()
         self.__explanation_time = time.time() - start
 
-    def __congruent_segments_reason(self, seg0, seg1):
-        reason, ratio = self.context.lengths_ratio_property_and_value(seg0, seg1)
-        return reason if ratio == 1 else None
-
     def __angles_ratio_reasons(self, angle):
         reasons = self.context.list(AnglesRatioProperty, keys=[angle])
         reasons.sort(key=lambda prop: prop.penalty)
@@ -706,8 +702,8 @@ class Explainer:
                     continue
                 pt0 = next(p for p in cs.segment0.points if p != common)
                 pt1 = next(p for p in cs.segment1.points if p != common)
-                cs2 = self.__congruent_segments_reason(common.segment(pt0), pt0.segment(pt1))
-                if cs2 and cs2.ratio == 1:
+                cs2 = self.context.congruent_segments_property(common.segment(pt0), pt0.segment(pt1))
+                if cs2:
                     yield (
                         EquilateralTriangleProperty((common, pt0, pt1)),
                         'Congruent sides',
@@ -826,7 +822,7 @@ class Explainer:
             for st in self.context.list(SimilarTrianglesProperty):
                 st_is_too_old = is_too_old(st)
                 for i in range(0, 3):
-                    cs = self.__congruent_segments_reason(side_of(st.ABC, i), side_of(st.DEF, i))
+                    cs = self.context.congruent_segments_property(side_of(st.ABC, i), side_of(st.DEF, i))
                     if cs is None:
                         continue
                     if st_is_too_old and is_too_old(cs):
@@ -913,7 +909,7 @@ class Explainer:
                             [st]
                         )
                         continue
-                    cs = self.__congruent_segments_reason(side00, side10)
+                    cs = self.context.congruent_segments_property(side00, side10)
                     if cs:
                         yield (
                             LengthsRatioProperty(side01, side11, 1),
@@ -921,7 +917,7 @@ class Explainer:
                             [st, cs]
                         )
                         continue
-                    cs = self.__congruent_segments_reason(side01, side11)
+                    cs = self.context.congruent_segments_property(side01, side11)
                     if cs:
                         yield (
                             LengthsRatioProperty(side00, side10, 1),
@@ -1104,7 +1100,7 @@ class Explainer:
             def congruent_segments(seg0, seg1):
                 if seg0 == seg1:
                     return True
-                return self.__congruent_segments_reason(seg0, seg1)
+                return self.context.congruent_segments_property(seg0, seg1)
 
             for ca in congruent_angles:
                 ncl = self.context.not_collinear_property(*ca.angle0.points)
@@ -1291,7 +1287,7 @@ class Explainer:
                             [cs0, cs1]
                         )
                     else:
-                        cs2 = self.__congruent_segments_reason(third0.as_segment, third1.as_segment)
+                        cs2 = self.context.congruent_segments_property(third0.as_segment, third1.as_segment)
                         if cs2:
                             yield (
                                 prop,
@@ -1314,7 +1310,7 @@ class Explainer:
                 ncl = self.context.not_collinear_property(common0, *third0.points)
                 if ncl is None or ps_are_too_old and is_too_old(ncl):
                     continue
-                ps2 = self.__congruent_segments_reason(third0.as_segment, third1.as_segment)
+                ps2 = self.context.congruent_segments_property(third0.as_segment, third1.as_segment)
                 if ps2 and ps2.ratio == ps0.ratio:
                     yield (
                         SimilarTrianglesProperty(

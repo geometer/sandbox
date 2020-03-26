@@ -90,6 +90,10 @@ class PropertySet:
             return (None, None)
         return (prop, prop.ratio if prop.segment0 == segment0 else divide(1, prop.ratio))
 
+    def congruent_segments_property(self, segment0, segment1):
+        prop = self.__length_ratios.get(frozenset([segment0, segment1]))
+        return prop if prop and prop.ratio == 1 else None
+
     def equal_length_ratios_property(self, segment0, segment1, segment2, segment3):
         return self.__equals_length_ratios.get(EqualLengthsRatiosProperty.unique_key(segment0, segment1, segment2, segment3))
 
