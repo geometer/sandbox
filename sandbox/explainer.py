@@ -20,7 +20,7 @@ class Explainer:
 
     def __reason(self, prop, comments, premises=None):
         if prop not in self.context:
-            prop.reason = Reason(len(self.context), self.__iteration_step_count, comments, premises)
+            prop.reason = Reason(len(self.context), self.__iteration_step_count + 1, comments, premises)
             self.context.add(prop)
 
     def __refresh_unexplained(self):
@@ -77,7 +77,7 @@ class Explainer:
 
         def iteration():
             def is_too_old(prop):
-                return prop.reason.generation < self.__iteration_step_count - 1
+                return prop.reason.generation < self.__iteration_step_count
 
             def _cs(coef):
                 return '' if coef == 1 else ('%s ' % coef)
