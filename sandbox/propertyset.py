@@ -1,6 +1,6 @@
 import itertools
 
-from .property import AngleValueProperty, AnglesRatioProperty, LengthsRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty
+from .property import AngleValueProperty, AnglesRatioProperty, LengthsRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthsRatiosProperty
 from .stats import Stats
 from .util import divide
 
@@ -11,6 +11,7 @@ class PropertySet:
         self.__angle_values = {} # angle => prop
         self.__angle_ratios = {} # {angle, angle} => prop
         self.__length_ratios = {} # {segment, segment} => prop
+        self.__equals_length_ratios = {} # key(four segments) => prop
         self.__coincidence = {} # {point, point} => prop
         self.__collinearity = {} # {point, point, point} => prop
         self.__intersections = {} # {segment, segment} => point, [reasons]
@@ -38,6 +39,8 @@ class PropertySet:
             self.__coincidence[prop.point_set] = prop
         elif type_key == PointsCollinearityProperty:
             self.__collinearity[prop.point_set] = prop
+        elif type_key == EqualLengthsRatiosProperty:
+            self.__equals_length_ratios[prop.key] = prop
 
     def list(self, property_type, keys=None):
         if keys:
@@ -86,6 +89,9 @@ class PropertySet:
         if prop is None:
             return (None, None)
         return (prop, prop.ratio if prop.segment0 == segment0 else divide(1, prop.ratio))
+
+    def equal_length_ratios_property(self, segment0, segment1, segment2, segment3):
+        return self.__equals_length_ratios.get(EqualLengthsRatiosProperty.unique_key(segment0, segment1, segment2, segment3))
 
     def intersection_of_lines(self, segment0, segment1):
         key = frozenset([segment0, segment1])

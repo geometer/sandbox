@@ -286,26 +286,30 @@ class EqualLengthsRatiosProperty(Property):
     Two segment lengths ratios are equal
     """
 
+    @staticmethod
+    def unique_key(segment0, segment1, segment2, segment3):
+        return frozenset([
+            frozenset([segment0, segment3]),
+            frozenset([segment1, segment2])
+        ])
+
     def __init__(self, segment0, segment1, segment2, segment3):
         """
         |segment0| * |segment3| == |segment1| * |segment2|
         """
         self.segments = (segment0, segment1, segment2, segment3)
         self.segment_set = frozenset(self.segments)
-        self.__key = frozenset([
-            frozenset([segment0, segment3]),
-            frozenset([segment1, segment2])
-        ])
+        self.key = EqualLengthsRatiosProperty.unique_key(segment0, segment1, segment2, segment3)
 
     @property
     def description(self):
         return _comment('|%s| / |%s| = |%s| / |%s|', *self.segments)
 
     def __eq__(self, other):
-        return isinstance(other, EqualLengthsRatiosProperty) and self.__key == other.__key
+        return isinstance(other, EqualLengthsRatiosProperty) and self.key == other.key
 
     def __hash__(self):
-        return hash(EqualLengthsRatiosProperty) + hash(self.__key)
+        return hash(EqualLengthsRatiosProperty) + hash(self.key)
 
 class SimilarTrianglesProperty(Property):
     """

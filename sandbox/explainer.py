@@ -1207,7 +1207,7 @@ class Explainer:
                 ang0 = ca.angle0
                 ang1 = ca.angle1
                 for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
-                    elr = self.context[EqualLengthsRatiosProperty(vec0.as_segment, vec1.as_segment, ang1.vector0.as_segment, ang1.vector1.as_segment)]
+                    elr = self.context.equal_length_ratios_property(vec0.as_segment, vec1.as_segment, ang1.vector0.as_segment, ang1.vector1.as_segment)
                     if elr is None or ca_is_too_old and is_too_old(elr):
                         continue
                     yield (
