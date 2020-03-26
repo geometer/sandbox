@@ -164,7 +164,7 @@ class AngleValueProperty(Property):
     """
     @staticmethod
     def generate(vector0, vector1, value):
-        for ngl, complementary in good_angles(vector0, vector1, include_four_point=value == 0 or value == 180):
+        for ngl, complementary in good_angles(vector0, vector1, include_four_point=True):
             yield AngleValueProperty(ngl, 180 - value if complementary else value)
 
     def __init__(self, angle, degree):

@@ -67,6 +67,32 @@ class Explainer:
             def is_too_old(prop):
                 return prop.reason.generation < self.__iteration_step_count
 
+            for av0, av1 in itertools.combinations(self.context.list(AngleValueProperty), 2):
+                if av0.degree == av1.degree or is_too_old(av0) and is_too_old(av1):
+                    continue
+                ang0 = av0.angle
+                ang1 = av1.angle
+
+                if ang0.vector0 == ang1.vector0:
+                    vec0, vec1 = ang0.vector1, ang1.vector1
+                elif ang0.vector0 == ang1.vector1:
+                    vec0, vec1 = ang0.vector1, ang1.vector0
+                elif ang0.vector1 == ang1.vector0:
+                    vec0, vec1 = ang0.vector0, ang1.vector1
+                elif ang0.vector1 == ang1.vector1:
+                    vec0, vec1 = ang0.vector0, ang1.vector0
+                else:
+                    continue
+
+                if vec0.start == vec1.start:
+                    prop = PointsCoincidenceProperty(vec0.end, vec1.end, False)
+                elif vec0.end == vec1.end:
+                    prop = PointsCoincidenceProperty(vec0.start, vec1.start, False)
+                else:
+                    continue
+
+                yield (prop, _comment('Otherwise, %s = %s', ang0, ang1), [av0, av1])
+
             def _cs(coef):
                 return '' if coef == 1 else ('%s ' % coef)
 
@@ -296,6 +322,19 @@ class Explainer:
                         _comment('%s is an intersection of segment %s and line %s', crossing, pt0.segment(pt1), prop.segment),
                         [prop] + reasons
                     )
+
+            for ra in [av for av in self.context.list(AngleValueProperty) if av.degree == 90]:
+                ra_is_too_old = is_too_old(ra)
+                vectors = (ra.angle.vector0, ra.angle.vector1)
+                for vec0, vec1 in (vectors, reversed(vectors)):
+                    for col in [p for p in self.context.list(PointsCollinearityProperty, [vec0.as_segment]) if p.collinear]:
+                        reasons_are_too_old = ra_is_too_old and is_too_old(col)
+                        pt0 = next(p for p in col.points if p not in vec0.points)
+                        for pt1 in vec0.points:
+                            ne = self.context.not_equal_property(pt0, pt1)
+                            if ne is not None and not (reasons_are_too_old and is_too_old(ne)):
+                                for prop in AngleValueProperty.generate(vec1, pt0.vector(pt1), 90):
+                                    yield (prop, '', [ra, col, ne]) #TODO: write comment
 
             for av in [av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 180]:
                 av_is_too_old = is_too_old(av)
