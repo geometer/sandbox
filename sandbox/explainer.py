@@ -791,6 +791,22 @@ class Explainer:
                         comment, [ar, value]
                     )
 
+            for ct in self.context.list(CongruentTrianglesProperty):
+                ncl = self.context.not_collinear_property(*ct.ABC)
+                if ncl is None:
+                    ncl = self.context.not_collinear_property(*ct.DEF)
+                if ncl is None or is_too_old(ct) and is_too_old(ncl):
+                    continue
+                for i in range(0, 3):
+                    angle0 = angle_of(ct.ABC, i)
+                    angle1 = angle_of(ct.DEF, i)
+                    if angle0 != angle1:
+                        yield (
+                            AnglesRatioProperty(angle0, angle1, 1),
+                            'Corresponding angles in congruent non-degenerate triangles',
+                            [ct, ncl]
+                        )
+
             for st in self.context.list(SimilarTrianglesProperty):
                 ncl = self.context.not_collinear_property(*st.ABC)
                 if ncl is None:
