@@ -164,6 +164,9 @@ class CoreScene:
                 auxiliary=True
             )
             new_line = self.line_through(new_point, **kwargs)
+            if self not in line:
+                crossing = new_line.intersection_point(line, auxiliary=True)
+                print('DEBUG %s' % crossing)
             line.perpendicular_constraint(new_line, guaranteed=True)
             return new_line
 
