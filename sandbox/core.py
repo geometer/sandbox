@@ -13,6 +13,12 @@ from .reason import Reason
 from .util import _comment, divide
 
 class CoreScene:
+    layers = ('user', 'auxiliary', 'invisible')
+
+    @staticmethod
+    def layers_by(max_layer):
+        return CoreScene.layers[0:CoreScene.layers.index(max_layer) + 1]
+
     class Object:
         """
         Common ancestor for all geometric objects like point, line, circle
@@ -32,7 +38,7 @@ class CoreScene:
                         self.auto_label = True
                         break
             self.layer = kwargs.get('layer', 'user')
-            assert self.layer in ('user', 'auxiliary', 'invisible')
+            assert self.layer in CoreScene.layers
 
             self.extra_labels = set()
             self.scene = scene
@@ -44,8 +50,7 @@ class CoreScene:
                 return self
 
             layer = kwargs.get('layer', 'user')
-            assert layer in ('user', 'auxiliary', 'invisible')
-            if layer == 'user' or layer == 'auxiliary' and self.layer == 'invisible':
+            if self.layer not in CoreScene.layers_by(layer):
                 self.layer = layer
             for key in kwargs:
                 if key == 'layer':
@@ -163,7 +168,7 @@ class CoreScene:
                 self.scene,
                 CoreScene.Point.Origin.perp,
                 point=self, line=line,
-                layer='auxiliary'
+                layer='invisible'
             )
             new_line = self.line_through(new_point, **kwargs)
             if self not in line:
@@ -667,23 +672,14 @@ class CoreScene:
         lineCD = CD[0].line_through(CD[1], layer='auxiliary')
         lineAB.perpendicular_constraint(lineCD, **kwargs)
 
-    def points(self, skip_auxiliary=False):
-        if skip_auxiliary:
-            return [p for p in self.__objects if isinstance(p, CoreScene.Point) and p.layer == 'user']
-        else:
-            return [p for p in self.__objects if isinstance(p, CoreScene.Point) and p.layer in ('user', 'auxiliary')]
+    def points(self, max_layer='invisible'):
+        return [p for p in self.__objects if isinstance(p, CoreScene.Point) and p.layer in CoreScene.layers_by(max_layer)]
 
-    def lines(self, skip_auxiliary=False):
-        if skip_auxiliary:
-            return [l for l in self.__objects if isinstance(l, CoreScene.Line) and l.layer == 'user']
-        else:
-            return [l for l in self.__objects if isinstance(l, CoreScene.Line) and l.layer in ('user', 'auxiliary')]
+    def lines(self, max_layer='invisible'):
+        return [l for l in self.__objects if isinstance(l, CoreScene.Line) and l.layer in CoreScene.layers_by(max_layer)]
 
-    def circles(self, skip_auxiliary=False):
-        if skip_auxiliary:
-            return [c for c in self.__objects if isinstance(c, CoreScene.Circle) and c.layer == 'user']
-        else:
-            return [c for c in self.__objects if isinstance(c, CoreScene.Circle) and c.layer in ('user', 'auxiliary')]
+    def circles(self, max_layer='invisible'):
+        return [c for c in self.__objects if isinstance(c, CoreScene.Circle) and c.layer in CoreScene.layers_by(max_layer)]
 
     def constraints(self, kind):
         if kind.stage == Stage.validation:
@@ -726,6 +722,8 @@ class CoreScene:
         for cnstr in self.constraints(Constraint.Kind.perpendicular):
             line0 = cnstr.params[0]
             line1 = cnstr.params[1]
+            if 'invisible' in [obj.layer for obj in (line0.point0, line0.point1, line1.point0, line1.point1)]:
+                continue
             vector0 = line0.point0.vector(line0.point1)
             vector1 = line1.point0.vector(line1.point1)
             yield (
@@ -758,14 +756,15 @@ class CoreScene:
                 cnstr.comments
             )
 
-        for line in self.lines(skip_auxiliary=False):
-            for pt0, pt1, pt2 in itertools.combinations([p for p in line.all_points], 3):
-                yield (
-                    PointsCollinearityProperty(pt0, pt1, pt2, True),
-                    [_comment('Three points on the line %s', line)]
-                )
+        for line in self.lines(max_layer='auxiliary'):
+            for pts in itertools.combinations([p for p in line.all_points], 3):
+                if any(p.layer in CoreScene.layers_by('auxiliary') for p in pts):
+                    yield (
+                        PointsCollinearityProperty(*pts, True),
+                        [_comment('Three points on the line %s', line)]
+                    )
 
-        for circle in self.circles(skip_auxiliary=True):
+        for circle in self.circles(max_layer='user'):
             radiuses = [circle.centre.segment(pt) for pt in circle.all_points]
             if circle.centre not in circle.radius.points:
                 for rad in radiuses:

@@ -143,7 +143,7 @@ class AngleFamily:
 
 def hunt_coincidences(placement: Placement):
     used_points = set()
-    points = placement.scene.points(skip_auxiliary=True)
+    points = placement.scene.points(max_layer='user')
     for index0, pt0 in enumerate(points):
         if pt0 in used_points:
             continue
@@ -167,14 +167,14 @@ class Hunter:
         self.__hunting_time = None
 
     def __vectors(self):
-        points = self.placement.scene.points(skip_auxiliary=True)
+        points = self.placement.scene.points(max_layer='user')
         for point0, point1 in itertools.combinations(points, 2):
             vec = point0.vector(point1)
             if self.placement.length(vec) >= ERROR:
                 yield vec
 
     def __triangles(self):
-        points = self.placement.scene.points(skip_auxiliary=True)
+        points = self.placement.scene.points(max_layer='user')
         for index0, pt0 in enumerate(points):
             loc0 = self.placement.location(pt0)
             for index1, pt1 in enumerate(points[index0 + 1:], start=index0 + 1):
@@ -191,7 +191,7 @@ class Hunter:
     def __lines(self):
         lines = []
         used_pairs = set()
-        points = self.placement.scene.points(skip_auxiliary=True)
+        points = self.placement.scene.points(max_layer='user')
         for index0, pt0 in enumerate(points):
             loc0 = self.placement.location(pt0)
             for index1, pt1 in enumerate(points[index0 + 1:], start=index0 + 1):
@@ -378,7 +378,7 @@ class Hunter:
             self.__hunt_collinears()
 
         if 'coincident_points' in options or 'default' in options:
-            points = self.placement.scene.points(skip_auxiliary=True)
+            points = self.placement.scene.points(max_layer='user')
             for point0, point1 in itertools.combinations(points, 2):
                 vec = point0.vector(point1)
                 if self.placement.length(vec) < ERROR:

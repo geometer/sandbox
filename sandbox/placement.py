@@ -484,7 +484,7 @@ class Placement(BasePlacement):
             self.__deviation = dist_square
             if numb_square > 0:
                 average2 = 0.0
-                points = [self.location(pt) for pt in self.scene.points(skip_auxiliary=True)]
+                points = [self.location(pt) for pt in self.scene.points(max_layer='user')]
                 for pt0, pt1 in itertools.combinations(points, 2):
                     average2 += pt0.distance2_to(pt1)
                 average2 /= len(points) * (len(points) - 1) / 2
