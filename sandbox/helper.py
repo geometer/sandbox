@@ -13,6 +13,8 @@ class PlacementHelper:
         assert isinstance(point0, CoreScene.Point), 'Parameter is not a point'
         assert isinstance(point1, CoreScene.Point), 'Parameter is not a point'
 
+        if point0 == point1:
+            return 0
         return self.placement.length(point0.vector(point1))
 
     def angle(self, pt0, pt1, pt2, pt3):
