@@ -20,4 +20,6 @@ if '--profile' in sys.argv[1:]:
     cProfile.run('explainer.explain()')
 else:
     explainer.explain()
+if '--dump' in sys.argv[1:]:
+    explainer.dump()
 explainer.stats().dump()

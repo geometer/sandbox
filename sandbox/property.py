@@ -64,6 +64,29 @@ class ParallelVectorsProperty(Property):
     def __hash__(self):
         return hash(ParallelVectorsProperty) + hash(self.__vector_set)
 
+class PerpendicularVectorsProperty(Property):
+    """
+    Two vectors are perpendicular (or at least one of them has zero length)
+    """
+    def __init__(self, vector0, vector1):
+        self.vector0 = vector0
+        self.vector1 = vector1
+        self.__vector_set = frozenset([vector0, vector1])
+
+    def keys(self):
+        return [self.vector0.as_segment, self.vector1.as_segment]
+
+    @property
+    def description(self):
+        return _comment('%s ⟂ %s', self.vector0, self.vector1)
+
+    def __eq__(self, other):
+        return isinstance(other, PerpendicularVectorsProperty) and \
+            self.__vector_set == other.__vector_set
+
+    def __hash__(self):
+        return hash(PerpendicularVectorsProperty) + hash(self.__vector_set)
+
 class PointsCoincidenceProperty(Property):
     """
     [Not] coincident points

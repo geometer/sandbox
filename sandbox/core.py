@@ -8,7 +8,7 @@ import itertools
 import sympy as sp
 from typing import List
 
-from .property import AngleValueProperty, PointsCoincidenceProperty, PointsCollinearityProperty, LengthsRatioProperty, PointInsideAngleProperty, EquilateralTriangleProperty
+from .property import AngleValueProperty, PointsCoincidenceProperty, PointsCollinearityProperty, LengthsRatioProperty, PointInsideAngleProperty, EquilateralTriangleProperty, PerpendicularVectorsProperty
 from .reason import Reason
 from .util import _comment, divide
 
@@ -689,15 +689,15 @@ class CoreScene:
 
     def enumerate_predefined_properties(self):
         for cnstr in self.constraints(Constraint.Kind.collinear):
-            yield (PointsCollinearityProperty(*cnstr.params, True), cnstr.comments)
+            if all(param.layer != 'invisible' for param in cnstr.params):
+                yield (PointsCollinearityProperty(*cnstr.params, True), cnstr.comments)
 
         for cnstr in self.constraints(Constraint.Kind.not_collinear):
-            if any(param.layer != 'user' for param in cnstr.params):
-                continue
-            yield (PointsCollinearityProperty(*cnstr.params, False), cnstr.comments)
-            yield (PointsCoincidenceProperty(*cnstr.params[0:2], False), cnstr.comments)
-            yield (PointsCoincidenceProperty(*cnstr.params[1:3], False), cnstr.comments)
-            yield (PointsCoincidenceProperty(cnstr.params[0], cnstr.params[2], False), cnstr.comments)
+            if all(param.layer != 'invisible' for param in cnstr.params):
+                yield (PointsCollinearityProperty(*cnstr.params, False), cnstr.comments)
+                yield (PointsCoincidenceProperty(*cnstr.params[0:2], False), cnstr.comments)
+                yield (PointsCoincidenceProperty(*cnstr.params[1:3], False), cnstr.comments)
+                yield (PointsCoincidenceProperty(cnstr.params[0], cnstr.params[2], False), cnstr.comments)
 
         for cnstr in self.constraints(Constraint.Kind.not_equal):
             if cnstr.params[0].layer != 'user' or cnstr.params[1].layer != 'user':
@@ -722,14 +722,18 @@ class CoreScene:
         for cnstr in self.constraints(Constraint.Kind.perpendicular):
             line0 = cnstr.params[0]
             line1 = cnstr.params[1]
-            if 'invisible' in [obj.layer for obj in (line0.point0, line0.point1, line1.point0, line1.point1)]:
-                continue
-            vector0 = line0.point0.vector(line0.point1)
-            vector1 = line1.point0.vector(line1.point1)
-            yield (
-                AngleValueProperty(vector0.angle(vector1), 90),
-                cnstr.comments
-            )
+            for pts0 in itertools.combinations(cnstr.params[0].all_points, 2):
+                if 'invisible' in [p.layer for p in pts0]:
+                    continue
+                for pts1 in itertools.combinations(cnstr.params[1].all_points, 2):
+                    if 'invisible' in [p.layer for p in pts1]:
+                        continue
+                    yield (
+                        PerpendicularVectorsProperty(
+                            pts0[0].vector(pts0[1]), pts1[0].vector(pts1[1])
+                        ),
+                        cnstr.comments
+                    )
 
         for cnstr in self.constraints(Constraint.Kind.inside_angle):
             point = cnstr.params[0]
@@ -758,7 +762,7 @@ class CoreScene:
 
         for line in self.lines(max_layer='auxiliary'):
             for pts in itertools.combinations([p for p in line.all_points], 3):
-                if any(p.layer in CoreScene.layers_by('auxiliary') for p in pts):
+                if all(p.layer in CoreScene.layers_by('auxiliary') for p in pts):
                     yield (
                         PointsCollinearityProperty(*pts, True),
                         [_comment('Three points on the line %s', line)]

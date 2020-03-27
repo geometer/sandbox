@@ -281,7 +281,26 @@ class Explainer:
                     if pv.reason.obsolete and ne0.reason.obsolete and ne1.reason.obsolete:
                         continue
                     for prop in AngleValueProperty.generate(vec0, vec1, 0):
-                        yield (prop, [], [pv, ne0, ne1])
+                        yield (
+                            prop,
+                            _comment('Non-zero parallel vectors %s and %s', vec0, vec1),
+                            [pv, ne0, ne1]
+                        )
+
+            for pv in self.context.list(PerpendicularVectorsProperty):
+                vec0 = pv.vector0
+                vec1 = pv.vector1
+                ne0 = self.context.not_equal_property(*vec0.points)
+                ne1 = self.context.not_equal_property(*vec1.points)
+                if ne0 is not None and ne1 is not None:
+                    if pv.reason.obsolete and ne0.reason.obsolete and ne1.reason.obsolete:
+                        continue
+                    for prop in AngleValueProperty.generate(vec0, vec1, 90):
+                        yield (
+                            prop,
+                            _comment('Non-zero perpendicular vectors %s and %s', vec0, vec1),
+                            [pv, ne0, ne1]
+                        )
 
             for prop in [p for p in self.context.list(SameOrOppositeSideProperty) if p.same]:
                 prop_is_too_old = prop.reason.obsolete
