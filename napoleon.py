@@ -13,7 +13,7 @@ A, B, C = scene.triangle(labels=['A', 'B', 'C'])
 
 def napoleonic(A: Scene.Point, B: Scene.Point, C: Scene.Point):
     V = A.circle_through(B).intersection_point(B.circle_through(A), label=C.label + '1')
-    line = A.line_through(B, auxiliary=True)
+    line = A.line_through(B, layer='auxiliary')
     V.opposite_side_constraint(C, line, comment=_comment('Given: %s is outward of △ %s %s %s', V, A, B, C))
     D = scene.gravity_centre_point(A, B, V, label=C.label + '2')
     #D = scene.free_point(label=C.label + '2')

@@ -31,8 +31,8 @@ class CoreScene:
                         self.label = label
                         self.auto_label = True
                         break
-            if 'auxiliary' not in kwargs:
-                self.auxiliary = None
+            self.layer = kwargs.get('layer', 'user')
+            assert self.layer in ('user', 'auxiliary', 'invisible')
 
             self.extra_labels = set()
             self.scene = scene
@@ -43,10 +43,12 @@ class CoreScene:
             if self.scene.is_frozen:
                 return self
 
-            if not kwargs.get('auxiliary'):
-                self.auxiliary = None
+            layer = kwargs.get('layer', 'user')
+            assert layer in ('user', 'auxiliary', 'invisible')
+            if layer == 'user' or layer == 'auxiliary' and self.layer == 'invisible':
+                self.layer = layer
             for key in kwargs:
-                if key == 'auxiliary':
+                if key == 'layer':
                     continue
                 value = kwargs[key]
                 if key == 'label' and value and value != self.label:
@@ -161,11 +163,11 @@ class CoreScene:
                 self.scene,
                 CoreScene.Point.Origin.perp,
                 point=self, line=line,
-                auxiliary=True
+                layer='auxiliary'
             )
             new_line = self.line_through(new_point, **kwargs)
             if self not in line:
-                crossing = new_line.intersection_point(line, auxiliary=True)
+                crossing = new_line.intersection_point(line, layer='auxiliary')
             line.perpendicular_constraint(new_line, guaranteed=True)
             return new_line
 
@@ -301,7 +303,7 @@ class CoreScene:
                     return
             self.not_equal_constraint(A)
             self.not_equal_constraint(B)
-            A.belongs_to(self.line_through(B, auxiliary=True))
+            A.belongs_to(self.line_through(B, layer='auxiliary'))
             self.scene.constraint(Constraint.Kind.same_direction, self, A, B, **kwargs)
 
         def inside_constraint(self, obj, **kwargs):
@@ -339,7 +341,7 @@ class CoreScene:
         def name(self):
             if hasattr(self, 'auto_label') and self.auto_label:
                 for points in itertools.combinations(self.all_points, 2):
-                    if not points[0].auxiliary and not points[1].auxiliary:
+                    if points[0].layer == 'user' and points[1].layer == 'user':
                         return '(%s %s)' % (points[0].name, points[1].name)
 
             return super().name
@@ -514,7 +516,7 @@ class CoreScene:
             return self.points[0].scene
 
         def free_point(self, **kwargs):
-            point = self.points[0].line_through(self.points[1], auxiliary=True).free_point(**kwargs)
+            point = self.points[0].line_through(self.points[1], layer='auxiliary').free_point(**kwargs)
             point.inside_constraint(self)
             return point
 
@@ -596,11 +598,11 @@ class CoreScene:
             assert self.vertex, 'Cannot construct bisector of angle %s with no vertex' % self
             B = self.vector0.end
             C = self.vector1.end
-            circle = self.vertex.circle_through(B, auxiliary=True)
-            line = self.vertex.line_through(C, auxiliary=True)
-            X = circle.intersection_point(line, auxiliary=True)
+            circle = self.vertex.circle_through(B, layer='auxiliary')
+            line = self.vertex.line_through(C, layer='auxiliary')
+            X = circle.intersection_point(line, layer='auxiliary')
             self.vertex.same_direction_constraint(X, C)
-            Y = X.translated_point(self.vector0, auxiliary=True)
+            Y = X.translated_point(self.vector0, layer='auxiliary')
             bisector = self.vertex.line_through(Y, **kwargs)
             comment = _comment('[%s %s) is the bisector of %s', self.vertex, Y, self)
             Y.inside_constraint(self, comment=comment)
@@ -661,27 +663,27 @@ class CoreScene:
         assert len(AB) == 2 and len(CD) == 2
         AB[0].not_equal_constraint(AB[1], **kwargs)
         CD[0].not_equal_constraint(CD[1], **kwargs)
-        lineAB = AB[0].line_through(AB[1], auxiliary=True)
-        lineCD = CD[0].line_through(CD[1], auxiliary=True)
+        lineAB = AB[0].line_through(AB[1], layer='auxiliary')
+        lineCD = CD[0].line_through(CD[1], layer='auxiliary')
         lineAB.perpendicular_constraint(lineCD, **kwargs)
 
     def points(self, skip_auxiliary=False):
         if skip_auxiliary:
-            return [p for p in self.__objects if isinstance(p, CoreScene.Point) and not p.auxiliary]
+            return [p for p in self.__objects if isinstance(p, CoreScene.Point) and p.layer == 'user']
         else:
-            return [p for p in self.__objects if isinstance(p, CoreScene.Point)]
+            return [p for p in self.__objects if isinstance(p, CoreScene.Point) and p.layer in ('user', 'auxiliary')]
 
     def lines(self, skip_auxiliary=False):
         if skip_auxiliary:
-            return [l for l in self.__objects if isinstance(l, CoreScene.Line) and not l.auxiliary]
+            return [l for l in self.__objects if isinstance(l, CoreScene.Line) and l.layer == 'user']
         else:
-            return [l for l in self.__objects if isinstance(l, CoreScene.Line)]
+            return [l for l in self.__objects if isinstance(l, CoreScene.Line) and l.layer in ('user', 'auxiliary')]
 
     def circles(self, skip_auxiliary=False):
         if skip_auxiliary:
-            return [c for c in self.__objects if isinstance(c, CoreScene.Circle) and not c.auxiliary]
+            return [c for c in self.__objects if isinstance(c, CoreScene.Circle) and c.layer == 'user']
         else:
-            return [c for c in self.__objects if isinstance(c, CoreScene.Circle)]
+            return [c for c in self.__objects if isinstance(c, CoreScene.Circle) and c.layer in ('user', 'auxiliary')]
 
     def constraints(self, kind):
         if kind.stage == Stage.validation:
@@ -694,7 +696,7 @@ class CoreScene:
             yield (PointsCollinearityProperty(*cnstr.params, True), cnstr.comments)
 
         for cnstr in self.constraints(Constraint.Kind.not_collinear):
-            if any(param.auxiliary for param in cnstr.params):
+            if any(param.layer != 'user' for param in cnstr.params):
                 continue
             yield (PointsCollinearityProperty(*cnstr.params, False), cnstr.comments)
             yield (PointsCoincidenceProperty(*cnstr.params[0:2], False), cnstr.comments)
@@ -702,12 +704,12 @@ class CoreScene:
             yield (PointsCoincidenceProperty(cnstr.params[0], cnstr.params[2], False), cnstr.comments)
 
         for cnstr in self.constraints(Constraint.Kind.not_equal):
-            if cnstr.params[0].auxiliary or cnstr.params[1].auxiliary:
+            if cnstr.params[0].layer != 'user' or cnstr.params[1].layer != 'user':
                 continue
             yield (PointsCoincidenceProperty(cnstr.params[0], cnstr.params[1], False), cnstr.comments)
 
         for cnstr in self.constraints(Constraint.Kind.length_ratio):
-            if any(param.auxiliary for param in [*cnstr.params[0].points, *cnstr.params[1].points]):
+            if any(param.layer != 'user' for param in [*cnstr.params[0].points, *cnstr.params[1].points]):
                 continue
             yield (
                 LengthsRatioProperty(cnstr.params[0], cnstr.params[1], cnstr.params[2]),
@@ -826,7 +828,7 @@ class CoreScene:
         print('Objects:')
         print('\n'.join(['\t' + obj.description for obj in self.__objects]))
         count = len(self.__objects)
-        aux = len([o for o in self.__objects if o.auxiliary])
+        aux = len([o for o in self.__objects if o.layer != 'user'])
         print('Total: %s objects (+ %s auxiliary)' % (count - aux, aux))
         if self.validation_constraints:
             print('\nValidation constraints:')

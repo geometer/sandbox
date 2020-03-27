@@ -11,7 +11,7 @@ class TestMCCME7_long(PlacementTest):
         scene = Scene()
 
         O = scene.free_point(label='O')
-        circle = O.circle_through(scene.free_point(auxiliary=True))
+        circle = O.circle_through(scene.free_point(layer='auxiliary'))
         A = circle.free_point(label='A')
         B = circle.free_point(label='B')
         C = circle.free_point(label='C')

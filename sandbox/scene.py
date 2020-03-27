@@ -33,31 +33,31 @@ class Scene(CoreScene):
 
         if len(points) == 1:
             return points[0]
-        intermediate = self.gravity_centre_point(*points[1:], auxiliary=True)
+        intermediate = self.gravity_centre_point(*points[1:], layer='auxiliary')
         return points[0].ratio_point(intermediate, 1, len(points) - 1, **kwargs)
 
     def parallel_line(self, line, point, **kwargs):
         """
         Constructs a line parallel to the given line through the given point.
         """
-        fourth = point.translated_point(line.point0.vector(line.point1), auxiliary=True)
+        fourth = point.translated_point(line.point0.vector(line.point1), layer='auxiliary')
         return point.line_through(fourth, **kwargs)
 
     def perpendicular_foot_point(self, point, line, **kwargs):
         """
         The foot of the perpendicular from the point to the line
         """
-        return line.intersection_point(point.perpendicular_line(line, auxiliary=True), **kwargs)
+        return line.intersection_point(point.perpendicular_line(line, layer='auxiliary'), **kwargs)
 
     def orthocentre_point(self, triangle, **kwargs):
         """
         Orthocentre of the triangle (intersection of the altitudes)
         """
         self.triangle_constraint(triangle)
-        altitude0 = self.altitude(triangle, triangle[0], auxiliary=True)
-        altitude1 = self.altitude(triangle, triangle[1], auxiliary=True)
+        altitude0 = self.altitude(triangle, triangle[0], layer='auxiliary')
+        altitude1 = self.altitude(triangle, triangle[1], layer='auxiliary')
         centre = altitude0.intersection_point(altitude1, **kwargs)
-        altitude2 = self.altitude(triangle, triangle[2], auxiliary=True)
+        altitude2 = self.altitude(triangle, triangle[2], layer='auxiliary')
         centre.belongs_to(altitude2)
         return centre
 
@@ -79,7 +79,7 @@ class Scene(CoreScene):
         A line through the point
         """
         self.assert_point(point)
-        extra = self.free_point(auxiliary=True)
+        extra = self.free_point(layer='auxiliary')
         extra.not_equal_constraint(point)
         return point.line_through(extra, **kwargs)
 
@@ -89,8 +89,8 @@ class Scene(CoreScene):
         """
         self.assert_point(point0)
         self.assert_point(point1)
-        middle = self.middle_point(point0, point1, auxiliary=True)
-        line = point0.line_through(point1, auxiliary=True)
+        middle = self.middle_point(point0, point1, layer='auxiliary')
+        line = point0.line_through(point1, layer='auxiliary')
         return middle.perpendicular_line(line, **kwargs)
 
     def incentre_point(self, triangle, **kwargs):
@@ -98,9 +98,9 @@ class Scene(CoreScene):
         Centre of the inscribed circle of the triangle
         """
         self.triangle_constraint(triangle)
-        bisector0 = triangle[0].angle(triangle[1], triangle[2]).bisector_line(auxiliary=True)
-        bisector1 = triangle[1].angle(triangle[0], triangle[2]).bisector_line(auxiliary=True)
-        bisector2 = triangle[2].angle(triangle[0], triangle[1]).bisector_line(auxiliary=True)
+        bisector0 = triangle[0].angle(triangle[1], triangle[2]).bisector_line(layer='auxiliary')
+        bisector1 = triangle[1].angle(triangle[0], triangle[2]).bisector_line(layer='auxiliary')
+        bisector2 = triangle[2].angle(triangle[0], triangle[1]).bisector_line(layer='auxiliary')
         centre = bisector0.intersection_point(bisector1, **kwargs)
         centre.belongs_to(bisector2)
         centre.inside_triangle_constraint(*triangle, comment=_comment('%s is incentre of %s %s %s', centre, *triangle))
@@ -110,19 +110,19 @@ class Scene(CoreScene):
         """
         Inscribed circle of △ABC
         """
-        centre = self.incentre_point(triangle, auxiliary=True)
-        side = triangle[0].line_through(triangle[1], auxiliary=True)
-        foot = self.perpendicular_foot_point(centre, side, auxiliary=True)
+        centre = self.incentre_point(triangle, layer='auxiliary')
+        side = triangle[0].line_through(triangle[1], layer='auxiliary')
+        foot = self.perpendicular_foot_point(centre, side, layer='auxiliary')
         return centre.circle_through(foot, **kwargs)
 
     def circumcircle(self, triangle, **kwargs):
         """
         Circumscribed circle of the triangle
         """
-        centre = self.circumcentre_point(triangle, auxiliary=True)
+        centre = self.circumcentre_point(triangle, layer='auxiliary')
         return centre.circle_through(triangle[0], **kwargs)
 
-    def triangle(self, labels=None, auxiliary=False):
+    def triangle(self, labels=None):
         """
         Free triangle
         Pass array of three strings as 'labels' to use as point labels
@@ -131,8 +131,6 @@ class Scene(CoreScene):
         assert not labels or len(labels) == 3
         def point(index):
             args = {}
-            if auxiliary:
-                args['auxiliary'] = True
             if labels and labels[index]:
                 args['label'] = labels[index]
             return self.free_point(**args)
@@ -163,12 +161,12 @@ class Scene(CoreScene):
         assert vertex in triangle
         points = list(triangle)
         points.remove(vertex)
-        base = points[0].line_through(points[1], auxiliary=True)
+        base = points[0].line_through(points[1], layer='auxiliary')
         altitude = vertex.perpendicular_line(base, **kwargs)
         altitude.perpendicular_constraint(base, comment=_comment('Altitude %s is perpendicular to the base %s', altitude, base), guaranteed=True)
         return altitude
 
-    def parallelogram(self, labels=None, auxiliary=False):
+    def parallelogram(self, labels=None):
         """
         Free parallelogram
         Pass array of four strings as 'labels' to use as point labels
@@ -177,8 +175,6 @@ class Scene(CoreScene):
         assert not labels or len(labels) == 4
         def point(index):
             args = {}
-            if auxiliary:
-                args['auxiliary'] = True
             if labels and labels[index]:
                 args['label'] = labels[index]
             return self.free_point(**args)
@@ -188,8 +184,6 @@ class Scene(CoreScene):
         pt2 = point(2)
         pt0.not_collinear_constraint(pt1, pt2)
         args = {}
-        if auxiliary:
-            args['auxiliary'] = True
         if labels and labels[3]:
             args['label'] = labels[3]
         pt3 = pt0.translated_point(pt1.vector(pt2), **args)
