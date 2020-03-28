@@ -8,7 +8,7 @@ import itertools
 import sympy as sp
 from typing import List
 
-from .property import AngleValueProperty, PointsCoincidenceProperty, PointsCollinearityProperty, LengthsRatioProperty, PointInsideAngleProperty, EquilateralTriangleProperty, PerpendicularVectorsProperty
+from .property import AngleValueProperty, PointsCoincidenceProperty, PointsCollinearityProperty, LengthsRatioProperty, PointInsideAngleProperty, EquilateralTriangleProperty, PerpendicularVectorsProperty, ParallelVectorsProperty
 from .reason import Reason
 from .util import _comment, divide
 
@@ -716,11 +716,11 @@ class CoreScene:
             )
 
         for cnstr in self.constraints(Constraint.Kind.same_direction):
-            #TODO: filter aux points
-            yield (
-                AngleValueProperty(cnstr.params[0].angle(*cnstr.params[1:]), 0),
-                cnstr.comments
-            )
+            if all(param.layer != 'invisible' for param in cnstr.params):
+                yield (
+                    AngleValueProperty(cnstr.params[0].angle(*cnstr.params[1:]), 0),
+                    cnstr.comments
+                )
 
         for cnstr in self.constraints(Constraint.Kind.perpendicular):
             line0 = cnstr.params[0]
@@ -737,6 +737,10 @@ class CoreScene:
                         ),
                         cnstr.comments
                     )
+
+        for cnstr in self.constraints(Constraint.Kind.parallel_vectors):
+            if all(all(p.layer != 'invisible' for p in param.points) for param in cnstr.params):
+                yield (ParallelVectorsProperty(*cnstr.params), cnstr.comments)
 
         for cnstr in self.constraints(Constraint.Kind.inside_angle):
             point = cnstr.params[0]

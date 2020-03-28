@@ -56,8 +56,6 @@ class Explainer:
                     SameOrOppositeSideProperty(line.point0.segment(line.point1), cnst.params[0], cnst.params[1], True),
                     cnst.comments
                 )
-            for cnst in self.scene.constraints(Constraint.Kind.parallel_vectors):
-                self.__reason(ParallelVectorsProperty(*cnst.params), cnst.comments)
             for cnst in self.scene.constraints(Constraint.Kind.angles_ratio):
                 self.__reason(
                     AnglesRatioProperty(cnst.params[0], cnst.params[1], cnst.params[2]),
