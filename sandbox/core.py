@@ -603,16 +603,19 @@ class CoreScene:
             assert self.vertex, 'Cannot construct bisector of angle %s with no vertex' % self
             B = self.vector0.end
             C = self.vector1.end
-            circle = self.vertex.circle_through(B, layer='auxiliary')
+            circle = self.vertex.circle_through(B, layer='invisible')
             line = self.vertex.line_through(C, layer='auxiliary')
-            X = circle.intersection_point(line, layer='auxiliary')
+            X = circle.intersection_point(line, layer='invisible')
             self.vertex.same_direction_constraint(X, C)
             Y = X.translated_point(self.vector0, layer='auxiliary')
             bisector = self.vertex.line_through(Y, **kwargs)
             comment = _comment('[%s %s) is the bisector of %s', self.vertex, Y, self)
             Y.inside_constraint(self, comment=comment)
-            self.ratio_constraint(self.vertex.angle(B, Y), 2, guaranteed=True, comment=comment)
-            self.ratio_constraint(self.vertex.angle(Y, C), 2, guaranteed=True, comment=comment)
+            angle0 = self.vertex.angle(B, Y)
+            angle1 = self.vertex.angle(C, Y)
+            self.ratio_constraint(angle0, 2, guaranteed=True, comment=comment)
+            self.ratio_constraint(angle1, 2, guaranteed=True, comment=comment)
+            angle0.ratio_constraint(angle1, 1, guaranteed=True, comment=comment)
             return bisector
 
         def ratio_constraint(self, angle, ratio, **kwargs):
