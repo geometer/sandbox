@@ -15,8 +15,8 @@ class TestTrianglePoints(PlacementTest):
         Y_bisector = bisectorA.intersection_point(bisectorC, label='Y_bisector')
 
         altitudeA = A.line_through(scene.perpendicular_foot_point(A, B.line_through(C)))
-        altitudeB = B.line_through(scene.perpendicular_foot_point(A, B.line_through(C)))
-        altitudeC = C.line_through(scene.perpendicular_foot_point(A, B.line_through(C)))
+        altitudeB = B.line_through(scene.perpendicular_foot_point(B, A.line_through(C)))
+        altitudeC = C.line_through(scene.perpendicular_foot_point(C, A.line_through(B)))
         X_altitude = altitudeA.intersection_point(altitudeB, label='X_altitude')
         Y_altitude = altitudeA.intersection_point(altitudeC, label='Y_altitude')
 
