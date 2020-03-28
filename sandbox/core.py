@@ -30,7 +30,7 @@ class CoreScene:
             if label:
                 assert scene.get(label) is None, 'Object with label `%s` already exists' % label
             else:
-                pattern = self.__class__.__name__ + ' %d'
+                pattern = self.__class__.prefix + '%d'
                 for index in itertools.count():
                     label = pattern % index
                     if scene.get(label) is None:
@@ -94,6 +94,8 @@ class CoreScene:
             return '%s `%s` %s' % (self.__class__.__name__, self.label, dct)
 
     class Point(Object):
+        prefix = '_P'
+
         class Origin(Enum):
             free              = auto()
             translated        = auto()
@@ -337,6 +339,8 @@ class CoreScene:
             self.inside_constraint(C.angle(B, A), **kwargs)
 
     class Line(Object):
+        prefix = '_L'
+
         def __init__(self, scene, **kwargs):
             CoreScene.Object.__init__(self, scene, **kwargs)
             self.all_points = [self.point0, self.point1]
@@ -410,6 +414,8 @@ class CoreScene:
             assert False, 'Operator not defined for %s and Line' % type(obj)
 
     class Circle(Object):
+        prefix = '_C'
+
         def __init__(self, scene, **kwargs):
             CoreScene.Object.__init__(self, scene, **kwargs)
             self.all_points = []
