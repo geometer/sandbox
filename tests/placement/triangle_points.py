@@ -26,9 +26,9 @@ class TestTrianglePoints(PlacementTest):
         X_perp = perpA.intersection_point(perpB, label='X_perp')
         Y_perp = perpA.intersection_point(perpC, label='Y_perp')
 
-        medianA = A.line_through(scene.middle_point(B, C))
-        medianB = B.line_through(scene.middle_point(A, C))
-        medianC = C.line_through(scene.middle_point(A, B))
+        medianA = A.line_through(B.segment(C).middle_point())
+        medianB = B.line_through(A.segment(C).middle_point())
+        medianC = C.line_through(A.segment(B).middle_point())
         X_median = medianA.intersection_point(medianB, label='X_median')
         Y_median = medianA.intersection_point(medianC, label='Y_median')
 

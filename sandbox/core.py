@@ -318,6 +318,7 @@ class CoreScene:
             The point is inside the object (angle or segment)
             """
             if isinstance(obj, CoreScene.Segment):
+                self.collinear_constraint(*obj.points, **kwargs)
                 self.scene.constraint(Constraint.Kind.inside_segment, self, obj, **kwargs)
             elif isinstance(obj, CoreScene.Angle) and obj.vertex:
                 self.scene.constraint(Constraint.Kind.inside_angle, self, obj, **kwargs)
@@ -526,6 +527,32 @@ class CoreScene:
         def scene(self):
             return self.points[0].scene
 
+        def middle_point(self, **kwargs):
+            """
+            Constructs middle point of the segment
+            """
+            if self.scene.strategy == 'constructs':
+                middle = CoreScene.Point(
+                    self.scene,
+                    CoreScene.Point.Origin.translated,
+                    base=self.points[0],
+                    delta=self.points[0].vector(self.points[1]),
+                    coef=divide(1, 2),
+                    **kwargs
+                )
+                guaranteed = True
+            else: # self.scene.strategy == 'constraints'
+                middle = self.free_point(**kwargs)
+                guaranteed = False
+            half0 = middle.segment(self.points[0])
+            half1 = middle.segment(self.points[1])
+            comment = _comment('%s is the middle of segment %s', middle, self)
+            middle.inside_constraint(self, comments=comment, guaranteed=guaranteed)
+            self.ratio_constraint(half0, 2, comments=comment, guaranteed=guaranteed)
+            self.ratio_constraint(half1, 2, comments=comment, guaranteed=guaranteed)
+            half0.ratio_constraint(half1, 1, comments=comment, guaranteed=guaranteed)
+            return middle
+
         def free_point(self, **kwargs):
             point = self.points[0].line_through(self.points[1], layer='auxiliary').free_point(**kwargs)
             point.inside_constraint(self)
@@ -634,7 +661,9 @@ class CoreScene:
                 return str(_comment('∠ %s %s %s', self.vector0.end, self.vertex, self.vector1.end))
             return '∠(%s, %s)' % (self.vector0, self.vector1)
 
-    def __init__(self):
+    def __init__(self, strategy='constructs'):
+        assert strategy in ('constructs', 'constraints')
+        self.strategy = strategy
         self.__objects = []
         self.validation_constraints = []
         self.adjustment_constraints = []
@@ -756,15 +785,15 @@ class CoreScene:
             )
 
         for cnstr in self.constraints(Constraint.Kind.inside_segment):
-            #TODO: filter aux points
-            yield (
-                PointsCoincidenceProperty(*cnstr.params[1].points, False),
-                cnstr.comments
-            )
-            yield (
-                AngleValueProperty(cnstr.params[0].angle(*cnstr.params[1].points), 180),
-                cnstr.comments
-            )
+            if all(p.layer != 'invisible' for p in (cnstr.params[0], *cnstr.params[1].points)):
+                yield (
+                    PointsCoincidenceProperty(*cnstr.params[1].points, False),
+                    cnstr.comments
+                )
+                yield (
+                    AngleValueProperty(cnstr.params[0].angle(*cnstr.params[1].points), 180),
+                    cnstr.comments
+                )
 
         for cnstr in self.constraints(Constraint.Kind.equilateral):
             yield (

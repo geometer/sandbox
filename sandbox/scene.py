@@ -13,16 +13,6 @@ class Scene(CoreScene):
     Adds composite construction methods to CoreScene.
     """
 
-    def middle_point(self, A, B, **kwargs):
-        """
-        Constructs middle point of the segment AB.
-        """
-        self.assert_point(A)
-        self.assert_point(B)
-        middle = A.ratio_point(B, 1, 1, **kwargs)
-        middle.inside_constraint(A.segment(B), guaranteed=True)
-        return middle
-
     def gravity_centre_point(self, *points, **kwargs):
         """
         Constructs the gravity centre of the points, with equal weights.
@@ -89,7 +79,7 @@ class Scene(CoreScene):
         """
         self.assert_point(point0)
         self.assert_point(point1)
-        middle = self.middle_point(point0, point1, layer='auxiliary')
+        middle = point0.segment(point1).middle_point(layer='auxiliary')
         line = point0.line_through(point1, layer='auxiliary')
         return middle.perpendicular_line(line, **kwargs)
 

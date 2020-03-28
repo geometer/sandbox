@@ -12,7 +12,7 @@ C.distance_constraint('B', 5)
 C.distance_constraint('A', 6)
 
 scene.freeze()
-E = scene.middle_point(A, C, label='E')
+E = A.segment(C).middle_point(label='E')
 
 scene.dump()
 
