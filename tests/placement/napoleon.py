@@ -18,7 +18,7 @@ class TestNapoleon(PlacementTest):
             line = A.line_through(B, layer='auxiliary')
             V = c0.intersection_point(c1, label=C.label + '1')
             V.opposite_side_constraint(C, line)
-            scene.gravity_centre_point(A, B, V, label=C.label + '2')
+            scene.centroid_point((A, B, V), label=C.label + '2')
 
         napoleonic(A, B, C)
         napoleonic(C, A, B)

@@ -11,7 +11,7 @@ class TestMedian(PlacementTest):
         A = scene.free_point(label='A')
         B = scene.free_point(label='B')
         C = scene.free_point(label='C')
-        M = scene.gravity_centre_point(A, B, label='M')
+        M = A.segment(B).middle_point(label='M')
         l = C.line_through(M)
         D = l.free_point(label='D')
         para = scene.parallel_line(A.line_through(B), D)

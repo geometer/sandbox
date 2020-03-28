@@ -1,5 +1,3 @@
-# https://www.facebook.com/groups/parmenides52/, problem 4594
-
 from sandbox import Scene, iterative_placement
 from sandbox.hunter import Hunter
 from sandbox.explainer import Explainer

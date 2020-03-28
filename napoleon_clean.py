@@ -7,7 +7,7 @@ from sandbox.explainer import Explainer
 from sandbox.propertyset import PropertySet
 from sandbox.util import _comment
 
-scene = Scene()
+scene = Scene(strategy='constraints')
 
 A, B, C = scene.triangle(labels=['A', 'B', 'C'])
 

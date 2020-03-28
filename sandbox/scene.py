@@ -13,19 +13,6 @@ class Scene(CoreScene):
     Adds composite construction methods to CoreScene.
     """
 
-    def gravity_centre_point(self, *points, **kwargs):
-        """
-        Constructs the gravity centre of the points, with equal weights.
-        """
-        assert len(points) > 0
-        for pnt in points:
-            self.assert_point(pnt)
-
-        if len(points) == 1:
-            return points[0]
-        intermediate = self.gravity_centre_point(*points[1:], layer='auxiliary')
-        return points[0].ratio_point(intermediate, 1, len(points) - 1, **kwargs)
-
     def parallel_line(self, line, point, **kwargs):
         """
         Constructs a line parallel to the given line through the given point.
@@ -47,8 +34,20 @@ class Scene(CoreScene):
         altitude0 = self.altitude(triangle, triangle[0], layer='auxiliary')
         altitude1 = self.altitude(triangle, triangle[1], layer='auxiliary')
         centre = altitude0.intersection_point(altitude1, **kwargs)
-        altitude2 = self.altitude(triangle, triangle[2], layer='auxiliary')
-        centre.belongs_to(altitude2)
+        #altitude2 = self.altitude(triangle, triangle[2], layer='auxiliary')
+        #centre.belongs_to(altitude2)
+        return centre
+
+    def centroid_point(self, triangle, **kwargs):
+        """
+        Centroid of the triangle (intersection of the medians)
+        """
+        self.triangle_constraint(triangle)
+        median0 = triangle[0].line_through(triangle[1].segment(triangle[2]).middle_point(layer='auxiliary'), layer='auxiliary')
+        median1 = triangle[1].line_through(triangle[2].segment(triangle[0]).middle_point(layer='auxiliary'), layer='auxiliary')
+        centre = median0.intersection_point(median1, **kwargs)
+        #median2 = triangle[2].line_through(triangle[0].segment(triangle[1]).middle_point(layer='auxiliary'), layer='auxiliary')
+        #centre.belongs_to(median2)
         return centre
 
     def circumcentre_point(self, triangle, **kwargs):
@@ -56,7 +55,14 @@ class Scene(CoreScene):
         Circumcentre of the triangle (i.e., centre of the circumcircle)
         """
         self.triangle_constraint(triangle)
-        centre = self.free_point(**kwargs)
+        if self.strategy == 'constructs':
+            bisector0 = self.perpendicular_bisector_line(triangle[0], triangle[1], layer='auxiliary')
+            bisector1 = self.perpendicular_bisector_line(triangle[0], triangle[2], layer='auxiliary')
+            centre = bisector0.intersection_point(bisector1, **kwargs)
+            #bisector2 = self.perpendicular_bisector_line(triangle[1], triangle[2], layer='auxiliary')
+            #centre.belongs_to(bisector2)
+        else: #sefl.scene.strategy == 'constraints'
+            centre = self.free_point(**kwargs)
         for seg0, seg1 in itertools.combinations([centre.segment(v) for v in triangle], 2):
             seg0.congruent_constraint(
                 seg1,
@@ -90,9 +96,9 @@ class Scene(CoreScene):
         self.triangle_constraint(triangle)
         bisector0 = triangle[0].angle(triangle[1], triangle[2]).bisector_line(layer='auxiliary')
         bisector1 = triangle[1].angle(triangle[0], triangle[2]).bisector_line(layer='auxiliary')
-        bisector2 = triangle[2].angle(triangle[0], triangle[1]).bisector_line(layer='auxiliary')
+        #bisector2 = triangle[2].angle(triangle[0], triangle[1]).bisector_line(layer='auxiliary')
         centre = bisector0.intersection_point(bisector1, **kwargs)
-        centre.belongs_to(bisector2)
+        #centre.belongs_to(bisector2)
         centre.inside_triangle_constraint(*triangle, comment=_comment('%s is incentre of %s %s %s', centre, *triangle))
         return centre
 
