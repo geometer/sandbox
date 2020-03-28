@@ -634,7 +634,7 @@ class Explainer:
                     angle = vertex.angle(*segment.points)
                     yield (
                         PointInsideAngleProperty(av.angle.vertex, angle),
-                        _comment('%s lies inside a segment with endoints on sides of %s', av.angle.vertex, angle),
+                        _comment('%s lies inside a segment with endpoints on sides of %s', av.angle.vertex, angle),
                         [av, ncl]
                     )
                     yield (
