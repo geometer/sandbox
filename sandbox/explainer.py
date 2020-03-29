@@ -894,10 +894,10 @@ class Explainer:
                     (four[2], four[3], four[0], four[1])
                 )
 
-            for segment0, segment1, premises in self.context.unitary_ratios():
+            for segment0, segment1, comment, premises in self.context.unitary_ratios():
                 yield (
                     LengthsRatioProperty(segment0, segment1, 1),
-                    'Transitivity',
+                    comment,
                     premises
                 )
 
@@ -956,7 +956,7 @@ class Explainer:
                     for j in [j for j in range(0, 3) if j != i]:
                         yield (
                             LengthsRatioProperty(side_of(st.ABC, j), side_of(st.DEF, j), ratio),
-                            'Equal sides ratio in similar triangles',
+                            'Sides ratio in similar triangles',
                             [st, lr]
                         )
                     break

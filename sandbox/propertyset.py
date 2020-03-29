@@ -4,7 +4,7 @@ import networkx as nx
 from .property import AngleValueProperty, AnglesRatioProperty, LengthsRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthsRatiosProperty
 from .reason import Reason
 from .stats import Stats
-from .util import divide
+from .util import _comment, divide
 
 class ELRPropertySet:
     class Family:
@@ -37,14 +37,14 @@ class ELRPropertySet:
 
         def explanation(self, ratio0, ratio1):
             if ratio0 not in self.ratio_set:
-                return None
+                return (None, None)
             if ratio1 not in self.ratio_set:
-                return None
+                return (None, None)
             path = nx.algorithms.shortest_path(self.premises_graph, ratio0, ratio1)
-            premises = []
-            for i, j in zip(path[:-1], path[1:]):
-                premises.append(self.premises_graph[i][j]['prop'])
-            return premises
+            pattern = ' = '.join(['|%s| / |%s|'] * len(path))
+            comment = _comment(pattern, *sum(path, ()))
+            premises = [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
+            return (comment, premises)
 
     def __init__(self):
         self.families = []
@@ -107,7 +107,7 @@ class ELRPropertySet:
     def explanation(self, ratio0, ratio1):
         fam, order = self.__find_family(ratio0)
         if fam is None:
-            return None
+            return (None, None)
         if order:
             return fam.explanation(ratio0, ratio1)
         return fam.explanation(tuple(reversed(ratio0)), tuple(reversed(ratio1)))
@@ -158,9 +158,9 @@ class PropertySet:
         for fam in self.__elrs.families:
             for ratio0, ratio1 in itertools.combinations(fam.ratio_set, 2):
                 if ratio0[0] == ratio1[0]:
-                    yield (ratio0[1], ratio1[1], fam.explanation(ratio0, ratio1))
+                    yield (ratio0[1], ratio1[1], *fam.explanation(ratio0, ratio1))
                 elif ratio0[1] == ratio1[1]:
-                    yield (ratio0[0], ratio1[0], fam.explanation(ratio0, ratio1))
+                    yield (ratio0[0], ratio1[0], *fam.explanation(ratio0, ratio1))
 
     def list(self, property_type, keys=None):
         if keys:
@@ -220,7 +220,7 @@ class PropertySet:
         if existing:
             return existing
         if prop in self.__elrs:
-            prop.reason = Reason(-2, -2, 'Transitivity', self.__elrs.explanation((segment0, segment1), (segment2, segment3)))
+            prop.reason = Reason(-2, -2, *self.__elrs.explanation((segment0, segment1), (segment2, segment3)))
             prop.reason.obsolete = False
             return prop
 
