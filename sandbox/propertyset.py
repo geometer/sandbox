@@ -54,37 +54,37 @@ class ELRPropertySet:
             found = fam.find_ratio(ratio)
             if found != 0:
                 return (fam, found == 1)
-        return None
+        return (None, None)
 
     def __add(self, ratio0, ratio1, prop):
-        found0 = self.__find_family(ratio0)
-        found1 = self.__find_family(ratio1)
-        if found0 and found1:
-            if found0[0] == found1[0]:
-                if found0[1] != found1[1]:
-                    for ratio in list(found0[0].ratio_set):
-                        found0[0].add_ratio(tuple(reversed(ratio)))
+        fam0, order0 = self.__find_family(ratio0)
+        fam1, order1 = self.__find_family(ratio1)
+        if fam0 and fam1:
+            if fam0 == fam1:
+                if order0 != order1:
+                    for ratio in list(fam0.ratio_set):
+                        fam0.add_ratio(tuple(reversed(ratio)))
             else:
-                if found0[1] == found1[1]:
-                    found0[0].ratio_set.update(found1[0].ratio_set)
+                if order0 == order1:
+                    fam0.ratio_set.update(fam1.ratio_set)
                 else:
-                    for ratio in found1[0].ratio_set:
-                        found0[0].add_ratio(tuple(reversed(ratio)))
-                found0[0].premises_graph.add_edges_from(found1[0].premises_graph.edges)
-                for v0, v1 in found1[0].premises_graph.edges:
-                    found0[0].premises_graph[v0][v1].update(found1[0].premises_graph[v0][v1])
-                self.families.remove(found1[0])
-            found0[0].add_property(prop)
-        elif found0:
-            found0[0].add_ratio(ratio1 if found0[1] else tuple(reversed(ratio1)))
-            if found0[1] and tuple(reversed(ratio0)) in found0[0].ratio_set:
-                found0[0].add_ratio(tuple(reversed(ratio1)))
-            found0[0].add_property(prop)
-        elif found1:
-            found1[0].add_ratio(ratio0 if found1[1] else tuple(reversed(ratio0)))
-            if found1[1] and tuple(reversed(ratio1)) in found1[0].ratio_set:
-                found1[0].add_ratio(tuple(reversed(ratio0)))
-            found1[0].add_property(prop)
+                    for ratio in fam1.ratio_set:
+                        fam0.add_ratio(tuple(reversed(ratio)))
+                fam0.premises_graph.add_edges_from(fam1.premises_graph.edges)
+                for v0, v1 in fam1.premises_graph.edges:
+                    fam0.premises_graph[v0][v1].update(fam1.premises_graph[v0][v1])
+                self.families.remove(fam1)
+            fam0.add_property(prop)
+        elif fam0:
+            fam0.add_ratio(ratio1 if order0 else tuple(reversed(ratio1)))
+            if order0 and tuple(reversed(ratio0)) in fam0.ratio_set:
+                fam0.add_ratio(tuple(reversed(ratio1)))
+            fam0.add_property(prop)
+        elif fam1:
+            fam1.add_ratio(ratio0 if order1 else tuple(reversed(ratio0)))
+            if order1 and tuple(reversed(ratio1)) in fam1.ratio_set:
+                fam1.add_ratio(tuple(reversed(ratio0)))
+            fam1.add_property(prop)
         else:
             fam = ELRPropertySet.Family()
             fam.add_ratio(ratio0)
@@ -93,24 +93,24 @@ class ELRPropertySet:
             self.families.append(fam)
 
     def __contains(self, ratio0, ratio1):
-        found = self.__find_family(ratio0)
-        if found is None:
+        fam, order = self.__find_family(ratio0)
+        if fam is None:
             return False
-        if found[1]:
-            return ratio1 in found[0].ratio_set
-        return tuple(reversed(ratio1)) in found[0].ratio_set
+        if order:
+            return ratio1 in fam.ratio_set
+        return tuple(reversed(ratio1)) in fam.ratio_set
 
     def add(self, prop):
         self.__add(prop.segments[0:2], prop.segments[2:4], prop)
         self.__add((prop.segments[0], prop.segments[2]), (prop.segments[1], prop.segments[3]), prop)
 
     def explanation(self, ratio0, ratio1):
-        fam = self.__find_family(ratio0)
+        fam, order = self.__find_family(ratio0)
         if fam is None:
             return None
-        if fam[1]:
-            return fam[0].explanation(ratio0, ratio1)
-        return fam[0].explanation(tuple(reversed(ratio0)), tuple(reversed(ratio1)))
+        if order:
+            return fam.explanation(ratio0, ratio1)
+        return fam.explanation(tuple(reversed(ratio0)), tuple(reversed(ratio1)))
 
     def __contains__(self, prop):
         return self.__contains(prop.segments[0:2], prop.segments[2:4]) or \
