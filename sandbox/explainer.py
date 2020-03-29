@@ -894,7 +894,7 @@ class Explainer:
                     (four[2], four[3], four[0], four[1])
                 )
 
-            for segment0, segment1, comment, premises in self.context.unitary_ratios():
+            for segment0, segment1, comment, premises in self.context.length_ratios_equal_to_one():
                 yield (
                     LengthRatioProperty(segment0, segment1, 1),
                     comment,

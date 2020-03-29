@@ -229,7 +229,7 @@ class PropertySet:
         elif type_key == EqualLengthRatiosProperty:
             self.__elrs.add(prop)
 
-    def unitary_ratios(self):
+    def length_ratios_equal_to_one(self):
         for fam in self.__elrs.families:
             for ratio0, ratio1 in itertools.combinations(fam.ratio_set, 2):
                 if ratio0[0] == ratio1[0]:
