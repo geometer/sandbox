@@ -1,7 +1,7 @@
 import itertools
 import networkx as nx
 
-from .property import AngleValueProperty, AnglesRatioProperty, LengthsRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthsRatiosProperty
+from .property import AngleValueProperty, AnglesRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty
 from .reason import Reason
 from .stats import Stats
 from .util import _comment, divide
@@ -9,6 +9,7 @@ from .util import _comment, divide
 class ELRPropertySet:
     class Family:
         def __init__(self):
+            self.ratio_value = None
             self.ratio_set = set()
             self.premises_graph = nx.Graph()
 
@@ -16,17 +17,63 @@ class ELRPropertySet:
             if ratio is self.ratio_set:
                 return
             if tuple(reversed(ratio)) in self.ratio_set:
-                for r in list(self.ratio_set):
-                    self.ratio_set.add(tuple(reversed(r)))
+                self.symmetrize()
             else:
                 self.ratio_set.add(ratio)
 
+        def symmetrize(self):
+            for ratio in list(self.ratio_set):
+                self.ratio_set.add(tuple(reversed(ratio)))
+
+        def merge(self, other, inverse):
+            if self.ratio_value is not None:
+                # TODO: better way to report contradiction
+                if other.ratio_value is not None:
+                    value = divide(1, self.ratio_value) if inverse else self.ratio_value
+                    assert other.ratio_value == value, 'Contradiction'
+            elif other.ratio_value is not None:
+                self.ratio_value = divide(1, other.ratio_value) if inverse else other.ratio_value
+
+            if inverse:
+                for ratio in other.ratio_set:
+                    self.add_ratio(tuple(reversed(ratio)))
+            else:
+                self.ratio_set.update(other.ratio_set)
+            self.premises_graph.add_edges_from(other.premises_graph.edges)
+            for v0, v1 in other.premises_graph.edges:
+                self.premises_graph[v0][v1].update(other.premises_graph[v0][v1])
+
         def add_property(self, prop):
-            segs = prop.segments
-            self.premises_graph.add_edge((segs[0], segs[1]), (segs[2], segs[3]), prop=prop)
-            self.premises_graph.add_edge((segs[1], segs[0]), (segs[3], segs[2]), prop=prop)
-            self.premises_graph.add_edge((segs[0], segs[2]), (segs[1], segs[3]), prop=prop)
-            self.premises_graph.add_edge((segs[2], segs[0]), (segs[3], segs[1]), prop=prop)
+            if isinstance(prop, EqualLengthRatiosProperty):
+                segs = prop.segments
+                self.premises_graph.add_edge((segs[0], segs[1]), (segs[2], segs[3]), prop=prop)
+                self.premises_graph.add_edge((segs[1], segs[0]), (segs[3], segs[2]), prop=prop)
+                self.premises_graph.add_edge((segs[0], segs[2]), (segs[1], segs[3]), prop=prop)
+                self.premises_graph.add_edge((segs[2], segs[0]), (segs[3], segs[1]), prop=prop)
+            elif isinstance(prop, LengthRatioProperty):
+                if prop.value == 1:
+                    self.symmetrize()
+                reciprocal = divide(1, prop.value)
+                ratio = (prop.segment0, prop.segment1)
+                inversed = tuple(reversed(ratio))
+                if ratio in self.ratio_set:
+                    if inversed in self.ratio_set:
+                        # TODO: better way to report contradiction
+                        assert prop.value == 1, 'Contradiction'
+                    if self.ratio_value is None:
+                        self.ratio_value = prop.value
+                    else:
+                        # TODO: better way to report contradiction
+                        assert prop.value == self.ratio_value, 'Contradiction'
+                else: #inversed in self.ratio_set
+                    if self.ratio_value is None:
+                        self.ratio_value = reciprocal
+                    else:
+                        # TODO: better way to report contradiction
+                        assert reciprocal == self.ratio_value, 'Contradiction: %s != %s' % (reciprocal, self.ratio_value)
+
+                self.premises_graph.add_edge(ratio, (prop.value, ), prop=prop)
+                self.premises_graph.add_edge(inversed, (reciprocal, ), prop=prop)
 
         def find_ratio(self, ratio):
             if ratio in self.ratio_set:
@@ -41,7 +88,7 @@ class ELRPropertySet:
             if ratio1 not in self.ratio_set:
                 return (None, None)
             path = nx.algorithms.shortest_path(self.premises_graph, ratio0, ratio1)
-            pattern = ' = '.join(['|%s| / |%s|'] * len(path))
+            pattern = ' = '.join(['|%s| / |%s|' if len(v) == 2 else '%s' for v in path])
             comment = _comment(pattern, *sum(path, ()))
             premises = [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
             return (comment, premises)
@@ -49,30 +96,54 @@ class ELRPropertySet:
     def __init__(self):
         self.families = []
 
-    def __find_family(self, ratio):
+    def __find_by_ratio(self, ratio):
         for fam in self.families:
             found = fam.find_ratio(ratio)
             if found != 0:
                 return (fam, found == 1)
         return (None, None)
 
-    def __add(self, ratio0, ratio1, prop):
-        fam0, order0 = self.__find_family(ratio0)
-        fam1, order1 = self.__find_family(ratio1)
+    def __find_by_value(self, value):
+        reciprocal = divide(1, value)
+        for fam in self.families:
+            if fam.ratio_value is None:
+                continue
+            if fam.ratio_value == value:
+                return (fam, True)
+            if fam.ratio_value == reciprocal:
+                return (fam, False)
+        return (None, None)
+
+    def __add_lr(self, prop):
+        ratio = (prop.segment0, prop.segment1)
+        fam0, order0 = self.__find_by_ratio(ratio)
+        fam1, order1 = self.__find_by_value(prop.value)
+        if fam0 and fam1:
+            if fam0 == fam1:
+                fam0.add_property(prop)
+            else:
+                fam0.merge(fam1, order0 != order1)
+                self.families.remove(fam1)
+        elif fam0:
+            fam0.add_property(prop)
+        elif fam1:
+            fam1.add_ratio(ratio if order1 else tuple(reversed(ratio)))
+            fam1.add_property(prop)
+        else:
+            fam = ELRPropertySet.Family()
+            fam.add_ratio(ratio)
+            fam.add_property(prop)
+            self.families.append(fam)
+
+    def __add_elr(self, ratio0, ratio1, prop):
+        fam0, order0 = self.__find_by_ratio(ratio0)
+        fam1, order1 = self.__find_by_ratio(ratio1)
         if fam0 and fam1:
             if fam0 == fam1:
                 if order0 != order1:
-                    for ratio in list(fam0.ratio_set):
-                        fam0.add_ratio(tuple(reversed(ratio)))
+                    fam0.symmetrize()
             else:
-                if order0 == order1:
-                    fam0.ratio_set.update(fam1.ratio_set)
-                else:
-                    for ratio in fam1.ratio_set:
-                        fam0.add_ratio(tuple(reversed(ratio)))
-                fam0.premises_graph.add_edges_from(fam1.premises_graph.edges)
-                for v0, v1 in fam1.premises_graph.edges:
-                    fam0.premises_graph[v0][v1].update(fam1.premises_graph[v0][v1])
+                fam0.merge(fam1, order0 != order1)
                 self.families.remove(fam1)
             fam0.add_property(prop)
         elif fam0:
@@ -93,7 +164,7 @@ class ELRPropertySet:
             self.families.append(fam)
 
     def __contains(self, ratio0, ratio1):
-        fam, order = self.__find_family(ratio0)
+        fam, order = self.__find_by_ratio(ratio0)
         if fam is None:
             return False
         if order:
@@ -101,11 +172,14 @@ class ELRPropertySet:
         return tuple(reversed(ratio1)) in fam.ratio_set
 
     def add(self, prop):
-        self.__add(prop.segments[0:2], prop.segments[2:4], prop)
-        self.__add((prop.segments[0], prop.segments[2]), (prop.segments[1], prop.segments[3]), prop)
+        if isinstance(prop, EqualLengthRatiosProperty):
+            self.__add_elr(prop.segments[0:2], prop.segments[2:4], prop)
+            self.__add_elr((prop.segments[0], prop.segments[2]), (prop.segments[1], prop.segments[3]), prop)
+        elif isinstance(prop, LengthRatioProperty):
+            self.__add_lr(prop)
 
     def explanation(self, ratio0, ratio1):
-        fam, order = self.__find_family(ratio0)
+        fam, order = self.__find_by_ratio(ratio0)
         if fam is None:
             return (None, None)
         if order:
@@ -145,13 +219,14 @@ class PropertySet:
             self.__angle_values[prop.angle] = prop
         elif type_key == AnglesRatioProperty:
             self.__angle_ratios[prop.angle_set] = prop
-        elif type_key == LengthsRatioProperty:
+        elif type_key == LengthRatioProperty:
             self.__length_ratios[prop.segment_set] = prop
+            self.__elrs.add(prop)
         elif type_key == PointsCoincidenceProperty:
             self.__coincidence[prop.point_set] = prop
         elif type_key == PointsCollinearityProperty:
             self.__collinearity[prop.point_set] = prop
-        elif type_key == EqualLengthsRatiosProperty:
+        elif type_key == EqualLengthRatiosProperty:
             self.__elrs.add(prop)
 
     def unitary_ratios(self):
@@ -208,21 +283,26 @@ class PropertySet:
         prop = self.__length_ratios.get(frozenset([segment0, segment1]))
         if prop is None:
             return (None, None)
-        return (prop, prop.ratio if prop.segment0 == segment0 else divide(1, prop.ratio))
+        return (prop, prop.value if prop.segment0 == segment0 else divide(1, prop.value))
 
     def congruent_segments_property(self, segment0, segment1):
         prop = self.__length_ratios.get(frozenset([segment0, segment1]))
-        return prop if prop and prop.ratio == 1 else None
+        return prop if prop and prop.value == 1 else None
 
     def equal_length_ratios_property(self, segment0, segment1, segment2, segment3):
-        prop = EqualLengthsRatiosProperty(segment0, segment1, segment2, segment3)
+        prop = EqualLengthRatiosProperty(segment0, segment1, segment2, segment3)
         existing = self[prop]
         if existing:
             return existing
         if prop in self.__elrs:
-            prop.reason = Reason(-2, -2, *self.__elrs.explanation((segment0, segment1), (segment2, segment3)))
+            comment, premises = self.__elrs.explanation((segment0, segment1), (segment2, segment3))
+            # this is a hack TODO: add symmetric properties during adding LengthRatioProperty
+            if comment is None:
+                comment, premises = self.__elrs.explanation((segment0, segment2), (segment1, segment3))
+            prop.reason = Reason(-2, -2, comment, premises)
             prop.reason.obsolete = False
             return prop
+        return None
 
     def intersection_of_lines(self, segment0, segment1):
         key = frozenset([segment0, segment1])

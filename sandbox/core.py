@@ -8,7 +8,7 @@ import itertools
 import sympy as sp
 from typing import List
 
-from .property import AngleValueProperty, PointsCoincidenceProperty, PointsCollinearityProperty, LengthsRatioProperty, PointInsideAngleProperty, EquilateralTriangleProperty, PerpendicularVectorsProperty, ParallelVectorsProperty
+from .property import AngleValueProperty, PointsCoincidenceProperty, PointsCollinearityProperty, LengthRatioProperty, PointInsideAngleProperty, EquilateralTriangleProperty, PerpendicularVectorsProperty, ParallelVectorsProperty
 from .reason import Reason
 from .util import _comment, divide
 
@@ -745,7 +745,7 @@ class CoreScene:
         for cnstr in self.constraints(Constraint.Kind.length_ratio):
             if all(param.layer != 'invisible' for param in [*cnstr.params[0].points, *cnstr.params[1].points]):
                 yield (
-                    LengthsRatioProperty(cnstr.params[0], cnstr.params[1], cnstr.params[2]),
+                    LengthRatioProperty(cnstr.params[0], cnstr.params[1], cnstr.params[2]),
                     cnstr.comments
                 )
 
@@ -814,12 +814,12 @@ class CoreScene:
             if circle.centre not in circle.radius.points:
                 for rad in radiuses:
                     yield (
-                        LengthsRatioProperty(rad, circle.radius, 1),
+                        LengthRatioProperty(rad, circle.radius, 1),
                         [_comment('Distance between centre %s and point %s on the circle of radius |%s|', circle.centre, rad.points[0], circle.radius)]
                     )
             for rad0, rad1 in itertools.combinations(radiuses, 2):
                 yield (
-                    LengthsRatioProperty(rad0, rad1, 1),
+                    LengthRatioProperty(rad0, rad1, 1),
                     [_comment('Two radiuses of the same circle with centre %s', circle.centre)]
                 )
 

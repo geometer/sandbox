@@ -223,11 +223,11 @@ class AnglesRatioProperty(Property):
         if ratio >= 1:
             self.angle0 = angle0
             self.angle1 = angle1
-            self.ratio = normalize_number(ratio)
+            self.value = normalize_number(ratio)
         else:
             self.angle0 = angle1
             self.angle1 = angle0
-            self.ratio = divide(1, ratio)
+            self.value = divide(1, ratio)
 
         self.angle_set = frozenset([angle0, angle1])
         self.__hash = None
@@ -238,10 +238,10 @@ class AnglesRatioProperty(Property):
 
     @property
     def description(self):
-        if self.ratio == 1:
+        if self.value == 1:
             return _comment('%s = %s', self.angle0, self.angle1)
         else:
-            return _comment('%s = %s %s', self.angle0, self.ratio, self.angle1)
+            return _comment('%s = %s %s', self.angle0, self.value, self.angle1)
 
     def __eq__(self, other):
         return isinstance(other, AnglesRatioProperty) and self.angle_set == other.angle_set
@@ -274,7 +274,7 @@ class SumOfAnglesProperty(Property):
     def __hash__(self):
         return hash(SumOfAnglesProperty) + hash(self.angle_set)
 
-class LengthsRatioProperty(Property):
+class LengthRatioProperty(Property):
     """
     Two segment lengths ratio
     """
@@ -282,11 +282,11 @@ class LengthsRatioProperty(Property):
         if ratio >= 1:
             self.segment0 = segment0
             self.segment1 = segment1
-            self.ratio = normalize_number(ratio)
+            self.value = normalize_number(ratio)
         else:
             self.segment0 = segment1
             self.segment1 = segment0
-            self.ratio = divide(1, ratio)
+            self.value = divide(1, ratio)
         self.segment_set = frozenset([segment0, segment1])
 
     def keys(self):
@@ -294,17 +294,17 @@ class LengthsRatioProperty(Property):
 
     @property
     def description(self):
-        if self.ratio == 1:
+        if self.value == 1:
             return _comment('|%s| = |%s|', self.segment0, self.segment1)
-        return _comment('|%s| = %s |%s|', self.segment0, self.ratio, self.segment1)
+        return _comment('|%s| = %s |%s|', self.segment0, self.value, self.segment1)
 
     def __eq__(self, other):
-        return isinstance(other, LengthsRatioProperty) and self.segment_set == other.segment_set
+        return isinstance(other, LengthRatioProperty) and self.segment_set == other.segment_set
 
     def __hash__(self):
-        return hash(LengthsRatioProperty) + hash(self.segment_set)
+        return hash(LengthRatioProperty) + hash(self.segment_set)
 
-class EqualLengthsRatiosProperty(Property):
+class EqualLengthRatiosProperty(Property):
     """
     Two segment lengths ratios are equal
     """
@@ -322,17 +322,17 @@ class EqualLengthsRatiosProperty(Property):
         """
         self.segments = (segment0, segment1, segment2, segment3)
         self.segment_set = frozenset(self.segments)
-        self.key = EqualLengthsRatiosProperty.unique_key(segment0, segment1, segment2, segment3)
+        self.key = EqualLengthRatiosProperty.unique_key(segment0, segment1, segment2, segment3)
 
     @property
     def description(self):
         return _comment('|%s| / |%s| = |%s| / |%s|', *self.segments)
 
     def __eq__(self, other):
-        return isinstance(other, EqualLengthsRatiosProperty) and self.key == other.key
+        return isinstance(other, EqualLengthRatiosProperty) and self.key == other.key
 
     def __hash__(self):
-        return hash(EqualLengthsRatiosProperty) + hash(self.key)
+        return hash(EqualLengthRatiosProperty) + hash(self.key)
 
 class SimilarTrianglesProperty(Property):
     """

@@ -92,38 +92,38 @@ class Explainer:
             def _cs(coef):
                 return '' if coef == 1 else ('%s ' % coef)
 
-            for lr0, lr1 in itertools.combinations(self.context.list(LengthsRatioProperty), 2):
+            for lr0, lr1 in itertools.combinations(self.context.list(LengthRatioProperty), 2):
                 if lr0.reason.obsolete and lr1.reason.obsolete:
                     continue
                 if lr0.segment0 == lr1.segment0:
-                    coef = divide(lr1.ratio, lr0.ratio)
+                    coef = divide(lr1.value, lr0.value)
                     yield (
-                        LengthsRatioProperty(lr0.segment1, lr1.segment1, coef),
-                        _comment('|%s| = %s|%s| = %s|%s|', lr0.segment1, _cs(divide(1, lr0.ratio)), lr0.segment0, _cs(coef), lr1.segment1),
+                        LengthRatioProperty(lr0.segment1, lr1.segment1, coef),
+                        _comment('|%s| = %s|%s| = %s|%s|', lr0.segment1, _cs(divide(1, lr0.value)), lr0.segment0, _cs(coef), lr1.segment1),
                         [lr0, lr1]
                     )
                     pass
                 elif lr0.segment0 == lr1.segment1:
-                    coef = lr1.ratio * lr0.ratio
+                    coef = lr1.value * lr0.value
                     yield (
-                        LengthsRatioProperty(lr1.segment0, lr0.segment1, coef),
-                        _comment('|%s| = %s|%s| = %s|%s|', lr1.segment0, _cs(lr1.ratio), lr0.segment0, _cs(coef), lr0.segment1),
+                        LengthRatioProperty(lr1.segment0, lr0.segment1, coef),
+                        _comment('|%s| = %s|%s| = %s|%s|', lr1.segment0, _cs(lr1.value), lr0.segment0, _cs(coef), lr0.segment1),
                         [lr1, lr0]
                     )
                     pass
                 elif lr0.segment1 == lr1.segment0:
-                    coef = lr1.ratio * lr0.ratio
+                    coef = lr1.value * lr0.value
                     yield (
-                        LengthsRatioProperty(lr0.segment0, lr1.segment1, coef),
-                        _comment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.ratio), lr0.segment1, _cs(coef), lr1.segment1),
+                        LengthRatioProperty(lr0.segment0, lr1.segment1, coef),
+                        _comment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.value), lr0.segment1, _cs(coef), lr1.segment1),
                         [lr0, lr1]
                     )
                     pass
                 elif lr0.segment1 == lr1.segment1:
-                    coef = divide(lr0.ratio, lr1.ratio)
+                    coef = divide(lr0.value, lr1.value)
                     yield (
-                        LengthsRatioProperty(lr0.segment0, lr1.segment0, coef),
-                        _comment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.ratio), lr0.segment1, _cs(coef), lr1.segment0),
+                        LengthRatioProperty(lr0.segment0, lr1.segment0, coef),
+                        _comment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.value), lr0.segment1, _cs(coef), lr1.segment0),
                         [lr0, lr1]
                     )
                     pass
@@ -156,22 +156,22 @@ class Explainer:
                     ar1 = tup[2]
                     #TODO: report contradictions if in used and ratio is different
                     if tup[1]:
-                        prop = AnglesRatioProperty(ar0.angle1, tup[0], divide(ar1.ratio, ar0.ratio))
+                        prop = AnglesRatioProperty(ar0.angle1, tup[0], divide(ar1.value, ar0.value))
                     else:
-                        prop = AnglesRatioProperty(tup[0], ar0.angle1, ar0.ratio * ar1.ratio)
+                        prop = AnglesRatioProperty(tup[0], ar0.angle1, ar0.value * ar1.value)
                     #TODO: better comment
                     yield (prop, 'Transitivity', [ar0, ar1])
                 tuples1 = [t for t in tuples1 if t[0] not in used0 and t[2] not in processed]
                 for tup in tuples1:
                     ar1 = tup[2]
                     if tup[1]:
-                        prop = AnglesRatioProperty(ar0.angle0, tup[0], divide(ar0.ratio, ar1.ratio))
+                        prop = AnglesRatioProperty(ar0.angle0, tup[0], divide(ar0.value, ar1.value))
                     else:
-                        prop = AnglesRatioProperty(ar0.angle0, tup[0], ar0.ratio * ar1.ratio)
+                        prop = AnglesRatioProperty(ar0.angle0, tup[0], ar0.value * ar1.value)
                     #TODO: better comment
                     yield (prop, 'Transitivity', [ar0, ar1])
 
-            for ar in [p for p in self.context.list(AnglesRatioProperty) if p.ratio == 1]:
+            for ar in [p for p in self.context.list(AnglesRatioProperty) if p.value == 1]:
                 set0 = set()
                 set1 = set()
                 for sa in self.context.list(SumOfAnglesProperty, keys=[ar.angle0]):
@@ -242,7 +242,7 @@ class Explainer:
                     [cl0, cl1, ncl]
                 )
 
-            for cs in self.context.list(LengthsRatioProperty):
+            for cs in self.context.list(LengthRatioProperty):
                 seg0 = cs.segment0
                 seg1 = cs.segment1
 
@@ -463,7 +463,7 @@ class Explainer:
                         ratio_reason = self.context.angles_ratio_property(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0))
                         if ratio_reason is None or reasons_are_too_old and ratio_reason.reason.obsolete:
                             continue
-                        if ratio_reason.ratio == 1:
+                        if ratio_reason.value == 1:
                             for prop in AngleValueProperty.generate(lp0.vector(pt0), pt1.vector(lp1), 0):
                                 yield (prop, 'Zigzag', [so, ratio_reason, ne])
 
@@ -597,7 +597,7 @@ class Explainer:
                 if sum_reason is None or ar.reason.obsolete and sum_reason.reason.obsolete and inside_angle_reason.reason.obsolete:
                     continue
                 value = sum_reason.degree
-                second = divide(value, 1 + ar.ratio)
+                second = divide(value, 1 + ar.value)
                 first = value - second
                 #TODO: write comments
                 yield (AngleValueProperty(a0, first), [], [ar, sum_reason, inside_angle_reason])
@@ -684,7 +684,7 @@ class Explainer:
                     continue
                 #a0 + a1 + a2 = 180
                 #a0 + a1 = 180 - a2
-                a1_value = divide(180 - a2_reason.degree, 1 + ar.ratio)
+                a1_value = divide(180 - a2_reason.degree, 1 + ar.value)
                 a0_value = 180 - a2_reason.degree - a1_value
                 comment = _comment('%s + %s + %s = 180º', a0, a1, a2)
                 yield (AngleValueProperty(a0, a0_value), comment, [ar, a2_reason])
@@ -725,7 +725,7 @@ class Explainer:
                     [iso]
                 )
                 yield (
-                    LengthsRatioProperty(
+                    LengthRatioProperty(
                         iso.apex.segment(iso.base.points[0]),
                         iso.apex.segment(iso.base.points[1]),
                         1
@@ -734,7 +734,7 @@ class Explainer:
                     [iso]
                 )
 
-            for cs in [p for p in self.context.list(LengthsRatioProperty) if p.ratio == 1]:
+            for cs in [p for p in self.context.list(LengthRatioProperty) if p.value == 1]:
                 if cs.reason.obsolete:
                     continue
                 common = next((p for p in cs.segment0.points if p in cs.segment1.points), None)
@@ -750,7 +750,7 @@ class Explainer:
                         [cs, cs2]
                     )
 
-            for cs in [p for p in self.context.list(LengthsRatioProperty) if p.ratio == 1]:
+            for cs in [p for p in self.context.list(LengthRatioProperty) if p.value == 1]:
                 if cs.segment1.points[0] in cs.segment0.points:
                     apex = cs.segment1.points[0]
                     base0 = cs.segment1.points[1]
@@ -769,7 +769,7 @@ class Explainer:
                     )
 
             for ar in self.context.list(AnglesRatioProperty):
-                if ar.ratio != 1:
+                if ar.value != 1:
                     continue
                 if len(ar.angle0.points) != 3 or ar.angle0.points != ar.angle1.points:
                     continue
@@ -795,7 +795,7 @@ class Explainer:
                     )
                 for i, j in itertools.combinations(range(0, 3), 2):
                     yield (
-                        LengthsRatioProperty(side_of(equ.ABC, i), side_of(equ.ABC, j), 1),
+                        LengthRatioProperty(side_of(equ.ABC, i), side_of(equ.ABC, j), 1),
                         _comment('Sides of equilateral △ %s %s %s', *equ.ABC),
                         [equ]
                     )
@@ -806,24 +806,24 @@ class Explainer:
                 if value:
                     if ar_is_too_old and value.reason.obsolete:
                         continue
-                    if ar.ratio == 1:
+                    if ar.value == 1:
                         comment = _comment('%s = %s = %sº', ar.angle1, ar.angle0, value.degree)
                     else:
-                        comment = _comment('%s = %s / %s = %sº / %s', ar.angle1, ar.angle0, ar.ratio, value.degree, ar.ratio)
+                        comment = _comment('%s = %s / %s = %sº / %s', ar.angle1, ar.angle0, ar.value, value.degree, ar.value)
                     yield (
-                        AngleValueProperty(ar.angle1, divide(value.degree, ar.ratio)),
+                        AngleValueProperty(ar.angle1, divide(value.degree, ar.value)),
                         comment, [ar, value]
                     )
                 else:
                     value = self.context.angle_value_property(ar.angle1)
                     if value is None or ar_is_too_old and value.reason.obsolete:
                         continue
-                    if ar.ratio == 1:
+                    if ar.value == 1:
                         comment = _comment('%s = %s = %sº', ar.angle0, ar.angle1, value.degree)
                     else:
-                        comment = _comment('%s = %s * %s = %sº * %s', ar.angle0, ar.angle1, ar.ratio, value.degree, ar.ratio)
+                        comment = _comment('%s = %s * %s = %sº * %s', ar.angle0, ar.angle1, ar.value, value.degree, ar.value)
                     yield (
-                        AngleValueProperty(ar.angle0, value.degree * ar.ratio),
+                        AngleValueProperty(ar.angle0, value.degree * ar.value),
                         comment, [ar, value]
                     )
 
@@ -896,7 +896,7 @@ class Explainer:
 
             for segment0, segment1, comment, premises in self.context.unitary_ratios():
                 yield (
-                    LengthsRatioProperty(segment0, segment1, 1),
+                    LengthRatioProperty(segment0, segment1, 1),
                     comment,
                     premises
                 )
@@ -911,14 +911,14 @@ class Explainer:
                     side11 = side_of(st.DEF, j)
                     if side00 == side10:
                         yield (
-                            LengthsRatioProperty(side01, side11, 1),
+                            LengthRatioProperty(side01, side11, 1),
                             'Ratios of sides in similar triangles',
                             [st]
                         )
                         continue
                     if side01 == side11:
                         yield (
-                            LengthsRatioProperty(side00, side10, 1),
+                            LengthRatioProperty(side00, side10, 1),
                             'Ratios of sides in similar triangles',
                             [st]
                         )
@@ -926,7 +926,7 @@ class Explainer:
                     cs = self.context.congruent_segments_property(side00, side10)
                     if cs:
                         yield (
-                            LengthsRatioProperty(side01, side11, 1),
+                            LengthRatioProperty(side01, side11, 1),
                             'Ratios of sides in similar triangles',
                             [st, cs]
                         )
@@ -934,13 +934,13 @@ class Explainer:
                     cs = self.context.congruent_segments_property(side01, side11)
                     if cs:
                         yield (
-                            LengthsRatioProperty(side00, side10, 1),
+                            LengthRatioProperty(side00, side10, 1),
                             'Ratios of sides in similar triangles',
                             [st, cs]
                         )
                         continue
                     yield (
-                        EqualLengthsRatiosProperty(side00, side10, side01, side11),
+                        EqualLengthRatiosProperty(side00, side10, side01, side11),
                         'Ratios of sides in similar triangles',
                         [st]
                     )
@@ -955,7 +955,7 @@ class Explainer:
                         break
                     for j in [j for j in range(0, 3) if j != i]:
                         yield (
-                            LengthsRatioProperty(side_of(st.ABC, j), side_of(st.DEF, j), ratio),
+                            LengthRatioProperty(side_of(st.ABC, j), side_of(st.DEF, j), ratio),
                             'Sides ratio in similar triangles',
                             [st, lr]
                         )
@@ -969,7 +969,7 @@ class Explainer:
                     segment1 = side_of(ct.DEF, i)
                     if segment0 != segment1:
                         yield (
-                            LengthsRatioProperty(segment0, segment1, 1),
+                            LengthRatioProperty(segment0, segment1, 1),
                             'Corresponding sides in congruent triangles',
                             [ct]
                         )
@@ -1078,7 +1078,7 @@ class Explainer:
                     [av]
                 )
 
-            congruent_angles = [ar for ar in self.context.list(AnglesRatioProperty) if ar.ratio == 1 and ar.angle0.vertex and ar.angle1.vertex]
+            congruent_angles = [ar for ar in self.context.list(AnglesRatioProperty) if ar.value == 1 and ar.angle0.vertex and ar.angle1.vertex]
             congruent_angles_groups = {}
             for ca in congruent_angles:
                 key = frozenset([frozenset(ca.angle0.points), frozenset(ca.angle1.points)])
@@ -1267,7 +1267,7 @@ class Explainer:
                         [rsn0, rsn1, ca]
                     )
 
-            congruent_segments = [p for p in self.context.list(LengthsRatioProperty) if p.ratio == 1]
+            congruent_segments = [p for p in self.context.list(LengthRatioProperty) if p.value == 1]
             def common_point(segment0, segment1):
                 if segment0.points[0] in segment1.points:
                     if segment0.points[1] in segment1.points:
@@ -1309,8 +1309,8 @@ class Explainer:
                                 [cs0, cs1, cs2]
                             )
 
-            for ps0, ps1 in itertools.combinations(self.context.list(LengthsRatioProperty), 2):
-                if ps0.ratio == 1 or ps0.ratio != ps1.ratio:
+            for ps0, ps1 in itertools.combinations(self.context.list(LengthRatioProperty), 2):
+                if ps0.value == 1 or ps0.value != ps1.value:
                     continue
                 ps_are_too_old = ps0.reason.obsolete and ps1.reason.obsolete
                 common0 = common_point(ps0.segment0, ps1.segment0)
@@ -1325,7 +1325,7 @@ class Explainer:
                 if ncl is None or ps_are_too_old and ncl.reason.obsolete:
                     continue
                 ps2 = self.context.congruent_segments_property(third0.as_segment, third1.as_segment)
-                if ps2 and ps2.ratio == ps0.ratio:
+                if ps2 and ps2.value == ps0.value:
                     yield (
                         SimilarTrianglesProperty(
                             (common0, *third0.points), (common1, *third1.points)
@@ -1381,7 +1381,7 @@ class Explainer:
                 sides = [side_of(triangle, i) for i in range(0, 3)]
                 for (sine0, side0), (sine1, side1) in itertools.combinations(zip(sines, sides), 2):
                     yield (
-                        LengthsRatioProperty(side0, side1, sine0 / sine1),
+                        LengthRatioProperty(side0, side1, sine0 / sine1),
                         _comment('Law of sines for △ %s %s %s', *triangle),
                         [av0, av1]
                     )
@@ -1461,7 +1461,7 @@ class Explainer:
                         [sco0, sco1]
                     )
 
-            for ca in [p for p in self.context.list(AnglesRatioProperty) if p.ratio == 1]:
+            for ca in [p for p in self.context.list(AnglesRatioProperty) if p.value == 1]:
                 vertex = ca.angle0.vertex
                 if vertex is None or vertex != ca.angle1.vertex:
                     continue

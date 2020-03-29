@@ -249,7 +249,7 @@ class Hunter:
 
         for fam in families:
             for vec0, vec1 in itertools.combinations(fam, 2):
-                self.__add(LengthsRatioProperty(vec0.as_segment, vec1.as_segment, 1))
+                self.__add(LengthRatioProperty(vec0.as_segment, vec1.as_segment, 1))
 
     def __hunt_proportional_segments(self, vectors):
         families = []
