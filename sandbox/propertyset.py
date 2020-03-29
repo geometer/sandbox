@@ -1,4 +1,5 @@
 import itertools
+import networkx as nx
 
 from .property import AngleValueProperty, AnglesRatioProperty, LengthsRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthsRatiosProperty
 from .reason import Reason
@@ -9,7 +10,7 @@ class ELRPropertySet:
     class Family:
         def __init__(self):
             self.ratio_set = set()
-            self.premises = []
+            self.premises_graph = nx.Graph()
 
         def add_ratio(self, ratio):
             if ratio is self.ratio_set:
@@ -19,6 +20,13 @@ class ELRPropertySet:
                     self.ratio_set.add(tuple(reversed(r)))
             else:
                 self.ratio_set.add(ratio)
+
+        def add_property(self, prop):
+            segs = prop.segments
+            self.premises_graph.add_edge((segs[0], segs[1]), (segs[2], segs[3]), prop=prop)
+            self.premises_graph.add_edge((segs[1], segs[0]), (segs[3], segs[2]), prop=prop)
+            self.premises_graph.add_edge((segs[0], segs[2]), (segs[1], segs[3]), prop=prop)
+            self.premises_graph.add_edge((segs[2], segs[0]), (segs[3], segs[1]), prop=prop)
 
         def find_ratio(self, ratio):
             if ratio in self.ratio_set:
@@ -32,8 +40,11 @@ class ELRPropertySet:
                 return None
             if ratio1 not in self.ratio_set:
                 return None
-            #TODO: collect real set
-            return list(self.premises)
+            path = nx.algorithms.shortest_path(self.premises_graph, ratio0, ratio1)
+            premises = []
+            for i, j in zip(path[:-1], path[1:]):
+                premises.append(self.premises_graph[i][j]['prop'])
+            return premises
 
     def __init__(self):
         self.families = []
@@ -53,30 +64,32 @@ class ELRPropertySet:
                 if found0[1] != found1[1]:
                     for ratio in list(found0[0].ratio_set):
                         found0[0].add_ratio(tuple(reversed(ratio)))
-            elif found0[1] == found1[1]:
-                found0[0].ratio_set.update(found1[0].ratio_set)
-                found0[0].premises += found1[0].premises
-                self.families.remove(found1[0])
             else:
-                for ratio in found1[0].ratio_set:
-                    found0[0].add_ratio(tuple(reversed(ratio)))
+                if found0[1] == found1[1]:
+                    found0[0].ratio_set.update(found1[0].ratio_set)
+                else:
+                    for ratio in found1[0].ratio_set:
+                        found0[0].add_ratio(tuple(reversed(ratio)))
+                found0[0].premises_graph.add_edges_from(found1[0].premises_graph.edges)
+                for v0, v1 in found1[0].premises_graph.edges:
+                    found0[0].premises_graph[v0][v1].update(found1[0].premises_graph[v0][v1])
                 self.families.remove(found1[0])
-            found0[0].premises.append(prop)
+            found0[0].add_property(prop)
         elif found0:
             found0[0].add_ratio(ratio1 if found0[1] else tuple(reversed(ratio1)))
             if found0[1] and tuple(reversed(ratio0)) in found0[0].ratio_set:
                 found0[0].add_ratio(tuple(reversed(ratio1)))
-            found0[0].premises.append(prop)
+            found0[0].add_property(prop)
         elif found1:
             found1[0].add_ratio(ratio0 if found1[1] else tuple(reversed(ratio0)))
             if found1[1] and tuple(reversed(ratio1)) in found1[0].ratio_set:
                 found1[0].add_ratio(tuple(reversed(ratio0)))
-            found1[0].premises.append(prop)
+            found1[0].add_property(prop)
         else:
             fam = ELRPropertySet.Family()
             fam.add_ratio(ratio0)
             fam.add_ratio(ratio1)
-            fam.premises.append(prop)
+            fam.add_property(prop)
             self.families.append(fam)
 
     def __contains(self, ratio0, ratio1):
@@ -110,7 +123,6 @@ class PropertySet:
         self.__angle_values = {} # angle => prop
         self.__angle_ratios = {} # {angle, angle} => prop
         self.__length_ratios = {} # {segment, segment} => prop
-        self.__equals_length_ratios = {} # key(four segments) => prop
         self.__elrs = ELRPropertySet()
         self.__coincidence = {} # {point, point} => prop
         self.__collinearity = {} # {point, point, point} => prop
@@ -140,7 +152,6 @@ class PropertySet:
         elif type_key == PointsCollinearityProperty:
             self.__collinearity[prop.point_set] = prop
         elif type_key == EqualLengthsRatiosProperty:
-            self.__equals_length_ratios[prop.key] = prop
             self.__elrs.add(prop)
 
     def unitary_ratios(self):
