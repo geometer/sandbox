@@ -1,8 +1,107 @@
 import itertools
 
 from .property import AngleValueProperty, AnglesRatioProperty, LengthsRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthsRatiosProperty
+from .reason import Reason
 from .stats import Stats
 from .util import divide
+
+class ELRPropertySet:
+    class Family:
+        def __init__(self):
+            self.ratio_set = set()
+            self.premises = []
+
+        def add_ratio(self, ratio):
+            if ratio is self.ratio_set:
+                return
+            if tuple(reversed(ratio)) in self.ratio_set:
+                for r in list(self.ratio_set):
+                    self.ratio_set.add(tuple(reversed(r)))
+            else:
+                self.ratio_set.add(ratio)
+
+        def find_ratio(self, ratio):
+            if ratio in self.ratio_set:
+                return 1
+            if tuple(reversed(ratio)) in self.ratio_set:
+                return -1
+            return 0
+
+        def explanation(self, ratio0, ratio1):
+            if ratio0 not in self.ratio_set:
+                return None
+            if ratio1 not in self.ratio_set:
+                return None
+            #TODO: collect real set
+            return list(self.premises)
+
+    def __init__(self):
+        self.families = []
+
+    def __find_family(self, ratio):
+        for fam in self.families:
+            found = fam.find_ratio(ratio)
+            if found != 0:
+                return (fam, found == 1)
+        return None
+
+    def __add(self, ratio0, ratio1, prop):
+        found0 = self.__find_family(ratio0)
+        found1 = self.__find_family(ratio1)
+        if found0 and found1:
+            if found0[0] == found1[0]:
+                if found0[1] != found1[1]:
+                    for ratio in list(found0[0].ratio_set):
+                        found0[0].add_ratio(tuple(reversed(ratio)))
+            elif found0[1] == found1[1]:
+                found0[0].ratio_set.update(found1[0].ratio_set)
+                found0[0].premises += found1[0].premises
+                self.families.remove(found1[0])
+            else:
+                for ratio in found1[0].ratio_set:
+                    found0[0].add_ratio(tuple(reversed(ratio)))
+                self.families.remove(found1[0])
+            found0[0].premises.append(prop)
+        elif found0:
+            found0[0].add_ratio(ratio1 if found0[1] else tuple(reversed(ratio1)))
+            if found0[1] and tuple(reversed(ratio0)) in found0[0].ratio_set:
+                found0[0].add_ratio(tuple(reversed(ratio1)))
+            found0[0].premises.append(prop)
+        elif found1:
+            found1[0].add_ratio(ratio0 if found1[1] else tuple(reversed(ratio0)))
+            if found1[1] and tuple(reversed(ratio1)) in found1[0].ratio_set:
+                found1[0].add_ratio(tuple(reversed(ratio0)))
+            found1[0].premises.append(prop)
+        else:
+            fam = ELRPropertySet.Family()
+            fam.add_ratio(ratio0)
+            fam.add_ratio(ratio1)
+            fam.premises.append(prop)
+            self.families.append(fam)
+
+    def __contains(self, ratio0, ratio1):
+        found = self.__find_family(ratio0)
+        if found is None:
+            return False
+        if found[1]:
+            return ratio1 in found[0].ratio_set
+        return tuple(reversed(ratio1)) in found[0].ratio_set
+
+    def add(self, prop):
+        self.__add(prop.segments[0:2], prop.segments[2:4], prop)
+        self.__add((prop.segments[0], prop.segments[2]), (prop.segments[1], prop.segments[3]), prop)
+
+    def explanation(self, ratio0, ratio1):
+        fam = self.__find_family(ratio0)
+        if fam is None:
+            return None
+        if fam[1]:
+            return fam[0].explanation(ratio0, ratio1)
+        return fam[0].explanation(tuple(reversed(ratio0)), tuple(reversed(ratio1)))
+
+    def __contains__(self, prop):
+        return self.__contains(prop.segments[0:2], prop.segments[2:4]) or \
+            self.__contains((prop.segments[0], prop.segments[2]), (prop.segments[1], prop.segments[3]))
 
 class PropertySet:
     def __init__(self):
@@ -12,6 +111,7 @@ class PropertySet:
         self.__angle_ratios = {} # {angle, angle} => prop
         self.__length_ratios = {} # {segment, segment} => prop
         self.__equals_length_ratios = {} # key(four segments) => prop
+        self.__elrs = ELRPropertySet()
         self.__coincidence = {} # {point, point} => prop
         self.__collinearity = {} # {point, point, point} => prop
         self.__intersections = {} # {segment, segment} => point, [reasons]
@@ -41,6 +141,15 @@ class PropertySet:
             self.__collinearity[prop.point_set] = prop
         elif type_key == EqualLengthsRatiosProperty:
             self.__equals_length_ratios[prop.key] = prop
+            self.__elrs.add(prop)
+
+    def unitary_ratios(self):
+        for fam in self.__elrs.families:
+            for ratio0, ratio1 in itertools.combinations(fam.ratio_set, 2):
+                if ratio0[0] == ratio1[0]:
+                    yield (ratio0[1], ratio1[1], fam.explanation(ratio0, ratio1))
+                elif ratio0[1] == ratio1[1]:
+                    yield (ratio0[0], ratio1[0], fam.explanation(ratio0, ratio1))
 
     def list(self, property_type, keys=None):
         if keys:
@@ -95,7 +204,14 @@ class PropertySet:
         return prop if prop and prop.ratio == 1 else None
 
     def equal_length_ratios_property(self, segment0, segment1, segment2, segment3):
-        return self.__equals_length_ratios.get(EqualLengthsRatiosProperty.unique_key(segment0, segment1, segment2, segment3))
+        prop = EqualLengthsRatiosProperty(segment0, segment1, segment2, segment3)
+        existing = self[prop]
+        if existing:
+            return existing
+        if prop in self.__elrs:
+            prop.reason = Reason(-2, -2, 'Transitivity', self.__elrs.explanation((segment0, segment1), (segment2, segment3)))
+            prop.reason.obsolete = False
+            return prop
 
     def intersection_of_lines(self, segment0, segment1):
         key = frozenset([segment0, segment1])
@@ -139,7 +255,10 @@ class PropertySet:
             by_type[key] = by_type.get(key, 0) + 1
         by_type = [(type_presentation(k), v) for k, v in by_type.items()]
         by_type.sort(key=lambda pair: -pair[1])
-        return Stats(by_type)
+        others = []
+        others.append(('ELR families count', len(self.__elrs.families)))
+        others.append(('ELR count', sum(len(f.ratio_set) for f in self.__elrs.families)))
+        return Stats(by_type + others)
 
     def keys_num(self):
         return len(self.__combined)

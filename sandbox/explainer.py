@@ -894,38 +894,12 @@ class Explainer:
                     (four[2], four[3], four[0], four[1])
                 )
 
-            for st0, st1 in itertools.combinations(self.context.list(EqualLengthsRatiosProperty), 2):
-                if st0.reason.obsolete and st1.reason.obsolete:
-                    continue
-
-                if len(st0.segment_set.intersection(st1.segment_set)) < 2:
-                    continue
-
-                for s0, s1, s2, s3 in half_combinations(st0.segments):
-                    for t0, t1, t2, t3 in all_combinations(st1.segments):
-                        if (s0, s1) == (t0, t1):
-                            if s2 == s3:
-                                yield (
-                                    LengthsRatioProperty(t2, t3, 1), 'Transitivity', [st0, st1]
-                                )
-                            elif s2 == t2:
-                                yield (
-                                    LengthsRatioProperty(s3, t3, 1), 'Transitivity', [st0, st1]
-                                )
-                            elif s3 == t3:
-                                yield (
-                                    LengthsRatioProperty(s2, t2, 1), 'Transitivity', [st0, st1]
-                                )
-                            elif t2 == t3:
-                                yield (
-                                    LengthsRatioProperty(s2, s3, 1), 'Transitivity', [st0, st1]
-                                )
-                            else:
-                                yield (
-                                    EqualLengthsRatiosProperty(
-                                        s2, s3, t2, t3
-                                    ), 'Transitivity', [st0, st1]
-                                )
+            for segment0, segment1, premises in self.context.unitary_ratios():
+                yield (
+                    LengthsRatioProperty(segment0, segment1, 1),
+                    'Transitivity',
+                    premises
+                )
 
             for st in self.context.list(SimilarTrianglesProperty):
                 if st.reason.obsolete:
@@ -1394,23 +1368,23 @@ class Explainer:
                     [ra0, ra1]
                 )
 
-            for av0 in [p for p in self.context.list(AngleValueProperty) if p.angle.vertex and p.degree not in (0, 180)]:
-                triangle = (av0.angle.vertex, *av0.angle.endpoints)
-                av1 = self.context.angle_value_property(angle_of(triangle, 1))
-                if av1 is None or av0.reason.obsolete and av1.reason.obsolete:
-                    continue
-                sines = (
-                    sp.sin(sp.pi * av0.degree / 180),
-                    sp.sin(sp.pi * av1.degree / 180),
-                    sp.sin(sp.pi * (180 - av0.degree - av1.degree) / 180)
-                )
-                sides = [side_of(triangle, i) for i in range(0, 3)]
-                for (sine0, side0), (sine1, side1) in itertools.combinations(zip(sines, sides), 2):
-                    yield (
-                        LengthsRatioProperty(side0, side1, sine0 / sine1),
-                        _comment('Law of sines for △ %s %s %s', *triangle),
-                        [av0, av1]
-                    )
+#            for av0 in [p for p in self.context.list(AngleValueProperty) if p.angle.vertex and p.degree not in (0, 180)]:
+#                triangle = (av0.angle.vertex, *av0.angle.endpoints)
+#                av1 = self.context.angle_value_property(angle_of(triangle, 1))
+#                if av1 is None or av0.reason.obsolete and av1.reason.obsolete:
+#                    continue
+#                sines = (
+#                    sp.sin(sp.pi * av0.degree / 180),
+#                    sp.sin(sp.pi * av1.degree / 180),
+#                    sp.sin(sp.pi * (180 - av0.degree - av1.degree) / 180)
+#                )
+#                sides = [side_of(triangle, i) for i in range(0, 3)]
+#                for (sine0, side0), (sine1, side1) in itertools.combinations(zip(sines, sides), 2):
+#                    yield (
+#                        LengthsRatioProperty(side0, side1, sine0 / sine1),
+#                        _comment('Law of sines for △ %s %s %s', *triangle),
+#                        [av0, av1]
+#                    )
 
             for sos in self.context.list(SameOrOppositeSideProperty):
                 if sos.reason.obsolete:
