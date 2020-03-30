@@ -6,7 +6,7 @@ from .reason import Reason
 from .stats import Stats
 from .util import _comment, divide
 
-class ELRPropertySet:
+class LengthRatioPropertySet:
     class Family:
         def __init__(self):
             self.ratio_value = None
@@ -130,7 +130,7 @@ class ELRPropertySet:
             fam1.add_ratio(ratio if order1 else tuple(reversed(ratio)))
             fam1.add_property(prop)
         else:
-            fam = ELRPropertySet.Family()
+            fam = LengthRatioPropertySet.Family()
             fam.add_ratio(ratio)
             fam.add_property(prop)
             self.families.append(fam)
@@ -157,7 +157,7 @@ class ELRPropertySet:
                 fam1.add_ratio(tuple(reversed(ratio0)))
             fam1.add_property(prop)
         else:
-            fam = ELRPropertySet.Family()
+            fam = LengthRatioPropertySet.Family()
             fam.add_ratio(ratio0)
             fam.add_ratio(ratio1)
             fam.add_property(prop)
@@ -197,7 +197,7 @@ class PropertySet:
         self.__angle_values = {} # angle => prop
         self.__angle_ratios = {} # {angle, angle} => prop
         self.__length_ratios = {} # {segment, segment} => prop
-        self.__elrs = ELRPropertySet()
+        self.__elrs = LengthRatioPropertySet()
         self.__coincidence = {} # {point, point} => prop
         self.__collinearity = {} # {point, point, point} => prop
         self.__intersections = {} # {segment, segment} => point, [reasons]
@@ -347,8 +347,6 @@ class PropertySet:
         by_type = [(type_presentation(k), v) for k, v in by_type.items()]
         by_type.sort(key=lambda pair: -pair[1])
         others = []
-        others.append(('ELR families count', len(self.__elrs.families)))
-        others.append(('ELR count', sum(len(f.ratio_set) for f in self.__elrs.families)))
         return Stats(by_type + others)
 
     def keys_num(self):
