@@ -83,14 +83,14 @@ class LengthRatioPropertySet:
         def add_ratio(self, ratio):
             if ratio is self.ratio_set:
                 return
-            if tuple(reversed(ratio)) in self.ratio_set:
+            if (ratio[1], ratio[0]) in self.ratio_set:
                 self.symmetrize()
             else:
                 self.ratio_set.add(ratio)
 
         def symmetrize(self):
             for ratio in list(self.ratio_set):
-                self.ratio_set.add(tuple(reversed(ratio)))
+                self.ratio_set.add((ratio[1], ratio[0]))
 
         def merge(self, other, inverse):
             if self.ratio_value is not None:
@@ -103,7 +103,7 @@ class LengthRatioPropertySet:
 
             if inverse:
                 for ratio in other.ratio_set:
-                    self.add_ratio(tuple(reversed(ratio)))
+                    self.add_ratio((ratio[1], ratio[0]))
             else:
                 self.ratio_set.update(other.ratio_set)
             self.premises_graph.add_edges_from(other.premises_graph.edges)
@@ -122,7 +122,7 @@ class LengthRatioPropertySet:
                     self.symmetrize()
                 reciprocal = divide(1, prop.value)
                 ratio = (prop.segment0, prop.segment1)
-                inversed = tuple(reversed(ratio))
+                inversed = (ratio[1], ratio[0])
                 if ratio in self.ratio_set:
                     if inversed in self.ratio_set:
                         # TODO: better way to report contradiction
@@ -145,7 +145,7 @@ class LengthRatioPropertySet:
         def find_ratio(self, ratio):
             if ratio in self.ratio_set:
                 return 1
-            if tuple(reversed(ratio)) in self.ratio_set:
+            if (ratio[1], ratio[0]) in self.ratio_set:
                 return -1
             return 0
 
@@ -162,6 +162,7 @@ class LengthRatioPropertySet:
 
     def __init__(self):
         self.families = []
+        self.ratio_to_family = {}
 
     def __find_by_ratio(self, ratio):
         for fam in self.families:
@@ -194,7 +195,7 @@ class LengthRatioPropertySet:
         elif fam0:
             fam0.add_property(prop)
         elif fam1:
-            fam1.add_ratio(ratio if order1 else tuple(reversed(ratio)))
+            fam1.add_ratio(ratio if order1 else (ratio[1], ratio[0]))
             fam1.add_property(prop)
         else:
             fam = LengthRatioPropertySet.Family()
@@ -214,14 +215,18 @@ class LengthRatioPropertySet:
                 self.families.remove(fam1)
             fam0.add_property(prop)
         elif fam0:
-            fam0.add_ratio(ratio1 if order0 else tuple(reversed(ratio1)))
-            if order0 and tuple(reversed(ratio0)) in fam0.ratio_set:
-                fam0.add_ratio(tuple(reversed(ratio1)))
+            ratio0_rev = (ratio0[1], ratio0[0])
+            ratio1_rev = (ratio1[1], ratio1[0])
+            fam0.add_ratio(ratio1 if order0 else ratio1_rev)
+            if order0 and ratio0_rev in fam0.ratio_set:
+                fam0.add_ratio(ratio1_rev)
             fam0.add_property(prop)
         elif fam1:
-            fam1.add_ratio(ratio0 if order1 else tuple(reversed(ratio0)))
-            if order1 and tuple(reversed(ratio1)) in fam1.ratio_set:
-                fam1.add_ratio(tuple(reversed(ratio0)))
+            ratio0_rev = (ratio0[1], ratio0[0])
+            ratio1_rev = (ratio1[1], ratio1[0])
+            fam1.add_ratio(ratio0 if order1 else ratio0_rev)
+            if order1 and ratio1_rev in fam1.ratio_set:
+                fam1.add_ratio(ratio0_rev)
             fam1.add_property(prop)
         else:
             fam = LengthRatioPropertySet.Family()
@@ -243,7 +248,7 @@ class LengthRatioPropertySet:
             return (None, None)
         if order:
             return fam.explanation(ratio0, ratio1)
-        return fam.explanation(tuple(reversed(ratio0)), tuple(reversed(ratio1)))
+        return fam.explanation((ratio0[1], ratio0[0]), (ratio1[1], ratio1[0]))
 
 class PropertySet:
     def __init__(self):
