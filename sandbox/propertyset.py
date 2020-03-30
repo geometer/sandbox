@@ -359,7 +359,7 @@ class PropertySet:
         if comment is None:
             return None
         prop.reason = Reason(-2, -2, comment, premises)
-        prop.reason.obsolete = False
+        prop.reason.obsolete = all(p.reason.obsolete for p in premises)
         return prop
 
     def same_cyclic_order_property(self, cycle0, cycle1):
@@ -370,7 +370,7 @@ class PropertySet:
         comment, premises = self.__cyclic_orders.explanation(cycle0, cycle1)
         if comment:
             prop.reason = Reason(-2, -2, comment, premises)
-            prop.reason.obsolete = False
+            prop.reason.obsolete = all(p.reason.obsolete for p in premises)
             return prop
         return None
 
