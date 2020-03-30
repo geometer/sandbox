@@ -165,11 +165,8 @@ class LengthRatioPropertySet:
         self.ratio_to_family = {}
 
     def __find_by_ratio(self, ratio):
-        for fam in self.families:
-            found = fam.find_ratio(ratio)
-            if found != 0:
-                return (fam, found == 1)
-        return (None, None)
+        fam = self.ratio_to_family.get(ratio)
+        return (fam, ratio in fam.ratio_set) if fam else (None, None)
 
     def __find_by_value(self, value):
         reciprocal = divide(1, value)
@@ -186,26 +183,36 @@ class LengthRatioPropertySet:
         ratio = (prop.segment0, prop.segment1)
         fam0, order0 = self.__find_by_ratio(ratio)
         fam1, order1 = self.__find_by_value(prop.value)
+        ratio_rev = (ratio[1], ratio[0])
         if fam0 and fam1:
             if fam0 == fam1:
                 fam0.add_property(prop)
             else:
                 fam0.merge(fam1, order0 != order1)
                 self.families.remove(fam1)
+                for k in list(self.ratio_to_family.keys()):
+                    if self.ratio_to_family[k] == fam1:
+                        self.ratio_to_family[k] = fam0
         elif fam0:
             fam0.add_property(prop)
         elif fam1:
-            fam1.add_ratio(ratio if order1 else (ratio[1], ratio[0]))
+            fam1.add_ratio(ratio if order1 else ratio_rev)
             fam1.add_property(prop)
+            self.ratio_to_family[ratio] = fam1
+            self.ratio_to_family[ratio_rev] = fam1
         else:
             fam = LengthRatioPropertySet.Family()
             fam.add_ratio(ratio)
             fam.add_property(prop)
             self.families.append(fam)
+            self.ratio_to_family[ratio] = fam
+            self.ratio_to_family[ratio_rev] = fam
 
     def __add_elr(self, ratio0, ratio1, prop):
         fam0, order0 = self.__find_by_ratio(ratio0)
         fam1, order1 = self.__find_by_ratio(ratio1)
+        ratio0_rev = (ratio0[1], ratio0[0])
+        ratio1_rev = (ratio1[1], ratio1[0])
         if fam0 and fam1:
             if fam0 == fam1:
                 if order0 != order1:
@@ -213,27 +220,34 @@ class LengthRatioPropertySet:
             else:
                 fam0.merge(fam1, order0 != order1)
                 self.families.remove(fam1)
+                for k in list(self.ratio_to_family.keys()):
+                    if self.ratio_to_family[k] == fam1:
+                        self.ratio_to_family[k] = fam0
             fam0.add_property(prop)
         elif fam0:
-            ratio0_rev = (ratio0[1], ratio0[0])
-            ratio1_rev = (ratio1[1], ratio1[0])
             fam0.add_ratio(ratio1 if order0 else ratio1_rev)
             if order0 and ratio0_rev in fam0.ratio_set:
                 fam0.add_ratio(ratio1_rev)
             fam0.add_property(prop)
+            self.ratio_to_family[ratio1] = fam0
+            self.ratio_to_family[ratio1_rev] = fam0
         elif fam1:
-            ratio0_rev = (ratio0[1], ratio0[0])
-            ratio1_rev = (ratio1[1], ratio1[0])
             fam1.add_ratio(ratio0 if order1 else ratio0_rev)
             if order1 and ratio1_rev in fam1.ratio_set:
                 fam1.add_ratio(ratio0_rev)
             fam1.add_property(prop)
+            self.ratio_to_family[ratio0] = fam1
+            self.ratio_to_family[ratio0_rev] = fam1
         else:
             fam = LengthRatioPropertySet.Family()
             fam.add_ratio(ratio0)
             fam.add_ratio(ratio1)
             fam.add_property(prop)
             self.families.append(fam)
+            self.ratio_to_family[ratio0] = fam
+            self.ratio_to_family[ratio0_rev] = fam
+            self.ratio_to_family[ratio1] = fam
+            self.ratio_to_family[ratio1_rev] = fam
 
     def add(self, prop):
         if isinstance(prop, EqualLengthRatiosProperty):
@@ -344,9 +358,9 @@ class PropertySet:
 
     def lengths_ratio_property_and_value(self, segment0, segment1):
         prop = self.__length_ratios.get(frozenset([segment0, segment1]))
-        if prop is None:
-            return (None, None)
-        return (prop, prop.value if prop.segment0 == segment0 else divide(1, prop.value))
+        if prop is not None:
+            return (prop, prop.value if prop.segment0 == segment0 else divide(1, prop.value))
+        return (None, None)
 
     def congruent_segments_property(self, segment0, segment1):
         prop = self.__length_ratios.get(frozenset([segment0, segment1]))
