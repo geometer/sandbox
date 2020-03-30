@@ -891,6 +891,8 @@ class Explainer:
                 )
 
             for segment0, segment1, comment, premises in self.context.length_ratios_equal_to_one():
+                if all(prop.reason.obsolete for prop in premises):
+                    continue
                 yield (
                     LengthRatioProperty(segment0, segment1, 1),
                     comment,
