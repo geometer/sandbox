@@ -438,7 +438,7 @@ class SameCyclicOrderProperty(Property):
 
     @property
     def description(self):
-        return _comment('Cycles %s and %s have the same order', self.cycle0, self.cycle1)
+        return _comment('%s and %s have the same order', self.cycle0, self.cycle1)
 
     def __eq__(self, other):
         return isinstance(other, SameCyclicOrderProperty) and self.__key == other.__key
