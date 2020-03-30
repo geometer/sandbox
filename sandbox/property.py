@@ -231,7 +231,6 @@ class AnglesRatioProperty(Property):
 
         self.angle_set = frozenset([angle0, angle1])
         self.__hash = None
-        self.penalty = len(angle0.points) + len(angle1.points)
 
     def keys(self):
         return [self.angle0, self.angle1]

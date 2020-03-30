@@ -38,9 +38,7 @@ class Explainer:
         self.__explanation_time = time.time() - start
 
     def __angles_ratio_reasons(self, angle):
-        reasons = self.context.list(AnglesRatioProperty, keys=[angle])
-        reasons.sort(key=lambda prop: prop.penalty)
-        return reasons
+        return self.context.list(AnglesRatioProperty, keys=[angle])
 
     def __explain_all(self):
         def base():
@@ -129,9 +127,7 @@ class Explainer:
                     pass
 
             processed = set()
-            angle_ratios = list(self.context.list(AnglesRatioProperty))
-            angle_ratios.sort(key=lambda prop: prop.penalty)
-            for ar0 in angle_ratios:
+            for ar0 in self.context.list(AnglesRatioProperty):
                 if ar0.reason.obsolete:
                     continue
                 processed.add(ar0)
