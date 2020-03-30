@@ -418,7 +418,7 @@ class Cycle:
         return self.__reversed
 
     def __str__(self):
-        return '%s %s %s' % self.points
+        return '↻ %s %s %s' % self.points
 
     def __eq__(self, other):
         return self.__key == other.__key

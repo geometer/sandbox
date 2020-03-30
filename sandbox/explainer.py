@@ -1409,58 +1409,6 @@ class Explainer:
                     [sos]
                 )
 
-            for sco0, sco1 in itertools.combinations(self.context.list(SameCyclicOrderProperty), 2):
-                if sco0.reason.obsolete and sco1.reason.obsolete:
-                    continue
-                if sco0.cycle0 == sco1.cycle0:
-                    yield (
-                        SameCyclicOrderProperty(sco0.cycle1, sco1.cycle1),
-                        'Transitivity',
-                        [sco0, sco1]
-                    )
-                elif sco0.cycle0 == sco1.cycle1:
-                    yield (
-                        SameCyclicOrderProperty(sco0.cycle1, sco1.cycle0),
-                        'Transitivity',
-                        [sco0, sco1]
-                    )
-                elif sco0.cycle1 == sco1.cycle0:
-                    yield (
-                        SameCyclicOrderProperty(sco0.cycle0, sco1.cycle1),
-                        'Transitivity',
-                        [sco0, sco1]
-                    )
-                elif sco0.cycle1 == sco1.cycle1:
-                    yield (
-                        SameCyclicOrderProperty(sco0.cycle0, sco1.cycle0),
-                        'Transitivity',
-                        [sco0, sco1]
-                    )
-                elif sco0.cycle0 == sco1.cycle0.reversed:
-                    yield (
-                        SameCyclicOrderProperty(sco0.cycle1, sco1.cycle1.reversed),
-                        'Transitivity',
-                        [sco0, sco1]
-                    )
-                elif sco0.cycle0 == sco1.cycle1.reversed:
-                    yield (
-                        SameCyclicOrderProperty(sco0.cycle1, sco1.cycle0.reversed),
-                        'Transitivity',
-                        [sco0, sco1]
-                    )
-                elif sco0.cycle1 == sco1.cycle0.reversed:
-                    yield (
-                        SameCyclicOrderProperty(sco0.cycle0, sco1.cycle1.reversed),
-                        'Transitivity',
-                        [sco0, sco1]
-                    )
-                elif sco0.cycle1 == sco1.cycle1.reversed:
-                    yield (
-                        SameCyclicOrderProperty(sco0.cycle0, sco1.cycle0.reversed),
-                        'Transitivity',
-                        [sco0, sco1]
-                    )
-
             for ca in [p for p in self.context.list(AnglesRatioProperty) if p.value == 1]:
                 vertex = ca.angle0.vertex
                 if vertex is None or vertex != ca.angle1.vertex:
@@ -1471,7 +1419,7 @@ class Explainer:
                     continue
                 cycle0 = Cycle(vertex, *pts0)
                 cycle1 = Cycle(vertex, *pts1)
-                co = self.context[SameCyclicOrderProperty(cycle0, cycle1)]
+                co = self.context.same_cyclic_order_property(cycle0, cycle1)
                 if co:
                     if ca.reason.obsolete and co.reason.obsolete:
                         continue
@@ -1481,7 +1429,7 @@ class Explainer:
                         [ca, co]
                     )
                 else:
-                    co = self.context[SameCyclicOrderProperty(cycle0, cycle1.reversed)]
+                    co = self.context.same_cyclic_order_property(cycle0, cycle1.reversed)
                     if co is None or ca.reason.obsolete and co.reason.obsolete:
                         continue
                     yield (

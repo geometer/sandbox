@@ -1,10 +1,77 @@
 import itertools
 import networkx as nx
 
-from .property import AngleValueProperty, AnglesRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty
+from .property import AngleValueProperty, AnglesRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty
 from .reason import Reason
 from .stats import Stats
 from .util import _comment, divide
+
+class CyclicOrderPropertySet:
+    class Family:
+        def __init__(self):
+            self.cycle_set = set()
+            self.premises_graph = nx.Graph()
+
+        def explanation(self, cycle0, cycle1):
+            if cycle0 not in self.cycle_set or cycle1 not in self.cycle_set:
+                return (None, None)
+
+            path = nx.algorithms.shortest_path(self.premises_graph, cycle0, cycle1)
+            pattern = ' = '.join(['%s'] * len(path))
+            comment = _comment(pattern, *path)
+            premises = [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
+            return (comment, premises)
+
+    def __init__(self):
+        self.families = []
+
+    def __find_by_cycle(self, cycle):
+        for fam in self.families:
+            if cycle in fam.cycle_set:
+                return (fam, True)
+            if cycle.reversed in fam.cycle_set:
+                return (fam, False)
+        return (None, None)
+
+    def add(self, prop):
+        fam0, order0 = self.__find_by_cycle(prop.cycle0)
+        fam1, order1 = self.__find_by_cycle(prop.cycle1)
+        if fam0 and fam1:
+            if fam0 == fam1:
+                # TODO: better way to report contradiction
+                assert order0 == order1, 'Contradiction'
+            else:
+                if order0 == order1:
+                    fam0.cycle_set.update(fam1.cycle_set)
+                else:
+                    for cycle in fam1.cycle_set:
+                        fam0.cycle_set.add(cycle.reversed)
+                fam0.premises_graph.add_edges_from(fam1.premises_graph.edges)
+                for v0, v1 in fam1.premises_graph.edges:
+                    fam0.premises_graph[v0][v1].update(fam1.premises_graph[v0][v1])
+                self.families.remove(fam1)
+            fam = fam0
+        elif fam0:
+            fam0.cycle_set.add(prop.cycle1 if order0 else prop.cycle1.reversed)
+            fam = fam0
+        elif fam1:
+            fam1.cycle_set.add(prop.cycle0 if order1 else prop.cycle0.reversed)
+            fam = fam1
+        else:
+            fam = CyclicOrderPropertySet.Family()
+            fam.cycle_set.add(prop.cycle0)
+            fam.cycle_set.add(prop.cycle1)
+            self.families.append(fam)
+        fam.premises_graph.add_edge(prop.cycle0, prop.cycle1, prop=prop)
+        fam.premises_graph.add_edge(prop.cycle0.reversed, prop.cycle1.reversed, prop=prop)
+
+    def explanation(self, cycle0, cycle1):
+        fam, order = self.__find_by_cycle(cycle0)
+        if fam is None:
+            return (None, None)
+        if order:
+            return fam.explanation(cycle0, cycle1)
+        return fam.explanation(cycle0.reversed, cycle1.reversed)
 
 class LengthRatioPropertySet:
     class Family:
@@ -163,14 +230,6 @@ class LengthRatioPropertySet:
             fam.add_property(prop)
             self.families.append(fam)
 
-    def __contains(self, ratio0, ratio1):
-        fam, order = self.__find_by_ratio(ratio0)
-        if fam is None:
-            return False
-        if order:
-            return ratio1 in fam.ratio_set
-        return tuple(reversed(ratio1)) in fam.ratio_set
-
     def add(self, prop):
         if isinstance(prop, EqualLengthRatiosProperty):
             self.__add_elr(prop.segments[0:2], prop.segments[2:4], prop)
@@ -186,10 +245,6 @@ class LengthRatioPropertySet:
             return fam.explanation(ratio0, ratio1)
         return fam.explanation(tuple(reversed(ratio0)), tuple(reversed(ratio1)))
 
-    def __contains__(self, prop):
-        return self.__contains(prop.segments[0:2], prop.segments[2:4]) or \
-            self.__contains((prop.segments[0], prop.segments[2]), (prop.segments[1], prop.segments[3]))
-
 class PropertySet:
     def __init__(self):
         self.__combined = {} # (type, key) => [prop] and type => prop
@@ -198,6 +253,7 @@ class PropertySet:
         self.__angle_ratios = {} # {angle, angle} => prop
         self.__length_ratios = {} # {segment, segment} => prop
         self.__elrs = LengthRatioPropertySet()
+        self.__cyclic_orders = CyclicOrderPropertySet()
         self.__coincidence = {} # {point, point} => prop
         self.__collinearity = {} # {point, point, point} => prop
         self.__intersections = {} # {segment, segment} => point, [reasons]
@@ -228,6 +284,8 @@ class PropertySet:
             self.__collinearity[prop.point_set] = prop
         elif type_key == EqualLengthRatiosProperty:
             self.__elrs.add(prop)
+        elif type_key == SameCyclicOrderProperty:
+            self.__cyclic_orders.add(prop)
 
     def length_ratios_equal_to_one(self):
         for fam in self.__elrs.families:
@@ -294,11 +352,23 @@ class PropertySet:
         existing = self[prop]
         if existing:
             return existing
-        if prop in self.__elrs:
-            comment, premises = self.__elrs.explanation((segment0, segment1), (segment2, segment3))
-            # this is a hack TODO: add symmetric properties during adding LengthRatioProperty
-            if comment is None:
-                comment, premises = self.__elrs.explanation((segment0, segment2), (segment1, segment3))
+        comment, premises = self.__elrs.explanation((segment0, segment1), (segment2, segment3))
+        # this is a hack TODO: add symmetric properties during adding LengthRatioProperty
+        if comment is None:
+            comment, premises = self.__elrs.explanation((segment0, segment2), (segment1, segment3))
+        if comment is None:
+            return None
+        prop.reason = Reason(-2, -2, comment, premises)
+        prop.reason.obsolete = False
+        return prop
+
+    def same_cyclic_order_property(self, cycle0, cycle1):
+        prop = SameCyclicOrderProperty(cycle0, cycle1)
+        existing = self[prop]
+        if existing:
+            return existing
+        comment, premises = self.__cyclic_orders.explanation(cycle0, cycle1)
+        if comment:
             prop.reason = Reason(-2, -2, comment, premises)
             prop.reason.obsolete = False
             return prop
