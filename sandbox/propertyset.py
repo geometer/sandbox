@@ -73,6 +73,70 @@ class CyclicOrderPropertySet:
             return fam.explanation(cycle0, cycle1)
         return fam.explanation(cycle0.reversed, cycle1.reversed)
 
+class AngleRatioPropertySet:
+    class Family:
+        def __init__(self):
+            self.angle_to_ratio = {}
+            self.premises_graph = nx.Graph()
+
+        def add_property(self, prop):
+            ratio0 = self.angle_to_ratio.get(prop.angle0)
+            ratio1 = self.angle_to_ratio.get(prop.angle1)
+            if ratio0 and ratio1:
+                # TODO: better way to report contradiction
+                assert ratio0 == ratio1 * prop.value, 'Contradiction'
+            elif ratio0:
+                self.angle_to_ratio[prop.angle1] = ratio0 / prop.value
+            elif ratio1:
+                self.angle_to_ratio[prop.angle0] = ratio1 * prop.value
+            else:
+                self.angle_to_ratio[prop.angle0] = prop.value
+                self.angle_to_ratio[prop.angle1] = 1
+            self.premises_graph.add_edge(prop.angle0, prop.angle1, prop=prop)
+
+    def __init__(self):
+        self.angle_to_family = {}
+
+    def add(self, prop):
+        fam0 = self.angle_to_family.get(prop.angle0)
+        fam1 = self.angle_to_family.get(prop.angle1)
+        if fam0 and fam1:
+            if fam0 == fam1:
+                fam0.add_property(prop)
+            else:
+                coef = prop.value * fam1.angle_to_ratio[prop.angle1] / fam0.angle_to_ratio[prop.angle0]
+                if coef != 1:
+                    for key in fam0.angle_to_ratio:
+                        fam0.angle_to_ratio[key] *= coef
+                fam0.angle_to_ratio.update(fam1.angle_to_ratio)
+                for key in self.angle_to_family:
+                    if self.angle_to_family[key] == fam1:
+                        self.angle_to_family[key] = fam0
+        elif fam0:
+            fam0.add_property(prop)
+            self.angle_to_family[prop.angle1] = fam0
+        elif fam1:
+            fam1.add_property(prop)
+            self.angle_to_family[prop.angle0] = fam1
+        else:
+            fam = AngleRatioPropertySet.Family()
+            fam.add_property(prop)
+            self.angle_to_family[prop.angle0] = fam
+            self.angle_to_family[prop.angle1] = fam
+
+    def explanation(self, angle0, angle1):
+        fam0 = self.angle_to_family.get(angle0)
+        if fam0 is None:
+            return (None, None)
+        fam1 = self.angle_to_family.get(angle1)
+        if fam1 != fam0:
+            return (None, None)
+        path = nx.algorithms.shortest_path(fam0.premises_graph, angle0, angle1)
+        pattern = ' = '.join(['%s'] * len(path))
+        comment = _comment(pattern, *path)
+        premises = [fam0.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
+        return (comment, premises)
+
 class LengthRatioPropertySet:
     class Family:
         def __init__(self):
@@ -271,6 +335,7 @@ class PropertySet:
         self.__angle_values = {} # angle => prop
         self.__angle_ratios = {} # {angle, angle} => prop
         self.__length_ratios = {} # {segment, segment} => prop
+        self.__alrs = AngleRatioPropertySet()
         self.__elrs = LengthRatioPropertySet()
         self.__cyclic_orders = CyclicOrderPropertySet()
         self.__coincidence = {} # {point, point} => prop
@@ -294,6 +359,7 @@ class PropertySet:
             self.__angle_values[prop.angle] = prop
         elif type_key == AnglesRatioProperty:
             self.__angle_ratios[prop.angle_set] = prop
+            self.__alrs.add(prop)
         elif type_key == LengthRatioProperty:
             self.__length_ratios[prop.segment_set] = prop
             self.__elrs.add(prop)
@@ -354,6 +420,11 @@ class PropertySet:
         return self.__angle_values.get(angle)
 
     def angles_ratio_property(self, angle0, angle1):
+        comment, premises = self.__alrs.explanation(angle0, angle1)
+        if comment is None:
+            return None
+        if len(premises) == 1:
+            return premises[0]
         return self.__angle_ratios.get(frozenset([angle0, angle1]))
 
     def lengths_ratio_property_and_value(self, segment0, segment1):
@@ -426,6 +497,8 @@ class PropertySet:
         return (None, [])
 
     def stats(self):
+        total = sum(len(fam.angle_to_ratio) * (len(fam.angle_to_ratio) - 1) / 2 for fam in set(self.__alrs.angle_to_family.values()))
+        print('%s angles in %s families, total: %s' % (len(self.__alrs.angle_to_family), len(set(self.__alrs.angle_to_family.values())), total))
         def type_presentation(kind):
             return kind.__doc__.strip() if kind.__doc__ else kind.__name__
 
