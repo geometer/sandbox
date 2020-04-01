@@ -547,10 +547,10 @@ class CoreScene:
             half0 = middle.segment(self.points[0])
             half1 = middle.segment(self.points[1])
             comment = _comment('%s is the middle of segment %s', middle, self)
-            middle.inside_constraint(self, comments=comment, guaranteed=guaranteed)
-            self.ratio_constraint(half0, 2, comments=comment, guaranteed=guaranteed)
-            self.ratio_constraint(half1, 2, comments=comment, guaranteed=guaranteed)
-            half0.ratio_constraint(half1, 1, comments=comment, guaranteed=guaranteed)
+            middle.inside_constraint(self, comment=comment, guaranteed=guaranteed)
+            self.ratio_constraint(half0, 2, comment=comment, guaranteed=guaranteed)
+            self.ratio_constraint(half1, 2, comment=comment, guaranteed=guaranteed)
+            half0.ratio_constraint(half1, 1, comment=comment, guaranteed=guaranteed)
             return middle
 
         def free_point(self, **kwargs):
