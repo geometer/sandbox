@@ -100,7 +100,6 @@ class Explainer:
                         _comment('|%s| = %s|%s| = %s|%s|', lr0.segment1, _cs(divide(1, lr0.value)), lr0.segment0, _cs(coef), lr1.segment1),
                         [lr0, lr1]
                     )
-                    pass
                 elif lr0.segment0 == lr1.segment1:
                     coef = lr1.value * lr0.value
                     yield (
@@ -108,7 +107,6 @@ class Explainer:
                         _comment('|%s| = %s|%s| = %s|%s|', lr1.segment0, _cs(lr1.value), lr0.segment0, _cs(coef), lr0.segment1),
                         [lr1, lr0]
                     )
-                    pass
                 elif lr0.segment1 == lr1.segment0:
                     coef = lr1.value * lr0.value
                     yield (
@@ -116,7 +114,6 @@ class Explainer:
                         _comment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.value), lr0.segment1, _cs(coef), lr1.segment1),
                         [lr0, lr1]
                     )
-                    pass
                 elif lr0.segment1 == lr1.segment1:
                     coef = divide(lr0.value, lr1.value)
                     yield (
@@ -124,7 +121,6 @@ class Explainer:
                         _comment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.value), lr0.segment1, _cs(coef), lr1.segment0),
                         [lr0, lr1]
                     )
-                    pass
 
 #            processed = set()
 #            for ar0 in self.context.list(AnglesRatioProperty):
