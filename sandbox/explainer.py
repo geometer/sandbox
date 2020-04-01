@@ -900,7 +900,10 @@ class Explainer:
                 )
 
             for st in self.context.list(SimilarTrianglesProperty):
-                if st.reason.obsolete:
+                ncl = self.context.collinearity_property(*st.ABC)
+                if ncl is None:
+                    ncl = self.context.collinearity_property(*st.DEF)
+                if ncl is None or ncl.collinear or st.reason.obsolete and ncl.reason.obsolete:
                     continue
                 for i, j in itertools.combinations(range(0, 3), 2):
                     side00 = side_of(st.ABC, i)
@@ -910,31 +913,31 @@ class Explainer:
                     if side00 == side10:
                         yield (
                             LengthRatioProperty(side01, side11, 1),
-                            'Ratios of sides in similar triangles',
-                            [st]
+                            'Ratios of sides in non-degenerate similar triangles',
+                            [st, ncl]
                         )
                         continue
                     if side01 == side11:
                         yield (
                             LengthRatioProperty(side00, side10, 1),
-                            'Ratios of sides in similar triangles',
-                            [st]
+                            'Ratios of sides in non-degenerate similar triangles',
+                            [st, ncl]
                         )
                         continue
                     cs = self.context.congruent_segments_property(side00, side10)
                     if cs:
                         yield (
                             LengthRatioProperty(side01, side11, 1),
-                            'Ratios of sides in similar triangles',
-                            [st, cs]
+                            'Ratios of sides in non-degenerate similar triangles',
+                            [st, cs, ncl]
                         )
                         continue
                     cs = self.context.congruent_segments_property(side01, side11)
                     if cs:
                         yield (
                             LengthRatioProperty(side00, side10, 1),
-                            'Ratios of sides in similar triangles',
-                            [st, cs]
+                            'Ratios of sides in non-degenerate similar triangles',
+                            [st, cs, ncl]
                         )
                         continue
                     yield (
