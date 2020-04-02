@@ -738,9 +738,8 @@ class CoreScene:
                 yield (PointsCoincidenceProperty(cnstr.params[0], cnstr.params[2], False), cnstr.comments)
 
         for cnstr in self.constraints(Constraint.Kind.not_equal):
-            if cnstr.params[0].layer != 'user' or cnstr.params[1].layer != 'user':
-                continue
-            yield (PointsCoincidenceProperty(cnstr.params[0], cnstr.params[1], False), cnstr.comments)
+            if all(param.layer != 'invisible' for param in cnstr.params):
+                yield (PointsCoincidenceProperty(cnstr.params[0], cnstr.params[1], False), cnstr.comments)
 
         for cnstr in self.constraints(Constraint.Kind.length_ratio):
             if all(param.layer != 'invisible' for param in [*cnstr.params[0].points, *cnstr.params[1].points]):
