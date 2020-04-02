@@ -119,6 +119,9 @@ class CoreScene:
                 return vector.end
             if coef == -1 and vector.end == self:
                 return vector.start
+            for pt in self.points():
+                if pt.origin == CoreScene.Point.Origin.translated and pt.base == self and pt.delta == vector and pt.coef == coef:
+                    return pt
             new_point = CoreScene.Point(
                 self.scene,
                 CoreScene.Point.Origin.translated,
@@ -532,14 +535,21 @@ class CoreScene:
             Constructs middle point of the segment
             """
             if self.scene.strategy == 'constructs':
-                middle = CoreScene.Point(
-                    self.scene,
-                    CoreScene.Point.Origin.translated,
-                    base=self.points[0],
-                    delta=self.points[0].vector(self.points[1]),
-                    coef=divide(1, 2),
-                    **kwargs
-                )
+                delta = self.points[0].vector(self.points[1])
+                coef = divide(1, 2)
+                for pt in self.scene.points():
+                    if pt.origin == CoreScene.Point.Origin.translated:
+                        if pt.base == self.points[0] and pt.delta == delta and pt.coef == coef:
+                            middle = pt
+                            break
+                        if pt.base == self.points[1] and pt.delta == delta.reversed and pt.coef == coef:
+                            middle = pt
+                            break
+                else:
+                    middle = CoreScene.Point(
+                        self.scene, CoreScene.Point.Origin.translated,
+                        base=self.points[0], delta=delta, coef=coef, **kwargs
+                    )
                 guaranteed = True
             else: # self.scene.strategy == 'constraints'
                 middle = self.free_point(**kwargs)
