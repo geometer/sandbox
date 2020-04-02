@@ -158,23 +158,24 @@ def hunt_coincidences(placement: Placement):
             print('same point: %s' % [pt.label for pt in same_points])
 
 class Hunter:
-    def __init__(self, scene):
+    def __init__(self, scene, max_layer='user'):
         if isinstance(scene, Placement):
             self.placement = scene
         else:
             self.placement = iterative_placement(scene)
         self.properties = []
+        self.max_layer = max_layer
         self.__hunting_time = None
 
     def __vectors(self):
-        points = self.placement.scene.points(max_layer='user')
+        points = self.placement.scene.points(max_layer=self.max_layer)
         for point0, point1 in itertools.combinations(points, 2):
             vec = point0.vector(point1)
             if self.placement.length(vec) >= ERROR:
                 yield vec
 
     def __triangles(self):
-        points = self.placement.scene.points(max_layer='user')
+        points = self.placement.scene.points(max_layer=self.max_layer)
         for index0, pt0 in enumerate(points):
             loc0 = self.placement.location(pt0)
             for index1, pt1 in enumerate(points[index0 + 1:], start=index0 + 1):
@@ -191,7 +192,7 @@ class Hunter:
     def __lines(self):
         lines = []
         used_pairs = set()
-        points = self.placement.scene.points(max_layer='user')
+        points = self.placement.scene.points(max_layer=self.max_layer)
         for index0, pt0 in enumerate(points):
             loc0 = self.placement.location(pt0)
             for index1, pt1 in enumerate(points[index0 + 1:], start=index0 + 1):
@@ -378,7 +379,7 @@ class Hunter:
             self.__hunt_collinears()
 
         if 'coincident_points' in options or 'default' in options:
-            points = self.placement.scene.points(max_layer='user')
+            points = self.placement.scene.points(max_layer=self.max_layer)
             for point0, point1 in itertools.combinations(points, 2):
                 vec = point0.vector(point1)
                 if self.placement.length(vec) < ERROR:

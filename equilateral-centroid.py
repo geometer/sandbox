@@ -9,7 +9,7 @@ A.segment(C).congruent_constraint(A.segment(B))
 B.segment(C).congruent_constraint(A.segment(B))
 scene.centroid_point((A, B, C), label='D')
 
-hunter = Hunter(scene)
+hunter = Hunter(scene, max_layer='auxiliary')
 hunter.hunt()
 
 explainer = Explainer(scene, hunter.properties)
