@@ -8,7 +8,7 @@ import itertools
 import sympy as sp
 from typing import List
 
-from .property import AngleValueProperty, PointsCoincidenceProperty, PointsCollinearityProperty, LengthRatioProperty, PointInsideAngleProperty, EquilateralTriangleProperty, PerpendicularVectorsProperty, ParallelVectorsProperty
+from .property import *
 from .reason import Reason
 from .util import _comment, divide
 
@@ -831,6 +831,26 @@ class CoreScene:
                     LengthRatioProperty(rad0, rad1, 1),
                     [_comment('Two radiuses of the same circle with centre %s', circle.centre)]
                 )
+
+        for cnstr in self.constraints(Constraint.Kind.opposite_side):
+            line = cnstr.params[2]
+            yield (
+                SameOrOppositeSideProperty(line.point0.segment(line.point1), cnstr.params[0], cnstr.params[1], False),
+                cnstr.comments
+            )
+
+        for cnstr in self.constraints(Constraint.Kind.same_side):
+            line = cnstr.params[2]
+            yield (
+                SameOrOppositeSideProperty(line.point0.segment(line.point1), cnstr.params[0], cnstr.params[1], True),
+                cnstr.comments
+            )
+
+        for cnstr in self.constraints(Constraint.Kind.angles_ratio):
+            yield (
+                AnglesRatioProperty(cnstr.params[0], cnstr.params[1], cnstr.params[2]),
+                cnstr.comments
+            )
 
     def assert_type(self, obj, *args):
         assert isinstance(obj, args), 'Unexpected type %s' % type(obj)

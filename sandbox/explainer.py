@@ -41,25 +41,6 @@ class Explainer:
         return self.context.list(AnglesRatioProperty, keys=[angle])
 
     def __explain_all(self):
-        def base():
-            for cnst in self.scene.constraints(Constraint.Kind.opposite_side):
-                line = cnst.params[2]
-                self.__reason(
-                    SameOrOppositeSideProperty(line.point0.segment(line.point1), cnst.params[0], cnst.params[1], False),
-                    cnst.comments
-                )
-            for cnst in self.scene.constraints(Constraint.Kind.same_side):
-                line = cnst.params[2]
-                self.__reason(
-                    SameOrOppositeSideProperty(line.point0.segment(line.point1), cnst.params[0], cnst.params[1], True),
-                    cnst.comments
-                )
-            for cnst in self.scene.constraints(Constraint.Kind.angles_ratio):
-                self.__reason(
-                    AnglesRatioProperty(cnst.params[0], cnst.params[1], cnst.params[2]),
-                    cnst.comments
-                )
-
         def iteration():
             for av0, av1 in itertools.combinations(self.context.list(AngleValueProperty), 2):
                 if av0.degree == av1.degree or av0.reason.obsolete and av1.reason.obsolete:
@@ -1438,7 +1419,6 @@ class Explainer:
         for prop, comment in self.scene.enumerate_predefined_properties():
             self.__reason(prop, comment, [])
 
-        base()
         self.__iteration_step_count = 0
         self.__refresh_unexplained()
         while itertools.count():
