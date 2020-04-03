@@ -182,7 +182,11 @@ class Explainer:
                         reasons_are_too_old = ncl.reason.obsolete and col.reason.obsolete
                         pt_col = next(pt for pt in col.points if pt not in segment.points)
                         if not reasons_are_too_old:
-                            yield (PointsCoincidenceProperty(pt_col, pt_ncl, False), [], [ncl, col])
+                            yield (
+                                PointsCoincidenceProperty(pt_col, pt_ncl, False),
+                                _comment('%s lies on the line %s, %s does not', pt_col, segment, pt_ncl),
+                                [ncl, col]
+                            )
                         for common in segment.points:
                             ne = self.context.not_equal_property(common, pt_col)
                             if ne is None or reasons_are_too_old and ne.reason.obsolete:
