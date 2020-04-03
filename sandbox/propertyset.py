@@ -224,9 +224,17 @@ class LengthRatioPropertySet:
             premises = [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
             return (comment, premises)
 
+        def value_explanation(self, ratio):
+            path = nx.algorithms.shortest_path(self.premises_graph, ratio, (self.ratio_value, ))
+            pattern = ' = '.join(['|%s| / |%s|' if len(v) == 2 else '%s' for v in path])
+            comment = _comment(pattern, *sum(path, ()))
+            premises = [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
+            return (comment, premises)
+
     def __init__(self):
         self.families = []
         self.ratio_to_family = {}
+        self.__cache = {} # (segment, segment) => (prop, value)
 
     def __find_by_ratio(self, ratio):
         fam = self.ratio_to_family.get(ratio)
@@ -319,14 +327,47 @@ class LengthRatioPropertySet:
             self.__add_elr((prop.segments[0], prop.segments[2]), (prop.segments[1], prop.segments[3]), prop)
         elif isinstance(prop, LengthRatioProperty):
             self.__add_lr(prop)
+            self.__cache[(prop.segment0, prop.segment1)] = (prop, prop.value)
+            self.__cache[(prop.segment1, prop.segment0)] = (prop, divide(1, prop.value))
 
     def explanation(self, ratio0, ratio1):
-        fam, order = self.__find_by_ratio(ratio0)
+        fam = self.ratio_to_family.get(ratio0)
         if fam is None:
             return (None, None)
-        if order:
+        if ratio0 in fam.ratio_set:
             return fam.explanation(ratio0, ratio1)
         return fam.explanation((ratio0[1], ratio0[0]), (ratio1[1], ratio1[0]))
+
+    def value_explanation(self, ratio):
+        fam = self.ratio_to_family.get(ratio)
+        if fam is None or fam.ratio_value is None:
+            return (None, None)
+        if ratio in fam.ratio_set:
+            return fam.value_explanation(ratio)
+        return fam.value_explanation((ratio[1], ratio[0]))
+
+    def property_and_value(self, segment0, segment1):
+        ratio = (segment0, segment1)
+        key = ratio
+        cached = self.__cache.get(key)
+        if cached:
+            return cached
+
+        fam = self.ratio_to_family.get(ratio)
+        if fam is None or fam.ratio_value is None:
+            return (None, None)
+        if ratio in fam.ratio_set:
+            value = fam.ratio_value
+        else:
+            ratio = (segment1, segment0)
+            value = divide(1, fam.ratio_value)
+        comment, premises = fam.value_explanation(ratio)
+        prop = LengthRatioProperty(*ratio, fam.ratio_value)
+        prop.reason = Reason(-2, -2, comment, premises)
+        prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+        pair = (prop, value)
+        self.__cache[key] = pair
+        return pair
 
 class PropertySet:
     def __init__(self):
@@ -334,9 +375,8 @@ class PropertySet:
         self.__full_set = {} # prop => prop
         self.__angle_values = {} # angle => prop
         self.__angle_ratios = {} # {angle, angle} => prop
-        self.__length_ratios = {} # {segment, segment} => prop
         self.__alrs = AngleRatioPropertySet()
-        self.__elrs = LengthRatioPropertySet()
+        self.__length_ratios = LengthRatioPropertySet()
         self.__cyclic_orders = CyclicOrderPropertySet()
         self.__coincidence = {} # {point, point} => prop
         self.__collinearity = {} # {point, point, point} => prop
@@ -361,19 +401,18 @@ class PropertySet:
             self.__angle_ratios[prop.angle_set] = prop
             self.__alrs.add(prop)
         elif type_key == LengthRatioProperty:
-            self.__length_ratios[prop.segment_set] = prop
-            self.__elrs.add(prop)
+            self.__length_ratios.add(prop)
         elif type_key == PointsCoincidenceProperty:
             self.__coincidence[prop.point_set] = prop
         elif type_key == PointsCollinearityProperty:
             self.__collinearity[prop.point_set] = prop
         elif type_key == EqualLengthRatiosProperty:
-            self.__elrs.add(prop)
+            self.__length_ratios.add(prop)
         elif type_key == SameCyclicOrderProperty:
             self.__cyclic_orders.add(prop)
 
     def length_ratios_equal_to_one(self):
-        for fam in self.__elrs.families:
+        for fam in self.__length_ratios.families:
             for ratio0, ratio1 in itertools.combinations(fam.ratio_set, 2):
                 if ratio0[0] == ratio1[0]:
                     yield (ratio0[1], ratio1[1], *fam.explanation(ratio0, ratio1))
@@ -428,24 +467,21 @@ class PropertySet:
         return self.__angle_ratios.get(frozenset([angle0, angle1]))
 
     def lengths_ratio_property_and_value(self, segment0, segment1):
-        prop = self.__length_ratios.get(frozenset([segment0, segment1]))
-        if prop is not None:
-            return (prop, prop.value if prop.segment0 == segment0 else divide(1, prop.value))
-        return (None, None)
+        return self.__length_ratios.property_and_value(segment0, segment1)
 
     def congruent_segments_property(self, segment0, segment1):
-        prop = self.__length_ratios.get(frozenset([segment0, segment1]))
-        return prop if prop and prop.value == 1 else None
+        prop, value = self.__length_ratios.property_and_value(segment0, segment1)
+        return prop if value == 1 else None
 
     def equal_length_ratios_property(self, segment0, segment1, segment2, segment3):
         prop = EqualLengthRatiosProperty(segment0, segment1, segment2, segment3)
         existing = self[prop]
         if existing:
             return existing
-        comment, premises = self.__elrs.explanation((segment0, segment1), (segment2, segment3))
+        comment, premises = self.__length_ratios.explanation((segment0, segment1), (segment2, segment3))
         # this is a hack TODO: add symmetric properties during adding LengthRatioProperty
         if comment is None:
-            comment, premises = self.__elrs.explanation((segment0, segment2), (segment1, segment3))
+            comment, premises = self.__length_ratios.explanation((segment0, segment2), (segment1, segment3))
         if comment is None:
             return None
         prop.reason = Reason(-2, -2, comment, premises)
