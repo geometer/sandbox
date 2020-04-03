@@ -101,9 +101,8 @@ class AngleRatioPropertySet:
         fam0 = self.angle_to_family.get(prop.angle0)
         fam1 = self.angle_to_family.get(prop.angle1)
         if fam0 and fam1:
-            if fam0 == fam1:
-                fam0.add_property(prop)
-            else:
+            fam0.add_property(prop)
+            if fam0 != fam1:
                 coef = prop.value * fam1.angle_to_ratio[prop.angle1] / fam0.angle_to_ratio[prop.angle0]
                 if coef != 1:
                     for key in fam0.angle_to_ratio:
@@ -112,6 +111,9 @@ class AngleRatioPropertySet:
                 for key in self.angle_to_family:
                     if self.angle_to_family[key] == fam1:
                         self.angle_to_family[key] = fam0
+                fam0.premises_graph.add_edges_from(fam1.premises_graph.edges)
+                for a0, a1 in fam1.premises_graph.edges:
+                    fam0.premises_graph[a0][a1].update(fam1.premises_graph[a0][a1])
         elif fam0:
             fam0.add_property(prop)
             self.angle_to_family[prop.angle1] = fam0
@@ -125,16 +127,13 @@ class AngleRatioPropertySet:
             self.angle_to_family[prop.angle1] = fam
 
     def explanation(self, angle0, angle1):
-        fam0 = self.angle_to_family.get(angle0)
-        if fam0 is None:
+        fam = self.angle_to_family.get(angle0)
+        if fam is None or angle1 not in fam.angle_to_ratio:
             return (None, None)
-        fam1 = self.angle_to_family.get(angle1)
-        if fam1 != fam0:
-            return (None, None)
-        path = nx.algorithms.shortest_path(fam0.premises_graph, angle0, angle1)
+        path = nx.algorithms.shortest_path(fam.premises_graph, angle0, angle1)
         pattern = ' = '.join(['%s'] * len(path))
         comment = _comment(pattern, *path)
-        premises = [fam0.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
+        premises = [fam.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
         return (comment, premises)
 
 class LengthRatioPropertySet:
