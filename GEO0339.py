@@ -1,6 +1,5 @@
 # GEO0339 from http://hilbert.mat.uc.pt/TGTP/Problems/listing.php
 import sys
-import time
 
 from sandbox import *
 from sandbox.hunter import Hunter
