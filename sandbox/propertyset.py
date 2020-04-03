@@ -412,12 +412,25 @@ class PropertySet:
             self.__cyclic_orders.add(prop)
 
     def length_ratios_equal_to_one(self):
+        ratio_to_explanation = {}
         for fam in self.__length_ratios.families:
             for ratio0, ratio1 in itertools.combinations(fam.ratio_set, 2):
                 if ratio0[0] == ratio1[0]:
-                    yield (ratio0[1], ratio1[1], *fam.explanation(ratio0, ratio1))
+                    key = (ratio0[1], ratio1[1])
                 elif ratio0[1] == ratio1[1]:
-                    yield (ratio0[0], ratio1[0], *fam.explanation(ratio0, ratio1))
+                    key = (ratio0[0], ratio1[0])
+                else:
+                    continue
+                previous_value = ratio_to_explanation.get(key)
+                if previous_value is None:
+                    previous_value = ratio_to_explanation.get((key[1], key[0]))
+                if previous_value is not None and len(previous_value[1]) == 1:
+                    continue
+                value = fam.explanation(ratio0, ratio1)
+                if previous_value is None or len(value[1]) < len(previous_value[1]):
+                    ratio_to_explanation[key] = value
+
+        return [(*key, *value) for key, value in ratio_to_explanation.items()]
 
     def list(self, property_type, keys=None):
         if keys:
