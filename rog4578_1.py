@@ -45,10 +45,9 @@ print('\tMeasured: %s = %.5f' % (angle, placement.angle(angle) / math.pi * 180))
 hunter = Hunter(placement)
 hunter.hunt()
 hunter.stats().dump()
+print('\tGuessed: %s = %s' % (angle, hunter.guessed(angle)))
 
 explainer = Explainer(scene, hunter.properties)
-print('\tGuessed: %s = %s' % (angle, explainer.guessed(angle)))
-
 if '--profile' in sys.argv[1:]:
     import cProfile
     cProfile.run('explainer.explain()')

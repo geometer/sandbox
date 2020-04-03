@@ -1503,19 +1503,6 @@ class Explainer:
             ('Explanation time', '%.3f sec' % self.__explanation_time),
         ], 'Explainer stats')
 
-    def guessed(self, obj):
-        explained = self.explained(obj)
-        if explained:
-            return explained
-
-        if isinstance(obj, Scene.Angle):
-            for prop in self.__unexplained:
-                if isinstance(prop, AngleValueProperty):
-                    if obj == prop.angle:
-                        return prop.degree
-            return None
-        raise Exception('Guess not supported for objects of type %s' % type(obj).__name__)
-
     def explained(self, obj):
         if isinstance(obj, Scene.Angle):
             rsn = self.context.angle_value_property(obj)

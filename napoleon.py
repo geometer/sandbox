@@ -27,9 +27,9 @@ hunter.hunt()
 
 angle = scene.get('A2').angle(scene.get('B2'), scene.get('C2'))
 
-explainer = Explainer(scene, hunter.properties)
-print('\tGuessed: %s = %s' % (angle, explainer.guessed(angle)))
+print('\tGuessed: %s = %s' % (angle, hunter.guessed(angle)))
 
+explainer = Explainer(scene, hunter.properties)
 if '--profile' in sys.argv[1:]:
     import cProfile
     cProfile.run('explainer.explain()')

@@ -406,6 +406,15 @@ class Hunter:
         if 'coincidences' in options or 'all' in options:
             hunt_coincidences(self.placement)
 
+    def guessed(self, obj):
+        if isinstance(obj, Scene.Angle):
+            for prop in self.properties:
+                if isinstance(prop, AngleValueProperty) and obj == prop.angle:
+                    return prop.degree
+            return None
+
+        raise Exception('Guess not supported for objects of type %s' % type(obj).__name__)
+
     def dump(self):
         print('Properties:\n')
         for prop in self.properties:
