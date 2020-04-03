@@ -564,9 +564,24 @@ class CoreScene:
             return middle
 
         def free_point(self, **kwargs):
-            point = self.points[0].line_through(self.points[1], layer='auxiliary').free_point(**kwargs)
+            point = self.line_through(layer='auxiliary').free_point(**kwargs)
             point.inside_constraint(self)
             return point
+
+        def line_through(self, **kwargs):
+            return self.points[0].line_through(self.points[1], **kwargs)
+
+        def perpendicular_bisector_line(self, **kwargs):
+            """
+            Perpendicular bisector
+            """
+            middle = self.middle_point(layer='auxiliary')
+            line = self.line_through(layer='auxiliary')
+            bisector = middle.perpendicular_line(line, **kwargs)
+            bisector.perpendicular_constraint(
+                line, comment=_comment('%s is a perpendicular bisector of %s', bisector, self)
+            )
+            return bisector
 
         def ratio_constraint(self, segment, coef, **kwargs):
             """

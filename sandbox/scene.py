@@ -56,10 +56,10 @@ class Scene(CoreScene):
         """
         self.triangle_constraint(triangle)
         if self.strategy == 'constructs':
-            bisector0 = self.perpendicular_bisector_line(triangle[0], triangle[1], layer='auxiliary')
-            bisector1 = self.perpendicular_bisector_line(triangle[0], triangle[2], layer='auxiliary')
+            bisector0 = triangle[0].segment(triangle[1]).perpendicular_bisector_line(layer='auxiliary')
+            bisector1 = triangle[0].segment(triangle[2]).perpendicular_bisector_line(layer='auxiliary')
             centre = bisector0.intersection_point(bisector1, **kwargs)
-            #bisector2 = self.perpendicular_bisector_line(triangle[1], triangle[2], layer='auxiliary')
+            #bisector2 = triangle[1].segment(triangle[2]).perpendicular_bisector_line(layer='auxiliary')
             #centre.belongs_to(bisector2)
         else: #sefl.scene.strategy == 'constraints'
             centre = self.free_point(**kwargs)
@@ -78,16 +78,6 @@ class Scene(CoreScene):
         extra = self.free_point(layer='auxiliary')
         extra.not_equal_constraint(point)
         return point.line_through(extra, **kwargs)
-
-    def perpendicular_bisector_line(self, point0, point1, **kwargs):
-        """
-        The perpendicular bisector to the segment [point0, point1]
-        """
-        self.assert_point(point0)
-        self.assert_point(point1)
-        middle = point0.segment(point1).middle_point(layer='auxiliary')
-        line = point0.line_through(point1, layer='auxiliary')
-        return middle.perpendicular_line(line, **kwargs)
 
     def incentre_point(self, triangle, **kwargs):
         """
