@@ -119,7 +119,7 @@ class CoreScene:
                 return vector.end
             if coef == -1 and vector.end == self:
                 return vector.start
-            for pt in self.points():
+            for pt in self.scene.points():
                 if pt.origin == CoreScene.Point.Origin.translated and pt.base == self and pt.delta == vector and pt.coef == coef:
                     return pt
             new_point = CoreScene.Point(
