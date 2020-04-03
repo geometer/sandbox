@@ -1261,6 +1261,21 @@ class Explainer:
             def other_point(segment, point):
                 return segment.points[0] if point == segment.points[1] else segment.points[1]
 
+            for cs in congruent_segments:
+                common = common_point(cs.segment0, cs.segment1)
+                if common is None:
+                    continue
+                pt0 = next(pt for pt in cs.segment0.points if pt != common)
+                pt1 = next(pt for pt in cs.segment1.points if pt != common)
+                ne = self.context.not_equal_property(pt0, pt1)
+                if ne is None or cs.reason.obsolete and ne.reason.obsolete:
+                    continue
+                yield (
+                    PointOnPerpendicularBisectorProperty(common, pt0.segment(pt1)),
+                    _comment('%s is equidistant from %s and %s', common, pt0, pt1),
+                    [cs, ne]
+                )
+
             for cs0, cs1 in itertools.combinations(congruent_segments, 2):
                 if cs0.reason.obsolete and cs1.reason.obsolete:
                     continue
@@ -1418,6 +1433,24 @@ class Explainer:
                         AnglesRatioProperty(vertex.angle(pts0[0], pts1[1]), vertex.angle(pts0[1], pts1[0]), 1),
                         'Rotated', #TODO: better comment
                         [ca, co]
+                    )
+
+            pb_dict = {}
+            for ppb in self.context.list(PointOnPerpendicularBisectorProperty):
+                lst = pb_dict.get(ppb.segment)
+                if lst is None:
+                    lst = [ppb]
+                    pb_dict[ppb.segment] = lst
+                else:
+                    lst.append(ppb)
+            for segment, lst in pb_dict.items():
+                for triple in itertools.combinations(lst, 3):
+                    if all(ppb.reason.obsolete for ppb in triple):
+                        continue
+                    yield (
+                        PointsCollinearityProperty(*[ppb.point for ppb in triple], True),
+                        _comment('Three points on the perpendicular bisector of %s', segment),
+                        list(triple)
                     )
 
         for prop, comment in self.scene.enumerate_predefined_properties():
