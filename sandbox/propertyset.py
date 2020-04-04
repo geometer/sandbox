@@ -150,6 +150,33 @@ class AngleRatioPropertySet:
                     properties.append(prop)
             return properties
 
+        def same_triple_ratio_properties(self):
+            angles_map = {}
+            for item in self.angle_to_ratio.items():
+                if item[0].vertex is None:
+                    continue
+                key = item[0].points
+                rs = angles_map.get(key)
+                if rs:
+                    rs.append(item)
+                else:
+                    angles_map[key] = [item]
+            properties = []
+            for ar in angles_map.values():
+                for item0, item1 in itertools.combinations(ar, 2):
+                    angle0, ratio0 = item0
+                    angle1, ratio1 = item1
+                    path = nx.algorithms.shortest_path(self.premises_graph, angle0, angle1)
+                    if len(path) == 2:
+                        properties.append(self.premises_graph[path[0]][path[1]]['prop'])
+                        continue
+                    comment, premises = self.explanation_from_path(path, ratio0)
+                    prop = AnglesRatioProperty(angle0, angle1, divide(ratio0, ratio1))
+                    prop.reason = Reason(-2, -2, comment, premises)
+                    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+                    properties.append(prop)
+            return properties
+
         def add_value_property(self, prop):
             ratio = self.angle_to_ratio.get(prop.angle)
             if ratio and self.degree:
@@ -212,6 +239,12 @@ class AngleRatioPropertySet:
         prop.reason = Reason(-2, -2, comment, premises)
         prop.reason.obsolete = all(p.reason.obsolete for p in premises)
         return prop
+
+    def same_triple_ratio_properties(self):
+        properties = []
+        for fam in set(self.angle_to_family.values()):
+            properties += fam.same_triple_ratio_properties()
+        return properties
 
     def congruent_properties(self):
         properties = []
@@ -623,9 +656,11 @@ class PropertySet:
     def angles_ratio_property(self, angle0, angle1):
         return self.__angle_ratios.ratio_property(angle0, angle1)
 
+    def same_triple_angle_ratio_properties(self):
+        return self.__angle_ratios.same_triple_ratio_properties()
+
     def congruent_angle_properties(self):
         return self.__angle_ratios.congruent_properties()
-        #return [prop for prop in self.list(AnglesRatioProperty) if prop.value == 1]
 
     def lengths_ratio_property_and_value(self, segment0, segment1):
         return self.__length_ratios.property_and_value(segment0, segment1)

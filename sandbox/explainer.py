@@ -586,7 +586,7 @@ class Explainer:
                     [sos0, sos1]
                 )
 
-            for ar in self.context.list(AnglesRatioProperty):
+            for ar in self.context.same_triple_angle_ratio_properties():
                 a0 = ar.angle0
                 a1 = ar.angle1
                 if a0.vertex is None or a1.vertex is None:
