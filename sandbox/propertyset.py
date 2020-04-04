@@ -81,6 +81,35 @@ class AngleRatioPropertySet:
             self.premises_graph = nx.Graph()
             self.degree = None
 
+        def value_properties(self):
+            properties = []
+            for angle, ratio in self.angle_to_ratio.items():
+                path = nx.algorithms.shortest_path(self.premises_graph, angle, self.degree)
+                if len(path) == 2:
+                    properties.append(self.premises_graph[path[0]][path[1]]['prop'])
+                    continue
+                pattern = []
+                params = []
+                for angle in path[:-1]:
+                    coef = divide(self.angle_to_ratio[angle], ratio)
+                    if ratio == 1:
+                        pattern.append('%s')
+                        params.append(angle)
+                    else:
+                        pattern.append('%s %s')
+                        params.append(coef)
+                        params.append(angle)
+                pattern.append('%sº')
+                params.append(divide(self.degree, ratio))
+                comment = _comment(' = '.join(pattern), *params)
+                premises = [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
+                value = divide(self.degree, coef)
+                prop = AngleValueProperty(angle, value)
+                prop.reason = Reason(-2, -2, comment, premises)
+                prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+                properties.append(prop)
+            return properties
+
         def add_value_property(self, prop):
             ratio = self.angle_to_ratio.get(prop.angle)
             if ratio and self.degree:
@@ -113,6 +142,10 @@ class AngleRatioPropertySet:
     def __init__(self):
         self.angle_to_family = {}
         self.family_with_degree = None
+
+    def value_properties(self):
+        fam = self.family_with_degree
+        return fam.value_properties() if fam else []
 
     def add(self, prop):
         if isinstance(prop, AnglesRatioProperty):
@@ -539,6 +572,9 @@ class PropertySet:
 
     def angle_value_property(self, angle):
         return self.__angle_values.get(angle)
+
+    def nondegenerate_angle_value_properties(self):
+        return self.__angle_ratios.value_properties()
 
     def angles_ratio_property(self, angle0, angle1):
         comment, premises, value = self.__angle_ratios.explanation_and_ratio(angle0, angle1)
