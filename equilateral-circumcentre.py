@@ -1,4 +1,4 @@
-#!/var/www/sandbox/virtualenv/bin/python
+import sys
 
 from sandbox import Scene
 from sandbox.hunter import Hunter
@@ -14,6 +14,10 @@ hunter = Hunter(scene, max_layer='auxiliary')
 hunter.hunt()
 
 explainer = Explainer(scene, hunter.properties)
-explainer.explain()
+if '--profile' in sys.argv[1:]:
+    import cProfile
+    cProfile.run('explainer.explain()')
+else:
+    explainer.explain()
 explainer.dump()
 explainer.stats().dump()
