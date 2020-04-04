@@ -101,7 +101,7 @@ class AngleRatioPropertySet:
             premises = [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
             return (comment, premises)
 
-        def value_property_for_angle(self, angle):
+        def value_property(self, angle):
             ratio = self.angle_to_ratio.get(angle)
             if ratio is None:
                 return None
@@ -162,12 +162,12 @@ class AngleRatioPropertySet:
         self.family_with_degree = None
         self.__value_cache = {} # angle => prop
 
-    def value_property_for_angle(self, angle):
+    def value_property(self, angle):
         prop = self.__value_cache.get(angle)
         if prop:
             return prop
         fam = self.family_with_degree
-        prop = fam.value_property_for_angle(angle) if fam else None
+        prop = fam.value_property(angle) if fam else None
         if prop:
             self.__value_cache[angle] = prop
         return prop
@@ -243,15 +243,20 @@ class AngleRatioPropertySet:
             self.angle_to_family[prop.angle0] = fam
             self.angle_to_family[prop.angle1] = fam
 
-    def explanation_and_ratio(self, angle0, angle1):
+    def ratio_property(self, angle0, angle1):
         fam = self.angle_to_family.get(angle0)
         if fam is None or angle1 not in fam.angle_to_ratio:
-            return (None, None, None)
+            return None
         path = nx.algorithms.shortest_path(fam.premises_graph, angle0, angle1)
+        if len(path) == 2:
+            return fam.premises_graph[path[0]][path[1]]['prop']
         coef = fam.angle_to_ratio[path[0]]
         comment, premises = fam.explanation_from_path(path, coef)
         value = divide(coef, fam.angle_to_ratio[path[-1]])
-        return (comment, premises, value)
+        prop = AnglesRatioProperty(angle0, angle1, value)
+        prop.reason = Reason(-2, -2, comment, premises)
+        prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+        return prop
 
 class LengthRatioPropertySet:
     class Family:
@@ -582,21 +587,13 @@ class PropertySet:
         return prop if prop and not prop.coincident else None
 
     def angle_value_property(self, angle):
-        return self.__angle_ratios.value_property_for_angle(angle)
+        return self.__angle_ratios.value_property(angle)
 
     def nondegenerate_angle_value_properties(self):
         return self.__angle_ratios.value_properties()
 
     def angles_ratio_property(self, angle0, angle1):
-        comment, premises, value = self.__angle_ratios.explanation_and_ratio(angle0, angle1)
-        if comment is None:
-            return None
-        if len(premises) == 1:
-            return premises[0]
-        prop = AnglesRatioProperty(angle0, angle1, value)
-        prop.reason = Reason(-2, -2, comment, premises)
-        prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-        return prop
+        return self.__angle_ratios.ratio_property(angle0, angle1)
 
     def lengths_ratio_property_and_value(self, segment0, segment1):
         return self.__length_ratios.property_and_value(segment0, segment1)
