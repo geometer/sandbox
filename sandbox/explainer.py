@@ -502,39 +502,23 @@ class Explainer:
                     reasons
                 )
 
-            for ar in self.context.list(AnglesRatioProperty):
-                a0 = ar.angle0
-                a1 = ar.angle1
-                if a0.vertex is None or a0.vertex != a1.vertex:
+            for pia in self.context.list(PointInsideAngleProperty):
+                av = self.context.angle_value_property(pia.angle)
+                if av is None:
                     continue
-                if a0.vector1.end == a1.vector0.end:
-                    angle = a0.vertex.angle(a0.vector0.end, a1.vector1.end)
-                    common_point = a0.vector1.end
-                elif a0.vector0.end == a1.vector1.end:
-                    angle = a0.vertex.angle(a1.vector0.end, a0.vector1.end)
-                    common_point = a0.vector0.end
-                elif a0.vector0.end == a1.vector0.end:
-                    angle = a0.vertex.angle(a1.vector1.end, a0.vector1.end)
-                    common_point = a0.vector0.end
-                elif a0.vector1.end == a1.vector1.end:
-                    angle = a0.vertex.angle(a0.vector0.end, a1.vector0.end)
-                    common_point = a0.vector1.end
-                else:
+                a0 = pia.angle.vertex.angle(pia.angle.vector0.end, pia.point)
+                a1 = pia.angle.vertex.angle(pia.angle.vector1.end, pia.point)
+                ar = self.context.angles_ratio_property(a0, a1)
+                if ar is None or pia.reason.obsolete and av.reason.obsolete and ar.reason.obsolete:
                     continue
-                inside_angle_reason = \
-                    self.context[PointInsideAngleProperty(common_point, angle)]
-                if inside_angle_reason is None:
-                    #TODO: consider angle difference
-                    continue
-                sum_reason = self.context.angle_value_property(angle)
-                if sum_reason is None or ar.reason.obsolete and sum_reason.reason.obsolete and inside_angle_reason.reason.obsolete:
-                    continue
-                value = sum_reason.degree
-                second = divide(value, 1 + ar.value)
-                first = value - second
+                if ar.angle0 == a1:
+                    a0, a1 = a1, a0
+                sum_value = av.degree
+                second = divide(sum_value, 1 + ar.value)
+                first = sum_value - second
                 #TODO: write comments
-                yield (AngleValueProperty(a0, first), [], [ar, sum_reason, inside_angle_reason])
-                yield (AngleValueProperty(a1, second), [], [ar, sum_reason, inside_angle_reason])
+                yield (AngleValueProperty(a0, first), [], [ar, av, pia])
+                yield (AngleValueProperty(a1, second), [], [ar, av, pia])
 
             angle_values = [prop for prop in self.context.list(AngleValueProperty) \
                 if prop.angle.vertex is not None]
