@@ -78,15 +78,30 @@ class AngleRatioPropertySet:
         def __init__(self):
             self.angle_to_ratio = {}
             self.premises_graph = nx.Graph()
+            self.degree = None
 
-        def add_property(self, prop):
+        def add_value_property(self, prop):
+            ratio = self.angle_to_ratio.get(prop.angle)
+            if ratio and self.degree:
+                # TODO: better way to report contradiction
+                assert prop.degree == ratio * self.degree, 'Contradiction'
+            elif ratio:
+                self.degree = divide(prop.degree, ratio)
+            elif self.degree:
+                self.angle_to_ratio[prop.angle] = divide(prop.degree, self.degree)
+            else:
+                self.angle_to_ratio[prop.angle] = 1
+                self.degree = prop.degree
+            self.premises_graph.add_edge(prop.angle, self.degree, prop=prop)
+
+        def add_ratio_property(self, prop):
             ratio0 = self.angle_to_ratio.get(prop.angle0)
             ratio1 = self.angle_to_ratio.get(prop.angle1)
             if ratio0 and ratio1:
                 # TODO: better way to report contradiction
                 assert ratio0 == ratio1 * prop.value, 'Contradiction'
             elif ratio0:
-                self.angle_to_ratio[prop.angle1] = ratio0 / prop.value
+                self.angle_to_ratio[prop.angle1] = divide(ratio0, prop.value)
             elif ratio1:
                 self.angle_to_ratio[prop.angle0] = ratio1 * prop.value
             else:
@@ -96,17 +111,55 @@ class AngleRatioPropertySet:
 
     def __init__(self):
         self.angle_to_family = {}
+        self.family_with_degree = None
 
     def add(self, prop):
+        if isinstance(prop, AnglesRatioProperty):
+            self.__add_ratio_property(prop)
+        elif isinstance(prop, AngleValueProperty):
+            self.__add_value_property(prop)
+
+    def __add_value_property(self, prop):
+        if prop.degree in (0, 180):
+            # TODO: implement special families
+            return
+        fam = self.angle_to_family.get(prop.angle)
+        if fam and self.family_with_degree:
+            if fam != self.family_with_degree:
+                coef = divide(prop.degree, self.family_with_degree.degree * fam.angle_to_ratio[prop.angle])
+                if coef != 1:
+                    for key in fam.angle_to_ratio:
+                        fam.angle_to_ratio[key] *= coef
+                self.family_with_degree.angle_to_ratio.update(fam.angle_to_ratio)
+                for key in self.angle_to_family:
+                    if self.angle_to_family[key] == fam:
+                        self.angle_to_family[key] = self.family_with_degree
+                self.family_with_degree.premises_graph.add_edges_from(fam.premises_graph.edges)
+                for a0, a1 in fam.premises_graph.edges:
+                    self.family_with_degree.premises_graph[a0][a1].update(fam.premises_graph[a0][a1])
+        elif fam:
+            self.family_with_degree = fam
+        elif self.family_with_degree:
+            self.angle_to_family[prop.angle] = self.family_with_degree
+        else:
+            self.family_with_degree = AngleRatioPropertySet.Family()
+            self.angle_to_family[prop.angle] = self.family_with_degree
+        self.family_with_degree.add_value_property(prop)
+
+    def __add_ratio_property(self, prop):
         fam0 = self.angle_to_family.get(prop.angle0)
         fam1 = self.angle_to_family.get(prop.angle1)
         if fam0 and fam1:
-            fam0.add_property(prop)
+            fam0.add_ratio_property(prop)
             if fam0 != fam1:
-                coef = prop.value * fam1.angle_to_ratio[prop.angle1] / fam0.angle_to_ratio[prop.angle0]
+                if fam1 == self.family_with_degree:
+                    fam0, fam1 = fam1, fam0
+                    coef = divide(fam0.angle_to_ratio[prop.angle1] * prop.value, fam1.angle_to_ratio[prop.angle0])
+                else:
+                    coef = divide(fam0.angle_to_ratio[prop.angle0], prop.value * fam1.angle_to_ratio[prop.angle1])
                 if coef != 1:
-                    for key in fam0.angle_to_ratio:
-                        fam0.angle_to_ratio[key] *= coef
+                    for key in fam1.angle_to_ratio:
+                        fam1.angle_to_ratio[key] *= coef
                 fam0.angle_to_ratio.update(fam1.angle_to_ratio)
                 for key in self.angle_to_family:
                     if self.angle_to_family[key] == fam1:
@@ -115,14 +168,14 @@ class AngleRatioPropertySet:
                 for a0, a1 in fam1.premises_graph.edges:
                     fam0.premises_graph[a0][a1].update(fam1.premises_graph[a0][a1])
         elif fam0:
-            fam0.add_property(prop)
+            fam0.add_ratio_property(prop)
             self.angle_to_family[prop.angle1] = fam0
         elif fam1:
-            fam1.add_property(prop)
+            fam1.add_ratio_property(prop)
             self.angle_to_family[prop.angle0] = fam1
         else:
             fam = AngleRatioPropertySet.Family()
-            fam.add_property(prop)
+            fam.add_ratio_property(prop)
             self.angle_to_family[prop.angle0] = fam
             self.angle_to_family[prop.angle1] = fam
 
@@ -373,13 +426,13 @@ class PropertySet:
         self.__combined = {} # (type, key) => [prop] and type => prop
         self.__full_set = {} # prop => prop
         self.__angle_values = {} # angle => prop
-        self.__angle_ratios = {} # {angle, angle} => prop
-        self.__alrs = AngleRatioPropertySet()
+        self.__angle_ratios = AngleRatioPropertySet()
         self.__length_ratios = LengthRatioPropertySet()
         self.__cyclic_orders = CyclicOrderPropertySet()
         self.__coincidence = {} # {point, point} => prop
         self.__collinearity = {} # {point, point, point} => prop
         self.__intersections = {} # {segment, segment} => point, [reasons]
+        self.COUNTS = [0] * 3
 
     def add(self, prop):
         def put(key):
@@ -396,9 +449,9 @@ class PropertySet:
         self.__full_set[prop] = prop
         if type_key == AngleValueProperty:
             self.__angle_values[prop.angle] = prop
+            self.__angle_ratios.add(prop)
         elif type_key == AnglesRatioProperty:
-            self.__angle_ratios[prop.angle_set] = prop
-            self.__alrs.add(prop)
+            self.__angle_ratios.add(prop)
         elif type_key == LengthRatioProperty:
             self.__length_ratios.add(prop)
         elif type_key == PointsCoincidenceProperty:
@@ -471,12 +524,18 @@ class PropertySet:
         return self.__angle_values.get(angle)
 
     def angles_ratio_property(self, angle0, angle1):
-        comment, premises = self.__alrs.explanation(angle0, angle1)
+        comment, premises = self.__angle_ratios.explanation(angle0, angle1)
         if comment is None:
+            self.COUNTS[0] += 1
             return None
         if len(premises) == 1:
+            self.COUNTS[1] += 1
             return premises[0]
-        return self.__angle_ratios.get(frozenset([angle0, angle1]))
+        self.COUNTS[2] += 1
+        return None
+        #prop.reason = Reason(-2, -2, comment, premises)
+        #prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+        #return prop
 
     def lengths_ratio_property_and_value(self, segment0, segment1):
         return self.__length_ratios.property_and_value(segment0, segment1)
@@ -545,8 +604,9 @@ class PropertySet:
         return (None, [])
 
     def stats(self):
-        total = sum(len(fam.angle_to_ratio) * (len(fam.angle_to_ratio) - 1) / 2 for fam in set(self.__alrs.angle_to_family.values()))
-        print('%s angles in %s families, total: %s' % (len(self.__alrs.angle_to_family), len(set(self.__alrs.angle_to_family.values())), total))
+        total = sum(len(fam.angle_to_ratio) * (len(fam.angle_to_ratio) - 1) / 2 for fam in set(self.__angle_ratios.angle_to_family.values()))
+        print('%s angles in %s families, total: %s' % (len(self.__angle_ratios.angle_to_family), len(set(self.__angle_ratios.angle_to_family.values())), total))
+        print(self.COUNTS)
         def type_presentation(kind):
             return kind.__doc__.strip() if kind.__doc__ else kind.__name__
 
