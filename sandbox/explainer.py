@@ -269,7 +269,7 @@ class Explainer:
                         [prop] + reasons
                     )
 
-            for ra in [av for av in self.context.list(AngleValueProperty) if av.degree == 90]:
+            for ra in [av for av in self.context.nondegenerate_angle_value_properties() if av.degree == 90]:
                 ra_is_too_old = ra.reason.obsolete
                 vectors = (ra.angle.vector0, ra.angle.vector1)
                 for vec0, vec1 in (vectors, reversed(vectors)):
@@ -623,9 +623,9 @@ class Explainer:
                 yield (AngleValueProperty(a0, a0_value), comment, [ar, a2_reason])
                 yield (AngleValueProperty(a1, a1_value), comment, [ar, a2_reason])
 
-            for ka in self.context.list(AngleValueProperty):
+            for ka in self.context.nondegenerate_angle_value_properties():
                 base = ka.angle
-                if ka.degree == 0 or ka.degree >= 90 or base.vertex is None:
+                if ka.degree >= 90 or base.vertex is None:
                     continue
                 ka_is_too_old = ka.reason.obsolete
                 for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
@@ -1305,7 +1305,7 @@ class Explainer:
                             [sos, col, ne]
                         )
 
-            right_angles = [p for p in self.context.list(AngleValueProperty) if p.angle.vertex and p.degree == 90]
+            right_angles = [p for p in self.context.nondegenerate_angle_value_properties() if p.angle.vertex and p.degree == 90]
             for ra0, ra1 in itertools.combinations(right_angles, 2):
                 vertex = ra0.angle.vertex
                 if vertex != ra1.angle.vertex or ra0.reason.obsolete and ra1.reason.obsolete:
