@@ -81,6 +81,26 @@ class AngleRatioPropertySet:
             self.premises_graph = nx.Graph()
             self.degree = None
 
+        def explanation_from_path(self, path, multiplier):
+            pattern = []
+            params = []
+            for vertex in path:
+                if isinstance(vertex, CoreScene.Angle):
+                    coef = divide(multiplier, self.angle_to_ratio[vertex])
+                    if coef == 1:
+                        pattern.append('%s')
+                        params.append(vertex)
+                    else:
+                        pattern.append('%s %s')
+                        params.append(coef)
+                        params.append(vertex)
+                else:
+                    pattern.append('%sº')
+                    params.append(multiplier * vertex)
+            comment = _comment(' = '.join(pattern), *params)
+            premises = [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
+            return (comment, premises)
+
         def value_properties(self):
             properties = []
             for angle, ratio in self.angle_to_ratio.items():
@@ -88,23 +108,8 @@ class AngleRatioPropertySet:
                 if len(path) == 2:
                     properties.append(self.premises_graph[path[0]][path[1]]['prop'])
                     continue
-                pattern = []
-                params = []
-                for angle in path[:-1]:
-                    coef = divide(self.angle_to_ratio[angle], ratio)
-                    if ratio == 1:
-                        pattern.append('%s')
-                        params.append(angle)
-                    else:
-                        pattern.append('%s %s')
-                        params.append(coef)
-                        params.append(angle)
-                pattern.append('%sº')
-                params.append(divide(self.degree, ratio))
-                comment = _comment(' = '.join(pattern), *params)
-                premises = [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
-                value = divide(self.degree, coef)
-                prop = AngleValueProperty(angle, value)
+                comment, premises = self.explanation_from_path(path, ratio)
+                prop = AngleValueProperty(angle, self.degree * ratio)
                 prop.reason = Reason(-2, -2, comment, premises)
                 prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                 properties.append(prop)
@@ -218,25 +223,9 @@ class AngleRatioPropertySet:
         if fam is None or angle1 not in fam.angle_to_ratio:
             return (None, None, None)
         path = nx.algorithms.shortest_path(fam.premises_graph, angle0, angle1)
-        pattern = []
-        params = []
         coef = fam.angle_to_ratio[path[0]]
-        for vertex in path:
-            if isinstance(vertex, CoreScene.Angle):
-                ratio = divide(fam.angle_to_ratio[vertex], coef)
-                if ratio == 1:
-                    pattern.append('%s')
-                    params.append(vertex)
-                else:
-                    pattern.append('%s %s')
-                    params.append(ratio)
-                    params.append(vertex)
-            else:
-                pattern.append('%sº')
-                params.append(divide(vertex, coef))
-        comment = _comment(' = '.join(pattern), *params)
-        premises = [fam.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
-        value = divide(fam.angle_to_ratio[path[-1]], coef)
+        comment, premises = fam.explanation_from_path(path, coef)
+        value = divide(coef, fam.angle_to_ratio[path[-1]])
         return (comment, premises, value)
 
 class LengthRatioPropertySet:
