@@ -1,6 +1,7 @@
 import itertools
 import networkx as nx
 
+from .core import CoreScene
 from .property import AngleValueProperty, AnglesRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty
 from .reason import Reason
 from .stats import Stats
@@ -179,15 +180,31 @@ class AngleRatioPropertySet:
             self.angle_to_family[prop.angle0] = fam
             self.angle_to_family[prop.angle1] = fam
 
-    def explanation(self, angle0, angle1):
+    def explanation_and_ratio(self, angle0, angle1):
         fam = self.angle_to_family.get(angle0)
         if fam is None or angle1 not in fam.angle_to_ratio:
-            return (None, None)
+            return (None, None, None)
         path = nx.algorithms.shortest_path(fam.premises_graph, angle0, angle1)
-        pattern = ' = '.join(['%s'] * len(path))
-        comment = _comment(pattern, *path)
+        pattern = []
+        params = []
+        coef = fam.angle_to_ratio[path[0]]
+        for vertex in path:
+            if isinstance(vertex, CoreScene.Angle):
+                ratio = divide(fam.angle_to_ratio[vertex], coef)
+                if ratio == 1:
+                    pattern.append('%s')
+                    params.append(vertex)
+                else:
+                    pattern.append('%s %s')
+                    params.append(ratio)
+                    params.append(vertex)
+            else:
+                pattern.append('%sº')
+                params.append(divide(vertex, coef))
+        comment = _comment(' = '.join(pattern), *params)
         premises = [fam.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
-        return (comment, premises)
+        value = divide(fam.angle_to_ratio[path[-1]], coef)
+        return (comment, premises, value)
 
 class LengthRatioPropertySet:
     class Family:
@@ -524,7 +541,7 @@ class PropertySet:
         return self.__angle_values.get(angle)
 
     def angles_ratio_property(self, angle0, angle1):
-        comment, premises = self.__angle_ratios.explanation(angle0, angle1)
+        comment, premises, value = self.__angle_ratios.explanation_and_ratio(angle0, angle1)
         if comment is None:
             self.COUNTS[0] += 1
             return None
@@ -532,10 +549,10 @@ class PropertySet:
             self.COUNTS[1] += 1
             return premises[0]
         self.COUNTS[2] += 1
-        return None
-        #prop.reason = Reason(-2, -2, comment, premises)
-        #prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-        #return prop
+        prop = AnglesRatioProperty(angle0, angle1, value)
+        prop.reason = Reason(-2, -2, comment, premises)
+        prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+        return prop
 
     def lengths_ratio_property_and_value(self, segment0, segment1):
         return self.__length_ratios.property_and_value(segment0, segment1)
