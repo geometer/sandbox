@@ -37,9 +37,6 @@ class Explainer:
             self.scene.unfreeze()
         self.__explanation_time = time.time() - start
 
-    def __angles_ratio_reasons(self, angle):
-        return self.context.list(AnglesRatioProperty, keys=[angle])
-
     def __explain_all(self):
         def iteration():
             for av0, av1 in itertools.combinations(self.context.list(AngleValueProperty), 2):
@@ -102,47 +99,6 @@ class Explainer:
                         _comment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.value), lr0.segment1, _cs(coef), lr1.segment0),
                         [lr0, lr1]
                     )
-
-#            processed = set()
-#            for ar0 in self.context.list(AnglesRatioProperty):
-#                if ar0.reason.obsolete:
-#                    continue
-#                processed.add(ar0)
-#                angle_ratios0 = list(self.__angles_ratio_reasons(ar0.angle0))
-#                angle_ratios1 = list(self.__angles_ratio_reasons(ar0.angle1))
-#                tuples0 = [
-#                    ((ar.angle0, False, ar) \
-#                    if ar.angle1 == ar0.angle0 \
-#                    else (ar.angle1, True, ar))
-#                    for ar in angle_ratios0
-#                ]
-#                used0 = {p[0] for p in tuples0}
-#                tuples1 = [
-#                    ((ar.angle0, True, ar) if \
-#                    ar.angle1 == ar0.angle1 \
-#                    else (ar.angle1, False, ar)) \
-#                    for ar in angle_ratios1
-#                ]
-#                used1 = {p[0] for p in tuples1}
-#                tuples0 = [t for t in tuples0 if t[0] not in used1 and t[2] not in processed]
-#                for tup in tuples0:
-#                    ar1 = tup[2]
-#                    #TODO: report contradictions if in used and ratio is different
-#                    if tup[1]:
-#                        prop = AnglesRatioProperty(ar0.angle1, tup[0], divide(ar1.value, ar0.value))
-#                    else:
-#                        prop = AnglesRatioProperty(tup[0], ar0.angle1, ar0.value * ar1.value)
-#                    #TODO: better comment
-#                    yield (prop, 'Transitivity', [ar0, ar1])
-#                tuples1 = [t for t in tuples1 if t[0] not in used0 and t[2] not in processed]
-#                for tup in tuples1:
-#                    ar1 = tup[2]
-#                    if tup[1]:
-#                        prop = AnglesRatioProperty(ar0.angle0, tup[0], divide(ar0.value, ar1.value))
-#                    else:
-#                        prop = AnglesRatioProperty(ar0.angle0, tup[0], ar0.value * ar1.value)
-#                    #TODO: better comment
-#                    yield (prop, 'Transitivity', [ar0, ar1])
 
             for ar in [p for p in self.context.list(AnglesRatioProperty) if p.value == 1]:
                 set0 = set()
