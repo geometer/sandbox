@@ -18,7 +18,7 @@ def napoleonic(A, B, C):
     line = A.line_through(B)
     V.opposite_side_constraint(C, line, comment=_comment('Given: %s is outward of △ %s %s %s', V, A, B, C))
     D = scene.circumcentre_point((A, B, V), label=C.label + '2')
-    #D.inside_triangle_constraint(A, B, V)
+    D.inside_triangle_constraint(A, B, V)
 
 napoleonic(A, B, C)
 napoleonic(C, A, B)

@@ -27,6 +27,9 @@ class Explainer:
     def __refresh_unexplained(self):
         self.__unexplained = [prop for prop in self.__unexplained if prop not in self.context]
 
+    def __list_angle_values(self):
+        return [p for p in self.context.list(AngleValueProperty) if p.degree in (0, 180)] + self.context.nondegenerate_angle_value_properties()
+
     def explain(self):
         start = time.time()
         frozen = self.scene.is_frozen
@@ -39,7 +42,7 @@ class Explainer:
 
     def __explain_all(self):
         def iteration():
-            for av0, av1 in itertools.combinations(self.context.list(AngleValueProperty), 2):
+            for av0, av1 in itertools.combinations(self.__list_angle_values(), 2):
                 if av0.degree == av1.degree or av0.reason.obsolete and av1.reason.obsolete:
                     continue
                 ang0 = av0.angle
@@ -523,7 +526,7 @@ class Explainer:
                 yield (AngleValueProperty(a0, first), [], [ar, av, pia])
                 yield (AngleValueProperty(a1, second), [], [ar, av, pia])
 
-            angle_values = [prop for prop in self.context.list(AngleValueProperty) \
+            angle_values = [prop for prop in self.__list_angle_values() \
                 if prop.angle.vertex is not None]
 
             for av in [av for av in angle_values if av.degree == 0]:
@@ -718,33 +721,6 @@ class Explainer:
                         [equ]
                     )
 
-            for ar in self.context.list(AnglesRatioProperty):
-                ar_is_too_old = ar.reason.obsolete
-                value = self.context.angle_value_property(ar.angle0)
-                if value:
-                    if ar_is_too_old and value.reason.obsolete:
-                        continue
-                    if ar.value == 1:
-                        comment = _comment('%s = %s = %sº', ar.angle1, ar.angle0, value.degree)
-                    else:
-                        comment = _comment('%s = %s / %s = %sº / %s', ar.angle1, ar.angle0, ar.value, value.degree, ar.value)
-                    yield (
-                        AngleValueProperty(ar.angle1, divide(value.degree, ar.value)),
-                        comment, [ar, value]
-                    )
-                else:
-                    value = self.context.angle_value_property(ar.angle1)
-                    if value is None or ar_is_too_old and value.reason.obsolete:
-                        continue
-                    if ar.value == 1:
-                        comment = _comment('%s = %s = %sº', ar.angle0, ar.angle1, value.degree)
-                    else:
-                        comment = _comment('%s = %s * %s = %sº * %s', ar.angle0, ar.angle1, ar.value, value.degree, ar.value)
-                    yield (
-                        AngleValueProperty(ar.angle0, value.degree * ar.value),
-                        comment, [ar, value]
-                    )
-
             for ct in self.context.list(CongruentTrianglesProperty):
                 ncl = self.context.not_collinear_property(*ct.ABC)
                 if ncl is None:
@@ -906,7 +882,7 @@ class Explainer:
                     [ct]
                 )
 
-            for av in self.context.list(AngleValueProperty):
+            for av in self.__list_angle_values():
                 if av.angle.vertex is None:
                     continue
                 av_is_too_old = av.reason.obsolete
@@ -941,20 +917,6 @@ class Explainer:
                             _comment('%s + %s + %s = 180º', second, av.angle, third),
                             [av, third_reason]
                         )
-
-            for av0, av1 in itertools.combinations( \
-                [av for av in self.context.list(AngleValueProperty) if av.degree not in (0, 180)], 2):
-                if av0.reason.obsolete and av1.reason.obsolete:
-                    continue
-                if av0.degree == av1.degree:
-                    comment = _comment('Both angle values = %sº', av0.degree)
-                else:
-                    comment = _comment('%s = %sº, %s = %sº', av0.angle, av0.degree, av1.angle, av1.degree)
-                yield (
-                    AnglesRatioProperty(av0.angle, av1.angle, divide(av0.degree, av1.degree)),
-                    comment,
-                    [av0, av1]
-                )
 
             for sa in self.context.list(SumOfAnglesProperty):
                 sa_is_too_old = sa.reason.obsolete
@@ -992,7 +954,7 @@ class Explainer:
                     [ar, oppo]
                 )
 
-            for av in self.context.list(AngleValueProperty):
+            for av in self.__list_angle_values():
                 if av.reason.obsolete or av.angle.vertex is None:
                     continue
                 yield (
