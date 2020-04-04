@@ -100,7 +100,10 @@ class Explainer:
                         [lr0, lr1]
                     )
 
-            for ar in [p for p in self.context.list(AnglesRatioProperty) if p.value == 1]:
+            congruent_angles = self.context.congruent_angle_properties()
+            congruent_angles_with_vertex = [ar for ar in congruent_angles if ar.angle0.vertex and ar.angle1.vertex]
+
+            for ar in congruent_angles:
                 set0 = set()
                 set1 = set()
                 for sa in self.context.list(SumOfAnglesProperty, keys=[ar.angle0]):
@@ -685,10 +688,8 @@ class Explainer:
                         [cs, nc]
                     )
 
-            for ar in self.context.list(AnglesRatioProperty):
-                if ar.value != 1:
-                    continue
-                if len(ar.angle0.points) != 3 or ar.angle0.points != ar.angle1.points:
+            for ar in congruent_angles_with_vertex:
+                if ar.angle0.points != ar.angle1.points:
                     continue
                 nc = self.context.not_collinear_property(*ar.angle0.points)
                 if nc is None:
@@ -1000,9 +1001,8 @@ class Explainer:
                     [av]
                 )
 
-            congruent_angles = [ar for ar in self.context.list(AnglesRatioProperty) if ar.value == 1 and ar.angle0.vertex and ar.angle1.vertex]
             congruent_angles_groups = {}
-            for ca in congruent_angles:
+            for ca in congruent_angles_with_vertex:
                 key = frozenset([frozenset(ca.angle0.points), frozenset(ca.angle1.points)])
                 lst = congruent_angles_groups.get(key)
                 if lst:
@@ -1038,7 +1038,7 @@ class Explainer:
                     return True
                 return self.context.congruent_segments_property(seg0, seg1)
 
-            for ca in congruent_angles:
+            for ca in congruent_angles_with_vertex:
                 ncl = self.context.not_collinear_property(*ca.angle0.points)
                 if ncl:
                     if not ca.reason.obsolete or not ncl.reason.obsolete:
@@ -1121,7 +1121,7 @@ class Explainer:
                     comment, premises
                 )
 
-            for ca in congruent_angles:
+            for ca in congruent_angles_with_vertex:
                 ca_is_too_old = ca.reason.obsolete
                 ang0 = ca.angle0
                 ang1 = ca.angle1
@@ -1150,7 +1150,7 @@ class Explainer:
                         ), comment, premises
                     )
 
-            for ca in congruent_angles:
+            for ca in congruent_angles_with_vertex:
                 ca_is_too_old = ca.reason.obsolete
                 ang0 = ca.angle0
                 ang1 = ca.angle1
@@ -1167,7 +1167,7 @@ class Explainer:
                         [elr, ca]
                     )
 
-            for ca in congruent_angles:
+            for ca in congruent_angles_with_vertex:
                 ca_is_too_old = ca.reason.obsolete
                 ang0 = ca.angle0
                 ang1 = ca.angle1
@@ -1346,9 +1346,9 @@ class Explainer:
                     [sos]
                 )
 
-            for ca in [p for p in self.context.list(AnglesRatioProperty) if p.value == 1]:
+            for ca in congruent_angles_with_vertex:
                 vertex = ca.angle0.vertex
-                if vertex is None or vertex != ca.angle1.vertex:
+                if vertex != ca.angle1.vertex:
                     continue
                 pts0 = ca.angle0.endpoints
                 pts1 = ca.angle1.endpoints

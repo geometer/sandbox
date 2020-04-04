@@ -128,6 +128,28 @@ class AngleRatioPropertySet:
                 properties.append(prop)
             return properties
 
+        def congruent_properties(self):
+            reverse_map = {}
+            for angle, ratio in self.angle_to_ratio.items():
+                rs = reverse_map.get(ratio)
+                if rs:
+                    rs.append(angle)
+                else:
+                    reverse_map[ratio] = [angle]
+            properties = []
+            for ar in reverse_map.values():
+                for angle0, angle1 in itertools.combinations(ar, 2):
+                    path = nx.algorithms.shortest_path(self.premises_graph, angle0, angle1)
+                    if len(path) == 2:
+                        properties.append(self.premises_graph[path[0]][path[1]]['prop'])
+                        continue
+                    comment, premises = self.explanation_from_path(path, ratio)
+                    prop = AnglesRatioProperty(angle0, angle1, 1)
+                    prop.reason = Reason(-2, -2, comment, premises)
+                    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+                    properties.append(prop)
+            return properties
+
         def add_value_property(self, prop):
             ratio = self.angle_to_ratio.get(prop.angle)
             if ratio and self.degree:
@@ -175,6 +197,27 @@ class AngleRatioPropertySet:
     def value_properties(self):
         fam = self.family_with_degree
         return fam.value_properties() if fam else []
+
+    def ratio_property(self, angle0, angle1):
+        fam = self.angle_to_family.get(angle0)
+        if fam is None or angle1 not in fam.angle_to_ratio:
+            return None
+        path = nx.algorithms.shortest_path(fam.premises_graph, angle0, angle1)
+        if len(path) == 2:
+            return fam.premises_graph[path[0]][path[1]]['prop']
+        coef = fam.angle_to_ratio[path[0]]
+        comment, premises = fam.explanation_from_path(path, coef)
+        value = divide(coef, fam.angle_to_ratio[path[-1]])
+        prop = AnglesRatioProperty(angle0, angle1, value)
+        prop.reason = Reason(-2, -2, comment, premises)
+        prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+        return prop
+
+    def congruent_properties(self):
+        properties = []
+        for fam in set(self.angle_to_family.values()):
+            properties += fam.congruent_properties()
+        return properties
 
     def add(self, prop):
         if isinstance(prop, AnglesRatioProperty):
@@ -242,21 +285,6 @@ class AngleRatioPropertySet:
             fam.add_ratio_property(prop)
             self.angle_to_family[prop.angle0] = fam
             self.angle_to_family[prop.angle1] = fam
-
-    def ratio_property(self, angle0, angle1):
-        fam = self.angle_to_family.get(angle0)
-        if fam is None or angle1 not in fam.angle_to_ratio:
-            return None
-        path = nx.algorithms.shortest_path(fam.premises_graph, angle0, angle1)
-        if len(path) == 2:
-            return fam.premises_graph[path[0]][path[1]]['prop']
-        coef = fam.angle_to_ratio[path[0]]
-        comment, premises = fam.explanation_from_path(path, coef)
-        value = divide(coef, fam.angle_to_ratio[path[-1]])
-        prop = AnglesRatioProperty(angle0, angle1, value)
-        prop.reason = Reason(-2, -2, comment, premises)
-        prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-        return prop
 
 class LengthRatioPropertySet:
     class Family:
@@ -594,6 +622,10 @@ class PropertySet:
 
     def angles_ratio_property(self, angle0, angle1):
         return self.__angle_ratios.ratio_property(angle0, angle1)
+
+    def congruent_angle_properties(self):
+        return self.__angle_ratios.congruent_properties()
+        #return [prop for prop in self.list(AnglesRatioProperty) if prop.value == 1]
 
     def lengths_ratio_property_and_value(self, segment0, segment1):
         return self.__length_ratios.property_and_value(segment0, segment1)
