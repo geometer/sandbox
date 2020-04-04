@@ -495,7 +495,6 @@ class PropertySet:
         self.__coincidence = {} # {point, point} => prop
         self.__collinearity = {} # {point, point, point} => prop
         self.__intersections = {} # {segment, segment} => point, [reasons]
-        self.COUNTS = [0] * 3
 
     def add(self, prop):
         def put(key):
@@ -591,12 +590,9 @@ class PropertySet:
     def angles_ratio_property(self, angle0, angle1):
         comment, premises, value = self.__angle_ratios.explanation_and_ratio(angle0, angle1)
         if comment is None:
-            self.COUNTS[0] += 1
             return None
         if len(premises) == 1:
-            self.COUNTS[1] += 1
             return premises[0]
-        self.COUNTS[2] += 1
         prop = AnglesRatioProperty(angle0, angle1, value)
         prop.reason = Reason(-2, -2, comment, premises)
         prop.reason.obsolete = all(p.reason.obsolete for p in premises)
@@ -671,7 +667,6 @@ class PropertySet:
     def stats(self):
         total = sum(len(fam.angle_to_ratio) * (len(fam.angle_to_ratio) - 1) / 2 for fam in set(self.__angle_ratios.angle_to_family.values()))
         print('%s angles in %s families, total: %s' % (len(self.__angle_ratios.angle_to_family), len(set(self.__angle_ratios.angle_to_family.values())), total))
-        print(self.COUNTS)
         def type_presentation(kind):
             return kind.__doc__.strip() if kind.__doc__ else kind.__name__
 
