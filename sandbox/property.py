@@ -114,7 +114,7 @@ class PointsCoincidenceProperty(Property):
 
 class SameOrOppositeSideProperty(Property):
     """
-    Two points on opposite/same sides of the line
+    Two points on opposite/same sides of a line
     """
     def __init__(self, segment, point0, point1, same):
         self.segment = segment
@@ -140,7 +140,7 @@ class SameOrOppositeSideProperty(Property):
 
 class PointInsideAngleProperty(Property):
     """
-    Point is inside the angle
+    Point is inside an angle
     """
     def __init__(self, point, angle):
         self.point = point
