@@ -835,10 +835,15 @@ class Explainer:
                 )
 
             for st in self.context.list(SimilarTrianglesProperty):
-                ncl = self.context.collinearity_property(*st.ABC)
-                if ncl is None:
-                    ncl = self.context.collinearity_property(*st.DEF)
-                if ncl is None or ncl.collinear or st.reason.obsolete and ncl.reason.obsolete:
+                neq = []
+                for i in range(0, 3):
+                    ne = self.context.not_equal_property(*side_of(st.ABC, i).points)
+                    if ne is None:
+                        ne = self.context.not_equal_property(*side_of(st.DEF, i).points)
+                    neq.append(ne)
+                if any(ne is None for ne in neq):
+                    continue
+                if st.reason.obsolete and all(ne.reason.obsolete for ne in neq):
                     continue
                 for i, j in itertools.combinations(range(0, 3), 2):
                     side00 = side_of(st.ABC, i)
@@ -848,37 +853,37 @@ class Explainer:
                     if side00 == side10:
                         yield (
                             LengthRatioProperty(side01, side11, 1),
-                            'Ratios of sides in non-degenerate similar triangles',
-                            [st, ncl]
+                            'Ratios of sides in similar triangles',
+                            [st] + neq
                         )
                         continue
                     if side01 == side11:
                         yield (
                             LengthRatioProperty(side00, side10, 1),
-                            'Ratios of sides in non-degenerate similar triangles',
-                            [st, ncl]
+                            'Ratios of sides in similar triangles',
+                            [st] + neq
                         )
                         continue
                     cs = self.context.congruent_segments_property(side00, side10)
                     if cs:
                         yield (
                             LengthRatioProperty(side01, side11, 1),
-                            'Ratios of sides in non-degenerate similar triangles',
-                            [st, cs, ncl]
+                            'Ratios of sides in similar triangles',
+                            [st, cs] + neq
                         )
                         continue
                     cs = self.context.congruent_segments_property(side01, side11)
                     if cs:
                         yield (
                             LengthRatioProperty(side00, side10, 1),
-                            'Ratios of sides in non-degenerate similar triangles',
-                            [st, cs, ncl]
+                            'Ratios of sides in similar triangles',
+                            [st, cs] + neq
                         )
                         continue
                     yield (
                         EqualLengthRatiosProperty(side00, side10, side01, side11),
                         'Ratios of sides in similar triangles',
-                        [st]
+                        [st] + neq
                     )
 
             for st in self.context.list(SimilarTrianglesProperty):
