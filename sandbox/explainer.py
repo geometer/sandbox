@@ -112,6 +112,7 @@ class Explainer:
 
             congruent_angles = self.context.congruent_angle_properties()
             congruent_angles_with_vertex = [ar for ar in congruent_angles if ar.angle0.vertex and ar.angle1.vertex]
+            same_triple_ratios = self.context.same_triple_angle_ratio_properties()
 
             for ar in congruent_angles:
                 set0 = set()
@@ -596,7 +597,7 @@ class Explainer:
                     [sos0, sos1]
                 )
 
-            for ar in self.context.same_triple_angle_ratio_properties():
+            for ar in same_triple_ratios:
                 a0 = ar.angle0
                 a1 = ar.angle1
                 if a0.vertex is None or a1.vertex is None:
@@ -698,8 +699,8 @@ class Explainer:
                         [cs, nc]
                     )
 
-            for ar in congruent_angles_with_vertex:
-                if ar.angle0.points != ar.angle1.points:
+            for ar in same_triple_ratios:
+                if ar.value != 1:
                     continue
                 nc = self.context.not_collinear_property(*ar.angle0.points)
                 if nc is None:
