@@ -115,24 +115,26 @@ class Explainer:
             same_triple_ratios = self.context.same_triple_angle_ratio_properties()
 
             for ar in congruent_angles:
-                set0 = set()
-                set1 = set()
+                dict0 = {}
+                dict1 = {}
                 for sa in self.context.list(SumOfAnglesProperty, keys=[ar.angle0]):
                     if ar.reason.obsolete and sa.reason.obsolete:
                         continue
-                    set0.add(sa.angle1 if sa.angle0 == ar.angle0 else sa.angle0)
+                    dict0[sa.angle1 if sa.angle0 == ar.angle0 else sa.angle0] = sa
                 for sa in self.context.list(SumOfAnglesProperty, keys=[ar.angle1]):
                     if ar.reason.obsolete and sa.reason.obsolete:
                         continue
-                    set1.add(sa.angle1 if sa.angle0 == ar.angle1 else sa.angle0)
-                for angle in set0.difference(set1):
+                    dict1[sa.angle1 if sa.angle0 == ar.angle1 else sa.angle0] = sa
+                for angle in [angle for angle in dict0 if angle not in dict1]:
+                    sa = dict0[angle]
                     if ar.angle1 == angle:
                         #TODO: better comment
                         prop = AngleValueProperty(angle, divide(sa.degree, 2))
                     else:
                         prop = SumOfAnglesProperty(ar.angle1, angle, sa.degree)
                     yield (prop, 'Transitivity', [sa, ar])
-                for angle in set1.difference(set0):
+                for angle in [angle for angle in dict1 if angle not in dict0]:
+                    sa = dict1[angle]
                     if ar.angle0 == angle:
                         #TODO: better comment
                         prop = AngleValueProperty(angle, divide(sa.degree, 2))
@@ -927,24 +929,25 @@ class Explainer:
                         )
 
             for sa in self.context.list(SumOfAnglesProperty):
-                sa_is_too_old = sa.reason.obsolete
-                av = self.context.angle_value_property(sa.angle0)
-                if av:
-                    if sa_is_too_old and av.reason.obsolete:
+                av0 = self.context.angle_value_property(sa.angle0)
+                av1 = self.context.angle_value_property(sa.angle1)
+                if av0 and av1:
+                    continue
+                elif av0:
+                    if sa.reason.obsolete and av0.reason.obsolete:
                         continue
                     yield (
-                        AngleValueProperty(sa.angle1, sa.degree - av.degree),
-                        _comment('%sº - %sº', sa.degree, av.degree),
-                        [sa, av]
+                        AngleValueProperty(sa.angle1, sa.degree - av0.degree),
+                        _comment('%sº - %sº', sa.degree, av0.degree),
+                        [sa, av0]
                     )
-                else:
-                    av = self.context.angle_value_property(sa.angle1)
-                    if av is None or sa_is_too_old and av.reason.obsolete:
+                elif av1:
+                    if sa.reason.obsolete and av1.reason.obsolete:
                         continue
                     yield (
-                        AngleValueProperty(sa.angle0, sa.degree - av.degree),
-                        _comment('%sº - %sº', sa.degree, av.degree),
-                        [sa, av]
+                        AngleValueProperty(sa.angle0, sa.degree - av1.degree),
+                        _comment('%sº - %sº', sa.degree, av1.degree),
+                        [sa, av1]
                     )
 
             for ar in [p for p in self.context.list(SumOfAnglesProperty) if p.angle0.vertex is not None and p.angle0.vertex == p.angle1.vertex and p.degree == 180]:
