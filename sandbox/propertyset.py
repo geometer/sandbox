@@ -701,7 +701,7 @@ class PropertySet:
         value = self.__intersections.get(key)
         if value is None:
             value = self.__intersection_of_lines(segment0, segment1)
-            if value:
+            if value[0]:
                 self.__intersections[key] = value
         return value
 
