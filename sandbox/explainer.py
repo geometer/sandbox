@@ -114,33 +114,20 @@ class Explainer:
             congruent_angles_with_vertex = [ar for ar in congruent_angles if ar.angle0.vertex and ar.angle1.vertex]
             same_triple_ratios = self.context.same_triple_angle_ratio_properties()
 
-            for ar in congruent_angles:
-                dict0 = {}
-                dict1 = {}
-                for sa in self.context.list(SumOfAnglesProperty, keys=[ar.angle0]):
-                    if ar.reason.obsolete and sa.reason.obsolete:
-                        continue
-                    dict0[sa.angle1 if sa.angle0 == ar.angle0 else sa.angle0] = sa
-                for sa in self.context.list(SumOfAnglesProperty, keys=[ar.angle1]):
-                    if ar.reason.obsolete and sa.reason.obsolete:
-                        continue
-                    dict1[sa.angle1 if sa.angle0 == ar.angle1 else sa.angle0] = sa
-                for angle in [angle for angle in dict0 if angle not in dict1]:
-                    sa = dict0[angle]
-                    if ar.angle1 == angle:
-                        #TODO: better comment
-                        prop = AngleValueProperty(angle, divide(sa.degree, 2))
-                    else:
-                        prop = SumOfAnglesProperty(ar.angle1, angle, sa.degree)
-                    yield (prop, 'Transitivity', [sa, ar])
-                for angle in [angle for angle in dict1 if angle not in dict0]:
-                    sa = dict1[angle]
-                    if ar.angle0 == angle:
-                        #TODO: better comment
-                        prop = AngleValueProperty(angle, divide(sa.degree, 2))
-                    else:
-                        prop = SumOfAnglesProperty(ar.angle0, angle, sa.degree)
-                    yield (prop, 'Transitivity', [sa, ar])
+            for sa in self.context.list(SumOfAnglesProperty):
+                ar = self.context.angles_ratio_property(sa.angle0, sa.angle1)
+                if ar is None or sa.reason.obsolete and ar.reason.obsolete:
+                    continue
+                value1 = divide(sa.degree, 1 + ar.value)
+                value0 = sa.degree - value1
+                if ar.value == 1:
+                    comment0 = _comment('%s + %s = %s', ar.angle0, ar.angle0, sa.degree),
+                    comment1 = _comment('%s + %s = %s', ar.angle1, ar.angle1, sa.degree),
+                else:
+                    comment0 = _comment('%s + %s / %s = %s', ar.angle0, ar.angle0, ar.value, sa.degree),
+                    comment1 = _comment('%s + %s %s = %s', ar.angle1, ar.value, ar.angle1, sa.degree),
+                yield (AngleValueProperty(ar.angle0, value0), comment0, [sa, ar])
+                yield (AngleValueProperty(ar.angle1, value1), comment1, [sa, ar])
 
             for ncl in [p for p in self.context.list(PointsCollinearityProperty) if not p.collinear]:
                 if not ncl.reason.obsolete:
