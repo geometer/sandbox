@@ -19,10 +19,17 @@ class Explainer:
         self.__iteration_step_count = -1
 
     def __reason(self, prop, comments, premises=None):
-        if prop not in self.context:
+        reason = Reason(len(self.context), self.__iteration_step_count, comments, premises)
+        if prop in reason.all_premises:
+            return
+        existing = self.context[prop]
+        if existing is None:
             prop.reason = Reason(len(self.context), self.__iteration_step_count, comments, premises)
             prop.reason.obsolete = False
             self.context.add(prop)
+        elif len(reason.all_premises) < len(existing.reason.all_premises):
+            reason.obsolete = existing.reason.obsolete
+            existing.reason = reason
 
     def __refresh_unexplained(self):
         self.__unexplained = [prop for prop in self.__unexplained if prop not in self.context]
