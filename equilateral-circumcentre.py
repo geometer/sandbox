@@ -13,11 +13,11 @@ D = scene.circumcentre_point((A, B, C), label='D')
 hunter = Hunter(scene, max_layer='auxiliary')
 hunter.hunt()
 
-explainer = Explainer(scene, hunter.properties)
+explainer = Explainer(scene)
 if '--profile' in sys.argv[1:]:
     import cProfile
     cProfile.run('explainer.explain()')
 else:
     explainer.explain()
-explainer.dump()
-explainer.stats().dump()
+explainer.dump(hunter.properties)
+explainer.stats(hunter.properties).dump()

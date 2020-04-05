@@ -11,11 +11,10 @@ from .stats import Stats
 from .util import _comment, divide, side_of, angle_of
 
 class Explainer:
-    def __init__(self, scene, properties=[], options=()):
+    def __init__(self, scene, options=()):
         self.scene = scene
         self.context = PropertySet()
         self.__options = options
-        self.__unexplained = list(properties)
         self.__explanation_time = None
         self.__iteration_step_count = -1
 
@@ -1411,37 +1410,38 @@ class Explainer:
             self.__iteration_step_count += 1
             if len(self.context) == explained_size:
                 break
-        self.__unexplained = [prop for prop in self.__unexplained if prop not in self.context]
 
-    def dump(self):
+    def dump(self, properties_to_explain=[]):
         if len(self.context) > 0:
             print('Explained:')
             explained = self.context.all
             explained.sort(key=lambda p: p.reason.index)
             for prop in explained:
                 print('\t%2d (%d): %s [%s]' % (prop.reason.index, prop.reason.generation, prop, prop.reason))
-        if len(self.__unexplained) > 0:
-            print('\nNot explained:')
-            for prop in self.__unexplained:
-                print('\t%s' % prop)
+        if properties_to_explain:
+            unexplained = [prop for prop in properties_to_explain if prop not in self.context]
+            if len(unexplained) > 0:
+                print('\nNot explained:')
+                for prop in unexplained:
+                    print('\t%s' % prop)
 
-    def stats(self):
+    def stats(self, properties_to_explain=[]):
         def type_presentation(kind):
             return kind.__doc__.strip() if kind.__doc__ else kind.__name__
 
+        unexplained = [prop for prop in properties_to_explain if prop not in self.context]
         unexplained_by_kind = {}
-        for prop in self.__unexplained:
+        for prop in unexplained:
             kind = type(prop)
             unexplained_by_kind[kind] = unexplained_by_kind.get(kind, 0) + 1
         unexplained_by_kind = [(type_presentation(k), v) for k, v in unexplained_by_kind.items()]
         unexplained_by_kind.sort(key=lambda pair: -pair[1])
 
         return Stats([
-            ('Total properties', len(self.context) + len(self.__unexplained)),
             ('Explained properties', len(self.context)),
             self.context.stats(),
             ('Explained property keys', self.context.keys_num()),
-            ('Unexplained properties', len(self.__unexplained)),
+            ('Unexplained properties', len(unexplained)),
             Stats(unexplained_by_kind),
             ('Iterations', self.__iteration_step_count),
             ('Explanation time', '%.3f sec' % self.__explanation_time),
