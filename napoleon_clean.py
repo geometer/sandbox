@@ -24,7 +24,10 @@ napoleonic(B, C, A)
 
 angle = scene.get('A2').angle(scene.get('B2'), scene.get('C2'))
 
-explainer = Explainer(scene, [])
+if '--use-trigonometry' in sys.argv[1:]:
+    explainer = Explainer(scene, options={'trigonometry'})
+else:
+    explainer = Explainer(scene)
 
 if '--profile' in sys.argv[1:]:
     import cProfile

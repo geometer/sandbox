@@ -631,7 +631,20 @@ class PropertySet:
         return list(self.__full_set)
 
     def __contains__(self, prop):
-        return prop in self.__full_set
+        if prop in self.__full_set:
+            return True
+        if isinstance(prop, AnglesRatioProperty):
+            #TODO: check ratio value for contradiction
+            fam = self.__angle_ratios.angle_to_family.get(prop.angle0)
+            return fam and prop.angle1 in fam.angle_to_ratio
+        if isinstance(prop, AngleValueProperty) and prop.degree not in (0, 180):
+            #TODO: check degree for contradiction
+            fam = self.__angle_ratios.family_with_degree
+            return fam and prop.angle in fam.angle_to_ratio
+        #TODO: LengthRatioProperty
+        #TODO: EqualLengthRatiosProperty
+        #TODO: SameCyclicOrderProperty
+        return False
 
     def __getitem__(self, prop):
         return self.__full_set.get(prop)
