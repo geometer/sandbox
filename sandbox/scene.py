@@ -84,10 +84,16 @@ class Scene(CoreScene):
         Centre of the inscribed circle of the triangle
         """
         self.triangle_constraint(triangle)
-        bisector0 = triangle[0].angle(triangle[1], triangle[2]).bisector_line(layer='auxiliary')
-        bisector1 = triangle[1].angle(triangle[0], triangle[2]).bisector_line(layer='auxiliary')
-        #bisector2 = triangle[2].angle(triangle[0], triangle[1]).bisector_line(layer='auxiliary')
+        angle0 = triangle[0].angle(triangle[1], triangle[2])
+        angle1 = triangle[1].angle(triangle[0], triangle[2])
+        bisector0 = angle0.bisector_line(layer='auxiliary')
+        bisector1 = angle1.bisector_line(layer='auxiliary')
+        #angle2 = triangle[2].angle(triangle[0], triangle[1])
+        #bisector2 = angle2.bisector_line(layer='auxiliary')
         centre = bisector0.intersection_point(bisector1, **kwargs)
+        angle0.point_on_bisector_constraint(centre)
+        angle1.point_on_bisector_constraint(centre)
+        #angle2.point_on_bisector_constraint(centre)
         #centre.belongs_to(bisector2)
         centre.inside_triangle_constraint(*triangle, comment=_comment('%s is incentre of %s %s %s', centre, *triangle))
         return centre

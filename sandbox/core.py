@@ -659,22 +659,31 @@ class CoreScene:
 
         def bisector_line(self, **kwargs):
             assert self.vertex, 'Cannot construct bisector of angle %s with no vertex' % self
-            B = self.vector0.end
-            C = self.vector1.end
-            circle = self.vertex.circle_through(B, layer='invisible')
-            line = self.vertex.line_through(C, layer='auxiliary')
-            X = circle.intersection_point(line, layer='invisible')
-            self.vertex.same_direction_constraint(X, C)
-            Y = X.translated_point(self.vector0, layer='auxiliary')
-            bisector = self.vertex.line_through(Y, **kwargs)
-            comment = _comment('[%s %s) is the bisector of %s', self.vertex, Y, self)
-            Y.inside_constraint(self, comment=comment)
-            angle0 = self.vertex.angle(B, Y)
-            angle1 = self.vertex.angle(C, Y)
-            self.ratio_constraint(angle0, 2, guaranteed=True, comment=comment)
-            self.ratio_constraint(angle1, 2, guaranteed=True, comment=comment)
-            angle0.ratio_constraint(angle1, 1, guaranteed=True, comment=comment)
-            return bisector
+            if self.scene.strategy == 'constructs':
+                circle = self.vertex.circle_through(self.vector0.end, layer='invisible')
+                line = self.vertex.line_through(self.vector1.end, layer='invisible')
+                X = circle.intersection_point(line, layer='invisible')
+                self.vertex.same_direction_constraint(X, self.vector1.end)
+                Y = X.translated_point(self.vector0, layer='invisible')
+                guaranteed = True
+            else: #self.scene.strategy == 'constraints'
+                Y = self.scene.free_point(layer='invisible')
+                guaranteed = False
+            self.point_on_bisector_constraint(Y, guaranteed=guaranteed)
+            return self.vertex.line_through(Y, **kwargs)
+
+        def point_on_bisector_constraint(self, point, **kwargs):
+            if kwargs.get('comment') is None:
+                kwargs = dict(kwargs)
+                kwargs['comment'] = _comment(
+                    '[%s %s) is the bisector of %s', self.vertex, point, self
+                )
+            angle0 = self.vertex.angle(self.vector0.end, point)
+            angle1 = self.vertex.angle(self.vector1.end, point)
+            point.inside_constraint(self, **kwargs)
+            self.ratio_constraint(angle0, 2, **kwargs)
+            self.ratio_constraint(angle1, 2, **kwargs)
+            angle0.ratio_constraint(angle1, 1, **kwargs)
 
         def ratio_constraint(self, angle, ratio, **kwargs):
             # self = angle * ratio
