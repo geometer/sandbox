@@ -29,6 +29,8 @@ class Explainer:
             prop.reason.obsolete = False
             self.context.add(prop)
         elif len(reason.all_premises) < len(existing.reason.all_premises):
+            reason.index = existing.reason.index
+            reason.generation = existing.reason.generation
             reason.obsolete = existing.reason.obsolete
             existing.reason = reason
 
