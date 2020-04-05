@@ -563,6 +563,9 @@ class PropertySet:
         self.__intersections = {} # {segment, segment} => point, [reasons]
 
     def add(self, prop):
+        if prop in prop.reason.all_premises:
+            return
+
         def put(key):
             lst = self.__combined.get(key)
             if lst:
