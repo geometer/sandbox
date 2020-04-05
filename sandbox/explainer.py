@@ -520,21 +520,15 @@ class Explainer:
 
             for pia in self.context.list(PointInsideAngleProperty):
                 av = self.context.angle_value_property(pia.angle)
-                if av is None:
+                if av is None or pia.reason.obsolete and av.reason.obsolete:
                     continue
-                a0 = pia.angle.vertex.angle(pia.angle.vector0.end, pia.point)
-                a1 = pia.angle.vertex.angle(pia.angle.vector1.end, pia.point)
-                ar = self.context.angles_ratio_property(a0, a1)
-                if ar is None or pia.reason.obsolete and av.reason.obsolete and ar.reason.obsolete:
-                    continue
-                if ar.angle0 == a1:
-                    a0, a1 = a1, a0
-                sum_value = av.degree
-                second = divide(sum_value, 1 + ar.value)
-                first = sum_value - second
-                #TODO: write comments
-                yield (AngleValueProperty(a0, first), [], [ar, av, pia])
-                yield (AngleValueProperty(a1, second), [], [ar, av, pia])
+                angle0 = pia.angle.vertex.angle(pia.angle.vector0.end, pia.point)
+                angle1 = pia.angle.vertex.angle(pia.angle.vector1.end, pia.point)
+                yield (
+                    SumOfAnglesProperty(angle0, angle1, av.degree),
+                    'Two angles with common side',
+                    [pia, av]
+                )
 
             angle_values = [prop for prop in self.__list_angle_values() \
                 if prop.angle.vertex is not None]
