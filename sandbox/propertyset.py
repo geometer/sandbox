@@ -729,8 +729,6 @@ class PropertySet:
         return (None, [])
 
     def stats(self):
-        total = sum(len(fam.angle_to_ratio) * (len(fam.angle_to_ratio) - 1) / 2 for fam in set(self.__angle_ratios.angle_to_family.values()))
-        print('%s angles in %s families, total: %s' % (len(self.__angle_ratios.angle_to_family), len(set(self.__angle_ratios.angle_to_family.values())), total))
         def type_presentation(kind):
             return kind.__doc__.strip() if kind.__doc__ else kind.__name__
 
