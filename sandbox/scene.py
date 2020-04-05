@@ -61,7 +61,7 @@ class Scene(CoreScene):
             centre = bisector0.intersection_point(bisector1, **kwargs)
             #bisector2 = triangle[1].segment(triangle[2]).perpendicular_bisector_line(layer='auxiliary')
             #centre.belongs_to(bisector2)
-        else: #sefl.scene.strategy == 'constraints'
+        else: #self.scene.strategy == 'constraints'
             centre = self.free_point(**kwargs)
         for seg0, seg1 in itertools.combinations([centre.segment(v) for v in triangle], 2):
             seg0.congruent_constraint(
