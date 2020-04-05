@@ -31,9 +31,6 @@ class Explainer:
             reason.obsolete = existing.reason.obsolete
             existing.reason = reason
 
-    def __refresh_unexplained(self):
-        self.__unexplained = [prop for prop in self.__unexplained if prop not in self.context]
-
     def __list_angle_values(self):
         return [p for p in self.context.list(AngleValueProperty) if p.degree in (0, 180)] + self.context.nondegenerate_angle_value_properties()
 
@@ -1402,7 +1399,6 @@ class Explainer:
             self.__reason(prop, comment, [])
 
         self.__iteration_step_count = 0
-        self.__refresh_unexplained()
         while itertools.count():
             explained_size = len(self.context)
             for prop, comment, premises in iteration():
@@ -1410,9 +1406,9 @@ class Explainer:
             for prop in self.context.all:
                 prop.reason.obsolete = prop.reason.generation < self.__iteration_step_count
             self.__iteration_step_count += 1
-            self.__refresh_unexplained()
             if len(self.context) == explained_size:
                 break
+        self.__unexplained = [prop for prop in self.__unexplained if prop not in self.context]
 
     def dump(self):
         if len(self.context) > 0:
