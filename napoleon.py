@@ -1,5 +1,3 @@
-#!/var/www/sandbox/virtualenv/bin/python
-
 import sys
 
 from sandbox import Scene
