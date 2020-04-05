@@ -19,9 +19,9 @@ class InsideTriangle1(ExplainerTest):
         B = self.scene.get('B')
         C = self.scene.get('C')
         X = self.scene.get('X')
-        self.assertIsNotNone(self.explainer.context[PointInsideAngleProperty(X, A.angle(B, C))])
-        self.assertIsNotNone(self.explainer.context[PointInsideAngleProperty(X, B.angle(C, A))])
-        self.assertIsNotNone(self.explainer.context[PointInsideAngleProperty(X, C.angle(A, B))])
+        self.assertIn(PointInsideAngleProperty(X, A.angle(B, C)), self.explainer.context)
+        self.assertIn(PointInsideAngleProperty(X, B.angle(C, A)), self.explainer.context)
+        self.assertIn(PointInsideAngleProperty(X, C.angle(A, B)), self.explainer.context)
 
 class InsideTriangle2(ExplainerTest):
     def createScene(self):
@@ -40,6 +40,6 @@ class InsideTriangle2(ExplainerTest):
         B = self.scene.get('B')
         C = self.scene.get('C')
         X = self.scene.get('X')
-        self.assertIsNotNone(self.explainer.context[PointInsideAngleProperty(X, A.angle(B, C))])
-        self.assertIsNotNone(self.explainer.context[PointInsideAngleProperty(X, B.angle(C, A))])
-        self.assertIsNotNone(self.explainer.context[PointInsideAngleProperty(X, C.angle(A, B))])
+        self.assertIn(PointInsideAngleProperty(X, A.angle(B, C)), self.explainer.context)
+        self.assertIn(PointInsideAngleProperty(X, B.angle(C, A)), self.explainer.context)
+        self.assertIn(PointInsideAngleProperty(X, C.angle(A, B)), self.explainer.context)

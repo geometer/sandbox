@@ -7,7 +7,7 @@ class ExplainerTest(unittest.TestCase):
     def setUp(self):
         self.startTime = time.time()
         self.scene = self.createScene()
-        self.explainer = Explainer(self.scene, [])
+        self.explainer = Explainer(self.scene)
         self.explainer.explain()
 
     def tearDown(self):
