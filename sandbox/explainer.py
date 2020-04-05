@@ -236,6 +236,15 @@ class Explainer:
                             [pv, ne0, ne1]
                         )
 
+            for prop in [p for p in self.context.list(SameOrOppositeSideProperty) if not p.same]:
+                if prop.reason.obsolete:
+                    continue
+                yield (
+                    PointsCoincidenceProperty(prop.points[0], prop.points[1], False),
+                    _comment('%s and %s are separated by line %s', prop.points[0], prop.points[1], prop.segment),
+                    [prop]
+                )
+
             for prop in [p for p in self.context.list(SameOrOppositeSideProperty) if p.same]:
                 prop_is_too_old = prop.reason.obsolete
                 segment = prop.points[0].segment(prop.points[1])
