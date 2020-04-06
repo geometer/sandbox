@@ -805,26 +805,6 @@ class Explainer:
                     )
                     break
 
-            def all_combinations(four):
-                return (
-                    four,
-                    (four[0], four[2], four[1], four[3]),
-                    (four[1], four[0], four[3], four[2]),
-                    (four[1], four[3], four[0], four[2]),
-                    (four[2], four[0], four[3], four[1]),
-                    (four[2], four[3], four[0], four[1]),
-                    (four[3], four[1], four[2], four[0]),
-                    (four[3], four[2], four[1], four[0])
-                )
-
-            def half_combinations(four):
-                return (
-                    four,
-                    (four[0], four[2], four[1], four[3]),
-                    (four[1], four[3], four[0], four[2]),
-                    (four[2], four[3], four[0], four[1])
-                )
-
             for segment0, segment1, comment, premises in self.context.length_ratios_equal_to_one():
                 if all(prop.reason.obsolete for prop in premises):
                     continue
