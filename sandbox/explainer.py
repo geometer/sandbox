@@ -743,20 +743,25 @@ class Explainer:
                 )
 
             for equ in self.context.list(EquilateralTriangleProperty):
-                if equ.reason.obsolete:
-                    continue
+                ne = None
                 for i in range(0, 3):
-                    yield (
-                        AngleValueProperty(angle_of(equ.ABC, i), 60),
-                        _comment('Angle of equilateral △ %s %s %s', *equ.ABC),
-                        [equ]
-                    )
-                for i, j in itertools.combinations(range(0, 3), 2):
-                    yield (
-                        LengthRatioProperty(side_of(equ.ABC, i), side_of(equ.ABC, j), 1),
-                        _comment('Sides of equilateral △ %s %s %s', *equ.ABC),
-                        [equ]
-                    )
+                    ne = self.context.not_equal_property(*side_of(equ.ABC, i).points)
+                    if ne:
+                        break
+                if ne is not None and not equ.reason.obsolete and not ne.reason.obsolete:
+                    for i in range(0, 3):
+                        yield (
+                            AngleValueProperty(angle_of(equ.ABC, i), 60),
+                            _comment('Angle of non-degenerate equilateral △ %s %s %s', *equ.ABC),
+                            [equ]
+                        )
+                if not equ.reason.obsolete:
+                    for i, j in itertools.combinations(range(0, 3), 2):
+                        yield (
+                            LengthRatioProperty(side_of(equ.ABC, i), side_of(equ.ABC, j), 1),
+                            _comment('Sides of equilateral △ %s %s %s', *equ.ABC),
+                            [equ]
+                        )
 
             for ct in self.context.list(CongruentTrianglesProperty):
                 ncl = self.context.not_collinear_property(*ct.ABC)
@@ -1428,12 +1433,16 @@ class Explainer:
         ], 'Explainer stats')
 
     def explained(self, obj):
+        if isinstance(obj, Property):
+            return obj in self.context
         if isinstance(obj, Scene.Angle):
             rsn = self.context.angle_value_property(obj)
             return rsn.degree if rsn else None
         raise Exception('Explanation not supported for objects of type %s' % type(obj).__name__)
 
     def explanation(self, obj):
+        if isinstance(obj, Property):
+            return self.context[obj]
         if isinstance(obj, Scene.Angle):
             return self.context.angle_value_property(obj)
         return None

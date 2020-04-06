@@ -2,6 +2,7 @@ import sys
 
 from sandbox import Scene
 from sandbox.explainer import Explainer
+from sandbox.property import EquilateralTriangleProperty
 from sandbox.propertyset import PropertySet
 from sandbox.util import _comment
 
@@ -22,7 +23,7 @@ napoleonic(A, B, C)
 napoleonic(C, A, B)
 napoleonic(B, C, A)
 
-angle = scene.get('A2').angle(scene.get('B2'), scene.get('C2'))
+prop = EquilateralTriangleProperty((scene.get('A2'), scene.get('B2'), scene.get('C2')))
 
 if '--use-trigonometry' in sys.argv[1:]:
     explainer = Explainer(scene, options={'trigonometry'})
@@ -37,7 +38,7 @@ else:
 if '--dump' in sys.argv[1:]:
     explainer.dump()
 explainer.stats().dump()
-print('\tExplained: %s = %s' % (angle, explainer.explained(angle)))
+print('\tExplained: %s = %s' % (prop, explainer.explained(prop)))
 
 if '--explain' in sys.argv[1:]:
     def dump(prop, level=0):
@@ -61,7 +62,7 @@ if '--explain' in sys.argv[1:]:
         collect(prop)
         return premises
 
-    explanation = explainer.explanation(angle)
+    explanation = explainer.explanation(prop)
     if explanation:
         dump(explanation)
         print('Depth = %s' % depth(explanation))
