@@ -880,7 +880,7 @@ class Explainer:
                     for j in [j for j in range(0, 3) if j != i]:
                         yield (
                             LengthRatioProperty(side_of(st.ABC, j), side_of(st.DEF, j), ratio),
-                            'Sides ratio in similar triangles',
+                            'Ratios of sides in similar triangles',
                             [st, lr]
                         )
                     break
