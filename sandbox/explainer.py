@@ -815,21 +815,19 @@ class Explainer:
                 )
 
             for st in self.context.list(SimilarTrianglesProperty):
-                neq = []
-                for i in range(0, 3):
-                    ne = self.context.not_equal_property(*side_of(st.ABC, i).points)
-                    if ne is None:
-                        ne = self.context.not_equal_property(*side_of(st.DEF, i).points)
-                    neq.append(ne)
-                if any(ne is None for ne in neq):
-                    continue
-                if st.reason.obsolete and all(ne.reason.obsolete for ne in neq):
-                    continue
                 for i, j in itertools.combinations(range(0, 3), 2):
                     side00 = side_of(st.ABC, i)
                     side01 = side_of(st.ABC, j)
                     side10 = side_of(st.DEF, i)
                     side11 = side_of(st.DEF, j)
+                    neq = [prop for prop in [
+                        self.context.not_equal_property(*side00.points),
+                        self.context.not_equal_property(*side01.points),
+                        self.context.not_equal_property(*side10.points),
+                        self.context.not_equal_property(*side11.points)
+                    ] if prop is not None]
+                    if len(neq) < 3 or st.reason.obsolete and all(ne.reason.obsolete for ne in neq):
+                        continue
                     if side00 == side10:
                         yield (
                             LengthRatioProperty(side01, side11, 1),
