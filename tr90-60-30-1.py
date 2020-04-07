@@ -17,8 +17,8 @@ hunter = Hunter(placement)
 hunter.hunt()
 print('')
 
-explainer = Explainer(scene, hunter.properties)
+explainer = Explainer(scene)
 explainer.explain()
-explainer.dump()
+explainer.dump(hunter.properties)
 
-explainer.stats().dump()
+explainer.stats(hunter.properties).dump()

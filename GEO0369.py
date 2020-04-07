@@ -13,19 +13,17 @@ D = scene.perpendicular_foot_point(C, A.line_through(B), label='D')
 E = scene.perpendicular_foot_point(B, A.line_through(C), label='E')
 G = scene.perpendicular_foot_point(F, D.line_through(E), label='G')
 
-scene.dump()
-
 placement = iterative_placement(scene)
 
 hunter = Hunter(placement)
 hunter.hunt()
 print('')
 
-explainer = Explainer(scene, hunter.properties)
+explainer = Explainer(scene)
 explainer.explain()
 if '--dump' in sys.argv[1:]:
-    explainer.dump()
-explainer.stats().dump()
+    explainer.dump(hunter.properties)
+explainer.stats(hunter.properties).dump()
 
 helper = PlacementHelper(placement)
 print('%.5f = %.5f' % (helper.distance(D, G), helper.distance(E, G)))

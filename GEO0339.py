@@ -13,19 +13,17 @@ A1 = scene.circumcentre_point((H, B, C), label='A1')
 B1 = scene.circumcentre_point((H, A, C), label='B1')
 C1 = scene.circumcentre_point((H, A, B), label='C1')
 
-scene.dump()
-
 placement = iterative_placement(scene)
 
 hunter = Hunter(placement)
 hunter.hunt()
 print('')
 
-explainer = Explainer(scene, hunter.properties)
+explainer = Explainer(scene)
 explainer.explain()
 if '--dump' in sys.argv[1:]:
-    explainer.dump()
-explainer.stats().dump()
+    explainer.dump(hunter.properties)
+explainer.stats(hunter.properties).dump()
 
 helper = PlacementHelper(placement)
 print('%.5f = %.5f' % (helper.distance(A, B), helper.distance(A1, B1)))
