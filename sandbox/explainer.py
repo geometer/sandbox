@@ -823,14 +823,21 @@ class Explainer:
                     side01 = side_of(st.ABC, j)
                     side10 = side_of(st.DEF, i)
                     side11 = side_of(st.DEF, j)
-                    neq = [prop for prop in [
-                        self.context.not_equal_property(*side00.points),
-                        self.context.not_equal_property(*side01.points),
-                        self.context.not_equal_property(*side10.points),
-                        self.context.not_equal_property(*side11.points)
-                    ] if prop is not None]
+                    sides = [side00, side01, side10, side11]
+                    neq_all = [self.context.not_equal_property(*side.points) for side in sides]
+                    neq = [prop for prop in neq_all if prop is not None]
                     if len(neq) < 3 or st.reason.obsolete and all(ne.reason.obsolete for ne in neq):
                         continue
+
+                    neq = list(set(neq))
+                    for prop, side in zip(neq_all, sides):
+                        if prop is None:
+                            yield (
+                                PointsCoincidenceProperty(*side.points, False),
+                                'Similar triangles with non-zero sides',
+                                [st] + neq
+                            )
+
                     if side00 == side10:
                         yield (
                             LengthRatioProperty(side01, side11, 1),
