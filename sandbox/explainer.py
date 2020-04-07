@@ -755,7 +755,7 @@ class Explainer:
                 yield (
                     IsoscelesTriangleProperty(apex, base),
                     'Congruent base angles',
-                    [cs]
+                    [ar]
                 )
 
             for equ in self.context.list(EquilateralTriangleProperty):
