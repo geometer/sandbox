@@ -349,7 +349,7 @@ class PointOnPerpendicularBisectorProperty(Property):
         return isinstance(other, PointOnPerpendicularBisectorProperty) and self.unique_key == other.unique_key
 
     def __hash__(self):
-        return hash(self.unique_key)
+        return hash(PointOnPerpendicularBisectorProperty) + hash(self.unique_key)
 
 class EqualLengthRatiosProperty(Property):
     """
