@@ -1396,7 +1396,7 @@ class Explainer:
                 yield (
                     RatioOfNonZeroLengthsProperty(lr.segment0, lr.segment1, lr.value),
                     lr.reason.comments,
-                    lr.reason.premises + [ne]
+                    [lr, ne]
                 )
 
         for prop, comment in self.scene.enumerate_predefined_properties():
