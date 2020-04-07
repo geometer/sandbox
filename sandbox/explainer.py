@@ -1387,7 +1387,19 @@ class Explainer:
                     pb_dict[ppb.segment] = lst
                 else:
                     lst.append(ppb)
+
             for segment, lst in pb_dict.items():
+                for ppb0, ppb1 in itertools.combinations(lst, 2):
+                    ne = self.context.not_equal_property(ppb0.point, ppb1.point)
+                    if ne is None or ppb0.reason.obsolete and ppb1.reason.obsolete and ne.reason.obsolete:
+                        continue
+                    line = ppb0.point.segment(ppb1.point)
+                    yield (
+                        SameOrOppositeSideProperty(line, *segment.points, False),
+                        _comment('Line %s is the perpendicular bisector of segment %s', line, segment),
+                        [ppb0, ppb1, ne]
+                    )
+
                 for triple in itertools.combinations(lst, 3):
                     if all(ppb.reason.obsolete for ppb in triple):
                         continue
