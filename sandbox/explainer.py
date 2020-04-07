@@ -829,7 +829,7 @@ class Explainer:
                     if len(neq) < 3 or st.reason.obsolete and all(ne.reason.obsolete for ne in neq):
                         continue
 
-                    neq = list(set(neq))
+                    neq = list(set(neq[:3]))
                     for prop, side in zip(neq_all, sides):
                         if prop is None:
                             yield (
