@@ -201,8 +201,8 @@ class Explainer:
                     ne = self.context.not_equal_property(pt0, pt1)
                     if ne is None or cs.reason.obsolete and ne.reason.obsolete:
                         continue
-                    yield (PointsCoincidenceProperty(*seg0.points, False), _comment('Otherwise, %s = %s = %s', ne.points[0], mid, ne.points[1]), [cs, ne])
-                    yield (PointsCoincidenceProperty(*seg1.points, False), _comment('Otherwise, %s = %s = %s', ne.points[1], mid, ne.points[0]), [cs, ne])
+                    yield (PointsCoincidenceProperty(*seg0.points, False), _comment('Otherwise, %s = %s = %s', ne.points[0], common, ne.points[1]), [cs, ne])
+                    yield (PointsCoincidenceProperty(*seg1.points, False), _comment('Otherwise, %s = %s = %s', ne.points[1], common, ne.points[0]), [cs, ne])
 
             for pv in self.context.list(ParallelVectorsProperty):
                 vec0 = pv.vector0
