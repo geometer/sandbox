@@ -91,7 +91,7 @@ class CoreScene:
                         dct[key] = [elt.label if isinstance(elt, CoreScene.Object) else str(elt) for elt in value]
                 else:
                     dct[key] = str(value)
-            return '%s `%s` %s' % (self.__class__.__name__, self.label, dct)
+            return '%s %s %s' % (self.__class__.__name__, self.label, dct)
 
     class Point(Object):
         prefix = '_P'
@@ -812,10 +812,11 @@ class CoreScene:
         for cnstr in self.constraints(Constraint.Kind.inside_angle):
             point = cnstr.params[0]
             angle = cnstr.params[1]
-            yield (
-                PointInsideAngleProperty(point, angle),
-                cnstr.comments
-            )
+            if point.layer != 'invisible' and all(p.layer != 'invisible' for p in angle.points):
+                yield (
+                    PointInsideAngleProperty(point, angle),
+                    cnstr.comments
+                )
 
         for cnstr in self.constraints(Constraint.Kind.inside_segment):
             if all(p.layer != 'invisible' for p in (cnstr.params[0], *cnstr.params[1].points)):
@@ -871,8 +872,14 @@ class CoreScene:
             )
 
         for cnstr in self.constraints(Constraint.Kind.angles_ratio):
+            angle0 = cnstr.params[0]
+            angle1 = cnstr.params[1]
+            if any(p.layer == 'invisible' for p in angle0.points):
+                continue
+            if any(p.layer == 'invisible' for p in angle1.points):
+                continue
             yield (
-                AnglesRatioProperty(cnstr.params[0], cnstr.params[1], cnstr.params[2]),
+                AnglesRatioProperty(angle0, angle1, cnstr.params[2]),
                 cnstr.comments
             )
 
