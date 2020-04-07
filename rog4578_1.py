@@ -47,13 +47,13 @@ hunter.hunt()
 hunter.stats().dump()
 print('\tGuessed: %s = %s' % (angle, hunter.guessed(angle)))
 
-explainer = Explainer(scene, hunter.properties)
+explainer = Explainer(scene)
 if '--profile' in sys.argv[1:]:
     import cProfile
     cProfile.run('explainer.explain()')
 else:
     explainer.explain()
-explainer.stats().dump()
+explainer.stats(hunter.properties).dump()
 print('\tExplained: %s = %s' % (angle, explainer.explained(angle)))
 
 if '--explain' in sys.argv[1:]:
