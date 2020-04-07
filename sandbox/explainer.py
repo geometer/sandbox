@@ -778,20 +778,30 @@ class Explainer:
                         )
 
             for st in self.context.list(SimilarTrianglesProperty):
-                ncl = self.context.not_collinear_property(*st.ABC)
-                if ncl is None:
-                    ncl = self.context.not_collinear_property(*st.DEF)
-                if ncl is None or st.reason.obsolete and ncl.reason.obsolete:
-                    continue
+                ne0 = []
+                ne1 = []
+                for i in range(0, 3):
+                    ne0.append(self.context.not_equal_property(*side_of(st.ABC, i).points))
+                    ne1.append(self.context.not_equal_property(*side_of(st.DEF, i).points))
+
                 for i in range(0, 3):
                     angle0 = angle_of(st.ABC, i)
                     angle1 = angle_of(st.DEF, i)
-                    if angle0 != angle1:
-                        yield (
-                            AnglesRatioProperty(angle0, angle1, 1),
-                            'Corresponding angles in similar non-degenerate triangles',
-                            [st, ncl]
-                        )
+                    if angle0 == angle1:
+                        continue
+                    ne = []
+                    for j in range(0, 3):
+                        if i != j:
+                            ne.append(ne0[j] if ne0[j] else ne1[j])
+                    if ne[0] is None or ne[1] is None:
+                        continue
+                    if st.reason.obsolete and ne[0].reason.obsolete and ne[1].reason.obsolete:
+                        continue
+                    yield (
+                        AnglesRatioProperty(angle0, angle1, 1),
+                        'Corresponding angles in similar non-degenerate triangles',
+                        [st, ne[0], ne[1]]
+                    )
 
             for st in self.context.list(SimilarTrianglesProperty):
                 st_is_too_old = st.reason.obsolete
