@@ -702,7 +702,7 @@ class Explainer:
                     continue
                 pt0 = next(p for p in cs.segment0.points if p != common)
                 pt1 = next(p for p in cs.segment1.points if p != common)
-                cs2 = self.context.congruent_segments_property(common.segment(pt0), pt0.segment(pt1))
+                cs2 = self.context.congruent_segments_property(common.segment(pt0), pt0.segment(pt1), True)
                 if cs2:
                     yield (
                         EquilateralTriangleProperty((common, pt0, pt1)),
@@ -798,7 +798,7 @@ class Explainer:
             for st in self.context.list(SimilarTrianglesProperty):
                 st_is_too_old = st.reason.obsolete
                 for i in range(0, 3):
-                    cs = self.context.congruent_segments_property(side_of(st.ABC, i), side_of(st.DEF, i))
+                    cs = self.context.congruent_segments_property(side_of(st.ABC, i), side_of(st.DEF, i), True)
                     if cs is None:
                         continue
                     if st_is_too_old and cs.reason.obsolete:
@@ -847,7 +847,7 @@ class Explainer:
                             [st] + neq
                         )
                         continue
-                    cs = self.context.congruent_segments_property(side00, side10)
+                    cs = self.context.congruent_segments_property(side00, side10, False)
                     if cs:
                         yield (
                             LengthRatioProperty(side01, side11, 1),
@@ -855,7 +855,7 @@ class Explainer:
                             [st, cs] + neq
                         )
                         continue
-                    cs = self.context.congruent_segments_property(side01, side11)
+                    cs = self.context.congruent_segments_property(side01, side11, False)
                     if cs:
                         yield (
                             LengthRatioProperty(side00, side10, 1),
@@ -1024,7 +1024,7 @@ class Explainer:
             def congruent_segments(seg0, seg1):
                 if seg0 == seg1:
                     return True
-                return self.context.congruent_segments_property(seg0, seg1)
+                return self.context.congruent_segments_property(seg0, seg1, True)
 
             for ca in congruent_angles_with_vertex:
                 ncl = self.context.not_collinear_property(*ca.angle0.points)
@@ -1226,7 +1226,7 @@ class Explainer:
                             [cs0, cs1]
                         )
                     else:
-                        cs2 = self.context.congruent_segments_property(third0.as_segment, third1.as_segment)
+                        cs2 = self.context.congruent_segments_property(third0.as_segment, third1.as_segment, True)
                         if cs2:
                             yield (
                                 prop,
@@ -1249,8 +1249,8 @@ class Explainer:
                 ncl = self.context.not_collinear_property(common0, *third0.points)
                 if ncl is None or ps_are_too_old and ncl.reason.obsolete:
                     continue
-                ps2 = self.context.congruent_segments_property(third0.as_segment, third1.as_segment)
-                if ps2 and ps2.value == ps0.value:
+                ps2, value2 = self.context.lengths_ratio_property_and_value(third0.as_segment, third1.as_segment)
+                if ps2 and value2 == ps0.value:
                     yield (
                         SimilarTrianglesProperty(
                             (common0, *third0.points), (common1, *third1.points)
@@ -1381,6 +1381,18 @@ class Explainer:
                         _comment('Three points on the perpendicular bisector of %s', segment),
                         list(triple)
                     )
+
+            for lr in self.context.list(LengthRatioProperty):
+                ne = self.context.not_equal_property(*lr.segment0.points)
+                if ne is None:
+                    ne = self.context.not_equal_property(*lr.segment1.points)
+                if ne is None or lr.reason.obsolete and ne.reason.obsolete:
+                    continue
+                yield (
+                    RatioOfNonZeroLengthsProperty(lr.segment0, lr.segment1, lr.value),
+                    lr.reason.comments,
+                    lr.reason.premises + [ne]
+                )
 
         for prop, comment in self.scene.enumerate_predefined_properties():
             self.__reason(prop, comment, [])

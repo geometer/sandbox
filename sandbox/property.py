@@ -274,6 +274,34 @@ class SumOfAnglesProperty(Property):
     def __hash__(self):
         return hash(SumOfAnglesProperty) + hash(self.angle_set)
 
+class RatioOfNonZeroLengthsProperty(Property):
+    """
+    Two non-zero segment lengths ratio
+    """
+    def __init__(self, segment0, segment1, ratio):
+        if ratio >= 1:
+            self.segment0 = segment0
+            self.segment1 = segment1
+            self.value = normalize_number(ratio)
+        else:
+            self.segment0 = segment1
+            self.segment1 = segment0
+            self.value = divide(1, ratio)
+        self.segment_set = frozenset([segment0, segment1])
+
+    def keys(self):
+        return [self.segment0, self.segment1]
+
+    @property
+    def description(self):
+        return _comment('|%s| / |%s| = %s', self.segment0, self.segment1, self.value)
+
+    def __eq__(self, other):
+        return isinstance(other, RatioOfNonZeroLengthsProperty) and self.segment_set == other.segment_set
+
+    def __hash__(self):
+        return hash(RatioOfNonZeroLengthsProperty) + hash(self.segment_set)
+
 class LengthRatioProperty(Property):
     """
     Two segment lengths ratio
