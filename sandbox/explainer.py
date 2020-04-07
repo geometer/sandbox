@@ -718,12 +718,12 @@ class Explainer:
                 else:
                     continue
                 base1 = cs.segment0.points[0] if apex == cs.segment0.points[1] else cs.segment0.points[1]
-                nc = self.context.not_collinear_property(apex, base0, base1)
-                if nc and not (cs.reason.obsolete and nc.reason.obsolete):
+                ne = self.context.not_equal_property(base0, base1)
+                if ne and not (cs.reason.obsolete and ne.reason.obsolete):
                     yield (
                         IsoscelesTriangleProperty(apex, base0.segment(base1)),
                         'Congruent legs',
-                        [cs, nc]
+                        [cs, ne]
                     )
 
             for ar in same_triple_ratios:
