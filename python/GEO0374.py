@@ -1,34 +1,17 @@
 # GEO0339 from http://hilbert.mat.uc.pt/TGTP/Problems/listing.php
 import sys
 
-from sandbox import *
-from sandbox.hunter import Hunter
-from sandbox.explainer import Explainer
+from runner import run_sample
+from sandbox import Scene
+from sandbox.property import AngleValueProperty
 
 scene = Scene()
 
 A, B, C = scene.triangle(labels=('A', 'B', 'C'))
 scene.equilateral_constraint((A, B, C))
-D = B.translated_point(A.vector(B), 2)
+D = B.translated_point(A.vector(B), 2, label='D')
 F = scene.perpendicular_foot_point(D, B.line_through(C), label='F')
 
-scene.dump()
+prop = AngleValueProperty(A.angle(C, F), 90)
 
-placement = iterative_placement(scene)
-
-hunter = Hunter(placement)
-hunter.hunt()
-
-angle = A.angle(C, F)
-print('\tGuessed: %s = %s' % (angle, hunter.guessed(angle)))
-
-explainer = Explainer(scene, hunter.properties)
-if '--profile' in sys.argv[1:]:
-    import cProfile
-    cProfile.run('explainer.explain()')
-else:
-    explainer.explain()
-if '--dump' in sys.argv[1:]:
-    explainer.dump()
-explainer.stats().dump()
-print('\tExplained: %s = %s' % (angle, explainer.explained(angle)))
+run_sample(scene, prop)
