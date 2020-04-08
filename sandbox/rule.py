@@ -1,5 +1,5 @@
 from .property import *
-from .util import _comment, divide
+from .util import _comment, divide, side_of
 
 class Rule:
     pass
@@ -96,6 +96,47 @@ class LengthRatioTransitivityRule(Rule):
                 _comment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.value), lr0.segment1, _cs(coef), lr1.segment0),
                 [lr0, lr1]
             )
+
+class CollinearityCollisionRule(Rule):
+    """
+    If a point is collinear to some line, and another one is not,
+    then the points are different;
+    moreover, if third point lies on the line does not coincide the first,
+    then three points are not collinear
+    """
+    def sources(self, context):
+        return itertools.product( \
+            [p for p in context.list(PointsCollinearityProperty) if not p.collinear], \
+            [p for p in context.list(PointsCollinearityProperty) if p.collinear] \
+        )
+
+    def apply(self, src, context):
+        ncl, col = src
+
+        common_points = [pt for pt in ncl.points if pt in col.points]
+        if len(common_points) != 2:
+            return
+        pt_ncl = next(pt for pt in ncl.points if pt not in common_points)
+        pt_col = next(pt for pt in col.points if pt not in common_points)
+
+        reasons_are_too_old = ncl.reason.obsolete and col.reason.obsolete
+        if not reasons_are_too_old:
+            yield (
+                PointsCoincidenceProperty(pt_col, pt_ncl, False),
+                _comment('%s lies on the line %s %s, %s does not', pt_col, common_points, pt_ncl),
+                [ncl, col]
+            )
+        for common in common_points:
+            ne = context.not_equal_property(common, pt_col)
+            if ne is not None and not (reasons_are_too_old and ne.reason.obsolete):
+                yield (
+                    PointsCollinearityProperty(common, pt_col, pt_ncl, False),
+                    _comment(
+                        '%s and %s lie on the line %s %s, %s does not',
+                        common, pt_col, *common_points, pt_ncl
+                    ),
+                    [ncl, col, ne]
+                )
 
 class NonCollinearPointsAreDifferentRule(SingleSourceRule):
     """
