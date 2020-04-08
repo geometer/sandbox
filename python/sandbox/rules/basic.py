@@ -308,13 +308,17 @@ class SinglePerperndicularBisectorRule(SingleSourceRule):
                     break
 
 class PointOnPerpendicularBisectorIsEquidistantRule(SingleSourceRule):
+    """
+    A point on the perpendicular bisector of a segment,
+    is equidistant from the endpoints of the segment endpoints
+    """
     property_type = PointOnPerpendicularBisectorProperty
 
     def apply(self, prop, context):
         if not prop.reason.obsolete:
             yield (
                 LengthRatioProperty(prop.point.segment(prop.segment.points[0]), prop.point.segment(prop.segment.points[1]), 1),
-                _comment('A point on the perpendicular bisector to a segment is equidistant from the segment endpoints'),
+                _comment('A point on the perpendicular bisector to %s is equidistant from %s and %s', prop.segment, *prop.segment.points),
                 [prop]
             )
 
