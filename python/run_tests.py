@@ -8,6 +8,7 @@ from tests.explainer.rog4594 import *
 from tests.explainer.napoleon import *
 from tests.explainer.rightangled import *
 from tests.explainer.geo0369 import *
+from tests.explainer.geo0374 import *
 
 from tests.placement.sympy import *
 from tests.placement.intersection import *

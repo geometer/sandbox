@@ -1,3 +1,6 @@
+# "Romantics of Geometry" group on Facebook, problem 4578
+# https://www.facebook.com/groups/parmenides52/permalink/2779763428804012/
+
 from sandbox import Scene
 from sandbox.property import AngleValueProperty
 from sandbox.util import _comment

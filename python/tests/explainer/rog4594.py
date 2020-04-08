@@ -1,3 +1,6 @@
+# "Romantics of Geometry" group on Facebook, problem 4594
+# https://www.facebook.com/groups/parmenides52/permalink/2784962828284072/
+
 from sandbox import Scene
 from sandbox.property import LengthRatioProperty
 from sandbox.util import _comment
