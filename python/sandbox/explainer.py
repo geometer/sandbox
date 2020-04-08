@@ -40,6 +40,8 @@ class Explainer:
         if 'advanced' in options:
             self.__rules += [
                 RightAngledTriangleMedianRule(),
+                Triangle30_60_90SidesRule(),
+                Triangle30_30_120SidesRule(),
             ]
         if 'trigonometric' in options:
             self.__rules += [

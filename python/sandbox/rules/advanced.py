@@ -1,3 +1,5 @@
+import sympy as sp
+
 from sandbox.property import *
 from sandbox.util import _comment
 
@@ -28,4 +30,56 @@ class RightAngledTriangleMedianRule(SingleSourceRule):
                 LengthRatioProperty(hypot, med.segment(vertex), 2),
                 _comment('Median in right-angled △ %s %s %s is equal to half of the hypotenuse', vertex, pt0, pt1),
                 [prop, col, half0, half1]
+            )
+
+class Triangle30_60_90SidesRule(SingleSourceRule):
+    """
+    Sides ratios in a right-angled triangle with angles 60º and 30º
+    """
+    property_type = AngleValueProperty
+
+    def accepts(self, prop):
+        return prop.degree == 90 and prop.angle.vertex
+
+    def apply(self, prop, context):
+        vertex = prop.angle.vertex
+        pt0 = prop.angle.vector0.end
+        pt1 = prop.angle.vector1.end
+        value = context.angle_value_property(pt0.angle(vertex, pt1))
+        if value is None or value.degree not in (30, 60) or prop.reason.obsolete and value.reason.obsolete:
+            return
+        hypot = pt0.segment(pt1)
+        long_leg = vertex.segment(pt0 if value.degree == 30 else pt1)
+        short_leg = vertex.segment(pt1 if value.degree == 30 else pt0)
+        yield (
+            LengthRatioProperty(hypot, short_leg, 2),
+            _comment('Hypotenuse and cathetus opposite the 30º angle'),
+            [prop, value]
+        )
+        yield (
+            LengthRatioProperty(hypot, long_leg, 2 / sp.sqrt(3)),
+            _comment('Hypotenuse and cathetus opposite the 60º angle'),
+            [prop, value]
+        )
+        yield (
+            LengthRatioProperty(long_leg, short_leg, sp.sqrt(3)),
+            _comment('Catheti opposite 60º and 30º angles'),
+            [prop, value]
+        )
+
+class Triangle30_30_120SidesRule(SingleSourceRule):
+    """
+    Sides ratios in an isosceles triangle with base angles 30º
+    """
+    property_type = IsoscelesTriangleProperty
+
+    def apply(self, prop, context):
+        value = context.angle_value_property(prop.apex.angle(*prop.base.points))
+        if value is None or value.degree != 120 or prop.reason.obsolete and value.reason.obsolete:
+            return
+        for pt in prop.base.points:
+            yield (
+                LengthRatioProperty(prop.base, prop.apex.segment(pt), sp.sqrt(3)),
+                _comment('Ratio of base and leg in isosceles △ %s %s %s with base angle = 30º', prop.apex, *prop.base.points),
+                [prop, value]
             )

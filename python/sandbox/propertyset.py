@@ -654,7 +654,7 @@ class PropertySet:
     def __getitem__(self, prop):
         existing = self.__full_set.get(prop)
         #TODO: better way to report contradiction
-        assert existing is None or existing.compare_values(prop), 'Contradiction: values are different'
+        assert existing is None or existing.compare_values(prop), 'Contradiction: values are different for %s and %s' % (prop, existing)
         return existing
 
     def collinearity_property(self, pt0, pt1, pt2):
