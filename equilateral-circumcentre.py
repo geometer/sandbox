@@ -4,7 +4,7 @@ from sandbox import Scene
 from sandbox.hunter import Hunter
 from sandbox.explainer import Explainer
 
-scene = Scene()
+scene = Scene(strategy='constraints')
 
 A, B, C = scene.triangle(labels=['A', 'B', 'C'])
 scene.equilateral_constraint((A, B, C))
