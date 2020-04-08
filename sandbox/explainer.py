@@ -18,6 +18,12 @@ class Explainer:
         self.__options = options
         self.__explanation_time = None
         self.__iteration_step_count = -1
+        self.__rules0 = (
+            DifferentAnglesToDifferentPointsRule(),
+            LengthRatioTransitivityRule(),
+            SumAndRatioOfTwoAnglesRule(),
+            NonCollinearPointsAreDifferentRule(),
+        )
         self.__rules = (
             LengthRatioRule(),
             ParallelVectorsRule(),
@@ -53,32 +59,12 @@ class Explainer:
 
     def __explain_all(self):
         def iteration():
-            rule = DifferentAnglesToDifferentPointsRule()
-            for src in rule.sources(self.context):
-                for reason in rule.apply(src, self.context):
-                    yield reason
-
-            rule = LengthRatioTransitivityRule()
-            for src in rule.sources(self.context):
-                for reason in rule.apply(src, self.context):
-                    yield reason
-
-            congruent_angles = self.context.congruent_angle_properties()
-            congruent_angles_with_vertex = [ar for ar in congruent_angles if ar.angle0.vertex and ar.angle1.vertex]
-            same_triple_ratios = self.context.same_triple_angle_ratio_properties()
-
-            rule = SumAndRatioOfTwoAnglesRule()
-            for prop in self.context.list(rule.property_type):
-                for reason in rule.apply(prop, self.context):
-                    yield reason
+            for rule in self.__rules0:
+                for src in rule.sources(self.context):
+                    for reason in rule.apply(src, self.context):
+                        yield reason
 
             for ncl in [p for p in self.context.list(PointsCollinearityProperty) if not p.collinear]:
-                if not ncl.reason.obsolete:
-                    #TODO: better comments
-                    yield (PointsCoincidenceProperty(ncl.points[0], ncl.points[1], False), str(ncl), [ncl])
-                    yield (PointsCoincidenceProperty(ncl.points[0], ncl.points[2], False), str(ncl), [ncl])
-                    yield (PointsCoincidenceProperty(ncl.points[1], ncl.points[2], False), str(ncl), [ncl])
-
                 for segment, pt_ncl in [(side_of(ncl.points, i), ncl.points[i]) for i in range(0, 3)]:
                     for col in [p for p in self.context.list(PointsCollinearityProperty, [segment]) if p.collinear]:
                         reasons_are_too_old = ncl.reason.obsolete and col.reason.obsolete
@@ -546,6 +532,10 @@ class Explainer:
                     'Transitivity', #TODO: better comment
                     [sos0, sos1]
                 )
+
+            congruent_angles = self.context.congruent_angle_properties()
+            congruent_angles_with_vertex = [ar for ar in congruent_angles if ar.angle0.vertex and ar.angle1.vertex]
+            same_triple_ratios = self.context.same_triple_angle_ratio_properties()
 
             for ar in same_triple_ratios:
                 a0 = ar.angle0

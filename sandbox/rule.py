@@ -97,6 +97,25 @@ class LengthRatioTransitivityRule(Rule):
                 [lr0, lr1]
             )
 
+class NonCollinearPointsAreDifferentRule(SingleSourceRule):
+    """
+    If three points are collinear, any two of them are not coinciding
+    """
+    property_type = PointsCollinearityProperty
+
+    def accepts(self, prop):
+        return not prop.collinear
+
+    def apply(self, prop, context):
+        if prop.reason.obsolete:
+            return
+        for pt0, pt1 in itertools.combinations(prop.points, 2):
+            yield (
+                PointsCoincidenceProperty(pt0, pt1, False),
+                'Two of three non-collinear points',
+                [prop]
+            )
+
 class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
     """
     If the sum and the ratio of two angles are known, we can find the values
