@@ -2,6 +2,7 @@ import itertools
 import time
 import sympy as sp
 
+from .advanced_rule import *
 from .core import Constraint
 from .property import *
 from .propertyset import PropertySet
