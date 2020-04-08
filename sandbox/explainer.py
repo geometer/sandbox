@@ -759,6 +759,26 @@ class Explainer:
                                 yield (AngleValueProperty(zero, 0), comment, [ka, col, ka2])
                             break
 
+            for aa0, aa1 in itertools.combinations([a for a in self.context.list(AcuteAngleProperty) if a.angle.vertex], 2):
+                vertex = aa0.angle.vertex
+                if vertex != aa1.angle.vertex:
+                    continue
+                vectors0 = [aa0.angle.vector0, aa0.angle.vector1]
+                vectors1 = [aa1.angle.vector0, aa1.angle.vector1]
+                common = next((v for v in vectors0 if v in vectors1), None)
+                if common is None:
+                    continue
+                other0 = next(v for v in vectors0 if v != common)
+                other1 = next(v for v in vectors1 if v != common)
+                col = self.context.collinearity_property(*other0.points, other1.end)
+                if col is None or not col.collinear or aa0.reason.obsolete and aa1.reason.obsolete and col.reason.obsolete:
+                    continue
+                yield (
+                    AngleValueProperty(other0.angle(other1), 0),
+                    _comment('Both %s and %s are acute', aa0.angle, aa1.angle),
+                    [aa0, aa1, col]
+                )
+
             for iso in self.context.list(IsoscelesTriangleProperty):
                 if iso.reason.obsolete:
                     continue
