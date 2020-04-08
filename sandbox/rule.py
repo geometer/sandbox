@@ -97,7 +97,7 @@ class LengthRatioTransitivityRule(Rule):
                 [lr0, lr1]
             )
 
-class TwoPointsCollinearToTwoLinesRule(Rule):
+class TwoPointsBelongsToTwoLinesRule(Rule):
     """
     If two points both belong to two different lines,
     the points are coinciding
@@ -115,7 +115,7 @@ class TwoPointsCollinearToTwoLinesRule(Rule):
         pt1 = next(pt for pt in cl1.points if pt not in common_points)
 
         for ncl_pt in common_points:
-            ncl = self.context.collinearity_property(pt0, pt1, ncl_pt)
+            ncl = context.collinearity_property(pt0, pt1, ncl_pt)
             if ncl:
                 break
         else:

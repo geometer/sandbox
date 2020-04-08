@@ -25,7 +25,7 @@ class Explainer:
             SumAndRatioOfTwoAnglesRule(),
             NonCollinearPointsAreDifferentRule(),
             CollinearityCollisionRule(),
-            TwoPointsCollinearToTwoLinesRule(),
+            TwoPointsBelongsToTwoLinesRule(),
             LengthRatioRule(),
             ParallelVectorsRule(),
             PerpendicularVectorsRule(),
