@@ -29,6 +29,7 @@ class Explainer:
             LengthRatioRule(),
             ParallelVectorsRule(),
             PerpendicularVectorsRule(),
+            Degree90IsRightAngleRule(),
             SeparatedPointsRule(),
         ]
         if 'advanced' in options:
