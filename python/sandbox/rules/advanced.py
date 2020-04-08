@@ -1,6 +1,7 @@
-from .property import *
-from .rule import SingleSourceRule
-from .util import _comment
+from sandbox.property import *
+from sandbox.util import _comment
+
+from .basic import SingleSourceRule
 
 class RightAngledTriangleMedianRule(SingleSourceRule):
     """

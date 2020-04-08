@@ -2,12 +2,12 @@ import itertools
 import time
 import sympy as sp
 
-from .advanced_rule import *
 from .core import Constraint
 from .property import *
 from .propertyset import PropertySet
 from .reason import Reason
-from .rule import *
+from .rules.advanced import *
+from .rules.basic import *
 from .scene import Scene
 from .stats import Stats
 from .util import _comment, divide, side_of, angle_of

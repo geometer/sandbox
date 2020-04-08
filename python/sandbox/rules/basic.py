@@ -1,5 +1,5 @@
-from .property import *
-from .util import _comment, divide, side_of
+from sandbox.property import *
+from sandbox.util import _comment, divide, side_of
 
 class Rule:
     pass
