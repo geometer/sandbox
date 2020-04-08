@@ -18,6 +18,12 @@ class Explainer:
         self.__options = options
         self.__explanation_time = None
         self.__iteration_step_count = -1
+        self.__rules = (
+            LengthRatioRule(),
+            ParallelVectorsRule(),
+            PerpendicularVectorsRule(),
+            SeparatedPointsRule(),
+        )
 
     def __reason(self, prop, comments, premises=None):
         reason = Reason(len(self.context), self.__iteration_step_count, comments, premises)
@@ -169,8 +175,7 @@ class Explainer:
                     [cl0, cl1, ncl]
                 )
 
-            rules = (LengthRatioRule(), ParallelVectorsRule(), PerpendicularVectorsRule(), SeparatedPointsRule())
-            for rule in rules:
+            for rule in self.__rules:
                 for prop in [p for p in self.context.list(rule.property_type) if rule.accepts(p)]:
                     for reason in rule.apply(prop, self.context):
                         yield reason
