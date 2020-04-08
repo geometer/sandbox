@@ -100,7 +100,7 @@ class LengthRatioTransitivityRule(Rule):
 class TwoPointsBelongsToTwoLinesRule(Rule):
     """
     If two points both belong to two different lines,
-    the points are coinciding
+    the points are coincident
     """
     def sources(self, context):
         return itertools.combinations([p for p in context.list(PointsCollinearityProperty) if p.collinear], 2)
@@ -171,7 +171,7 @@ class CollinearityCollisionRule(Rule):
 
 class NonCollinearPointsAreDifferentRule(SingleSourceRule):
     """
-    If three points are collinear, any two of them are not coinciding
+    If three points are collinear, any two of them are not coincident
     """
     property_type = PointsCollinearityProperty
 
@@ -324,7 +324,7 @@ class PointOnPerpendicularBisectorIsEquidistantRule(SingleSourceRule):
 
 class SeparatedPointsRule(SingleSourceRule):
     """
-    If two points are separated by a line, the points are not coinciding
+    If two points are separated by a line, the points are not coincident
     """
     property_type = SameOrOppositeSideProperty
 
