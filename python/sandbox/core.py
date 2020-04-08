@@ -136,34 +136,6 @@ class CoreScene:
             self.segment(new_point).ratio_constraint(vector.as_segment, sp.Abs(coef), guaranteed=True)
             return new_point
 
-        def ratio_point(self, point, coef0: int, coef1: int, **kwargs):
-            """
-            Constructs new point as (coef0 * self + coef1 * point) / (coef0 + coef1).
-            Requires coef0 + coef1 != 0.
-            No other conditions.
-            """
-            self.scene.assert_point(point)
-            assert coef0 + coef1 != 0
-            if self == point:
-                return self
-            if coef0 == 0:
-                return point
-            if coef1 == 0:
-                return self
-            new_point = self.translated_point(self.vector(point), divide(coef1, coef0 + coef1), **kwargs)
-            new_point.collinear_constraint(self, point, guaranteed=True)
-            self.segment(new_point).ratio_constraint(new_point.segment(point), divide(coef1, coef0), guaranteed=True)
-            if coef0 > 0 and coef1 > 0 or coef0 < 0 and coef1 < 0:
-                self.vector(point).parallel_constraint(self.vector(new_point), guaranteed=True)
-                point.vector(self).parallel_constraint(point.vector(new_point), guaranteed=True)
-            elif coef0 < 0:
-                self.vector(point).parallel_constraint(self.vector(new_point), guaranteed=True)
-                new_point.vector(self).parallel_constraint(new_point.vector(point), guaranteed=True)
-            elif coef1 < 0:
-                new_point.vector(self).parallel_constraint(new_point.vector(point), guaranteed=True)
-                point.vector(self).parallel_constraint(point.vector(new_point), guaranteed=True)
-            return new_point
-
         def perpendicular_line(self, line, **kwargs):
             """
             Constructs a line through the point, perpendicular to the given line.
