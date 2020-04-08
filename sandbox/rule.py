@@ -2,12 +2,46 @@ from .property import *
 from .util import _comment, divide
 
 class Rule:
+    pass
+
+class SingleSourceRule(Rule):
     def accepts(self, prop):
         return True
 
-class SingleSourceRule(Rule):
-    def list_sources(self, context):
+    def sources(self, context):
         return [p for p in context.list(self.property_type) if self.accepts(p)]
+
+class DifferentAnglesToDifferentPointsRule(Rule):
+    def sources(self, context):
+        return itertools.combinations(context.angle_value_properties(), 2)
+
+    def apply(self, src, context):
+        av0, av1 = src
+
+        if av0.degree == av1.degree or av0.reason.obsolete and av1.reason.obsolete:
+            return
+        ang0 = av0.angle
+        ang1 = av1.angle
+
+        if ang0.vector0 == ang1.vector0:
+            vec0, vec1 = ang0.vector1, ang1.vector1
+        elif ang0.vector0 == ang1.vector1:
+            vec0, vec1 = ang0.vector1, ang1.vector0
+        elif ang0.vector1 == ang1.vector0:
+            vec0, vec1 = ang0.vector0, ang1.vector1
+        elif ang0.vector1 == ang1.vector1:
+            vec0, vec1 = ang0.vector0, ang1.vector0
+        else:
+            return
+
+        if vec0.start == vec1.start:
+            prop = PointsCoincidenceProperty(vec0.end, vec1.end, False)
+        elif vec0.end == vec1.end:
+            prop = PointsCoincidenceProperty(vec0.start, vec1.start, False)
+        else:
+            return
+
+        yield (prop, _comment('Otherwise, %s = %s', ang0, ang1), [av0, av1])
 
 class SumOfAnglesRule(SingleSourceRule):
     property_type = SumOfAnglesProperty

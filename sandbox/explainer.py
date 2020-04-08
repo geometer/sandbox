@@ -53,31 +53,10 @@ class Explainer:
 
     def __explain_all(self):
         def iteration():
-            for av0, av1 in itertools.combinations(self.context.angle_value_properties(), 2):
-                if av0.degree == av1.degree or av0.reason.obsolete and av1.reason.obsolete:
-                    continue
-                ang0 = av0.angle
-                ang1 = av1.angle
-
-                if ang0.vector0 == ang1.vector0:
-                    vec0, vec1 = ang0.vector1, ang1.vector1
-                elif ang0.vector0 == ang1.vector1:
-                    vec0, vec1 = ang0.vector1, ang1.vector0
-                elif ang0.vector1 == ang1.vector0:
-                    vec0, vec1 = ang0.vector0, ang1.vector1
-                elif ang0.vector1 == ang1.vector1:
-                    vec0, vec1 = ang0.vector0, ang1.vector0
-                else:
-                    continue
-
-                if vec0.start == vec1.start:
-                    prop = PointsCoincidenceProperty(vec0.end, vec1.end, False)
-                elif vec0.end == vec1.end:
-                    prop = PointsCoincidenceProperty(vec0.start, vec1.start, False)
-                else:
-                    continue
-
-                yield (prop, _comment('Otherwise, %s = %s', ang0, ang1), [av0, av1])
+            rule = DifferentAnglesToDifferentPointsRule()
+            for src in rule.sources(self.context):
+                for reason in rule.apply(src, self.context):
+                    yield reason
 
             def _cs(coef):
                 return '' if coef == 1 else ('%s ' % coef)
@@ -173,7 +152,7 @@ class Explainer:
                 )
 
             for rule in self.__rules:
-                for prop in rule.list_sources(self.context):
+                for prop in rule.sources(self.context):
                     for reason in rule.apply(prop, self.context):
                         yield reason
 
