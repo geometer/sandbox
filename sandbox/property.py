@@ -182,6 +182,46 @@ class EquilateralTriangleProperty(Property):
     def __hash__(self):
         return hash(EquilateralTriangleProperty) + hash(self.__point_set)
 
+class AcuteAngleProperty(Property):
+    """
+    An angle is acute
+    """
+    def __init__(self, angle):
+        self.angle = angle
+
+    def keys(self):
+        return [self.angle]
+
+    @property
+    def description(self):
+        return _comment('%s is acute (0º < %s < 90º)', self.angle, self.angle)
+
+    def __eq__(self, other):
+        return isinstance(other, AcuteAngleProperty) and self.angle == other.angle
+
+    def __hash__(self):
+        return hash(AcuteAngleProperty) + hash(self.angle)
+
+class ObtuseAngleProperty(Property):
+    """
+    An angle is obtuse
+    """
+    def __init__(self, angle):
+        self.angle = angle
+
+    def keys(self):
+        return [self.angle]
+
+    @property
+    def description(self):
+        return _comment('%s is acute (90º < %s < 180º)', self.angle, self.angle)
+
+    def __eq__(self, other):
+        return isinstance(other, ObtuseAngleProperty) and self.angle == other.angle
+
+    def __hash__(self):
+        return hash(ObtuseAngleProperty) + hash(self.angle)
+
 class AngleValueProperty(Property):
     """
     Angle value
