@@ -5,7 +5,7 @@ from sandbox.explainer import Explainer
 from sandbox.hunter import Hunter
 from sandbox.propertyset import PropertySet
 
-def run_sample(scene, prop):
+def run_sample(scene, prop=None):
     if '--dump-scene' in sys.argv[1:]:
         scene.dump()
 
@@ -32,10 +32,12 @@ def run_sample(scene, prop):
     if '--dump' in sys.argv[1:]:
         explainer.dump(properties)
     explainer.stats(properties).dump()
-    if explainer.explained(prop):
-        print('\tExplained: %s' % prop)
-    else:
-        print('\tNot explained: %s' % prop)
+
+    if prop:
+        if explainer.explained(prop):
+            print('\tExplained: %s' % prop)
+        else:
+            print('\tNot explained: %s' % prop)
 
     if '--explain' in sys.argv[1:]:
         def dump(prop, level=0):
