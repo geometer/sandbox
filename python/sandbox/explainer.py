@@ -555,7 +555,7 @@ class Explainer:
                                 continue
                             if ka.degree >= 90:
                                 comment = _comment(
-                                    '%s, %s, %s are collinear, %s is acute, and %s = %s',
+                                    '%s, %s, %s are collinear, %s is acute, and %s = %sº',
                                     pt, *vec0.points, base, angle, ka.degree
                                 )
                                 zero = base.vertex.angle(vec0.end, pt)
