@@ -6,6 +6,7 @@ from .core import Constraint
 from .property import *
 from .propertyset import PropertySet
 from .reason import Reason
+from .rule import SumOfAnglesRule
 from .scene import Scene
 from .stats import Stats
 from .util import _comment, divide, side_of, angle_of
@@ -114,20 +115,10 @@ class Explainer:
             congruent_angles_with_vertex = [ar for ar in congruent_angles if ar.angle0.vertex and ar.angle1.vertex]
             same_triple_ratios = self.context.same_triple_angle_ratio_properties()
 
-            for sa in self.context.list(SumOfAnglesProperty):
-                ar = self.context.angles_ratio_property(sa.angle0, sa.angle1)
-                if ar is None or sa.reason.obsolete and ar.reason.obsolete:
-                    continue
-                value1 = divide(sa.degree, 1 + ar.value)
-                value0 = sa.degree - value1
-                if ar.value == 1:
-                    comment0 = _comment('%s + %s = %s', ar.angle0, ar.angle0, sa.degree),
-                    comment1 = _comment('%s + %s = %s', ar.angle1, ar.angle1, sa.degree),
-                else:
-                    comment0 = _comment('%s + %s / %s = %s', ar.angle0, ar.angle0, ar.value, sa.degree),
-                    comment1 = _comment('%s + %s %s = %s', ar.angle1, ar.value, ar.angle1, sa.degree),
-                yield (AngleValueProperty(ar.angle0, value0), comment0, [sa, ar])
-                yield (AngleValueProperty(ar.angle1, value1), comment1, [sa, ar])
+            rule = SumOfAnglesRule(self.context)
+            for prop in self.context.list(rule.property_type):
+                for reason in rule.apply(prop):
+                    yield tuple(reason)
 
             for ncl in [p for p in self.context.list(PointsCollinearityProperty) if not p.collinear]:
                 if not ncl.reason.obsolete:
