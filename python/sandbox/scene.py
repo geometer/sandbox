@@ -171,12 +171,20 @@ class Scene(CoreScene):
                 args['label'] = labels[index]
             return self.free_point(**args)
 
-        pt0 = point(0)
-        pt1 = point(1)
-        pt2 = point(2)
-        pt0.not_collinear_constraint(pt1, pt2)
+        pts = [point(0), point(1), point(2)]
         args = {}
         if labels and labels[3]:
             args['label'] = labels[3]
-        pt3 = pt0.translated_point(pt1.vector(pt2), **args)
-        return (pt0, pt1, pt2, pt3)
+        if self.strategy == 'constructs':
+            pts.append(pts[0].translated_point(pts[1].vector(pts[2]), **args))
+        else:
+            pts.append(self.free_point(**args))
+
+        comment = _comment('%s %s %s %s is a parallelogram', *pts)
+        pts[0].vector(pts[1]).parallel_constraint(pts[3].vector(pts[2]), comment=comment)
+        pts[0].vector(pts[3]).parallel_constraint(pts[1].vector(pts[2]), comment=comment)
+        pts[0].segment(pts[1]).congruent_constraint(pts[2].segment(pts[3]), comment=comment)
+        pts[0].segment(pts[3]).congruent_constraint(pts[1].segment(pts[2]), comment=comment)
+        for pt0, pt1, pt2 in itertools.combinations(pts, 3):
+            pt0.not_collinear_constraint(pt1, pt2, comment=comment)
+        return tuple(pts)
