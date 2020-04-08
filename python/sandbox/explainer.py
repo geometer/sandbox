@@ -283,7 +283,7 @@ class Explainer:
                             continue
                         if ratio_reason.value == 1:
                             for prop in AngleValueProperty.generate(lp0.vector(pt0), pt1.vector(lp1), 0):
-                                yield (prop, 'Corresponging angles', [so, ratio_reason, ne])
+                                yield (prop, 'Corresponding angles', [so, ratio_reason, ne])
 
             for zero in [av for av in self.context.list(AngleValueProperty) if av.degree == 0]:
                 zero_is_too_old = zero.reason.obsolete
