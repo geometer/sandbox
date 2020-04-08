@@ -35,6 +35,7 @@ class Explainer:
             SeparatedPointsRule(),
             PointOnPerpendicularBisectorIsEquidistantRule(),
             SameSidePointInsideSegmentRule(),
+            TwoPerpendicularsRule(),
         ]
         if 'advanced' in options:
             self.__rules += [

@@ -287,6 +287,11 @@ class Degree90IsRightAngleRule(Rule):
                 prop.reason.comments,
                 prop.reason.premises
             )
+            yield (
+                PerpendicularVectorsProperty(prop.angle.vector0, prop.angle.vector1.reversed),
+                prop.reason.comments,
+                prop.reason.premises
+            )
 
 class SinglePerperndicularBisectorRule(SingleSourceRule):
     property_type = PerpendicularVectorsProperty
@@ -350,12 +355,11 @@ class SameSidePointInsideSegmentRule(SingleSourceRule):
         return prop.same
 
     def apply(self, prop, context):
-        prop_is_too_old = prop.reason.obsolete
         segment = prop.points[0].segment(prop.points[1])
         for col in [p for p in context.list(PointsCollinearityProperty, [segment]) if p.collinear]:
             pt = next(p for p in col.points if p not in prop.points)
             value = context.angle_value_property(pt.angle(*prop.points))
-            if not value or value.degree != 180 or prop_is_too_old and value.reason.obsolete:
+            if not value or value.degree != 180 or prop.reason.obsolete and value.reason.obsolete:
                 return
             for endpoint in prop.points:
                 yield (
@@ -363,3 +367,27 @@ class SameSidePointInsideSegmentRule(SingleSourceRule):
                     _comment('Segment %s does not cross line %s', segment, prop.segment),
                     [prop, value]
                 )
+
+class TwoPerpendicularsRule(SingleSourceRule):
+    """
+    Two perpendiculars to the same line are parallel
+    """
+    property_type = SameOrOppositeSideProperty
+
+    def apply(self, prop, context):
+        foot0, reasons0 = context.foot_of_perpendicular(prop.points[0], prop.segment)
+        if foot0 is None:
+            return
+        foot1, reasons1 = context.foot_of_perpendicular(prop.points[1], prop.segment)
+        if foot1 is None:
+            return
+        premises = [prop] + reasons0 + reasons1
+        if all(p.reason.obsolete for p in premises):
+            return
+        vec0 = foot0.vector(prop.points[0])
+        vec1 = foot1.vector(prop.points[1]) if prop.same else prop.points[1].vector(foot1)
+        yield (
+            ParallelVectorsProperty(vec0, vec1),
+            _comment('Two perpendiculars to line %s', prop.segment),
+            premises
+        )
