@@ -176,7 +176,7 @@ class Explainer:
                 )
 
             for rule in self.__rules:
-                for prop in [p for p in self.context.list(rule.property_type) if rule.accepts(p)]:
+                for prop in rule.list_sources(self.context):
                     for reason in rule.apply(prop, self.context):
                         yield reason
 

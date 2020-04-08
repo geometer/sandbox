@@ -5,6 +5,9 @@ class Rule:
     def accepts(self, prop):
         return True
 
+    def list_sources(self, context):
+        return [p for p in context.list(self.property_type) if self.accepts(p)]
+
 class SumOfAnglesRule(Rule):
     property_type = SumOfAnglesProperty
 
