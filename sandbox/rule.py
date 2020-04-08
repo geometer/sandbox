@@ -1,7 +1,11 @@
 from .property import *
 from .util import _comment, divide
 
-class SumOfAnglesRule:
+class Rule:
+    def accepts(self, prop):
+        return True
+
+class SumOfAnglesRule(Rule):
     property_type = SumOfAnglesProperty
 
     def apply(self, prop, context):
@@ -19,7 +23,7 @@ class SumOfAnglesRule:
         yield (AngleValueProperty(ar.angle0, value0), comment0, [prop, ar])
         yield (AngleValueProperty(ar.angle1, value1), comment1, [prop, ar])
 
-class LengthRatioRule:
+class LengthRatioRule(Rule):
     property_type = LengthRatioProperty
 
     def apply(self, prop, context):
@@ -48,7 +52,7 @@ class LengthRatioRule:
             yield (PointsCoincidenceProperty(*seg0.points, False), _comment('Otherwise, %s = %s = %s', ne.points[0], common, ne.points[1]), [prop, ne])
             yield (PointsCoincidenceProperty(*seg1.points, False), _comment('Otherwise, %s = %s = %s', ne.points[1], common, ne.points[0]), [prop, ne])
 
-class ParallelVectorsRule:
+class ParallelVectorsRule(Rule):
     property_type = ParallelVectorsProperty
 
     def apply(self, pv, context):
@@ -67,7 +71,7 @@ class ParallelVectorsRule:
                 [pv, ne0, ne1]
             )
 
-class PerpendicularVectorsRule:
+class PerpendicularVectorsRule(Rule):
     property_type = PerpendicularVectorsProperty
 
     def apply(self, pv, context):
@@ -84,4 +88,18 @@ class PerpendicularVectorsRule:
                 prop,
                 _comment('Non-zero perpendicular vectors %s and %s', vec0, vec1),
                 [pv, ne0, ne1]
+            )
+
+class SeparatedPointsRule(Rule):
+    property_type = SameOrOppositeSideProperty
+
+    def accepts(self, prop):
+        return not prop.same
+
+    def apply(self, prop, context):
+        if not prop.reason.obsolete:
+            yield (
+                PointsCoincidenceProperty(prop.points[0], prop.points[1], False),
+                _comment('%s and %s are separated by line %s', prop.points[0], prop.points[1], prop.segment),
+                [prop]
             )

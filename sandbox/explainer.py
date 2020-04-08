@@ -169,20 +169,11 @@ class Explainer:
                     [cl0, cl1, ncl]
                 )
 
-            rules = (LengthRatioRule(), ParallelVectorsRule(), PerpendicularVectorsRule())
+            rules = (LengthRatioRule(), ParallelVectorsRule(), PerpendicularVectorsRule(), SeparatedPointsRule())
             for rule in rules:
-                for prop in self.context.list(rule.property_type):
+                for prop in [p for p in self.context.list(rule.property_type) if rule.accepts(p)]:
                     for reason in rule.apply(prop, self.context):
                         yield reason
-
-            for prop in [p for p in self.context.list(SameOrOppositeSideProperty) if not p.same]:
-                if prop.reason.obsolete:
-                    continue
-                yield (
-                    PointsCoincidenceProperty(prop.points[0], prop.points[1], False),
-                    _comment('%s and %s are separated by line %s', prop.points[0], prop.points[1], prop.segment),
-                    [prop]
-                )
 
             for prop in [p for p in self.context.list(SameOrOppositeSideProperty) if p.same]:
                 prop_is_too_old = prop.reason.obsolete
