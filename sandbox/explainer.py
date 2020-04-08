@@ -6,7 +6,7 @@ from .core import Constraint
 from .property import *
 from .propertyset import PropertySet
 from .reason import Reason
-from .rule import LengthRatioRule, SumOfAnglesRule
+from .rule import *
 from .scene import Scene
 from .stats import Stats
 from .util import _comment, divide, side_of, angle_of
@@ -169,40 +169,11 @@ class Explainer:
                     [cl0, cl1, ncl]
                 )
 
-            rule = LengthRatioRule()
-            for prop in self.context.list(rule.property_type):
-                for reason in rule.apply(prop, self.context):
-                    yield reason
-
-            for pv in self.context.list(ParallelVectorsProperty):
-                vec0 = pv.vector0
-                vec1 = pv.vector1
-                ne0 = self.context.not_equal_property(*vec0.points)
-                ne1 = self.context.not_equal_property(*vec1.points)
-                if ne0 is not None and ne1 is not None:
-                    if pv.reason.obsolete and ne0.reason.obsolete and ne1.reason.obsolete:
-                        continue
-                    for prop in AngleValueProperty.generate(vec0, vec1, 0):
-                        yield (
-                            prop,
-                            _comment('Non-zero parallel vectors %s and %s', vec0, vec1),
-                            [pv, ne0, ne1]
-                        )
-
-            for pv in self.context.list(PerpendicularVectorsProperty):
-                vec0 = pv.vector0
-                vec1 = pv.vector1
-                ne0 = self.context.not_equal_property(*vec0.points)
-                ne1 = self.context.not_equal_property(*vec1.points)
-                if ne0 is not None and ne1 is not None:
-                    if pv.reason.obsolete and ne0.reason.obsolete and ne1.reason.obsolete:
-                        continue
-                    for prop in AngleValueProperty.generate(vec0, vec1, 90):
-                        yield (
-                            prop,
-                            _comment('Non-zero perpendicular vectors %s and %s', vec0, vec1),
-                            [pv, ne0, ne1]
-                        )
+            rules = (LengthRatioRule(), ParallelVectorsRule(), PerpendicularVectorsRule())
+            for rule in rules:
+                for prop in self.context.list(rule.property_type):
+                    for reason in rule.apply(prop, self.context):
+                        yield reason
 
             for prop in [p for p in self.context.list(SameOrOppositeSideProperty) if not p.same]:
                 if prop.reason.obsolete:

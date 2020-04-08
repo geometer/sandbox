@@ -1,4 +1,4 @@
-from .property import AngleValueProperty, LengthRatioProperty, PointsCoincidenceProperty, SumOfAnglesProperty
+from .property import *
 from .util import _comment, divide
 
 class SumOfAnglesRule:
@@ -47,3 +47,41 @@ class LengthRatioRule:
                 return
             yield (PointsCoincidenceProperty(*seg0.points, False), _comment('Otherwise, %s = %s = %s', ne.points[0], common, ne.points[1]), [prop, ne])
             yield (PointsCoincidenceProperty(*seg1.points, False), _comment('Otherwise, %s = %s = %s', ne.points[1], common, ne.points[0]), [prop, ne])
+
+class ParallelVectorsRule:
+    property_type = ParallelVectorsProperty
+
+    def apply(self, pv, context):
+        vec0 = pv.vector0
+        vec1 = pv.vector1
+        ne0 = context.not_equal_property(*vec0.points)
+        ne1 = context.not_equal_property(*vec1.points)
+        if ne0 is None or ne1 is None:
+            return
+        if pv.reason.obsolete and ne0.reason.obsolete and ne1.reason.obsolete:
+            return
+        for prop in AngleValueProperty.generate(vec0, vec1, 0):
+            yield (
+                prop,
+                _comment('Non-zero parallel vectors %s and %s', vec0, vec1),
+                [pv, ne0, ne1]
+            )
+
+class PerpendicularVectorsRule:
+    property_type = PerpendicularVectorsProperty
+
+    def apply(self, pv, context):
+        vec0 = pv.vector0
+        vec1 = pv.vector1
+        ne0 = context.not_equal_property(*vec0.points)
+        ne1 = context.not_equal_property(*vec1.points)
+        if ne0 is None or ne1 is None:
+            return
+        if pv.reason.obsolete and ne0.reason.obsolete and ne1.reason.obsolete:
+            return
+        for prop in AngleValueProperty.generate(vec0, vec1, 90):
+            yield (
+                prop,
+                _comment('Non-zero perpendicular vectors %s and %s', vec0, vec1),
+                [pv, ne0, ne1]
+            )
