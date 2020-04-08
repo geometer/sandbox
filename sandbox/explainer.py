@@ -30,7 +30,9 @@ class Explainer:
             ParallelVectorsRule(),
             PerpendicularVectorsRule(),
             Degree90IsRightAngleRule(),
+            SinglePerperndicularBisectorRule(),
             SeparatedPointsRule(),
+            PointOnPerpendicularBisectorIsEquidistantRule(),
         ]
         if 'advanced' in options:
             self.__rules += [

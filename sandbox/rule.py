@@ -288,6 +288,36 @@ class Degree90IsRightAngleRule(Rule):
                 prop.reason.premises
             )
 
+class SinglePerperndicularBisectorRule(SingleSourceRule):
+    property_type = PerpendicularVectorsProperty
+
+    def apply(self, prop, context):
+        if len({*prop.vector0.points, *prop.vector1.points}) != 4:
+            return
+        segments = (prop.vector0.as_segment, prop.vector1.as_segment)
+        for seg0, seg1 in (segments, reversed(segments)):
+            for i, j in ((0, 1), (1, 0)):
+                ppb = context[PointOnPerpendicularBisectorProperty(seg0.points[i], seg1)]
+                if ppb:
+                    if not (prop.reason.obsolete and ppb.reason.obsolete):
+                        yield (
+                            PointOnPerpendicularBisectorProperty(seg0.points[j], seg1),
+                            _comment('%s lies on the same perpendicular to %s as %s', seg0.points[j], seg1, seg0.points[i]),
+                            [prop, ppb]
+                        )
+                    break
+
+class PointOnPerpendicularBisectorIsEquidistantRule(SingleSourceRule):
+    property_type = PointOnPerpendicularBisectorProperty
+
+    def apply(self, prop, context):
+        if not prop.reason.obsolete:
+            yield (
+                LengthRatioProperty(prop.point.segment(prop.segment.points[0]), prop.point.segment(prop.segment.points[1]), 1),
+                _comment('A point on the perpendicular bisector to a segment is equidistant from the segment endpoints'),
+                [prop]
+            )
+
 class SeparatedPointsRule(SingleSourceRule):
     property_type = SameOrOppositeSideProperty
 
