@@ -33,9 +33,9 @@ class Scene(CoreScene):
         self.triangle_constraint(triangle)
         altitude0 = self.altitude(triangle, triangle[0], layer='auxiliary')
         altitude1 = self.altitude(triangle, triangle[1], layer='auxiliary')
+        altitude2 = self.altitude(triangle, triangle[2], layer='auxiliary')
         centre = altitude0.intersection_point(altitude1, **kwargs)
-        #altitude2 = self.altitude(triangle, triangle[2], layer='auxiliary')
-        #centre.belongs_to(altitude2)
+        centre.belongs_to(altitude2)
         return centre
 
     def centroid_point(self, triangle, **kwargs):
@@ -58,8 +58,8 @@ class Scene(CoreScene):
         if self.strategy == 'constructs':
             bisector0 = triangle[0].segment(triangle[1]).perpendicular_bisector_line(layer='auxiliary')
             bisector1 = triangle[0].segment(triangle[2]).perpendicular_bisector_line(layer='auxiliary')
-            centre = bisector0.intersection_point(bisector1, **kwargs)
             #bisector2 = triangle[1].segment(triangle[2]).perpendicular_bisector_line(layer='auxiliary')
+            centre = bisector0.intersection_point(bisector1, **kwargs)
             #centre.belongs_to(bisector2)
         else: #self.scene.strategy == 'constraints'
             centre = self.free_point(**kwargs)
@@ -86,15 +86,15 @@ class Scene(CoreScene):
         self.triangle_constraint(triangle)
         angle0 = triangle[0].angle(triangle[1], triangle[2])
         angle1 = triangle[1].angle(triangle[0], triangle[2])
+        angle2 = triangle[2].angle(triangle[0], triangle[1])
         bisector0 = angle0.bisector_line(layer='auxiliary')
         bisector1 = angle1.bisector_line(layer='auxiliary')
-        #angle2 = triangle[2].angle(triangle[0], triangle[1])
-        #bisector2 = angle2.bisector_line(layer='auxiliary')
+        bisector2 = angle2.bisector_line(layer='auxiliary')
         centre = bisector0.intersection_point(bisector1, **kwargs)
+        centre.belongs_to(bisector2)
         angle0.point_on_bisector_constraint(centre)
         angle1.point_on_bisector_constraint(centre)
-        #angle2.point_on_bisector_constraint(centre)
-        #centre.belongs_to(bisector2)
+        angle2.point_on_bisector_constraint(centre)
         centre.inside_triangle_constraint(*triangle, comment=_comment('%s is incentre of %s %s %s', centre, *triangle))
         return centre
 
