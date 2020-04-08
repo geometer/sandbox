@@ -17,10 +17,12 @@ def run_sample(scene, prop):
     else:
         properties = []
 
+    options = set()
     if '--use-trigonometry' in sys.argv[1:]:
-        explainer = Explainer(scene, options={'trigonometry'})
-    else:
-        explainer = Explainer(scene)
+        options.add('trigonometry')
+    if '--use-advanced' in sys.argv[1:]:
+        options.add('advanced')
+    explainer = Explainer(scene, options=options)
 
     if '--profile' in sys.argv[1:]:
         import cProfile

@@ -18,7 +18,7 @@ class Explainer:
         self.__options = options
         self.__explanation_time = None
         self.__iteration_step_count = -1
-        self.__rules = (
+        self.__rules = [
             DifferentAnglesToDifferentPointsRule(),
             LengthRatioTransitivityRule(),
             SumAndRatioOfTwoAnglesRule(),
@@ -29,7 +29,11 @@ class Explainer:
             ParallelVectorsRule(),
             PerpendicularVectorsRule(),
             SeparatedPointsRule(),
-        )
+        ]
+        if 'advanced' in options:
+            self.__rules += [
+                RightAngledTriangleMedianRule(),
+            ]
 
     def __reason(self, prop, comments, premises=None):
         reason = Reason(len(self.context), self.__iteration_step_count, comments, premises)
