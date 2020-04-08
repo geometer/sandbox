@@ -58,46 +58,16 @@ class Explainer:
                 for reason in rule.apply(src, self.context):
                     yield reason
 
-            def _cs(coef):
-                return '' if coef == 1 else ('%s ' % coef)
-
-            for lr0, lr1 in itertools.combinations(self.context.list(LengthRatioProperty), 2):
-                if lr0.reason.obsolete and lr1.reason.obsolete:
-                    continue
-                if lr0.segment0 == lr1.segment0:
-                    coef = divide(lr1.value, lr0.value)
-                    yield (
-                        LengthRatioProperty(lr0.segment1, lr1.segment1, coef),
-                        _comment('|%s| = %s|%s| = %s|%s|', lr0.segment1, _cs(divide(1, lr0.value)), lr0.segment0, _cs(coef), lr1.segment1),
-                        [lr0, lr1]
-                    )
-                elif lr0.segment0 == lr1.segment1:
-                    coef = lr1.value * lr0.value
-                    yield (
-                        LengthRatioProperty(lr1.segment0, lr0.segment1, coef),
-                        _comment('|%s| = %s|%s| = %s|%s|', lr1.segment0, _cs(lr1.value), lr0.segment0, _cs(coef), lr0.segment1),
-                        [lr1, lr0]
-                    )
-                elif lr0.segment1 == lr1.segment0:
-                    coef = lr1.value * lr0.value
-                    yield (
-                        LengthRatioProperty(lr0.segment0, lr1.segment1, coef),
-                        _comment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.value), lr0.segment1, _cs(coef), lr1.segment1),
-                        [lr0, lr1]
-                    )
-                elif lr0.segment1 == lr1.segment1:
-                    coef = divide(lr0.value, lr1.value)
-                    yield (
-                        LengthRatioProperty(lr0.segment0, lr1.segment0, coef),
-                        _comment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.value), lr0.segment1, _cs(coef), lr1.segment0),
-                        [lr0, lr1]
-                    )
+            rule = LengthRatioTransitivityRule()
+            for src in rule.sources(self.context):
+                for reason in rule.apply(src, self.context):
+                    yield reason
 
             congruent_angles = self.context.congruent_angle_properties()
             congruent_angles_with_vertex = [ar for ar in congruent_angles if ar.angle0.vertex and ar.angle1.vertex]
             same_triple_ratios = self.context.same_triple_angle_ratio_properties()
 
-            rule = SumOfAnglesRule()
+            rule = SumAndRatioOfTwoAnglesRule()
             for prop in self.context.list(rule.property_type):
                 for reason in rule.apply(prop, self.context):
                     yield reason

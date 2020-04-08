@@ -12,6 +12,12 @@ class SingleSourceRule(Rule):
         return [p for p in context.list(self.property_type) if self.accepts(p)]
 
 class DifferentAnglesToDifferentPointsRule(Rule):
+    """
+    For three vectors, v0, v1, v2, if it is known that
+        v1 and v2 have common start (or end), and
+        ∠(v0, v1) != ∠(v0, v2),
+    then ends (starts) of v1 and v2 are different
+    """
     def sources(self, context):
         return itertools.combinations(context.angle_value_properties(), 2)
 
@@ -43,7 +49,58 @@ class DifferentAnglesToDifferentPointsRule(Rule):
 
         yield (prop, _comment('Otherwise, %s = %s', ang0, ang1), [av0, av1])
 
-class SumOfAnglesRule(SingleSourceRule):
+class LengthRatioTransitivityRule(Rule):
+    """
+    For three segments seg0, seg1, and seg2, from
+        |seg0| = A |seg1|, and
+        |seg1| = B |seg2|
+    we conclude that |seg0| = A B |seg2|
+    """
+    def sources(self, context):
+        return itertools.combinations(context.list(LengthRatioProperty), 2)
+
+    def apply(self, src, context):
+        lr0, lr1 = src
+
+        if lr0.reason.obsolete and lr1.reason.obsolete:
+            return
+
+        def _cs(coef):
+            return '' if coef == 1 else ('%s ' % coef)
+
+        if lr0.segment0 == lr1.segment0:
+            coef = divide(lr1.value, lr0.value)
+            yield (
+                LengthRatioProperty(lr0.segment1, lr1.segment1, coef),
+                _comment('|%s| = %s|%s| = %s|%s|', lr0.segment1, _cs(divide(1, lr0.value)), lr0.segment0, _cs(coef), lr1.segment1),
+                [lr0, lr1]
+            )
+        elif lr0.segment0 == lr1.segment1:
+            coef = lr1.value * lr0.value
+            yield (
+                LengthRatioProperty(lr1.segment0, lr0.segment1, coef),
+                _comment('|%s| = %s|%s| = %s|%s|', lr1.segment0, _cs(lr1.value), lr0.segment0, _cs(coef), lr0.segment1),
+                [lr1, lr0]
+            )
+        elif lr0.segment1 == lr1.segment0:
+            coef = lr1.value * lr0.value
+            yield (
+                LengthRatioProperty(lr0.segment0, lr1.segment1, coef),
+                _comment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.value), lr0.segment1, _cs(coef), lr1.segment1),
+                [lr0, lr1]
+            )
+        elif lr0.segment1 == lr1.segment1:
+            coef = divide(lr0.value, lr1.value)
+            yield (
+                LengthRatioProperty(lr0.segment0, lr1.segment0, coef),
+                _comment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.value), lr0.segment1, _cs(coef), lr1.segment0),
+                [lr0, lr1]
+            )
+
+class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
+    """
+    If the sum and the ratio of two angles are known, we can find the values
+    """
     property_type = SumOfAnglesProperty
 
     def apply(self, prop, context):
