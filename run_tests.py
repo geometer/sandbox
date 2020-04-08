@@ -4,6 +4,7 @@ from tests.scene.midpoint import *
 
 from tests.explainer.inside_triangle import *
 from tests.explainer.rog4578 import *
+from tests.explainer.rog4594 import *
 from tests.explainer.napoleon import *
 from tests.explainer.rightangled import *
 from tests.explainer.geo0369 import *
