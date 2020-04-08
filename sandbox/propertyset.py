@@ -636,7 +636,7 @@ class PropertySet:
         return list(self.__full_set)
 
     def __contains__(self, prop):
-        if prop in self.__full_set:
+        if self[prop] is not None:
             return True
         if isinstance(prop, AnglesRatioProperty):
             #TODO: check ratio value for contradiction
@@ -652,7 +652,10 @@ class PropertySet:
         return False
 
     def __getitem__(self, prop):
-        return self.__full_set.get(prop)
+        existing = self.__full_set.get(prop)
+        #TODO: better way to report contradiction
+        assert existing is None or existing.compare_values(prop), 'Contradiction: values are different'
+        return existing
 
     def collinearity_property(self, pt0, pt1, pt2):
         return self.__collinearity.get(frozenset([pt0, pt1, pt2]))

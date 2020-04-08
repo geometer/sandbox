@@ -17,6 +17,9 @@ class Property:
     def __str__(self):
         return str(self.description)
 
+    def compare_values(self, other):
+        return True
+
 class PointsCollinearityProperty(Property):
     """
     [Not] collinear points
@@ -35,6 +38,9 @@ class PointsCollinearityProperty(Property):
             return _comment('Points %s, %s, and %s are collinear', *self.points)
         else:
             return _comment('Points %s, %s, and %s are not collinear', *self.points)
+
+    def compare_values(self, other):
+        return self.collinear == other.collinear
 
     def __eq__(self, other):
         return isinstance(other, PointsCollinearityProperty) and self.point_set == other.point_set
@@ -107,6 +113,9 @@ class PointsCoincidenceProperty(Property):
         else:
             return _comment('Points %s and %s are not coincident', *self.points)
 
+    def compare_values(self, other):
+        return self.coincident == other.coincident
+
     def __eq__(self, other):
         return isinstance(other, PointsCoincidenceProperty) and self.point_set == other.point_set
 
@@ -132,6 +141,9 @@ class SameOrOppositeSideProperty(Property):
             return _comment('%s, %s located on the same side of line %s', *self.points, self.segment)
         else:
             return _comment('%s, %s located on opposite sides of line %s', *self.points, self.segment)
+
+    def compare_values(self, other):
+        return self.same == other.same
 
     def __eq__(self, other):
         return isinstance(other, SameOrOppositeSideProperty) and self.__object_set == other.__object_set
@@ -247,6 +259,9 @@ class AngleValueProperty(Property):
                 return _comment('%s lies inside segment %s', self.angle.vertex, self.angle.vector0.end.segment(self.angle.vector1.end))
         return _comment('%s = %dº', self.angle, self.degree)
 
+    def compare_values(self, other):
+        return self.degree == other.degree
+
     def __eq__(self, other):
         if not isinstance(other, AngleValueProperty):
             return False
@@ -283,6 +298,9 @@ class AnglesRatioProperty(Property):
         else:
             return _comment('%s = %s %s', self.angle0, self.value, self.angle1)
 
+    def compare_values(self, other):
+        return self.value == other.value
+
     def __eq__(self, other):
         return isinstance(other, AnglesRatioProperty) and self.angle_set == other.angle_set
 
@@ -307,6 +325,9 @@ class SumOfAnglesProperty(Property):
     @property
     def description(self):
         return _comment('%s + %s = %sº', self.angle0, self.angle1, self.degree)
+
+    def compare_values(self, other):
+        return self.degree == other.degree
 
     def __eq__(self, other):
         return isinstance(other, SumOfAnglesProperty) and self.angle_set == other.angle_set
@@ -335,6 +356,9 @@ class RatioOfNonZeroLengthsProperty(Property):
     @property
     def description(self):
         return _comment('|%s| / |%s| = %s', self.segment0, self.segment1, self.value)
+
+    def compare_values(self, other):
+        return self.value == other.value
 
     def __eq__(self, other):
         return isinstance(other, RatioOfNonZeroLengthsProperty) and self.segment_set == other.segment_set
@@ -365,6 +389,9 @@ class LengthRatioProperty(Property):
         if self.value == 1:
             return _comment('|%s| = |%s|', self.segment0, self.segment1)
         return _comment('|%s| = %s |%s|', self.segment0, self.value, self.segment1)
+
+    def compare_values(self, other):
+        return self.value == other.value
 
     def __eq__(self, other):
         return isinstance(other, LengthRatioProperty) and self.segment_set == other.segment_set
