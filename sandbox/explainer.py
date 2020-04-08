@@ -41,9 +41,6 @@ class Explainer:
             reason.obsolete = existing.reason.obsolete
             existing.reason = reason
 
-    def __list_angle_values(self):
-        return [p for p in self.context.list(AngleValueProperty) if p.degree in (0, 180)] + self.context.nondegenerate_angle_value_properties()
-
     def explain(self):
         start = time.time()
         frozen = self.scene.is_frozen
@@ -56,7 +53,7 @@ class Explainer:
 
     def __explain_all(self):
         def iteration():
-            for av0, av1 in itertools.combinations(self.__list_angle_values(), 2):
+            for av0, av1 in itertools.combinations(self.context.angle_value_properties(), 2):
                 if av0.degree == av1.degree or av0.reason.obsolete and av1.reason.obsolete:
                     continue
                 ang0 = av0.angle
@@ -538,7 +535,7 @@ class Explainer:
                     [pia, av]
                 )
 
-            angle_values = [prop for prop in self.__list_angle_values() \
+            angle_values = [prop for prop in self.context.angle_value_properties() \
                 if prop.angle.vertex is not None]
 
             for av in [av for av in angle_values if av.degree == 0]:
@@ -968,7 +965,7 @@ class Explainer:
                     [ct]
                 )
 
-            for av in self.__list_angle_values():
+            for av in self.context.angle_value_properties():
                 if av.angle.vertex is None:
                     continue
                 av_is_too_old = av.reason.obsolete
@@ -1041,7 +1038,7 @@ class Explainer:
                     [ar, oppo]
                 )
 
-            for av in self.__list_angle_values():
+            for av in self.context.list(AngleValueProperty):
                 if av.reason.obsolete or av.angle.vertex is None:
                     continue
                 yield (

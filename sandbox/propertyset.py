@@ -671,6 +671,9 @@ class PropertySet:
     def nondegenerate_angle_value_properties(self):
         return self.__angle_ratios.value_properties()
 
+    def angle_value_properties(self):
+        return [p for p in self.list(AngleValueProperty) if p.degree in (0, 180)] + self.nondegenerate_angle_value_properties()
+
     def angles_ratio_property(self, angle0, angle1):
         return self.__angle_ratios.ratio_property(angle0, angle1)
 
