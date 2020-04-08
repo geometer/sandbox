@@ -19,7 +19,7 @@ def run_sample(scene, prop):
 
     options = set()
     if '--use-trigonometry' in sys.argv[1:]:
-        options.add('trigonometry')
+        options.add('trigonometric')
     if '--use-advanced' in sys.argv[1:]:
         options.add('advanced')
     explainer = Explainer(scene, options=options)

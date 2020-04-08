@@ -8,6 +8,7 @@ from .propertyset import PropertySet
 from .reason import Reason
 from .rules.advanced import *
 from .rules.basic import *
+from .rules.trigonometric import *
 from .scene import Scene
 from .stats import Stats
 from .util import _comment, divide, side_of, angle_of
@@ -37,6 +38,10 @@ class Explainer:
         if 'advanced' in options:
             self.__rules += [
                 RightAngledTriangleMedianRule(),
+            ]
+        if 'trigonometric' in options:
+            self.__rules += [
+                LawOfSinesRule(),
             ]
 
     def __reason(self, prop, comments, premises=None):
@@ -1249,25 +1254,6 @@ class Explainer:
                     _comment('There is only one perpendicular to %s at point %s', vertex.segment(common), vertex),
                     [ra0, ra1]
                 )
-
-            if 'trigonometry' in self.__options:
-                for av0 in [p for p in self.context.nondegenerate_angle_value_properties() if p.angle.vertex]:
-                    triangle = (av0.angle.vertex, *av0.angle.endpoints)
-                    av1 = self.context.angle_value_property(angle_of(triangle, 1))
-                    if av1 is None or av0.reason.obsolete and av1.reason.obsolete:
-                        continue
-                    sines = (
-                        sp.sin(sp.pi * av0.degree / 180),
-                        sp.sin(sp.pi * av1.degree / 180),
-                        sp.sin(sp.pi * (180 - av0.degree - av1.degree) / 180)
-                    )
-                    sides = [side_of(triangle, i) for i in range(0, 3)]
-                    for (sine0, side0), (sine1, side1) in itertools.combinations(zip(sines, sides), 2):
-                        yield (
-                            LengthRatioProperty(side0, side1, sine0 / sine1),
-                            _comment('Law of sines for △ %s %s %s', *triangle),
-                            [av0, av1]
-                        )
 
             for sos in self.context.list(SameOrOppositeSideProperty):
                 if sos.reason.obsolete:
