@@ -154,7 +154,7 @@ class CollinearityCollisionRule(Rule):
         if not reasons_are_too_old:
             yield (
                 PointsCoincidenceProperty(pt_col, pt_ncl, False),
-                _comment('%s lies on the line %s %s, %s does not', pt_col, common_points, pt_ncl),
+                _comment('%s lies on the line %s %s, %s does not', pt_col, *common_points, pt_ncl),
                 [ncl, col]
             )
         for common in common_points:
