@@ -456,14 +456,14 @@ class Explainer:
                             continue
                         if sum_reason.degree == 180:
                             for prop in AngleValueProperty.generate(lp0.vector(pt0), lp1.vector(pt1), 0):
-                                yield (prop, 'Zigzag', [so, sum_reason, ne])
+                                yield (prop, 'Alternate angles', [so, sum_reason, ne])
                     else:
                         ratio_reason = self.context.angles_ratio_property(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0))
                         if ratio_reason is None or reasons_are_too_old and ratio_reason.reason.obsolete:
                             continue
                         if ratio_reason.value == 1:
                             for prop in AngleValueProperty.generate(lp0.vector(pt0), pt1.vector(lp1), 0):
-                                yield (prop, 'Zigzag', [so, ratio_reason, ne])
+                                yield (prop, 'Corresponging angles', [so, ratio_reason, ne])
 
             for zero in [av for av in self.context.list(AngleValueProperty) if av.degree == 0]:
                 zero_is_too_old = zero.reason.obsolete

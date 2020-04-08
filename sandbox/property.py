@@ -194,7 +194,7 @@ class AcuteAngleProperty(Property):
 
     @property
     def description(self):
-        return _comment('%s is acute (0º < %s < 90º)', self.angle, self.angle)
+        return _comment('%s is acute', self.angle)
 
     def __eq__(self, other):
         return isinstance(other, AcuteAngleProperty) and self.angle == other.angle
@@ -214,7 +214,7 @@ class ObtuseAngleProperty(Property):
 
     @property
     def description(self):
-        return _comment('%s is acute (90º < %s < 180º)', self.angle, self.angle)
+        return _comment('%s is obtuse', self.angle)
 
     def __eq__(self, other):
         return isinstance(other, ObtuseAngleProperty) and self.angle == other.angle
