@@ -6,7 +6,7 @@ from .core import Constraint
 from .property import *
 from .propertyset import PropertySet
 from .reason import Reason
-from .rule import SumOfAnglesRule
+from .rule import LengthRatioRule, SumOfAnglesRule
 from .scene import Scene
 from .stats import Stats
 from .util import _comment, divide, side_of, angle_of
@@ -115,10 +115,10 @@ class Explainer:
             congruent_angles_with_vertex = [ar for ar in congruent_angles if ar.angle0.vertex and ar.angle1.vertex]
             same_triple_ratios = self.context.same_triple_angle_ratio_properties()
 
-            rule = SumOfAnglesRule(self.context)
+            rule = SumOfAnglesRule()
             for prop in self.context.list(rule.property_type):
-                for reason in rule.apply(prop):
-                    yield tuple(reason)
+                for reason in rule.apply(prop, self.context):
+                    yield reason
 
             for ncl in [p for p in self.context.list(PointsCollinearityProperty) if not p.collinear]:
                 if not ncl.reason.obsolete:
@@ -169,31 +169,10 @@ class Explainer:
                     [cl0, cl1, ncl]
                 )
 
-            for cs in self.context.list(LengthRatioProperty):
-                seg0 = cs.segment0
-                seg1 = cs.segment1
-
-                ne0 = self.context.not_equal_property(*seg0.points)
-                ne1 = self.context.not_equal_property(*seg1.points)
-                if ne0 is not None and ne1 is None:
-                    if cs.reason.obsolete and ne0.reason.obsolete:
-                        continue
-                    yield (PointsCoincidenceProperty(*seg1.points, False), _comment('Otherwise, %s = %s', *seg0.points), [cs, ne0])
-                elif ne1 is not None and ne0 is None:
-                    if cs.reason.obsolete and ne1.reason.obsolete:
-                        continue
-                    yield (PointsCoincidenceProperty(*seg0.points, False), _comment('Otherwise, %s = %s', *seg1.points), [cs, ne1])
-                elif ne0 is None and ne1 is None:
-                    common = next((pt for pt in seg0.points if pt in seg1.points), None)
-                    if common is None:
-                        continue
-                    pt0 = next(pt for pt in seg0.points if pt != common)
-                    pt1 = next(pt for pt in seg1.points if pt != common)
-                    ne = self.context.not_equal_property(pt0, pt1)
-                    if ne is None or cs.reason.obsolete and ne.reason.obsolete:
-                        continue
-                    yield (PointsCoincidenceProperty(*seg0.points, False), _comment('Otherwise, %s = %s = %s', ne.points[0], common, ne.points[1]), [cs, ne])
-                    yield (PointsCoincidenceProperty(*seg1.points, False), _comment('Otherwise, %s = %s = %s', ne.points[1], common, ne.points[0]), [cs, ne])
+            rule = LengthRatioRule()
+            for prop in self.context.list(rule.property_type):
+                for reason in rule.apply(prop, self.context):
+                    yield reason
 
             for pv in self.context.list(ParallelVectorsProperty):
                 vec0 = pv.vector0
