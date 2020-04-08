@@ -18,14 +18,13 @@ class Explainer:
         self.__options = options
         self.__explanation_time = None
         self.__iteration_step_count = -1
-        self.__rules0 = (
+        self.__rules = (
             DifferentAnglesToDifferentPointsRule(),
             LengthRatioTransitivityRule(),
             SumAndRatioOfTwoAnglesRule(),
             NonCollinearPointsAreDifferentRule(),
             CollinearityCollisionRule(),
-        )
-        self.__rules = (
+            TwoPointsCollinearToTwoLinesRule(),
             LengthRatioRule(),
             ParallelVectorsRule(),
             PerpendicularVectorsRule(),
@@ -60,33 +59,9 @@ class Explainer:
 
     def __explain_all(self):
         def iteration():
-            for rule in self.__rules0:
+            for rule in self.__rules:
                 for src in rule.sources(self.context):
                     for reason in rule.apply(src, self.context):
-                        yield reason
-
-            for cl0, cl1 in itertools.combinations([p for p in self.context.list(PointsCollinearityProperty) if p.collinear], 2):
-                if len(cl0.point_set.union(cl1.point_set)) != 4:
-                    continue
-                pt0 = next(pt for pt in cl0.points if pt not in cl1.point_set)
-                pt1 = next(pt for pt in cl1.points if pt not in cl0.point_set)
-                others = [pt for pt in cl0.points if pt != pt0]
-                ncl_pt = others[0]
-                ncl = self.context.collinearity_property(pt0, pt1, ncl_pt)
-                if ncl is None:
-                    ncl_pt = others[1]
-                    ncl = self.context.collinearity_property(pt0, pt1, ncl_pt)
-                if ncl is None or ncl.collinear or cl0.reason.obsolete and cl1.reason.obsolete and ncl.reason.obsolete:
-                    continue
-                yield (
-                    PointsCoincidenceProperty(*others, True),
-                    _comment('%s and %s belong to two different lines %s and %s', *others, pt0.segment(ncl_pt), pt1.segment(ncl_pt)),
-                    [cl0, cl1, ncl]
-                )
-
-            for rule in self.__rules:
-                for prop in rule.sources(self.context):
-                    for reason in rule.apply(prop, self.context):
                         yield reason
 
             for prop in [p for p in self.context.list(SameOrOppositeSideProperty) if p.same]:

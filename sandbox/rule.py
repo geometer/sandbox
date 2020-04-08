@@ -97,12 +97,43 @@ class LengthRatioTransitivityRule(Rule):
                 [lr0, lr1]
             )
 
+class TwoPointsCollinearToTwoLinesRule(Rule):
+    """
+    If two points both belong to two different lines,
+    the points are coinciding
+    """
+    def sources(self, context):
+        return itertools.combinations([p for p in context.list(PointsCollinearityProperty) if p.collinear], 2)
+
+    def apply(self, src, context):
+        cl0, cl1 = src
+
+        common_points = [pt for pt in cl0.points if pt in cl1.points]
+        if len(common_points) != 2:
+            return
+        pt0 = next(pt for pt in cl0.points if pt not in common_points)
+        pt1 = next(pt for pt in cl1.points if pt not in common_points)
+
+        for ncl_pt in common_points:
+            ncl = self.context.collinearity_property(pt0, pt1, ncl_pt)
+            if ncl:
+                break
+        else:
+            return
+        if ncl.collinear or cl0.reason.obsolete and cl1.reason.obsolete and ncl.reason.obsolete:
+            return
+        yield (
+            PointsCoincidenceProperty(*common_points, True),
+            _comment('%s and %s belong to two different lines %s and %s', *common_points, pt0.segment(ncl_pt), pt1.segment(ncl_pt)),
+            [cl0, cl1, ncl]
+        )
+
 class CollinearityCollisionRule(Rule):
     """
-    If a point is collinear to some line, and another one is not,
-    then the points are different;
-    moreover, if third point lies on the line does not coincide the first,
-    then three points are not collinear
+    If a point belongs to some line, and another one does not,
+    then the points are different.
+    Moreover, if a third point belongs to the line and does not coincide to the first,
+    then the three points are not collinear.
     """
     def sources(self, context):
         return itertools.product( \
