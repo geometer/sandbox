@@ -5,10 +5,11 @@ class Rule:
     def accepts(self, prop):
         return True
 
+class SingleSourceRule(Rule):
     def list_sources(self, context):
         return [p for p in context.list(self.property_type) if self.accepts(p)]
 
-class SumOfAnglesRule(Rule):
+class SumOfAnglesRule(SingleSourceRule):
     property_type = SumOfAnglesProperty
 
     def apply(self, prop, context):
@@ -26,7 +27,7 @@ class SumOfAnglesRule(Rule):
         yield (AngleValueProperty(ar.angle0, value0), comment0, [prop, ar])
         yield (AngleValueProperty(ar.angle1, value1), comment1, [prop, ar])
 
-class LengthRatioRule(Rule):
+class LengthRatioRule(SingleSourceRule):
     property_type = LengthRatioProperty
 
     def apply(self, prop, context):
@@ -55,7 +56,7 @@ class LengthRatioRule(Rule):
             yield (PointsCoincidenceProperty(*seg0.points, False), _comment('Otherwise, %s = %s = %s', ne.points[0], common, ne.points[1]), [prop, ne])
             yield (PointsCoincidenceProperty(*seg1.points, False), _comment('Otherwise, %s = %s = %s', ne.points[1], common, ne.points[0]), [prop, ne])
 
-class ParallelVectorsRule(Rule):
+class ParallelVectorsRule(SingleSourceRule):
     property_type = ParallelVectorsProperty
 
     def apply(self, pv, context):
@@ -74,7 +75,7 @@ class ParallelVectorsRule(Rule):
                 [pv, ne0, ne1]
             )
 
-class PerpendicularVectorsRule(Rule):
+class PerpendicularVectorsRule(SingleSourceRule):
     property_type = PerpendicularVectorsProperty
 
     def apply(self, pv, context):
@@ -93,7 +94,7 @@ class PerpendicularVectorsRule(Rule):
                 [pv, ne0, ne1]
             )
 
-class SeparatedPointsRule(Rule):
+class SeparatedPointsRule(SingleSourceRule):
     property_type = SameOrOppositeSideProperty
 
     def accepts(self, prop):
