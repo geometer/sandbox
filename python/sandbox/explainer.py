@@ -89,13 +89,13 @@ class Explainer:
                 if prop.same:
                     yield (
                         AngleValueProperty(crossing.angle(pt0, pt1), 0),
-                        _comment('%s is an intersection of lines %s and %s', crossing, pt0.segment(pt1), prop.segment),
+                        _comment('%s is the intersection point of lines %s and %s', crossing, pt0.segment(pt1), prop.segment),
                         [prop] + reasons
                     )
                 else:
                     yield (
                         AngleValueProperty(crossing.angle(pt0, pt1), 180),
-                        _comment('%s is an intersection of segment %s and line %s', crossing, pt0.segment(pt1), prop.segment),
+                        _comment('%s is the intersection point of segment %s and line %s', crossing, pt0.segment(pt1), prop.segment),
                         [prop] + reasons
                     )
 
