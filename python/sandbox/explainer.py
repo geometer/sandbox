@@ -34,6 +34,7 @@ class Explainer:
             SinglePerperndicularBisectorRule(),
             SeparatedPointsRule(),
             PointOnPerpendicularBisectorIsEquidistantRule(),
+            SameSidePointInsideSegmentRule(),
         ]
         if 'advanced' in options:
             self.__rules += [
@@ -76,21 +77,6 @@ class Explainer:
                 for src in rule.sources(self.context):
                     for reason in rule.apply(src, self.context):
                         yield reason
-
-            for prop in [p for p in self.context.list(SameOrOppositeSideProperty) if p.same]:
-                prop_is_too_old = prop.reason.obsolete
-                segment = prop.points[0].segment(prop.points[1])
-                for col in [p for p in self.context.list(PointsCollinearityProperty, [segment]) if p.collinear]:
-                    pt = next(p for p in col.points if p not in prop.points)
-                    value = self.context.angle_value_property(pt.angle(*prop.points))
-                    if not value or value.degree != 180 or prop_is_too_old and value.reason.obsolete:
-                        continue
-                    for old in prop.points:
-                        yield (
-                            SameOrOppositeSideProperty(prop.segment, old, pt, True),
-                            _comment('The segment %s does not cross line %s', segment, prop.segment),
-                            [prop, value]
-                        )
 
             for prop in self.context.list(SameOrOppositeSideProperty):
                 pt0 = prop.points[0]

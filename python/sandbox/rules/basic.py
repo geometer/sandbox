@@ -319,6 +319,9 @@ class PointOnPerpendicularBisectorIsEquidistantRule(SingleSourceRule):
             )
 
 class SeparatedPointsRule(SingleSourceRule):
+    """
+    If two points are separated by a line, the points are not coinciding
+    """
     property_type = SameOrOppositeSideProperty
 
     def accepts(self, prop):
@@ -331,3 +334,28 @@ class SeparatedPointsRule(SingleSourceRule):
                 _comment('%s and %s are separated by line %s', prop.points[0], prop.points[1], prop.segment),
                 [prop]
             )
+
+class SameSidePointInsideSegmentRule(SingleSourceRule):
+    """
+    If endpoints of a segment are on the same side of a line,
+    then any point inside the segment in on the same side too
+    """
+    property_type = SameOrOppositeSideProperty
+
+    def accepts(self, prop):
+        return prop.same
+
+    def apply(self, prop, context):
+        prop_is_too_old = prop.reason.obsolete
+        segment = prop.points[0].segment(prop.points[1])
+        for col in [p for p in context.list(PointsCollinearityProperty, [segment]) if p.collinear]:
+            pt = next(p for p in col.points if p not in prop.points)
+            value = context.angle_value_property(pt.angle(*prop.points))
+            if not value or value.degree != 180 or prop_is_too_old and value.reason.obsolete:
+                return
+            for endpoint in prop.points:
+                yield (
+                    SameOrOppositeSideProperty(prop.segment, endpoint, pt, True),
+                    _comment('Segment %s does not cross line %s', segment, prop.segment),
+                    [prop, value]
+                )
