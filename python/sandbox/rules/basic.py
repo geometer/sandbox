@@ -357,6 +357,31 @@ class CommonPerpendicularRule(SingleSourceRule):
                     [perp, prop]
                 )
 
+class TwoPointsBelongsToTwoPerpendicularsRule(Rule):
+    def sources(self, context):
+        return itertools.combinations(context.list(PerpendicularSegmentsProperty), 2)
+
+    def apply(self, src, context):
+        perp0, perp1 = src
+        segments0 = (perp0.segment0, perp0.segment1)
+        segments1 = (perp1.segment0, perp1.segment1)
+        common = next((seg for seg in segments0 if seg in segments1), None)
+        if common is None:
+            return
+        seg0 = next(seg for seg in segments0 if seg != common)
+        seg1 = next(seg for seg in segments1 if seg != common)
+        points = set(seg0.points + seg1.points)
+        if len(points) != 3:
+            return
+        ncl = context.collinearity_property(*points)
+        if ncl is None or ncl.collinear or ncl.reason.obsolete and perp0.reason.obsolete and perp1.reason.obsolete:
+            return
+        yield (
+            PointsCoincidenceProperty(*common.points, True),
+            _comment('%s and %s lies on perpendiculars to non-parallel lines %s and %s', *common.points, seg0, seg1),
+            [perp0, perp1, ncl]
+        )
+
 class PerpendicularTransitivityRule(Rule):
     def sources(self, context):
         return itertools.combinations(context.list(PerpendicularSegmentsProperty), 2)

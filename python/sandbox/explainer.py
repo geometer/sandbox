@@ -28,6 +28,7 @@ class Explainer:
             NonCollinearPointsAreDifferentRule(),
             CollinearityCollisionRule(),
             TwoPointsBelongsToTwoLinesRule(),
+            TwoPointsBelongsToTwoPerpendicularsRule(),
             LengthRatioRule(),
             ParallelVectorsRule(),
             PerpendicularSegmentsRule(),
