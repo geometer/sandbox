@@ -550,9 +550,9 @@ class CoreScene:
             middle = self.middle_point(layer='auxiliary')
             line = self.line_through(layer='auxiliary')
             bisector = middle.perpendicular_line(line, **kwargs)
-            bisector.perpendicular_constraint(
-                line, comment=_comment('%s is a perpendicular bisector of %s', bisector, self)
-            )
+            comment=_comment('%s is a perpendicular bisector of %s', bisector, self)
+            bisector.perpendicular_constraint(line, comment=comment)
+            self.scene.constraint(Constraint.Kind.perpendicular_bisector, bisector, self, comment=comment)
             return bisector
 
         def ratio_constraint(self, segment, coef, **kwargs):
@@ -673,6 +673,7 @@ class CoreScene:
         self.__objects = []
         self.validation_constraints = []
         self.adjustment_constraints = []
+        self.explanation_constraints = []
         self.__frozen = False
         self.__angles = {} # {vector, vector} => angle
         self.__segments = {} # {point, point} => angle
@@ -682,8 +683,10 @@ class CoreScene:
         if not self.__frozen:
             if kind.stage == Stage.validation:
                 self.validation_constraints.append(cns)
-            else:
+            elif kind.stage == Stage.adjustment:
                 self.adjustment_constraints.append(cns)
+            else:
+                self.explanation_constraints.append(cns)
         return cns
 
     def equilateral_constraint(self, triangle, **kwargs):
@@ -728,8 +731,10 @@ class CoreScene:
     def constraints(self, kind):
         if kind.stage == Stage.validation:
             return [cnstr for cnstr in self.validation_constraints if cnstr.kind == kind]
-        else:
+        elif kind.stage == Stage.adjustment:
             return [cnstr for cnstr in self.adjustment_constraints if cnstr.kind == kind]
+        else:
+            return [cnstr for cnstr in self.explanation_constraints if cnstr.kind == kind]
 
     def enumerate_predefined_properties(self):
         for cnstr in self.constraints(Constraint.Kind.collinear):
@@ -764,10 +769,10 @@ class CoreScene:
         for cnstr in self.constraints(Constraint.Kind.perpendicular):
             line0 = cnstr.params[0]
             line1 = cnstr.params[1]
-            for pts0 in itertools.combinations(cnstr.params[0].all_points, 2):
+            for pts0 in itertools.combinations(line0.all_points, 2):
                 if 'invisible' in [p.layer for p in pts0]:
                     continue
-                for pts1 in itertools.combinations(cnstr.params[1].all_points, 2):
+                for pts1 in itertools.combinations(line1.all_points, 2):
                     if 'invisible' in [p.layer for p in pts1]:
                         continue
                     yield (
@@ -776,6 +781,19 @@ class CoreScene:
                         ),
                         cnstr.comments
                     )
+
+        for cnstr in self.constraints(Constraint.Kind.perpendicular_bisector):
+            bisector = cnstr.params[0]
+            segment = cnstr.params[1]
+            if 'invisible' in [p.layer for p in segment.points]:
+                continue
+            for pt in bisector.all_points:
+                if pt.layer == 'invisible':
+                    continue
+                yield (
+                    PointOnPerpendicularBisectorProperty(pt, segment),
+                    cnstr.comments
+                )
 
         for cnstr in self.constraints(Constraint.Kind.parallel_vectors):
             if all(all(p.layer != 'invisible' for p in param.points) for param in cnstr.params):
@@ -912,31 +930,36 @@ class CoreScene:
         if self.adjustment_constraints:
             print('\nAdjustment constraints:')
             print('\n'.join(['\t' + str(cnstr) for cnstr in self.adjustment_constraints]))
+        if self.explanation_constraints:
+            print('\nExplanation constraints:')
+            print('\n'.join(['\t' + str(cnstr) for cnstr in self.explanation_constraints]))
         print('')
 
 class Stage(Enum):
     validation        = auto()
     adjustment        = auto()
+    explanation       = auto()
 
 class Constraint:
     @unique
     class Kind(Enum):
-        not_equal         = ('not_equal', Stage.validation, CoreScene.Point, CoreScene.Point)
-        not_collinear     = ('not_collinear', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point)
-        collinear         = ('collinear', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point)
-        opposite_side     = ('opposite_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
-        same_side         = ('same_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
-        same_direction    = ('same_direction', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point)
-        inside_segment    = ('inside_segment', Stage.validation, CoreScene.Point, CoreScene.Segment)
-        inside_angle      = ('inside_angle', Stage.validation, CoreScene.Point, CoreScene.Angle)
-        quadrilateral     = ('quadrilateral', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
-        equilateral       = ('equilateral', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point)
-        convex_polygon    = ('convex_polygon', Stage.validation, List[CoreScene.Point])
-        distance          = ('distance', Stage.adjustment, CoreScene.Vector, int)
-        length_ratio      = ('length_ratio', Stage.adjustment, CoreScene.Segment, CoreScene.Segment, int)
-        parallel_vectors  = ('parallel_vectors', Stage.adjustment, CoreScene.Vector, CoreScene.Vector)
-        angles_ratio      = ('angles_ratio', Stage.adjustment, CoreScene.Angle, CoreScene.Angle, int)
-        perpendicular     = ('perpendicular', Stage.adjustment, CoreScene.Line, CoreScene.Line)
+        not_equal                 = ('not_equal', Stage.validation, CoreScene.Point, CoreScene.Point)
+        not_collinear             = ('not_collinear', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point)
+        collinear                 = ('collinear', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point)
+        opposite_side             = ('opposite_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
+        same_side                 = ('same_side', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Line)
+        same_direction            = ('same_direction', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point)
+        inside_segment            = ('inside_segment', Stage.validation, CoreScene.Point, CoreScene.Segment)
+        inside_angle              = ('inside_angle', Stage.validation, CoreScene.Point, CoreScene.Angle)
+        quadrilateral             = ('quadrilateral', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
+        equilateral               = ('equilateral', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point)
+        convex_polygon            = ('convex_polygon', Stage.validation, List[CoreScene.Point])
+        distance                  = ('distance', Stage.adjustment, CoreScene.Vector, int)
+        length_ratio              = ('length_ratio', Stage.adjustment, CoreScene.Segment, CoreScene.Segment, int)
+        parallel_vectors          = ('parallel_vectors', Stage.adjustment, CoreScene.Vector, CoreScene.Vector)
+        angles_ratio              = ('angles_ratio', Stage.adjustment, CoreScene.Angle, CoreScene.Angle, int)
+        perpendicular             = ('perpendicular', Stage.adjustment, CoreScene.Line, CoreScene.Line)
+        perpendicular_bisector    = ('perpendicular_bisector', Stage.explanation, CoreScene.Line, CoreScene.Segment)
 
         def __init__(self, name, stage, *params):
             self.stage = stage
