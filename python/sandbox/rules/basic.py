@@ -109,36 +109,52 @@ class LengthRatioTransitivityRule(Rule):
                 [lr0, lr1]
             )
 
-class TwoPointsBelongsToTwoLinesRule(Rule):
+class TwoPointsBelongsToTwoLinesRule(SingleSourceRule):
     """
     If two points both belong to two different lines,
     the points are coincident
     """
-    def sources(self, context):
-        return itertools.combinations([p for p in context.list(PointsCollinearityProperty) if p.collinear], 2)
+    property_type = PointsCollinearityProperty
 
-    def apply(self, src, context):
-        cl0, cl1 = src
+    def accepts(self, prop):
+        return prop.collinear
 
-        common_points = [pt for pt in cl0.points if pt in cl1.points]
-        if len(common_points) != 2:
-            return
-        pt0 = next(pt for pt in cl0.points if pt not in common_points)
-        pt1 = next(pt for pt in cl1.points if pt not in common_points)
+    def apply(self, cl0, context):
+        for side, pt0 in [(side_of(cl0.points, i), cl0.points[i]) for i in range(0, 3)]:
+            third_points = [pt0]
+            for cl1 in [p for p in context.list(PointsCollinearityProperty, [side]) if p.collinear and p != cl0]:
+                pt1 = next(pt for pt in cl1.points if pt not in side.points)
+                third_points.append(pt1)
 
-        for ncl_pt in common_points:
-            ncl = context.collinearity_property(pt0, pt1, ncl_pt)
-            if ncl:
+                for ncl_pt in side.points:
+                    ncl = context.collinearity_property(pt0, pt1, ncl_pt)
+                    if ncl:
+                        break
+                else:
+                    continue
+                if ncl.collinear or cl0.reason.obsolete and cl1.reason.obsolete and ncl.reason.obsolete:
+                    continue
+                yield (
+                    PointsCoincidenceProperty(*side.points, True),
+                    _comment('%s and %s belong to two different lines %s and %s', *side.points, pt0.segment(ncl_pt), pt1.segment(ncl_pt)),
+                    [cl0, cl1, ncl]
+                )
                 break
-        else:
-            return
-        if ncl.collinear or cl0.reason.obsolete and cl1.reason.obsolete and ncl.reason.obsolete:
-            return
-        yield (
-            PointsCoincidenceProperty(*common_points, True),
-            _comment('%s and %s belong to two different lines %s and %s', *common_points, pt0.segment(ncl_pt), pt1.segment(ncl_pt)),
-            [cl0, cl1, ncl]
-        )
+            else:
+                for triple in itertools.combinations(third_points, 3):
+                    ncl = context.collinearity_property(*triple)
+                    if ncl and not ncl.collinear:
+                        lines = [pt.segment(side.points[0]) for pt in triple]
+                        yield (
+                            PointsCoincidenceProperty(*side.points, True),
+                            _comment('%s and %s belong to three lines %s, %s, and %s, at least two of them are different', *side.points, *lines),
+                            [cl0, cl1, ncl]
+                        )
+                        break
+
+                if len(third_points) >= 3:
+                    print('DEBUG %s %s' % side.points)
+                    print('DEBUG POINTS = %s' % ', '.join([str(p) for p in third_points]))
 
 class CollinearityCollisionRule(Rule):
     """
