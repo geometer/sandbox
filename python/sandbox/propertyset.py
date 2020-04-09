@@ -2,7 +2,7 @@ import itertools
 import networkx as nx
 
 from .core import CoreScene
-from .property import AngleValueProperty, AnglesRatioProperty, RatioOfNonZeroLengthsProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, LengthRatioProperty, PerpendicularVectorsProperty
+from .property import AngleValueProperty, AnglesRatioProperty, RatioOfNonZeroLengthsProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, LengthRatioProperty, PerpendicularSegmentsProperty
 from .reason import Reason
 from .stats import Stats
 from .util import _comment, divide
@@ -747,8 +747,8 @@ class PropertySet:
 
     def foot_of_perpendicular(self, point, segment):
         #TODO: cache not-None values (?)
-        for prop in self.list(PerpendicularVectorsProperty, [segment]):
-            other = prop.vector1 if segment == prop.vector0.as_segment else prop.vector0
+        for prop in self.list(PerpendicularSegmentsProperty, [segment]):
+            other = prop.segment1 if segment == prop.segment0 else prop.segment0
             if not point in other.points:
                 continue
             candidate = next(pt for pt in other.points if pt != point)

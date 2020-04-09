@@ -37,6 +37,14 @@ class DifferentAnglesToDifferentPointsRule(Rule):
             vec0, vec1 = ang0.vector0, ang1.vector1
         elif ang0.vector1 == ang1.vector1:
             vec0, vec1 = ang0.vector0, ang1.vector0
+        elif ang0.vector0 == ang1.vector0.reversed:
+            vec0, vec1 = ang0.vector1, ang1.vector1.reversed
+        elif ang0.vector0 == ang1.vector1.reversed:
+            vec0, vec1 = ang0.vector1, ang1.vector0.reversed
+        elif ang0.vector1 == ang1.vector0.reversed:
+            vec0, vec1 = ang0.vector0, ang1.vector1.reversed
+        elif ang0.vector1 == ang1.vector1.reversed:
+            vec0, vec1 = ang0.vector0, ang1.vector0.reversed
         else:
             return
 
@@ -283,38 +291,35 @@ class ParallelVectorsRule(SingleSourceRule):
                 [pv, ne0, ne1]
             )
 
-class PerpendicularVectorsRule(SingleSourceRule):
-    property_type = PerpendicularVectorsProperty
+class PerpendicularSegmentsRule(SingleSourceRule):
+    property_type = PerpendicularSegmentsProperty
 
     def apply(self, pv, context):
-        vec0 = pv.vector0
-        vec1 = pv.vector1
-        ne0 = context.not_equal_property(*vec0.points)
-        ne1 = context.not_equal_property(*vec1.points)
+        seg0 = pv.segment0
+        seg1 = pv.segment1
+        ne0 = context.not_equal_property(*seg0.points)
+        ne1 = context.not_equal_property(*seg1.points)
         if ne0 is None or ne1 is None:
             return
         if pv.reason.obsolete and ne0.reason.obsolete and ne1.reason.obsolete:
             return
+        vec0 = seg0.points[0].vector(seg0.points[1])
+        vec1 = seg1.points[0].vector(seg1.points[1])
         for prop in AngleValueProperty.generate(vec0, vec1, 90):
             yield (
                 prop,
-                _comment('Non-zero perpendicular vectors %s and %s', vec0, vec1),
+                _comment('Non-zero perpendicular segments %s and %s', seg0, seg1),
                 [pv, ne0, ne1]
             )
 
-class Degree90ToPerpendicularVectorsRule(Rule):
+class Degree90ToPerpendicularSegmentsRule(Rule):
     def sources(self, context):
         return [p for p in context.nondegenerate_angle_value_properties() if p.degree == 90]
 
     def apply(self, prop, context):
         if not prop.reason.obsolete:
             yield (
-                PerpendicularVectorsProperty(prop.angle.vector0, prop.angle.vector1),
-                prop.reason.comments,
-                prop.reason.premises
-            )
-            yield (
-                PerpendicularVectorsProperty(prop.angle.vector0, prop.angle.vector1.reversed),
+                PerpendicularSegmentsProperty(prop.angle.vector0.as_segment, prop.angle.vector1.as_segment),
                 prop.reason.comments,
                 prop.reason.premises
             )
@@ -340,25 +345,25 @@ class CommonPerpendicularRule(SingleSourceRule):
         return prop.degree == 0
 
     def apply(self, prop, context):
-        vectors = (prop.angle.vector0, prop.angle.vector1)
-        for vec0, vec1 in (vectors, reversed(vectors)):
-            for perp in context.list(PerpendicularVectorsProperty, [vec0.as_segment]):
+        segments = (prop.angle.vector0.as_segment, prop.angle.vector1.as_segment)
+        for seg0, seg1 in (segments, reversed(segments)):
+            for perp in context.list(PerpendicularSegmentsProperty, [seg0]):
                 if prop.reason.obsolete and perp.reason.obsolete:
                     continue
-                other = perp.vector1 if vec0.as_segment == perp.vector0.as_segment else perp.vector0
+                other = perp.segment1 if seg0 == perp.segment0 else perp.segment0
                 yield (
-                    PerpendicularVectorsProperty(vec1, other),
+                    PerpendicularSegmentsProperty(seg1, other),
                     '', #TODO: write comment
                     [perp, prop]
                 )
 
 class SinglePerperndicularBisectorRule(SingleSourceRule):
-    property_type = PerpendicularVectorsProperty
+    property_type = PerpendicularSegmentsProperty
 
     def apply(self, prop, context):
-        if len({*prop.vector0.points, *prop.vector1.points}) != 4:
+        if len({*prop.segment0.points, *prop.segment1.points}) != 4:
             return
-        segments = (prop.vector0.as_segment, prop.vector1.as_segment)
+        segments = (prop.segment0, prop.segment1)
         for seg0, seg1 in (segments, reversed(segments)):
             for i, j in ((0, 1), (1, 0)):
                 ppb = context[PointOnPerpendicularBisectorProperty(seg0.points[i], seg1)]

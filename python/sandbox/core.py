@@ -776,8 +776,8 @@ class CoreScene:
                     if 'invisible' in [p.layer for p in pts1]:
                         continue
                     yield (
-                        PerpendicularVectorsProperty(
-                            pts0[0].vector(pts0[1]), pts1[0].vector(pts1[1])
+                        PerpendicularSegmentsProperty(
+                            pts0[0].segment(pts0[1]), pts1[0].segment(pts1[1])
                         ),
                         cnstr.comments
                     )
