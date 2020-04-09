@@ -357,7 +357,34 @@ class CommonPerpendicularRule(SingleSourceRule):
                     [perp, prop]
                 )
 
-class SinglePerperndicularBisectorRule(SingleSourceRule):
+class PerpendicularTransitivityRule(Rule):
+    def sources(self, context):
+        return itertools.combinations(context.list(PerpendicularSegmentsProperty), 2)
+
+    def apply(self, src, context):
+        perp0, perp1 = src
+        segments0 = (perp0.segment0, perp0.segment1)
+        segments1 = (perp1.segment0, perp1.segment1)
+        common = next((seg for seg in segments0 if seg in segments1), None)
+        if common is None:
+            return
+        seg0 = next(seg for seg in segments0 if seg != common)
+        seg1 = next(seg for seg in segments1 if seg != common)
+        common_point = next((pt for pt in seg0.points if pt in seg1.points), None)
+        if common_point is None:
+            return
+        ne = context.not_equal_property(*common.points)
+        if ne is None or ne.reason.obsolete and perp0.reason.obsolete and perp1.reason.obsolete:
+            return
+        pt0 = next(pt for pt in seg0.points if pt != common_point)
+        pt1 = next(pt for pt in seg1.points if pt != common_point)
+        yield (
+            PerpendicularSegmentsProperty(common, pt0.segment(pt1)),
+            _comment('Transitivity'), #TODO: better comment
+            [perp0, perp1, ne]
+        )
+
+class SinglePerpendicularBisectorRule(SingleSourceRule):
     property_type = PerpendicularSegmentsProperty
 
     def apply(self, prop, context):
