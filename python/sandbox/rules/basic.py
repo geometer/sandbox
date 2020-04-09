@@ -321,6 +321,25 @@ class Degree0ToParallelVectorsRule(SingleSourceRule):
                 prop.reason.premises
             )
 
+class CommonPerpendicularRule(SingleSourceRule):
+    property_type = AngleValueProperty
+
+    def accepts(self, prop):
+        return prop.degree == 0
+
+    def apply(self, prop, context):
+        vectors = (prop.angle.vector0, prop.angle.vector1)
+        for vec0, vec1 in (vectors, reversed(vectors)):
+            for perp in context.list(PerpendicularVectorsProperty, [vec0.as_segment]):
+                if prop.reason.obsolete and perp.reason.obsolete:
+                    continue
+                other = perp.vector1 if vec0.as_segment == perp.vector0.as_segment else perp.vector0
+                yield (
+                    PerpendicularVectorsProperty(vec1, other),
+                    '', #TODO: write comment
+                    [perp, prop]
+                )
+
 class SinglePerperndicularBisectorRule(SingleSourceRule):
     property_type = PerpendicularVectorsProperty
 
