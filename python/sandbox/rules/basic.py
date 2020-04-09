@@ -278,7 +278,7 @@ class PerpendicularVectorsRule(SingleSourceRule):
                 [pv, ne0, ne1]
             )
 
-class Degree90IsRightAngleRule(Rule):
+class Degree90ToPerpendicularVectorsRule(Rule):
     def sources(self, context):
         return [p for p in context.nondegenerate_angle_value_properties() if p.degree == 90]
 
@@ -291,6 +291,20 @@ class Degree90IsRightAngleRule(Rule):
             )
             yield (
                 PerpendicularVectorsProperty(prop.angle.vector0, prop.angle.vector1.reversed),
+                prop.reason.comments,
+                prop.reason.premises
+            )
+
+class Degree0ToParallelVectorsRule(SingleSourceRule):
+    property_type = AngleValueProperty
+
+    def accepts(self, prop):
+        return prop.degree == 0
+
+    def apply(self, prop, context):
+        if not prop.reason.obsolete:
+            yield (
+                ParallelVectorsProperty(prop.angle.vector0, prop.angle.vector1),
                 prop.reason.comments,
                 prop.reason.premises
             )
