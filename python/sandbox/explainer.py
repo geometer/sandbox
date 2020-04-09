@@ -846,7 +846,7 @@ class Explainer:
             for st in self.context.list(SimilarTrianglesProperty):
                 st_is_too_old = st.reason.obsolete
                 for i in range(0, 3):
-                    lr, ratio = self.context.lengths_ratio_property_and_value(side_of(st.ABC, i), side_of(st.DEF, i))
+                    lr, ratio = self.context.length_ratio_property_and_value(side_of(st.ABC, i), side_of(st.DEF, i))
                     if lr is None:
                         continue
                     if ratio == 1 or st_is_too_old and lr.reason.obsolete:
@@ -1134,10 +1134,10 @@ class Explainer:
                 ang0 = ca.angle0
                 ang1 = ca.angle1
                 for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
-                    rsn0, ratio0 = self.context.lengths_ratio_property_and_value(vec0.as_segment, ang1.vector0.as_segment)
+                    rsn0, ratio0 = self.context.length_ratio_property_and_value(vec0.as_segment, ang1.vector0.as_segment)
                     if rsn0 is None:
                         continue
-                    rsn1, ratio1 = self.context.lengths_ratio_property_and_value(vec1.as_segment, ang1.vector1.as_segment)
+                    rsn1, ratio1 = self.context.length_ratio_property_and_value(vec1.as_segment, ang1.vector1.as_segment)
                     if rsn1 is None or ratio0 != ratio1:
                         continue
                     if ca_is_too_old and rsn0.reason.obsolete and rsn1.reason.obsolete:
@@ -1223,7 +1223,7 @@ class Explainer:
                 ncl = self.context.not_collinear_property(common0, *third0.points)
                 if ncl is None or ps_are_too_old and ncl.reason.obsolete:
                     continue
-                ps2, value2 = self.context.lengths_ratio_property_and_value(third0.as_segment, third1.as_segment)
+                ps2, value2 = self.context.length_ratio_property_and_value(third0.as_segment, third1.as_segment)
                 if ps2 and value2 == ps0.value:
                     yield (
                         SimilarTrianglesProperty(

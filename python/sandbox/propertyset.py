@@ -703,7 +703,7 @@ class PropertySet:
     def length_ratio_properties(self):
         return self.__length_ratios.value_properties()
 
-    def lengths_ratio_property_and_value(self, segment0, segment1):
+    def length_ratio_property_and_value(self, segment0, segment1):
         return self.__length_ratios.property_and_value(segment0, segment1)
 
     def congruent_segments_property(self, segment0, segment1, allow_zeroes):

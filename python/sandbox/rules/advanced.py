@@ -20,10 +20,10 @@ class RightAngledTriangleMedianRule(SingleSourceRule):
         hypot = pt0.segment(pt1)
         for col in [p for p in context.list(PointsCollinearityProperty, [hypot]) if p.collinear]:
             med = next(pt for pt in col.points if pt not in hypot.points)
-            half0, value = context.lengths_ratio_property_and_value(hypot, med.segment(hypot.points[0]))
+            half0, value = context.length_ratio_property_and_value(hypot, med.segment(hypot.points[0]))
             if value != 2:
                 continue
-            half1, value = context.lengths_ratio_property_and_value(hypot, med.segment(hypot.points[1]))
+            half1, value = context.length_ratio_property_and_value(hypot, med.segment(hypot.points[1]))
             if value != 2:
                 continue
             yield (
