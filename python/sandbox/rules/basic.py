@@ -324,20 +324,6 @@ class Degree90ToPerpendicularSegmentsRule(Rule):
                 prop.reason.premises
             )
 
-class Degree0ToParallelVectorsRule(SingleSourceRule):
-    property_type = AngleValueProperty
-
-    def accepts(self, prop):
-        return prop.degree == 0
-
-    def apply(self, prop, context):
-        if not prop.reason.obsolete:
-            yield (
-                ParallelVectorsProperty(prop.angle.vector0, prop.angle.vector1),
-                prop.reason.comments,
-                prop.reason.premises
-            )
-
 class CommonPerpendicularRule(SingleSourceRule):
     property_type = AngleValueProperty
 
@@ -353,7 +339,7 @@ class CommonPerpendicularRule(SingleSourceRule):
                 other = perp.segment1 if seg0 == perp.segment0 else perp.segment0
                 yield (
                     PerpendicularSegmentsProperty(seg1, other),
-                    '', #TODO: write comment
+                    _comment('Any line perpendicular to %s is also perpendicular to %s', seg0, seg1),
                     [perp, prop]
                 )
 
@@ -405,7 +391,7 @@ class PerpendicularTransitivityRule(Rule):
         pt1 = next(pt for pt in seg1.points if pt != common_point)
         yield (
             PerpendicularSegmentsProperty(common, pt0.segment(pt1)),
-            _comment('Transitivity'), #TODO: better comment
+            _comment('%s and %s are perpendicular to non-zero %s', seg0, seg1, common),
             [perp0, perp1, ne]
         )
 

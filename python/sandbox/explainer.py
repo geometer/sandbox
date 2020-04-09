@@ -33,7 +33,6 @@ class Explainer:
             ParallelVectorsRule(),
             PerpendicularSegmentsRule(),
             Degree90ToPerpendicularSegmentsRule(),
-            #Degree0ToParallelVectorsRule(),
             PerpendicularTransitivityRule(),
             SinglePerpendicularBisectorRule(),
             SeparatedPointsRule(),
