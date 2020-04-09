@@ -152,10 +152,6 @@ class TwoPointsBelongsToTwoLinesRule(SingleSourceRule):
                         )
                         break
 
-                if len(third_points) >= 3:
-                    print('DEBUG %s %s' % side.points)
-                    print('DEBUG POINTS = %s' % ', '.join([str(p) for p in third_points]))
-
 class CollinearityCollisionRule(Rule):
     """
     If a point belongs to some line, and another one does not,
