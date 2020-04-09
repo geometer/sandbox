@@ -22,6 +22,7 @@ class Explainer:
         self.__iteration_step_count = -1
         self.__rules = [
             DifferentAnglesToDifferentPointsRule(),
+            LengthRatioSimplificationRule(),
             LengthRatioTransitivityRule(),
             SumAndRatioOfTwoAnglesRule(),
             NonCollinearPointsAreDifferentRule(),

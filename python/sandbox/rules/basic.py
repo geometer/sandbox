@@ -49,6 +49,18 @@ class DifferentAnglesToDifferentPointsRule(Rule):
 
         yield (prop, _comment('Otherwise, %s = %s', ang0, ang1), [av0, av1])
 
+class LengthRatioSimplificationRule(Rule):
+    def sources(self, context):
+        return context.length_ratio_properties()
+
+    def apply(self, prop, context):
+        if not prop.reason.obsolete:
+            yield (
+                LengthRatioProperty(prop.segment0, prop.segment1, prop.value),
+                prop.reason.comments,
+                prop.reason.premises
+            )
+
 class LengthRatioTransitivityRule(Rule):
     """
     For three segments seg0, seg1, and seg2, from
