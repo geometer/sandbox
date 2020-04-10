@@ -21,38 +21,38 @@ class Explainer:
         self.__explanation_time = None
         self.__iteration_step_count = -1
         self.__rules = [
-            DifferentAnglesToDifferentPointsRule(),
-            LengthRatioSimplificationRule(),
-            LengthRatioTransitivityRule(),
-            SumAndRatioOfTwoAnglesRule(),
-            NonCollinearPointsAreDifferentRule(),
-            CollinearityCollisionRule(),
-            TwoPointsBelongsToTwoLinesRule(),
-            TwoPointsBelongsToTwoPerpendicularsRule(),
-            LengthRatioRule(),
-            ParallelVectorsRule(),
-            PerpendicularSegmentsRule(),
-            Degree90ToPerpendicularSegmentsRule(),
-            PerpendicularTransitivityRule(),
-            SinglePerpendicularBisectorRule(),
-            SeparatedPointsRule(),
-            PointOnPerpendicularBisectorIsEquidistantRule(),
-            SameSidePointInsideSegmentRule(),
-            TwoPerpendicularsRule(),
-            CommonPerpendicularRule(),
-            SideProductsInSimilarTrianglesRule(),
-            LengthProductEqualityToRatioRule(),
-            SimilarTrianglesByTwoAnglesRule(),
+            DifferentAnglesToDifferentPointsRule(self.context),
+            LengthRatioSimplificationRule(self.context),
+            LengthRatioTransitivityRule(self.context),
+            SumAndRatioOfTwoAnglesRule(self.context),
+            NonCollinearPointsAreDifferentRule(self.context),
+            CollinearityCollisionRule(self.context),
+            TwoPointsBelongsToTwoLinesRule(self.context),
+            TwoPointsBelongsToTwoPerpendicularsRule(self.context),
+            LengthRatioRule(self.context),
+            ParallelVectorsRule(self.context),
+            PerpendicularSegmentsRule(self.context),
+            Degree90ToPerpendicularSegmentsRule(self.context),
+            PerpendicularTransitivityRule(self.context),
+            SinglePerpendicularBisectorRule(self.context),
+            SeparatedPointsRule(self.context),
+            PointOnPerpendicularBisectorIsEquidistantRule(self.context),
+            SameSidePointInsideSegmentRule(self.context),
+            TwoPerpendicularsRule(self.context),
+            CommonPerpendicularRule(self.context),
+            SideProductsInSimilarTrianglesRule(self.context),
+            LengthProductEqualityToRatioRule(self.context),
+            SimilarTrianglesByTwoAnglesRule(self.context),
         ]
         if 'advanced' in options:
             self.__rules += [
-                RightAngledTriangleMedianRule(),
-                Triangle30_60_90SidesRule(),
-                Triangle30_30_120SidesRule(),
+                RightAngledTriangleMedianRule(self.context),
+                Triangle30_60_90SidesRule(self.context),
+                Triangle30_30_120SidesRule(self.context),
             ]
         if 'trigonometric' in options:
             self.__rules += [
-                LawOfSinesRule(),
+                LawOfSinesRule(self.context),
             ]
 
     def __reason(self, prop, comments, premises=None):
@@ -84,9 +84,8 @@ class Explainer:
     def __explain_all(self):
         def iteration():
             for rule in self.__rules:
-                for src in rule.sources(self.context):
-                    for reason in rule.apply(src, self.context):
-                        yield reason
+                for reason in rule.generate():
+                    yield reason
 
             for prop in self.context.list(SameOrOppositeSideProperty):
                 pt0 = prop.points[0]

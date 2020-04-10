@@ -4,14 +4,20 @@ from sandbox.property import *
 from sandbox.util import _comment, divide, side_of
 
 class Rule:
-    pass
+    def __init__(self, context):
+        self.context = context
+
+    def generate(self):
+        for src in self.sources():
+            for reason in self.apply(src):
+                yield reason
 
 class SingleSourceRule(Rule):
     def accepts(self, prop):
         return True
 
-    def sources(self, context):
-        return [p for p in context.list(self.property_type) if self.accepts(p)]
+    def sources(self):
+        return [p for p in self.context.list(self.property_type) if self.accepts(p)]
 
 class DifferentAnglesToDifferentPointsRule(Rule):
     """
@@ -20,10 +26,10 @@ class DifferentAnglesToDifferentPointsRule(Rule):
         ∠(v0, v1) != ∠(v0, v2),
     then ends (starts) of v1 and v2 are different
     """
-    def sources(self, context):
-        return itertools.combinations(context.angle_value_properties(), 2)
+    def sources(self):
+        return itertools.combinations(self.context.angle_value_properties(), 2)
 
-    def apply(self, src, context):
+    def apply(self, src):
         av0, av1 = src
 
         if av0.degree == av1.degree or av0.reason.obsolete and av1.reason.obsolete:
@@ -60,10 +66,10 @@ class DifferentAnglesToDifferentPointsRule(Rule):
         yield (prop, _comment('Otherwise, %s = %s', ang0, ang1), [av0, av1])
 
 class LengthRatioSimplificationRule(Rule):
-    def sources(self, context):
-        return context.length_ratio_properties()
+    def sources(self):
+        return self.context.length_ratio_properties()
 
-    def apply(self, prop, context):
+    def apply(self, prop):
         if not prop.reason.obsolete:
             yield (
                 LengthRatioProperty(prop.segment0, prop.segment1, prop.value),
@@ -78,10 +84,10 @@ class LengthRatioTransitivityRule(Rule):
         |seg1| = B |seg2|
     we conclude that |seg0| = A B |seg2|
     """
-    def sources(self, context):
-        return itertools.combinations(context.list(LengthRatioProperty), 2)
+    def sources(self):
+        return itertools.combinations(self.context.list(LengthRatioProperty), 2)
 
-    def apply(self, src, context):
+    def apply(self, src):
         lr0, lr1 = src
 
         if lr0.reason.obsolete and lr1.reason.obsolete:
@@ -129,15 +135,15 @@ class TwoPointsBelongsToTwoLinesRule(SingleSourceRule):
     def accepts(self, prop):
         return prop.collinear
 
-    def apply(self, cl0, context):
+    def apply(self, cl0):
         for side, pt0 in [(side_of(cl0.points, i), cl0.points[i]) for i in range(0, 3)]:
             third_points = [pt0]
-            for cl1 in [p for p in context.list(PointsCollinearityProperty, [side]) if p.collinear and p != cl0]:
+            for cl1 in [p for p in self.context.list(PointsCollinearityProperty, [side]) if p.collinear and p != cl0]:
                 pt1 = next(pt for pt in cl1.points if pt not in side.points)
                 third_points.append(pt1)
 
                 for ncl_pt in side.points:
-                    ncl = context.collinearity_property(pt0, pt1, ncl_pt)
+                    ncl = self.context.collinearity_property(pt0, pt1, ncl_pt)
                     if ncl:
                         break
                 else:
@@ -152,7 +158,7 @@ class TwoPointsBelongsToTwoLinesRule(SingleSourceRule):
                 break
             else:
                 for triple in itertools.combinations(third_points, 3):
-                    ncl = context.collinearity_property(*triple)
+                    ncl = self.context.collinearity_property(*triple)
                     if ncl and not ncl.collinear:
                         lines = [pt.segment(side.points[0]) for pt in triple]
                         yield (
@@ -169,13 +175,13 @@ class CollinearityCollisionRule(Rule):
     Moreover, if a third point belongs to the line and does not coincide to the first,
     then the three points are not collinear.
     """
-    def sources(self, context):
+    def sources(self):
         return itertools.product( \
-            [p for p in context.list(PointsCollinearityProperty) if not p.collinear], \
-            [p for p in context.list(PointsCollinearityProperty) if p.collinear] \
+            [p for p in self.context.list(PointsCollinearityProperty) if not p.collinear], \
+            [p for p in self.context.list(PointsCollinearityProperty) if p.collinear] \
         )
 
-    def apply(self, src, context):
+    def apply(self, src):
         ncl, col = src
 
         common_points = [pt for pt in ncl.points if pt in col.points]
@@ -192,7 +198,7 @@ class CollinearityCollisionRule(Rule):
                 [ncl, col]
             )
         for common in common_points:
-            ne = context.not_equal_property(common, pt_col)
+            ne = self.context.not_equal_property(common, pt_col)
             if ne is not None and not (reasons_are_too_old and ne.reason.obsolete):
                 yield (
                     PointsCollinearityProperty(common, pt_col, pt_ncl, False),
@@ -212,7 +218,7 @@ class NonCollinearPointsAreDifferentRule(SingleSourceRule):
     def accepts(self, prop):
         return not prop.collinear
 
-    def apply(self, prop, context):
+    def apply(self, prop):
         if prop.reason.obsolete:
             return
         for pt0, pt1 in itertools.combinations(prop.points, 2):
@@ -228,10 +234,10 @@ class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
     """
     property_type = SumOfAnglesProperty
 
-    def apply(self, prop, context):
-        if context.angle_value_property(prop.angle0) or context.angle_value_property(prop.angle1):
+    def apply(self, prop):
+        if self.context.angle_value_property(prop.angle0) or self.context.angle_value_property(prop.angle1):
             return
-        ar = context.angles_ratio_property(prop.angle0, prop.angle1)
+        ar = self.context.angles_ratio_property(prop.angle0, prop.angle1)
         if ar is None or prop.reason.obsolete and ar.reason.obsolete:
             return
         value1 = divide(prop.degree, 1 + ar.value)
@@ -248,12 +254,12 @@ class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
 class LengthRatioRule(SingleSourceRule):
     property_type = LengthRatioProperty
 
-    def apply(self, prop, context):
+    def apply(self, prop):
         seg0 = prop.segment0
         seg1 = prop.segment1
 
-        ne0 = context.not_equal_property(*seg0.points)
-        ne1 = context.not_equal_property(*seg1.points)
+        ne0 = self.context.not_equal_property(*seg0.points)
+        ne1 = self.context.not_equal_property(*seg1.points)
         if ne0 is not None and ne1 is None:
             if prop.reason.obsolete and ne0.reason.obsolete:
                 return
@@ -268,7 +274,7 @@ class LengthRatioRule(SingleSourceRule):
                 return
             pt0 = next(pt for pt in seg0.points if pt != common)
             pt1 = next(pt for pt in seg1.points if pt != common)
-            ne = context.not_equal_property(pt0, pt1)
+            ne = self.context.not_equal_property(pt0, pt1)
             if ne is None or prop.reason.obsolete and ne.reason.obsolete:
                 return
             yield (PointsCoincidenceProperty(*seg0.points, False), _comment('Otherwise, %s = %s = %s', ne.points[0], common, ne.points[1]), [prop, ne])
@@ -277,11 +283,11 @@ class LengthRatioRule(SingleSourceRule):
 class ParallelVectorsRule(SingleSourceRule):
     property_type = ParallelVectorsProperty
 
-    def apply(self, para, context):
+    def apply(self, para):
         vec0 = para.vector0
         vec1 = para.vector1
-        ne0 = context.not_equal_property(*vec0.points)
-        ne1 = context.not_equal_property(*vec1.points)
+        ne0 = self.context.not_equal_property(*vec0.points)
+        ne1 = self.context.not_equal_property(*vec1.points)
         if ne0 is None or ne1 is None:
             return
         if para.reason.obsolete and ne0.reason.obsolete and ne1.reason.obsolete:
@@ -296,11 +302,11 @@ class ParallelVectorsRule(SingleSourceRule):
 class PerpendicularSegmentsRule(SingleSourceRule):
     property_type = PerpendicularSegmentsProperty
 
-    def apply(self, pv, context):
+    def apply(self, pv):
         seg0 = pv.segment0
         seg1 = pv.segment1
-        ne0 = context.not_equal_property(*seg0.points)
-        ne1 = context.not_equal_property(*seg1.points)
+        ne0 = self.context.not_equal_property(*seg0.points)
+        ne1 = self.context.not_equal_property(*seg1.points)
         if ne0 is None or ne1 is None:
             return
         if pv.reason.obsolete and ne0.reason.obsolete and ne1.reason.obsolete:
@@ -315,10 +321,10 @@ class PerpendicularSegmentsRule(SingleSourceRule):
             )
 
 class Degree90ToPerpendicularSegmentsRule(Rule):
-    def sources(self, context):
-        return [p for p in context.nondegenerate_angle_value_properties() if p.degree == 90]
+    def sources(self):
+        return [p for p in self.context.nondegenerate_angle_value_properties() if p.degree == 90]
 
-    def apply(self, prop, context):
+    def apply(self, prop):
         if not prop.reason.obsolete:
             yield (
                 PerpendicularSegmentsProperty(prop.angle.vector0.as_segment, prop.angle.vector1.as_segment),
@@ -332,10 +338,10 @@ class CommonPerpendicularRule(SingleSourceRule):
     def accepts(self, prop):
         return prop.degree == 0
 
-    def apply(self, prop, context):
+    def apply(self, prop):
         segments = (prop.angle.vector0.as_segment, prop.angle.vector1.as_segment)
         for seg0, seg1 in (segments, reversed(segments)):
-            for perp in context.list(PerpendicularSegmentsProperty, [seg0]):
+            for perp in self.context.list(PerpendicularSegmentsProperty, [seg0]):
                 if prop.reason.obsolete and perp.reason.obsolete:
                     continue
                 other = perp.segment1 if seg0 == perp.segment0 else perp.segment0
@@ -346,10 +352,10 @@ class CommonPerpendicularRule(SingleSourceRule):
                 )
 
 class TwoPointsBelongsToTwoPerpendicularsRule(Rule):
-    def sources(self, context):
-        return itertools.combinations(context.list(PerpendicularSegmentsProperty), 2)
+    def sources(self):
+        return itertools.combinations(self.context.list(PerpendicularSegmentsProperty), 2)
 
-    def apply(self, src, context):
+    def apply(self, src):
         perp0, perp1 = src
         segments0 = (perp0.segment0, perp0.segment1)
         segments1 = (perp1.segment0, perp1.segment1)
@@ -361,7 +367,7 @@ class TwoPointsBelongsToTwoPerpendicularsRule(Rule):
         points = set(seg0.points + seg1.points)
         if len(points) != 3:
             return
-        ncl = context.collinearity_property(*points)
+        ncl = self.context.collinearity_property(*points)
         if ncl is None or ncl.collinear or ncl.reason.obsolete and perp0.reason.obsolete and perp1.reason.obsolete:
             return
         yield (
@@ -371,10 +377,10 @@ class TwoPointsBelongsToTwoPerpendicularsRule(Rule):
         )
 
 class PerpendicularTransitivityRule(Rule):
-    def sources(self, context):
-        return itertools.combinations(context.list(PerpendicularSegmentsProperty), 2)
+    def sources(self):
+        return itertools.combinations(self.context.list(PerpendicularSegmentsProperty), 2)
 
-    def apply(self, src, context):
+    def apply(self, src):
         perp0, perp1 = src
         segments0 = (perp0.segment0, perp0.segment1)
         segments1 = (perp1.segment0, perp1.segment1)
@@ -386,7 +392,7 @@ class PerpendicularTransitivityRule(Rule):
         common_point = next((pt for pt in seg0.points if pt in seg1.points), None)
         if common_point is None:
             return
-        ne = context.not_equal_property(*common.points)
+        ne = self.context.not_equal_property(*common.points)
         if ne is None or ne.reason.obsolete and perp0.reason.obsolete and perp1.reason.obsolete:
             return
         pt0 = next(pt for pt in seg0.points if pt != common_point)
@@ -400,13 +406,13 @@ class PerpendicularTransitivityRule(Rule):
 class SinglePerpendicularBisectorRule(SingleSourceRule):
     property_type = PerpendicularSegmentsProperty
 
-    def apply(self, prop, context):
+    def apply(self, prop):
         if len({*prop.segment0.points, *prop.segment1.points}) != 4:
             return
         segments = (prop.segment0, prop.segment1)
         for seg0, seg1 in (segments, reversed(segments)):
             for i, j in ((0, 1), (1, 0)):
-                ppb = context[PointOnPerpendicularBisectorProperty(seg0.points[i], seg1)]
+                ppb = self.context[PointOnPerpendicularBisectorProperty(seg0.points[i], seg1)]
                 if ppb:
                     if not (prop.reason.obsolete and ppb.reason.obsolete):
                         yield (
@@ -423,7 +429,7 @@ class PointOnPerpendicularBisectorIsEquidistantRule(SingleSourceRule):
     """
     property_type = PointOnPerpendicularBisectorProperty
 
-    def apply(self, prop, context):
+    def apply(self, prop):
         if not prop.reason.obsolete:
             yield (
                 LengthRatioProperty(prop.point.segment(prop.segment.points[0]), prop.point.segment(prop.segment.points[1]), 1),
@@ -440,7 +446,7 @@ class SeparatedPointsRule(SingleSourceRule):
     def accepts(self, prop):
         return not prop.same
 
-    def apply(self, prop, context):
+    def apply(self, prop):
         if not prop.reason.obsolete:
             yield (
                 PointsCoincidenceProperty(prop.points[0], prop.points[1], False),
@@ -458,11 +464,11 @@ class SameSidePointInsideSegmentRule(SingleSourceRule):
     def accepts(self, prop):
         return prop.same
 
-    def apply(self, prop, context):
+    def apply(self, prop):
         segment = prop.points[0].segment(prop.points[1])
-        for col in [p for p in context.list(PointsCollinearityProperty, [segment]) if p.collinear]:
+        for col in [p for p in self.context.list(PointsCollinearityProperty, [segment]) if p.collinear]:
             pt = next(p for p in col.points if p not in prop.points)
-            value = context.angle_value_property(pt.angle(*prop.points))
+            value = self.context.angle_value_property(pt.angle(*prop.points))
             if not value or value.degree != 180 or prop.reason.obsolete and value.reason.obsolete:
                 return
             for endpoint in prop.points:
@@ -478,11 +484,11 @@ class TwoPerpendicularsRule(SingleSourceRule):
     """
     property_type = SameOrOppositeSideProperty
 
-    def apply(self, prop, context):
-        foot0, reasons0 = context.foot_of_perpendicular(prop.points[0], prop.segment)
+    def apply(self, prop):
+        foot0, reasons0 = self.context.foot_of_perpendicular(prop.points[0], prop.segment)
         if foot0 is None:
             return
-        foot1, reasons1 = context.foot_of_perpendicular(prop.points[1], prop.segment)
+        foot1, reasons1 = self.context.foot_of_perpendicular(prop.points[1], prop.segment)
         if foot1 is None:
             return
         premises = [prop] + reasons0 + reasons1
@@ -499,7 +505,7 @@ class TwoPerpendicularsRule(SingleSourceRule):
 class SideProductsInSimilarTrianglesRule(SingleSourceRule):
     property_type = SimilarTrianglesProperty
 
-    def apply(self, prop, context):
+    def apply(self, prop):
         for i, j in itertools.combinations(range(0, 3), 2):
             yield (
                 EqualLengthProductsProperty(
@@ -513,8 +519,8 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
 class LengthProductEqualityToRatioRule(SingleSourceRule):
     property_type = EqualLengthProductsProperty
 
-    def apply(self, prop, context):
-        ne = [context.not_equal_property(*seg.points) for seg in prop.segments]
+    def apply(self, prop):
+        ne = [self.context.not_equal_property(*seg.points) for seg in prop.segments]
         for (i, j, k, l) in [(0, 1, 2, 3), (0, 2, 1, 3), (3, 1, 2, 0), (3, 2, 1, 0)]:
             if ne[j] and ne[l] and not (prop.reason.obsolete and ne[j].reason.obsolete and ne[l].reason.obsolete):
                 if prop.segments[j] == prop.segments[l]:
@@ -543,9 +549,9 @@ class LengthProductEqualityToRatioRule(SingleSourceRule):
                     )
 
 class SimilarTrianglesByTwoAnglesRule(Rule):
-    def sources(self, context):
+    def sources(self):
         groups = {}
-        for prop in context.congruent_angle_properties():
+        for prop in self.context.congruent_angle_properties():
             if not prop.angle0.vertex or not prop.angle1.vertex:
                 continue
             key = frozenset([frozenset(prop.angle0.points), frozenset(prop.angle1.points)])
@@ -561,13 +567,13 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
                     continue
                 yield (ca0, ca1)
 
-    def apply(self, src, context):
+    def apply(self, src):
         ca0, ca1 = src
 
-        ncl = context.not_collinear_property(*ca0.angle0.points)
+        ncl = self.context.not_collinear_property(*ca0.angle0.points)
         first_non_degenerate = True
         if ncl is None:
-            ncl = context.not_collinear_property(*ca1.angle1.points)
+            ncl = self.context.not_collinear_property(*ca1.angle1.points)
             first_non_degenerate = False
         if ncl is None or ca0.reason.obsolete and ca1.reason.obsolete and ncl.reason.obsolete:
             return

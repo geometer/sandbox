@@ -11,19 +11,19 @@ class RightAngledTriangleMedianRule(SingleSourceRule):
     """
     property_type = PerpendicularSegmentsProperty
 
-    def apply(self, prop, context):
+    def apply(self, prop):
         vertex = next((pt for pt in prop.segment0.points if pt in prop.segment1.points), None)
         if vertex is None:
             return
         pt0 = next(pt for pt in prop.segment0.points if pt != vertex)
         pt1 = next(pt for pt in prop.segment1.points if pt != vertex)
         hypot = pt0.segment(pt1)
-        for col in [p for p in context.list(PointsCollinearityProperty, [hypot]) if p.collinear]:
+        for col in [p for p in self.context.list(PointsCollinearityProperty, [hypot]) if p.collinear]:
             med = next(pt for pt in col.points if pt not in hypot.points)
-            half0, value = context.length_ratio_property_and_value(hypot, med.segment(hypot.points[0]), True)
+            half0, value = self.context.length_ratio_property_and_value(hypot, med.segment(hypot.points[0]), True)
             if value != 2:
                 continue
-            half1, value = context.length_ratio_property_and_value(hypot, med.segment(hypot.points[1]), True)
+            half1, value = self.context.length_ratio_property_and_value(hypot, med.segment(hypot.points[1]), True)
             if value != 2:
                 continue
             yield (
@@ -41,11 +41,11 @@ class Triangle30_60_90SidesRule(SingleSourceRule):
     def accepts(self, prop):
         return prop.degree == 90 and prop.angle.vertex
 
-    def apply(self, prop, context):
+    def apply(self, prop):
         vertex = prop.angle.vertex
         pt0 = prop.angle.vector0.end
         pt1 = prop.angle.vector1.end
-        value = context.angle_value_property(pt0.angle(vertex, pt1))
+        value = self.context.angle_value_property(pt0.angle(vertex, pt1))
         if value is None or value.degree not in (30, 60) or prop.reason.obsolete and value.reason.obsolete:
             return
         hypot = pt0.segment(pt1)
@@ -73,8 +73,8 @@ class Triangle30_30_120SidesRule(SingleSourceRule):
     """
     property_type = IsoscelesTriangleProperty
 
-    def apply(self, prop, context):
-        value = context.angle_value_property(prop.apex.angle(*prop.base.points))
+    def apply(self, prop):
+        value = self.context.angle_value_property(prop.apex.angle(*prop.base.points))
         if value is None or value.degree != 120 or prop.reason.obsolete and value.reason.obsolete:
             return
         for pt in prop.base.points:

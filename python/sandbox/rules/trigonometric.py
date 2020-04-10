@@ -10,12 +10,12 @@ class LawOfSinesRule(Rule):
     """
     The law of sines
     """
-    def sources(self, context):
-        return [p for p in context.nondegenerate_angle_value_properties() if p.angle.vertex]
+    def sources(self):
+        return [p for p in self.context.nondegenerate_angle_value_properties() if p.angle.vertex]
 
-    def apply(self, av0, context):
+    def apply(self, av0):
         triangle = (av0.angle.vertex, *av0.angle.endpoints)
-        av1 = context.angle_value_property(angle_of(triangle, 1))
+        av1 = self.context.angle_value_property(angle_of(triangle, 1))
         if av1 is None or av0.reason.obsolete and av1.reason.obsolete:
             return
         sines = (
