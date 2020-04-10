@@ -1,6 +1,6 @@
 import sympy as sp
 
-from sandbox.property import *
+from sandbox.property import AngleValueProperty, IsoscelesTriangleProperty, LengthRatioProperty, PerpendicularSegmentsProperty, PointsCollinearityProperty
 from sandbox.util import _comment
 
 from .basic import SingleSourceRule
