@@ -327,31 +327,16 @@ class LengthRatioPropertySet:
             self.premises_graph = nx.Graph()
 
         def add_ratio(self, ratio):
-            if ratio is self.ratio_set:
-                return
-            if (ratio[1], ratio[0]) in self.ratio_set:
-                self.symmetrize()
-            else:
-                self.ratio_set.add(ratio)
+            self.ratio_set.add(ratio)
 
-        def symmetrize(self):
-            for ratio in list(self.ratio_set):
-                self.ratio_set.add((ratio[1], ratio[0]))
-
-        def merge(self, other, inverse):
+        def merge(self, other):
             if self.ratio_value is not None:
                 # TODO: better way to report contradiction
-                if other.ratio_value is not None:
-                    value = divide(1, self.ratio_value) if inverse else self.ratio_value
-                    assert other.ratio_value == value, 'Contradiction'
+                assert other.ratio_value is None or self.ratio_value == other.ratio_value, 'Contradiction'
             elif other.ratio_value is not None:
-                self.ratio_value = divide(1, other.ratio_value) if inverse else other.ratio_value
+                self.ratio_value = other.ratio_value
 
-            if inverse:
-                for ratio in other.ratio_set:
-                    self.add_ratio((ratio[1], ratio[0]))
-            else:
-                self.ratio_set.update(other.ratio_set)
+            self.ratio_set.update(other.ratio_set)
             self.premises_graph.add_edges_from(other.premises_graph.edges)
             for v0, v1 in other.premises_graph.edges:
                 self.premises_graph[v0][v1].update(other.premises_graph[v0][v1])
@@ -360,33 +345,8 @@ class LengthRatioPropertySet:
             if isinstance(prop, EqualLengthRatiosProperty):
                 segs = prop.segments
                 self.premises_graph.add_edge((segs[0], segs[1]), (segs[2], segs[3]), prop=prop)
-                self.premises_graph.add_edge((segs[1], segs[0]), (segs[3], segs[2]), prop=prop)
-                self.premises_graph.add_edge((segs[0], segs[2]), (segs[1], segs[3]), prop=prop)
-                self.premises_graph.add_edge((segs[2], segs[0]), (segs[3], segs[1]), prop=prop)
             elif isinstance(prop, RatioOfNonZeroLengthsProperty):
-                if prop.value == 1:
-                    self.symmetrize()
-                reciprocal = divide(1, prop.value)
-                ratio = (prop.segment0, prop.segment1)
-                inversed = (ratio[1], ratio[0])
-                if ratio in self.ratio_set:
-                    if inversed in self.ratio_set:
-                        # TODO: better way to report contradiction
-                        assert prop.value == 1, 'Contradiction'
-                    if self.ratio_value is None:
-                        self.ratio_value = prop.value
-                    else:
-                        # TODO: better way to report contradiction
-                        assert prop.value == self.ratio_value, 'Contradiction'
-                else: #inversed in self.ratio_set
-                    if self.ratio_value is None:
-                        self.ratio_value = reciprocal
-                    else:
-                        # TODO: better way to report contradiction
-                        assert reciprocal == self.ratio_value, 'Contradiction: %s != %s' % (reciprocal, self.ratio_value)
-
-                self.premises_graph.add_edge(ratio, (prop.value, ), prop=prop)
-                self.premises_graph.add_edge(inversed, (reciprocal, ), prop=prop)
+                self.premises_graph.add_edge((prop.segment0, prop.segment1), (prop.value, ), prop=prop)
 
         def find_ratio(self, ratio):
             if ratio in self.ratio_set:
@@ -396,10 +356,6 @@ class LengthRatioPropertySet:
             return 0
 
         def explanation(self, ratio0, ratio1):
-            if ratio0 not in self.ratio_set:
-                return (None, None)
-            if ratio1 not in self.ratio_set:
-                return (None, None)
             path = nx.algorithms.shortest_path(self.premises_graph, ratio0, ratio1)
             pattern = ' = '.join(['|%s| / |%s|' if len(v) == 2 else '%s' for v in path])
             comment = _comment(pattern, *sum(path, ()))
@@ -407,11 +363,7 @@ class LengthRatioPropertySet:
             return (comment, premises)
 
         def value_explanation(self, ratio):
-            path = nx.algorithms.shortest_path(self.premises_graph, ratio, (self.ratio_value, ))
-            pattern = ' = '.join(['|%s| / |%s|' if len(v) == 2 else '%s' for v in path])
-            comment = _comment(pattern, *sum(path, ()))
-            premises = [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
-            return (comment, premises)
+            return self.explanation(ratio, (self.ratio_value, ))
 
     def __init__(self):
         self.families = []
@@ -419,80 +371,64 @@ class LengthRatioPropertySet:
         self.__cache = {} # (segment, segment) => (prop, value)
         self.possible_zeroes = {} # {segment, segment} => LengthRatioProperty
 
-    def __find_by_ratio(self, ratio):
-        fam = self.ratio_to_family.get(ratio)
-        return (fam, ratio in fam.ratio_set) if fam else (None, None)
-
     def __find_by_value(self, value):
-        reciprocal = divide(1, value)
         for fam in self.families:
-            if fam.ratio_value is None:
-                continue
             if fam.ratio_value == value:
-                return (fam, True)
-            if fam.ratio_value == reciprocal:
-                return (fam, False)
-        return (None, None)
+                return fam
+        return None
 
-    def __add_lr(self, prop):
-        ratio = (prop.segment0, prop.segment1)
-        fam0, order0 = self.__find_by_ratio(ratio)
-        fam1, order1 = self.__find_by_value(prop.value)
-        ratio_rev = (ratio[1], ratio[0])
+    def __add_lr(self, prop, ratio, value):
+        def add_property_to(fam):
+            fam.premises_graph.add_edge(ratio, (value, ), prop=prop)
+
+        fam0 = self.ratio_to_family.get(ratio)
+        fam1 = self.__find_by_value(value)
         if fam0 and fam1:
-            if fam0 == fam1:
-                fam0.add_property(prop)
-            else:
-                fam0.merge(fam1, order0 != order1)
+            if fam0 != fam1:
+                fam0.merge(fam1)
                 self.families.remove(fam1)
                 for k in list(self.ratio_to_family.keys()):
                     if self.ratio_to_family[k] == fam1:
                         self.ratio_to_family[k] = fam0
+            add_property_to(fam0)
         elif fam0:
-            fam0.add_property(prop)
+            #TODO: better way to report contradiction
+            assert fam0.ratio_value is None or fam0.ratio_value == value, 'Contradiction'
+            fam0.ratio_value = value
+            add_property_to(fam0)
         elif fam1:
-            fam1.add_ratio(ratio if order1 else ratio_rev)
-            fam1.add_property(prop)
+            fam1.add_ratio(ratio)
+            add_property_to(fam1)
             self.ratio_to_family[ratio] = fam1
-            self.ratio_to_family[ratio_rev] = fam1
         else:
             fam = LengthRatioPropertySet.Family()
+            fam.ratio_value = value
             fam.add_ratio(ratio)
-            fam.add_property(prop)
+            add_property_to(fam)
             self.families.append(fam)
             self.ratio_to_family[ratio] = fam
-            self.ratio_to_family[ratio_rev] = fam
 
-    def __add_elr(self, ratio0, ratio1, prop):
-        fam0, order0 = self.__find_by_ratio(ratio0)
-        fam1, order1 = self.__find_by_ratio(ratio1)
-        ratio0_rev = (ratio0[1], ratio0[0])
-        ratio1_rev = (ratio1[1], ratio1[0])
+    def __add_elr(self, prop):
+        ratio0 = (prop.segments[0], prop.segments[1])
+        ratio1 = (prop.segments[2], prop.segments[3])
+        fam0 = self.ratio_to_family.get(ratio0)
+        fam1 = self.ratio_to_family.get(ratio1)
         if fam0 and fam1:
-            if fam0 == fam1:
-                if order0 != order1:
-                    fam0.symmetrize()
-            else:
-                fam0.merge(fam1, order0 != order1)
+            if fam0 != fam1:
+                fam0.merge(fam1)
                 self.families.remove(fam1)
                 for k in list(self.ratio_to_family.keys()):
                     if self.ratio_to_family[k] == fam1:
                         self.ratio_to_family[k] = fam0
             fam0.add_property(prop)
         elif fam0:
-            fam0.add_ratio(ratio1 if order0 else ratio1_rev)
-            if order0 and ratio0_rev in fam0.ratio_set:
-                fam0.add_ratio(ratio1_rev)
+            fam0.add_ratio(ratio1)
             fam0.add_property(prop)
             self.ratio_to_family[ratio1] = fam0
-            self.ratio_to_family[ratio1_rev] = fam0
         elif fam1:
-            fam1.add_ratio(ratio0 if order1 else ratio0_rev)
-            if order1 and ratio1_rev in fam1.ratio_set:
-                fam1.add_ratio(ratio0_rev)
+            fam1.add_ratio(ratio0)
             fam1.add_property(prop)
             self.ratio_to_family[ratio0] = fam1
-            self.ratio_to_family[ratio0_rev] = fam1
         else:
             fam = LengthRatioPropertySet.Family()
             fam.add_ratio(ratio0)
@@ -500,36 +436,34 @@ class LengthRatioPropertySet:
             fam.add_property(prop)
             self.families.append(fam)
             self.ratio_to_family[ratio0] = fam
-            self.ratio_to_family[ratio0_rev] = fam
             self.ratio_to_family[ratio1] = fam
-            self.ratio_to_family[ratio1_rev] = fam
 
     def add(self, prop):
         if isinstance(prop, EqualLengthRatiosProperty):
-            self.__add_elr(prop.segments[0:2], prop.segments[2:4], prop)
-            self.__add_elr((prop.segments[0], prop.segments[2]), (prop.segments[1], prop.segments[3]), prop)
+            self.__add_elr(prop)
         elif isinstance(prop, RatioOfNonZeroLengthsProperty):
-            self.__add_lr(prop)
-            self.__cache[(prop.segment0, prop.segment1)] = (prop, prop.value)
-            self.__cache[(prop.segment1, prop.segment0)] = (prop, divide(1, prop.value))
+            ratio = (prop.segment0, prop.segment1)
+            value = prop.value
+            self.__add_lr(prop, ratio, value)
+            self.__cache[ratio] = (prop, value)
+            ratio = (prop.segment1, prop.segment0)
+            value = divide(1, prop.value)
+            self.__add_lr(prop, ratio, value)
+            self.__cache[ratio] = (prop, value)
         elif isinstance(prop, LengthRatioProperty):
             self.possible_zeroes[prop.segment_set] = prop
 
     def explanation(self, ratio0, ratio1):
         fam = self.ratio_to_family.get(ratio0)
-        if fam is None:
+        if fam is None or ratio1 not in fam.ratio_set:
             return (None, None)
-        if ratio0 in fam.ratio_set:
-            return fam.explanation(ratio0, ratio1)
-        return fam.explanation((ratio0[1], ratio0[0]), (ratio1[1], ratio1[0]))
+        return fam.explanation(ratio0, ratio1)
 
     def value_explanation(self, ratio):
         fam = self.ratio_to_family.get(ratio)
-        if fam is None or fam.ratio_value is None:
+        if fam is None:
             return (None, None)
-        if ratio in fam.ratio_set:
-            return fam.value_explanation(ratio)
-        return fam.value_explanation((ratio[1], ratio[0]))
+        return fam.value_explanation(ratio)
 
     def value_properties(self):
         for fam in set(self.ratio_to_family.values()):

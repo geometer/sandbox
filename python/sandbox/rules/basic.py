@@ -493,3 +493,49 @@ class TwoPerpendicularsRule(SingleSourceRule):
             _comment('Two perpendiculars to line %s', prop.segment),
             premises
         )
+
+class SideProductsInSimilarTrianglesRule(SingleSourceRule):
+    property_type = SimilarTrianglesProperty
+
+    def apply(self, prop, context):
+        for i, j in itertools.combinations(range(0, 3), 2):
+            yield (
+                EqualLengthProductsProperty(
+                    side_of(prop.ABC, i), side_of(prop.ABC, j),
+                    side_of(prop.DEF, i), side_of(prop.DEF, j)
+                ),
+                'Ratios of sides in similar triangles',
+                [prop]
+            )
+
+class LengthProductEqualityToRatioRule(SingleSourceRule):
+    property_type = EqualLengthProductsProperty
+
+    def apply(self, prop, context):
+        ne = [context.not_equal_property(*seg.points) for seg in prop.segments]
+        for (i, j, k, l) in [(0, 1, 2, 3), (0, 2, 1, 3), (3, 1, 2, 0), (3, 2, 1, 0)]:
+            if ne[j] and ne[l] and not (prop.reason.obsolete and ne[j].reason.obsolete and ne[l].reason.obsolete):
+                if prop.segments[j] == prop.segments[l]:
+                    yield (
+                        LengthRatioProperty(prop.segments[i], prop.segments[k], 1),
+                        prop.reason.comments,
+                        prop.reason.premises + [ne[j], ne[l]]
+                    )
+                elif prop.segments[i] == prop.segments[j]:
+                    yield (
+                        LengthRatioProperty(prop.segments[k], prop.segments[l], 1),
+                        prop.reason.comments,
+                        prop.reason.premises + [ne[j]]
+                    )
+                elif prop.segments[k] == prop.segments[l]:
+                    yield (
+                        LengthRatioProperty(prop.segments[i], prop.segments[j], 1),
+                        prop.reason.comments,
+                        prop.reason.premises + [ne[l]]
+                    )
+                else:
+                    yield (
+                        EqualLengthRatiosProperty(*[prop.segments[x] for x in (i, j, k, l)]),
+                        prop.reason.comments,
+                        prop.reason.premises + [ne[j], ne[l]]
+                    )

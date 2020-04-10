@@ -40,6 +40,8 @@ class Explainer:
             SameSidePointInsideSegmentRule(),
             TwoPerpendicularsRule(),
             CommonPerpendicularRule(),
+            SideProductsInSimilarTrianglesRule(),
+            LengthProductEqualityToRatioRule(),
         ]
         if 'advanced' in options:
             self.__rules += [
@@ -787,63 +789,6 @@ class Explainer:
                     comment,
                     premises
                 )
-
-            for st in self.context.list(SimilarTrianglesProperty):
-                for i, j in itertools.combinations(range(0, 3), 2):
-                    side00 = side_of(st.ABC, i)
-                    side01 = side_of(st.ABC, j)
-                    side10 = side_of(st.DEF, i)
-                    side11 = side_of(st.DEF, j)
-                    sides = [side00, side01, side10, side11]
-                    neq_all = [self.context.not_equal_property(*side.points) for side in sides]
-                    neq = [prop for prop in neq_all if prop is not None]
-                    if len(neq) < 3 or st.reason.obsolete and all(ne.reason.obsolete for ne in neq):
-                        continue
-
-                    neq = list(set(neq[:3]))
-                    for prop, side in zip(neq_all, sides):
-                        if prop is None:
-                            yield (
-                                PointsCoincidenceProperty(*side.points, False),
-                                'Similar triangles with non-zero sides',
-                                [st] + neq
-                            )
-
-                    if side00 == side10:
-                        yield (
-                            LengthRatioProperty(side01, side11, 1),
-                            'Ratios of sides in similar triangles',
-                            [st] + neq
-                        )
-                        continue
-                    if side01 == side11:
-                        yield (
-                            LengthRatioProperty(side00, side10, 1),
-                            'Ratios of sides in similar triangles',
-                            [st] + neq
-                        )
-                        continue
-                    cs = self.context.congruent_segments_property(side00, side10, False)
-                    if cs:
-                        yield (
-                            LengthRatioProperty(side01, side11, 1),
-                            'Ratios of sides in similar triangles',
-                            [st, cs] + neq
-                        )
-                        continue
-                    cs = self.context.congruent_segments_property(side01, side11, False)
-                    if cs:
-                        yield (
-                            LengthRatioProperty(side00, side10, 1),
-                            'Ratios of sides in similar triangles',
-                            [st, cs] + neq
-                        )
-                        continue
-                    yield (
-                        EqualLengthRatiosProperty(side00, side10, side01, side11),
-                        'Ratios of sides in similar triangles',
-                        [st] + neq
-                    )
 
             for st in self.context.list(SimilarTrianglesProperty):
                 st_is_too_old = st.reason.obsolete

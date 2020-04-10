@@ -418,9 +418,9 @@ class PointOnPerpendicularBisectorProperty(Property):
     def __hash__(self):
         return hash(PointOnPerpendicularBisectorProperty) + hash(self.unique_key)
 
-class EqualLengthRatiosProperty(Property):
+class EqualLengthProductsProperty(Property):
     """
-    Two segment lengths ratios are equal
+    Two segment lengths products are equal
     """
 
     @staticmethod
@@ -433,6 +433,36 @@ class EqualLengthRatiosProperty(Property):
     def __init__(self, segment0, segment1, segment2, segment3):
         """
         |segment0| * |segment3| == |segment1| * |segment2|
+        """
+        self.segments = (segment0, segment1, segment2, segment3)
+        self.segment_set = frozenset(self.segments)
+        self.key = EqualLengthProductsProperty.unique_key(segment0, segment1, segment2, segment3)
+
+    @property
+    def description(self):
+        return _comment('|%s| * |%s| = |%s| * |%s|', *[self.segments[i] for i in (0, 3, 1, 2)])
+
+    def __eq__(self, other):
+        return isinstance(other, EqualLengthProductsProperty) and self.key == other.key
+
+    def __hash__(self):
+        return hash(EqualLengthProductsProperty) + hash(self.key)
+
+class EqualLengthRatiosProperty(Property):
+    """
+    Two segment lengths ratios are equal
+    """
+
+    @staticmethod
+    def unique_key(segment0, segment1, segment2, segment3):
+        return frozenset([
+            (segment0, segment1),
+            (segment2, segment3)
+        ])
+
+    def __init__(self, segment0, segment1, segment2, segment3):
+        """
+        |segment0| / |segment1| == |segment2| / |segment3|
         """
         self.segments = (segment0, segment1, segment2, segment3)
         self.segment_set = frozenset(self.segments)
