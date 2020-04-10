@@ -504,7 +504,7 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
                     side_of(prop.ABC, i), side_of(prop.ABC, j),
                     side_of(prop.DEF, i), side_of(prop.DEF, j)
                 ),
-                'Ratios of sides in similar triangles',
+                'Relation of sides in similar triangles',
                 [prop]
             )
 
