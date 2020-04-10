@@ -539,3 +539,50 @@ class LengthProductEqualityToRatioRule(SingleSourceRule):
                         prop.reason.comments,
                         prop.reason.premises + [ne[j], ne[l]]
                     )
+
+class SimilarTrianglesByTwoAnglesRule(Rule):
+    def sources(self, context):
+        groups = {}
+        for ca in context.congruent_angle_properties():
+            if not ca.angle0.vertex or not ca.angle1.vertex:
+                continue
+            key = frozenset([frozenset(ca.angle0.points), frozenset(ca.angle1.points)])
+            lst = groups.get(key)
+            if lst:
+                lst.append(ca)
+            else:
+                groups[key] = [ca]
+
+        for group in groups.values():
+            for ca0, ca1 in itertools.combinations(group, 2):
+                if ca1.angle0 in ca0.angle_set or ca1.angle1 in ca0.angle_set:
+                    continue
+                yield (ca0, ca1)
+
+    def apply(self, src, context):
+        ca0, ca1 = src
+
+        for angle in [*ca0.angle_set, *ca1.angle_set]:
+            ncl = context.not_collinear_property(*ca0.angle0.points)
+            first_non_degenerate = True
+            if ncl is None:
+                ncl = context.not_collinear_property(*ca1.angle1.points)
+                first_non_degenerate = False
+            if ncl is None or ca0.reason.obsolete and ca1.reason.obsolete and ncl.reason.obsolete:
+                return
+
+            #this code ensures that vertices are listed in corresponding orders
+            if ca0.angle0.points == ca1.angle0.points:
+                tr0 = [ca0.angle0.vertex, ca1.angle0.vertex]
+                tr1 = [ca0.angle1.vertex, ca1.angle1.vertex]
+            else:
+                tr0 = [ca0.angle0.vertex, ca1.angle1.vertex]
+                tr1 = [ca0.angle1.vertex, ca1.angle0.vertex]
+            tr0.append(next(p for p in ca0.angle0.points if p not in tr0))
+            tr1.append(next(p for p in ca0.angle1.points if p not in tr1))
+
+            yield (
+                SimilarTrianglesProperty(tr0, tr1),
+                _comment('Two pairs of congruent angles, and △ %s %s %s is non-degenerate', *(tr0 if first_non_degenerate else tr1)),
+                [ca0, ca1, ncl]
+            )

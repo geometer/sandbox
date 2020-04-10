@@ -42,6 +42,7 @@ class Explainer:
             CommonPerpendicularRule(),
             SideProductsInSimilarTrianglesRule(),
             LengthProductEqualityToRatioRule(),
+            SimilarTrianglesByTwoAnglesRule(),
         ]
         if 'advanced' in options:
             self.__rules += [
@@ -909,38 +910,6 @@ class Explainer:
                     '',#TODO: write comment
                     [av]
                 )
-
-            congruent_angles_groups = {}
-            for ca in congruent_angles_with_vertex:
-                key = frozenset([frozenset(ca.angle0.points), frozenset(ca.angle1.points)])
-                lst = congruent_angles_groups.get(key)
-                if lst:
-                    lst.append(ca)
-                else:
-                    congruent_angles_groups[key] = [ca]
-
-            for group in congruent_angles_groups.values():
-                for ar0, ar1 in itertools.combinations(group, 2):
-                    if ar1.angle0 in ar0.angle_set or ar1.angle1 in ar0.angle_set:
-                        continue
-                    ncl = self.context.not_collinear_property(*ca.angle0.points)
-                    if ncl is None:
-                        ncl = self.context.not_collinear_property(*ca.angle1.points)
-                    if ncl is None or ar0.reason.obsolete and ar1.reason.obsolete and ncl.reason.obsolete:
-                        continue
-                    if ar0.angle0.points == ar1.angle0.points:
-                        tr0 = [ar0.angle0.vertex, ar1.angle0.vertex]
-                        tr1 = [ar0.angle1.vertex, ar1.angle1.vertex]
-                    else:
-                        tr0 = [ar0.angle0.vertex, ar1.angle1.vertex]
-                        tr1 = [ar0.angle1.vertex, ar1.angle0.vertex]
-                    tr0.append(next(p for p in ar0.angle0.points if p not in tr0))
-                    tr1.append(next(p for p in ar0.angle1.points if p not in tr1))
-                    yield (
-                        SimilarTrianglesProperty(tr0, tr1),
-                        'Two pairs of congruent angles, and the triangles are non-degenerate',
-                        [ar0, ar1, ncl]
-                    )
 
             def congruent_segments(seg0, seg1):
                 if seg0 == seg1:
