@@ -1,5 +1,7 @@
 import unittest
 
+from tests.misc.lengthratios import *
+
 from tests.scene.midpoint import *
 
 from tests.explainer.inside_triangle import *
