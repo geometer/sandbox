@@ -1,3 +1,5 @@
+import itertools
+
 from sandbox.property import *
 from sandbox.util import _comment, divide, side_of
 
@@ -235,11 +237,11 @@ class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
         value1 = divide(prop.degree, 1 + ar.value)
         value0 = prop.degree - value1
         if ar.value == 1:
-            comment0 = _comment('%s + %s = %s + %s = %sº', ar.angle0, ar.angle0, ar.angle0, ar.angle1, prop.degree),
-            comment1 = _comment('%s + %s = %s + %s = %sº', ar.angle1, ar.angle1, ar.angle1, ar.angle0, prop.degree),
+            comment0 = _comment('%s + %s = %s + %s = %sº', ar.angle0, ar.angle0, ar.angle0, ar.angle1, prop.degree)
+            comment1 = _comment('%s + %s = %s + %s = %sº', ar.angle1, ar.angle1, ar.angle1, ar.angle0, prop.degree)
         else:
-            comment0 = _comment('%s + %s / %s = %s + %s = %sº', ar.angle0, ar.angle0, ar.value, ar.angle0, ar.angle1, prop.degree),
-            comment1 = _comment('%s + %s %s = %s + %s = %sº', ar.angle1, ar.value, ar.angle1, ar.angle1, ar.angle0, prop.degree),
+            comment0 = _comment('%s + %s / %s = %s + %s = %sº', ar.angle0, ar.angle0, ar.value, ar.angle0, ar.angle1, prop.degree)
+            comment1 = _comment('%s + %s %s = %s + %s = %sº', ar.angle1, ar.value, ar.angle1, ar.angle1, ar.angle0, prop.degree)
         yield (AngleValueProperty(ar.angle0, value0), comment0, [prop, ar])
         yield (AngleValueProperty(ar.angle1, value1), comment1, [prop, ar])
 
@@ -275,20 +277,20 @@ class LengthRatioRule(SingleSourceRule):
 class ParallelVectorsRule(SingleSourceRule):
     property_type = ParallelVectorsProperty
 
-    def apply(self, pv, context):
-        vec0 = pv.vector0
-        vec1 = pv.vector1
+    def apply(self, para, context):
+        vec0 = para.vector0
+        vec1 = para.vector1
         ne0 = context.not_equal_property(*vec0.points)
         ne1 = context.not_equal_property(*vec1.points)
         if ne0 is None or ne1 is None:
             return
-        if pv.reason.obsolete and ne0.reason.obsolete and ne1.reason.obsolete:
+        if para.reason.obsolete and ne0.reason.obsolete and ne1.reason.obsolete:
             return
         for prop in AngleValueProperty.generate(vec0, vec1, 0):
             yield (
                 prop,
                 _comment('Non-zero parallel vectors %s and %s', vec0, vec1),
-                [pv, ne0, ne1]
+                [para, ne0, ne1]
             )
 
 class PerpendicularSegmentsRule(SingleSourceRule):
@@ -543,15 +545,15 @@ class LengthProductEqualityToRatioRule(SingleSourceRule):
 class SimilarTrianglesByTwoAnglesRule(Rule):
     def sources(self, context):
         groups = {}
-        for ca in context.congruent_angle_properties():
-            if not ca.angle0.vertex or not ca.angle1.vertex:
+        for prop in context.congruent_angle_properties():
+            if not prop.angle0.vertex or not prop.angle1.vertex:
                 continue
-            key = frozenset([frozenset(ca.angle0.points), frozenset(ca.angle1.points)])
+            key = frozenset([frozenset(prop.angle0.points), frozenset(prop.angle1.points)])
             lst = groups.get(key)
             if lst:
-                lst.append(ca)
+                lst.append(prop)
             else:
-                groups[key] = [ca]
+                groups[key] = [prop]
 
         for group in groups.values():
             for ca0, ca1 in itertools.combinations(group, 2):
@@ -562,27 +564,26 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
     def apply(self, src, context):
         ca0, ca1 = src
 
-        for angle in [*ca0.angle_set, *ca1.angle_set]:
-            ncl = context.not_collinear_property(*ca0.angle0.points)
-            first_non_degenerate = True
-            if ncl is None:
-                ncl = context.not_collinear_property(*ca1.angle1.points)
-                first_non_degenerate = False
-            if ncl is None or ca0.reason.obsolete and ca1.reason.obsolete and ncl.reason.obsolete:
-                return
+        ncl = context.not_collinear_property(*ca0.angle0.points)
+        first_non_degenerate = True
+        if ncl is None:
+            ncl = context.not_collinear_property(*ca1.angle1.points)
+            first_non_degenerate = False
+        if ncl is None or ca0.reason.obsolete and ca1.reason.obsolete and ncl.reason.obsolete:
+            return
 
-            #this code ensures that vertices are listed in corresponding orders
-            if ca0.angle0.points == ca1.angle0.points:
-                tr0 = [ca0.angle0.vertex, ca1.angle0.vertex]
-                tr1 = [ca0.angle1.vertex, ca1.angle1.vertex]
-            else:
-                tr0 = [ca0.angle0.vertex, ca1.angle1.vertex]
-                tr1 = [ca0.angle1.vertex, ca1.angle0.vertex]
-            tr0.append(next(p for p in ca0.angle0.points if p not in tr0))
-            tr1.append(next(p for p in ca0.angle1.points if p not in tr1))
+        #this code ensures that vertices are listed in corresponding orders
+        if ca0.angle0.points == ca1.angle0.points:
+            tr0 = [ca0.angle0.vertex, ca1.angle0.vertex]
+            tr1 = [ca0.angle1.vertex, ca1.angle1.vertex]
+        else:
+            tr0 = [ca0.angle0.vertex, ca1.angle1.vertex]
+            tr1 = [ca0.angle1.vertex, ca1.angle0.vertex]
+        tr0.append(next(p for p in ca0.angle0.points if p not in tr0))
+        tr1.append(next(p for p in ca0.angle1.points if p not in tr1))
 
-            yield (
-                SimilarTrianglesProperty(tr0, tr1),
-                _comment('Two pairs of congruent angles, and △ %s %s %s is non-degenerate', *(tr0 if first_non_degenerate else tr1)),
-                [ca0, ca1, ncl]
-            )
+        yield (
+            SimilarTrianglesProperty(tr0, tr1),
+            _comment('Two pairs of congruent angles, and △ %s %s %s is non-degenerate', *(tr0 if first_non_degenerate else tr1)),
+            [ca0, ca1, ncl]
+        )
