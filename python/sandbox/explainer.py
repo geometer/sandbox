@@ -496,7 +496,7 @@ class Explainer:
                     [sos0, sos1]
                 )
 
-            congruent_angles = self.context.congruent_angle_properties()
+            congruent_angles = list(self.context.congruent_angle_properties())
             congruent_angles_with_vertex = [ar for ar in congruent_angles if ar.angle0.vertex and ar.angle1.vertex]
             same_triple_ratios = self.context.same_triple_angle_ratio_properties()
 

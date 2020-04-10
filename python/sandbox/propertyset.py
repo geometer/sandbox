@@ -136,19 +136,17 @@ class AngleRatioPropertySet:
                     rs.append(angle)
                 else:
                     reverse_map[ratio] = [angle]
-            properties = []
             for ar in reverse_map.values():
                 for angle0, angle1 in itertools.combinations(ar, 2):
                     path = nx.algorithms.shortest_path(self.premises_graph, angle0, angle1)
                     if len(path) == 2:
-                        properties.append(self.premises_graph[path[0]][path[1]]['prop'])
-                        continue
-                    comment, premises = self.explanation_from_path(path, ratio)
-                    prop = AnglesRatioProperty(angle0, angle1, 1)
-                    prop.reason = Reason(-2, -2, comment, premises)
-                    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-                    properties.append(prop)
-            return properties
+                        yield self.premises_graph[path[0]][path[1]]['prop']
+                    else:
+                        comment, premises = self.explanation_from_path(path, ratio)
+                        prop = AnglesRatioProperty(angle0, angle1, 1)
+                        prop.reason = Reason(-2, -2, comment, premises)
+                        prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+                        yield prop
 
         def same_triple_ratio_properties(self):
             angles_map = {}
@@ -247,10 +245,9 @@ class AngleRatioPropertySet:
         return properties
 
     def congruent_properties(self):
-        properties = []
         for fam in set(self.angle_to_family.values()):
-            properties += fam.congruent_properties()
-        return properties
+            for prop in fam.congruent_properties():
+                yield prop
 
     def add(self, prop):
         if isinstance(prop, AnglesRatioProperty):
