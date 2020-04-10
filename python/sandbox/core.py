@@ -984,8 +984,8 @@ class Constraint:
         angles_ratio              = ('angles_ratio', Stage.adjustment, CoreScene.Angle, CoreScene.Angle, int)
         perpendicular             = ('perpendicular', Stage.adjustment, CoreScene.Line, CoreScene.Line)
         perpendicular_bisector    = ('perpendicular_bisector', Stage.explanation, CoreScene.Line, CoreScene.Segment)
-        acute_angle               = ('acute_angle', Stage.explanation, CoreScene.Angle)
-        obtuse_angle              = ('obtuse_angle', Stage.explanation, CoreScene.Angle)
+        acute_angle               = ('acute_angle', Stage.validation, CoreScene.Angle)
+        obtuse_angle              = ('obtuse_angle', Stage.validation, CoreScene.Angle)
 
         def __init__(self, name, stage, *params):
             self.stage = stage

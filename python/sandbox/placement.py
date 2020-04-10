@@ -170,6 +170,12 @@ class Placement(BasePlacement):
                 vec0 = pt.vector(constraint.params[1].points[0])
                 vec1 = pt.vector(constraint.params[1].points[1])
                 return self.scalar_product(vec0, vec1) < 0
+            if constraint.kind == Constraint.Kind.acute_angle:
+                angle = constraint.params[0]
+                return self.scalar_product(angle.vector0, angle.vector1) > 0
+            if constraint.kind == Constraint.Kind.obtuse_angle:
+                angle = constraint.params[0]
+                return self.scalar_product(angle.vector0, angle.vector1) < 0
 
             assert False, 'Constraint `%s` not supported in placement' % constraint.kind
 
