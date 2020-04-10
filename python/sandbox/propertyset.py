@@ -369,18 +369,12 @@ class LengthRatioPropertySet:
         self.__cache = {} # (segment, segment) => (prop, value)
         self.possible_zeroes = {} # {segment, segment} => LengthRatioProperty
 
-    def __find_by_value(self, value):
-        for fam in self.families:
-            if fam.ratio_value == value:
-                return fam
-        return None
-
     def __add_lr(self, prop, ratio, value):
         def add_property_to(fam):
             fam.premises_graph.add_edge(ratio, (value, ), prop=prop)
 
         fam0 = self.ratio_to_family.get(ratio)
-        fam1 = self.__find_by_value(value)
+        fam1 = self.ratio_to_family.get(value)
         if fam0 and fam1:
             if fam0 != fam1:
                 fam0.merge(fam1)
@@ -394,6 +388,7 @@ class LengthRatioPropertySet:
             assert fam0.ratio_value is None or fam0.ratio_value == value, 'Contradiction'
             fam0.ratio_value = value
             add_property_to(fam0)
+            self.ratio_to_family[value] = fam0
         elif fam1:
             fam1.add_ratio(ratio)
             add_property_to(fam1)
@@ -405,6 +400,7 @@ class LengthRatioPropertySet:
             add_property_to(fam)
             self.families.append(fam)
             self.ratio_to_family[ratio] = fam
+            self.ratio_to_family[value] = fam
 
     def __add_elr(self, prop):
         ratio0 = (prop.segments[0], prop.segments[1])
