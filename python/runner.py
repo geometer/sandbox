@@ -26,7 +26,7 @@ def run_sample(scene, prop=None):
 
     if '--profile' in sys.argv[1:]:
         import cProfile
-        cProfile.run('explainer.explain()')
+        cProfile.runctx('explainer.explain()', {'explainer': explainer}, {})
     else:
         explainer.explain()
     if '--dump' in sys.argv[1:]:
