@@ -4,7 +4,7 @@ import sympy as sp
 from sandbox.property import LengthRatioProperty
 from sandbox.util import _comment, angle_of, side_of
 
-from .basic import Rule
+from .abstract import Rule
 
 class LawOfSinesRule(Rule):
     """
