@@ -662,6 +662,12 @@ class CoreScene:
             self.scene.assert_angle(angle)
             self.scene.constraint(Constraint.Kind.angles_ratio, self, angle, ratio, **kwargs)
 
+        def is_acute_constraint(self, **kwargs):
+            self.scene.constraint(Constraint.Kind.acute_angle, self, **kwargs)
+
+        def is_obtuse_constraint(self, **kwargs):
+            self.scene.constraint(Constraint.Kind.obtuse_angle, self, **kwargs)
+
         def __str__(self):
             if self.vertex:
                 return str(_comment('∠ %s %s %s', self.vector0.end, self.vertex, self.vector1.end))
@@ -794,6 +800,24 @@ class CoreScene:
                     PointOnPerpendicularBisectorProperty(pt, segment),
                     cnstr.comments
                 )
+
+        for cnstr in self.constraints(Constraint.Kind.acute_angle):
+            angle = cnstr.params[0]
+            if 'invisible' in [p.layer for p in angle.points]:
+                continue
+            yield (
+                AcuteAngleProperty(angle),
+                cnstr.comments
+            )
+
+        for cnstr in self.constraints(Constraint.Kind.obtuse_angle):
+            angle = cnstr.params[0]
+            if 'invisible' in [p.layer for p in angle.points]:
+                continue
+            yield (
+                ObtuseAngleProperty(angle),
+                cnstr.comments
+            )
 
         for cnstr in self.constraints(Constraint.Kind.parallel_vectors):
             if all(all(p.layer != 'invisible' for p in param.points) for param in cnstr.params):
@@ -960,6 +984,8 @@ class Constraint:
         angles_ratio              = ('angles_ratio', Stage.adjustment, CoreScene.Angle, CoreScene.Angle, int)
         perpendicular             = ('perpendicular', Stage.adjustment, CoreScene.Line, CoreScene.Line)
         perpendicular_bisector    = ('perpendicular_bisector', Stage.explanation, CoreScene.Line, CoreScene.Segment)
+        acute_angle               = ('acute_angle', Stage.explanation, CoreScene.Angle)
+        obtuse_angle              = ('obtuse_angle', Stage.explanation, CoreScene.Angle)
 
         def __init__(self, name, stage, *params):
             self.stage = stage
