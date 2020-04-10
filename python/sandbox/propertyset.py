@@ -136,9 +136,10 @@ class AngleRatioPropertySet:
                     rs.append(angle)
                 else:
                     reverse_map[ratio] = [angle]
+            all_paths = dict(nx.algorithms.all_pairs_shortest_path(self.premises_graph))
             for ar in reverse_map.values():
                 for angle0, angle1 in itertools.combinations(ar, 2):
-                    path = nx.algorithms.shortest_path(self.premises_graph, angle0, angle1)
+                    path = all_paths[angle0][angle1]
                     if len(path) == 2:
                         yield self.premises_graph[path[0]][path[1]]['prop']
                     else:
