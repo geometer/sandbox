@@ -579,3 +579,99 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
             _comment('Two pairs of congruent angles, and △ %s %s %s is non-degenerate', *(tr0 if first_non_degenerate else tr1)),
             [ca0, ca1, ncl]
         )
+
+class SimilarRightangledTrianglesByCommonAngleRule(Rule):
+    def sources(self):
+        return itertools.combinations(self.context.list(PerpendicularSegmentsProperty), 2)
+
+    def apply(self, src):
+        perp0, perp1 = src
+
+        vertex0 = next((pt for pt in perp0.segment0.points if pt in perp0.segment1.points), None)
+        if vertex0 is None:
+            return
+        vertex1 = next((pt for pt in perp1.segment0.points if pt in perp1.segment1.points), None)
+        if vertex1 is None:
+            return
+        pt00 = next(pt for pt in perp0.segment0.points if pt != vertex0)
+        pt01 = next(pt for pt in perp0.segment1.points if pt != vertex0)
+        pt10 = next(pt for pt in perp1.segment0.points if pt != vertex1)
+        pt11 = next(pt for pt in perp1.segment1.points if pt != vertex1)
+
+        if pt00 == pt10:
+            col0 = self.context.collinearity_property(pt00, vertex0, pt11)
+            if col0 is None or not col0.collinear:
+                return
+            col1 = self.context.collinearity_property(pt00, vertex1, pt01)
+            if col1 is None or not col1.collinear:
+                return
+            if perp0.reason.obsolete and perp1.reason.obsolete and col0.reason.obsolete and col1.reason.obsolete:
+                return
+            vec0 = pt01.vector(vertex0)
+            vec1 = pt11.vector(vertex1)
+            line0 = pt00.vector(pt01)
+            line1 = pt00.vector(pt11)
+            yield (
+                SimilarTrianglesProperty((vertex0, pt00, pt01), (vertex1, pt00, pt11)),
+                _comment('%s and %s are perpendiculars from a point on the line %s to the line %s and from a point on %s to %s, correspondingly', vec0, vec1, line0, line1, line1, line0),
+                [perp0, perp1, col0, col1]
+            )
+
+class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
+    def sources(self):
+        return [ar for ar in self.context.congruent_angle_properties() if ar.angle0.vertex and ar.angle1.vertex]
+
+    def apply(self, ca):
+        ang0 = ca.angle0
+        ang1 = ca.angle1
+        for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
+            segments = (
+                vec0.as_segment, vec1.as_segment,
+                ang1.vector0.as_segment, ang1.vector1.as_segment
+            )
+            for inds in [(0, 1, 2, 3), (0, 2, 1, 3), (1, 0, 3, 2), (1, 3, 0, 2)]:
+                elr = self.context.equal_length_ratios_property(*[segments[i] for i in inds])
+                if elr:
+                    break
+            else:
+                continue
+            if ca.reason.obsolete and elr.reason.obsolete:
+                continue
+            yield (
+                SimilarTrianglesProperty(
+                    (ang0.vertex, vec0.end, vec1.end),
+                    (ang1.vertex, ang1.vector0.end, ang1.vector1.end)
+                ),
+                'Two pairs of sides with the same ratio, and angle between the sides',
+                [elr, ca]
+            )
+
+class CorrespondingAnglesInSimilarTriangles(SingleSourceRule):
+    property_type = SimilarTrianglesProperty
+
+    def apply(self, prop):
+        ne0 = []
+        ne1 = []
+        for i in range(0, 3):
+            ne0.append(self.context.not_equal_property(*side_of(prop.ABC, i).points))
+            ne1.append(self.context.not_equal_property(*side_of(prop.DEF, i).points))
+
+        for i in range(0, 3):
+            angle0 = angle_of(prop.ABC, i)
+            angle1 = angle_of(prop.DEF, i)
+            if angle0 == angle1:
+                continue
+            ne = []
+            for j in range(0, 3):
+                if i != j:
+                    if ne0[j]:
+                        ne.append(ne0[j])
+                    if ne1[j]:
+                        ne.append(ne1[j])
+            if len(ne) < 3 or prop.reason.obsolete and all(p.reason.obsolete for p in ne):
+                continue
+            yield (
+                AnglesRatioProperty(angle0, angle1, 1),
+                'Corresponding non-degenerate angles in similar triangles',
+                [prop] + ne
+            )
