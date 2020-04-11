@@ -1057,28 +1057,6 @@ class Explainer:
                         ), comment, premises
                     )
 
-            for ca in congruent_angles_with_vertex:
-                ca_is_too_old = ca.reason.obsolete
-                ang0 = ca.angle0
-                ang1 = ca.angle1
-                for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
-                    rsn0, ratio0 = self.context.length_ratio_property_and_value(vec0.as_segment, ang1.vector0.as_segment, True)
-                    if rsn0 is None:
-                        continue
-                    rsn1, ratio1 = self.context.length_ratio_property_and_value(vec1.as_segment, ang1.vector1.as_segment, True)
-                    if rsn1 is None or ratio0 != ratio1:
-                        continue
-                    if ca_is_too_old and rsn0.reason.obsolete and rsn1.reason.obsolete:
-                        continue
-                    yield (
-                        SimilarTrianglesProperty(
-                            (ang0.vertex, vec0.end, vec1.end),
-                            (ang1.vertex, ang1.vector0.end, ang1.vector1.end)
-                        ),
-                        'Two pairs of sides with the same ratio, and angle between the sides',
-                        [rsn0, rsn1, ca]
-                    )
-
             congruent_segments = [p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1]
             def common_point(segment0, segment1):
                 if segment0.points[0] in segment1.points:
