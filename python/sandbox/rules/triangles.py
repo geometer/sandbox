@@ -23,21 +23,30 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
 class SimilarTrianglesByTwoAnglesRule(Rule):
     def sources(self):
         groups = {}
-        for prop in self.context.congruent_angle_properties():
-            if not prop.angle0.vertex or not prop.angle1.vertex:
+        for a0, a1 in self.context.congruent_angles():
+            if not a0.vertex or not a1.vertex:
                 continue
-            key = frozenset([frozenset(prop.angle0.points), frozenset(prop.angle1.points)])
+            key = frozenset([frozenset(a0.points), frozenset(a1.points)])
             lst = groups.get(key)
             if lst:
-                lst.append(prop)
+                lst.append((a0, a1))
             else:
-                groups[key] = [prop]
+                groups[key] = [(a0, a1)]
+
+        pair_to_prop = {}
+        def prop_for(pair):
+            prop = pair_to_prop.get(pair)
+            if prop is None:
+                prop = self.context.angle_ratio_property(pair[0], pair[1])
+                pair_to_prop[pair] = prop
+            return prop
 
         for group in groups.values():
-            for ca0, ca1 in itertools.combinations(group, 2):
-                if ca1.angle0 in ca0.angle_set or ca1.angle1 in ca0.angle_set:
+            for pair0, pair1 in itertools.combinations(group, 2):
+                common = next((angle for angle in pair0 if angle in pair1), None)
+                if common:
                     continue
-                yield (ca0, ca1)
+                yield (prop_for(pair0), prop_for(pair1))
 
     def apply(self, src):
         ca0, ca1 = src
@@ -68,11 +77,10 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
 
 class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
     def sources(self):
-        return [ar for ar in self.context.congruent_angle_properties() if ar.angle0.vertex and ar.angle1.vertex]
+        return [(a0, a1) for a0, a1 in self.context.congruent_angles() if a0.vertex and a1.vertex]
 
-    def apply(self, ca):
-        ang0 = ca.angle0
-        ang1 = ca.angle1
+    def apply(self, src):
+        ang0, ang1 = src
         for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
             segments = (
                 vec0.as_segment, vec1.as_segment,
@@ -84,6 +92,7 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
                     break
             else:
                 continue
+            ca = self.context.angle_ratio_property(ang0, ang1)
             if ca.reason.obsolete and elr.reason.obsolete:
                 continue
             yield (

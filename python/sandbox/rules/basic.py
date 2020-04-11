@@ -234,7 +234,7 @@ class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
     def apply(self, prop):
         if self.context.angle_value_property(prop.angle0) or self.context.angle_value_property(prop.angle1):
             return
-        ar = self.context.angles_ratio_property(prop.angle0, prop.angle1)
+        ar = self.context.angle_ratio_property(prop.angle0, prop.angle1)
         if ar is None or prop.reason.obsolete and ar.reason.obsolete:
             return
         value1 = divide(prop.degree, 1 + ar.value)

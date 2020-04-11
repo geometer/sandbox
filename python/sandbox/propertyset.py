@@ -136,6 +136,18 @@ class AngleRatioPropertySet:
                 properties.append(prop)
             return properties
 
+        def congruent_angles(self):
+            reverse_map = {}
+            for angle, ratio in self.angle_to_ratio.items():
+                rs = reverse_map.get(ratio)
+                if rs:
+                    rs.append(angle)
+                else:
+                    reverse_map[ratio] = [angle]
+            for ar in reverse_map.values():
+                for angle0, angle1 in itertools.combinations(ar, 2):
+                    yield (angle0, angle1)
+
         def congruent_properties(self):
             reverse_map = {}
             for angle, ratio in self.angle_to_ratio.items():
@@ -252,6 +264,11 @@ class AngleRatioPropertySet:
         for fam in set(self.angle_to_family.values()):
             properties += fam.same_triple_ratio_properties()
         return properties
+
+    def congruent_angles(self):
+        for fam in set(self.angle_to_family.values()):
+            for prop in fam.congruent_angles():
+                yield prop
 
     def congruent_properties(self):
         for fam in set(self.angle_to_family.values()):
@@ -634,11 +651,14 @@ class PropertySet:
     def angle_value_properties(self):
         return [p for p in self.list(AngleValueProperty) if p.degree in (0, 180)] + self.nondegenerate_angle_value_properties()
 
-    def angles_ratio_property(self, angle0, angle1):
+    def angle_ratio_property(self, angle0, angle1):
         return self.__angle_ratios.ratio_property(angle0, angle1)
 
     def same_triple_angle_ratio_properties(self):
         return self.__angle_ratios.same_triple_ratio_properties()
+
+    def congruent_angles(self):
+        return self.__angle_ratios.congruent_angles()
 
     def congruent_angle_properties(self):
         return self.__angle_ratios.congruent_properties()

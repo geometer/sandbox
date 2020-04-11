@@ -293,7 +293,7 @@ class Explainer:
                             for prop in AngleValueProperty.generate(lp0.vector(pt0), lp1.vector(pt1), 0):
                                 yield (prop, 'Alternate angles', [so, sum_reason, ne])
                     else:
-                        ratio_reason = self.context.angles_ratio_property(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0))
+                        ratio_reason = self.context.angle_ratio_property(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0))
                         if ratio_reason is None or reasons_are_too_old and ratio_reason.reason.obsolete:
                             continue
                         if ratio_reason.value == 1:
