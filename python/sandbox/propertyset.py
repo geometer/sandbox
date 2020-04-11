@@ -677,9 +677,6 @@ class PropertySet:
         if existing:
             return existing
         comment, premises = self.__length_ratios.explanation((segment0, segment1), (segment2, segment3))
-        # this is a hack TODO: add symmetric properties during adding RatioOfNonZeroLengthsProperty
-        if comment is None:
-            comment, premises = self.__length_ratios.explanation((segment0, segment2), (segment1, segment3))
         if comment is None:
             return None
         prop.reason = Reason(-2, -2, comment, premises)
