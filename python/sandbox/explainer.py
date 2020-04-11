@@ -26,6 +26,7 @@ class Explainer:
             LengthRatioTransitivityRule(self.context),
             SumAndRatioOfTwoAnglesRule(self.context),
             NonCollinearPointsAreDifferentRule(self.context),
+            CoincidenceTransitivityRule(self.context),
             CollinearityCollisionRule(self.context),
             TwoPointsBelongsToTwoLinesRule(self.context),
             TwoPointsBelongsToTwoPerpendicularsRule(self.context),
@@ -45,7 +46,6 @@ class Explainer:
             LengthProductEqualityToRatioRule(self.context),
             SimilarTrianglesByTwoAnglesRule(self.context),
             SimilarTrianglesByAngleAndTwoSidesRule(self.context),
-            SimilarRightangledTrianglesByCommonAngleRule(self.context),
         ]
         if 'advanced' in options:
             self.__rules += [
@@ -572,6 +572,78 @@ class Explainer:
                                 zero = base.vertex.angle(vec0.end, pt)
                                 yield (AngleValueProperty(zero, 0), comment, [col, aa, ka])
                             break
+
+            for aa in self.context.list(AcuteAngleProperty):
+                base = aa.angle
+                if base.vertex is None:
+                    continue
+                for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
+                    for perp in self.context.list(PerpendicularSegmentsProperty, [vec0.as_segment]):
+                        other = perp.segment0 if vec0.as_segment == perp.segment1 else perp.segment1
+                        if vec1.end not in other.points:
+                            continue
+                        foot = next(pt for pt in other.points if pt != vec1.end)
+                        col = self.context.collinearity_property(foot, *vec0.points)
+                        if col is None or not col.collinear:
+                            continue
+                        if aa.reason.obsolete and perp.reason.obsolete and col.reason.obsolete:
+                            continue
+                        yield (
+                            AngleValueProperty(base.vertex.angle(vec0.end, foot), 0),
+                            _comment(
+                                '%s it the foot of the perpendicular from %s to %s, %s is acute',
+                                foot, vec1.end, vec0, base
+                            ),
+                            [perp, col, aa]
+                        )
+
+            for aa in self.context.list(ObtuseAngleProperty):
+                base = aa.angle
+                if base.vertex is None:
+                    continue
+                for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
+                    for perp in self.context.list(PerpendicularSegmentsProperty, [vec0.as_segment]):
+                        other = perp.segment0 if vec0.as_segment == perp.segment1 else perp.segment1
+                        if vec1.end not in other.points:
+                            continue
+                        foot = next(pt for pt in other.points if pt != vec1.end)
+                        col = self.context.collinearity_property(foot, *vec0.points)
+                        if col is None or not col.collinear:
+                            continue
+                        if aa.reason.obsolete and perp.reason.obsolete and col.reason.obsolete:
+                            continue
+                        yield (
+                            AngleValueProperty(base.vertex.angle(vec0.end, foot), 180),
+                            _comment(
+                                '%s it the foot of the perpendicular from %s to %s, %s is obtuse',
+                                foot, vec1.end, vec0, base
+                            ),
+                            [perp, col, aa]
+                        )
+
+            for aa in [p for p in self.context.list(AngleValueProperty) if p.degree == 90]:
+                base = aa.angle
+                if base.vertex is None:
+                    continue
+                for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
+                    for perp in self.context.list(PerpendicularSegmentsProperty, [vec0.as_segment]):
+                        other = perp.segment0 if vec0.as_segment == perp.segment1 else perp.segment1
+                        if vec1.end not in other.points:
+                            continue
+                        foot = next(pt for pt in other.points if pt != vec1.end)
+                        col = self.context.collinearity_property(foot, *vec0.points)
+                        if col is None or not col.collinear:
+                            continue
+                        if aa.reason.obsolete and perp.reason.obsolete and col.reason.obsolete:
+                            continue
+                        yield (
+                            PointsCoincidenceProperty(base.vertex, foot, True),
+                            _comment(
+                                '%s it the foot of the perpendicular from %s to %s, %s is right',
+                                foot, vec1.end, vec0, base
+                            ),
+                            [perp, col, aa]
+                        )
 
             for oa in self.context.list(ObtuseAngleProperty):
                 base = oa.angle

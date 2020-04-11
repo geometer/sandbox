@@ -111,6 +111,27 @@ class LengthRatioTransitivityRule(Rule):
                 [lr0, lr1]
             )
 
+class CoincidenceTransitivityRule(Rule):
+    def sources(self):
+        return itertools.combinations(self.context.list(PointsCoincidenceProperty), 2)
+
+    def apply(self, src):
+        co0, co1 = src
+        if not co0.coincident and not co1.coincident:
+            return
+        if co0.reason.obsolete and co1.reason.obsolete:
+            return
+        common = next((pt for pt in co0.points if pt in co1.points), None)
+        if common is None:
+            return
+        pt0 = next(pt for pt in co0.points if pt != common)
+        pt1 = next(pt for pt in co1.points if pt != common)
+        yield (
+            PointsCoincidenceProperty(pt0, pt1, co0.coincident and co1.coincident),
+            _comment('%s %s %s %s %s', pt0, '=' if co0.coincident else '!=', common, '=' if co1.coincident else '!=', pt1),
+            [co0, co1]
+        )
+
 class TwoPointsBelongsToTwoLinesRule(SingleSourceRule):
     """
     If two points both belong to two different lines,
@@ -358,7 +379,7 @@ class TwoPointsBelongsToTwoPerpendicularsRule(Rule):
             return
         yield (
             PointsCoincidenceProperty(*common.points, True),
-            _comment('%s and %s lies on perpendiculars to non-parallel lines %s and %s', *common.points, seg0, seg1),
+            _comment('%s and %s lie on perpendiculars to non-parallel lines %s and %s', *common.points, seg0, seg1),
             [perp0, perp1, ncl]
         )
 
@@ -579,43 +600,6 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
             _comment('Two pairs of congruent angles, and △ %s %s %s is non-degenerate', *(tr0 if first_non_degenerate else tr1)),
             [ca0, ca1, ncl]
         )
-
-class SimilarRightangledTrianglesByCommonAngleRule(Rule):
-    def sources(self):
-        return itertools.combinations(self.context.list(PerpendicularSegmentsProperty), 2)
-
-    def apply(self, src):
-        perp0, perp1 = src
-
-        vertex0 = next((pt for pt in perp0.segment0.points if pt in perp0.segment1.points), None)
-        if vertex0 is None:
-            return
-        vertex1 = next((pt for pt in perp1.segment0.points if pt in perp1.segment1.points), None)
-        if vertex1 is None:
-            return
-        pt00 = next(pt for pt in perp0.segment0.points if pt != vertex0)
-        pt01 = next(pt for pt in perp0.segment1.points if pt != vertex0)
-        pt10 = next(pt for pt in perp1.segment0.points if pt != vertex1)
-        pt11 = next(pt for pt in perp1.segment1.points if pt != vertex1)
-
-        if pt00 == pt10:
-            col0 = self.context.collinearity_property(pt00, vertex0, pt11)
-            if col0 is None or not col0.collinear:
-                return
-            col1 = self.context.collinearity_property(pt00, vertex1, pt01)
-            if col1 is None or not col1.collinear:
-                return
-            if perp0.reason.obsolete and perp1.reason.obsolete and col0.reason.obsolete and col1.reason.obsolete:
-                return
-            vec0 = pt01.vector(vertex0)
-            vec1 = pt11.vector(vertex1)
-            line0 = pt00.vector(pt01)
-            line1 = pt00.vector(pt11)
-            yield (
-                SimilarTrianglesProperty((vertex0, pt00, pt01), (vertex1, pt00, pt11)),
-                _comment('%s and %s are perpendiculars from a point on the line %s to the line %s and from a point on %s to %s, correspondingly', vec0, vec1, line0, line1, line1, line0),
-                [perp0, perp1, col0, col1]
-            )
 
 class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
     def sources(self):

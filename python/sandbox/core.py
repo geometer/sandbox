@@ -668,6 +668,12 @@ class CoreScene:
         def is_obtuse_constraint(self, **kwargs):
             self.scene.constraint(Constraint.Kind.obtuse_angle, self, **kwargs)
 
+        def is_right_constraint(self, **kwargs):
+            self.vector0.as_segment.line_through().perpendicular_constraint(
+                self.vector1.as_segment.line_through(),
+                **kwargs
+            )
+
         def __str__(self):
             if self.vertex:
                 return str(_comment('∠ %s %s %s', self.vector0.end, self.vertex, self.vector1.end))
