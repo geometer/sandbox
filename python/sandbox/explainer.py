@@ -50,6 +50,7 @@ class Explainer:
             SimilarTrianglesByAngleAndTwoSidesRule(self.context),
             BaseAnglesOfIsoscelesRule(self.context),
             LegsOfIsoscelesRule(self.context),
+            RotatedAngleRule(self.context),
         ]
         if 'advanced' in options:
             self.__rules += [
@@ -1181,39 +1182,6 @@ class Explainer:
                     '', #TODO: write comment
                     [sos]
                 )
-
-            for ang0, ang1 in self.context.congruent_angles():
-                vertex = ang0.vertex
-                if vertex is None or vertex != ang1.vertex:
-                    continue
-                pts0 = ang0.endpoints
-                pts1 = ang1.endpoints
-                if next((p for p in pts0 if p in pts1), None) is not None:
-                    continue
-                cycle0 = Cycle(vertex, *pts0)
-                cycle1 = Cycle(vertex, *pts1)
-                co = self.context.same_cyclic_order_property(cycle0, cycle1)
-                if co:
-                    ca = self.context.angle_ratio_property(ang0, ang1)
-                    if ca.reason.obsolete and co.reason.obsolete:
-                        continue
-                    yield (
-                        AngleRatioProperty(vertex.angle(pts0[0], pts1[0]), vertex.angle(pts0[1], pts1[1]), 1),
-                        'Rotated', #TODO: better comment
-                        [ca, co]
-                    )
-                else:
-                    co = self.context.same_cyclic_order_property(cycle0, cycle1.reversed)
-                    if co is None:
-                        continue
-                    ca = self.context.angle_ratio_property(ang0, ang1)
-                    if ca.reason.obsolete and co.reason.obsolete:
-                        continue
-                    yield (
-                        AngleRatioProperty(vertex.angle(pts0[0], pts1[1]), vertex.angle(pts0[1], pts1[0]), 1),
-                        'Rotated', #TODO: better comment
-                        [ca, co]
-                    )
 
         for prop, comment in enumerate_predefined_properties(self.scene):
             self.__reason(prop, comment, [])
