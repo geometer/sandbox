@@ -515,13 +515,11 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
     property_type = SimilarTrianglesProperty
 
     def apply(self, prop):
-        triangle0 = Triangle(prop.ABC)
-        triangle1 = Triangle(prop.DEF)
         for i, j in itertools.combinations(range(0, 3), 2):
             yield (
                 EqualLengthProductsProperty(
-                    triangle0.side_for_index(i), triangle0.side_for_index(j),
-                    triangle1.side_for_index(i), triangle1.side_for_index(j)
+                    prop.triangle0.side_for_index(i), prop.triangle0.side_for_index(j),
+                    prop.triangle1.side_for_index(i), prop.triangle1.side_for_index(j)
                 ),
                 'Relation of sides in similar triangles',
                 [prop]
@@ -638,17 +636,15 @@ class CorrespondingAnglesInSimilarTriangles(SingleSourceRule):
     property_type = SimilarTrianglesProperty
 
     def apply(self, prop):
-        triangle0 = Triangle(prop.ABC)
-        triangle1 = Triangle(prop.DEF)
         ne0 = []
         ne1 = []
         for i in range(0, 3):
-            ne0.append(self.context.not_equal_property(*triangle0.side_for_index(i).points))
-            ne1.append(self.context.not_equal_property(*triangle1.side_for_index(i).points))
+            ne0.append(self.context.not_equal_property(*prop.triangle0.side_for_index(i).points))
+            ne1.append(self.context.not_equal_property(*prop.triangle1.side_for_index(i).points))
 
         for i in range(0, 3):
-            angle0 = triangle0.angle_for_index(i)
-            angle1 = triangle1.angle_for_index(i)
+            angle0 = prop.triangle0.angle_for_index(i)
+            angle1 = prop.triangle1.angle_for_index(i)
             if angle0 == angle1:
                 continue
             ne = []

@@ -17,6 +17,9 @@ class Triangle:
     def angle_for_index(self, index):
         return self.points[index].angle(self.points[(index + 1) % 3], self.points[(index + 2) % 3])
 
+    def permutation(self, indexes):
+        return tuple(self.points[i] for i in indexes)
+
     def __str__(self):
         return '△ %s %s %s' % self.points
 

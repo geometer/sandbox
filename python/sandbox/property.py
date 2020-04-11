@@ -170,16 +170,16 @@ class EquilateralTriangleProperty(Property):
     """
     Equilateral triangle
     """
-    def __init__(self, ABC):
-        self.ABC = tuple(ABC)
-        self.__point_set = frozenset(self.ABC)
+    def __init__(self, points):
+        self.triangle = Triangle(points)
+        self.__point_set = frozenset(self.triangle.points)
 
     def keys(self, lengths=None):
-        return keys_for_triangle(Triangle(self.ABC), lengths)
+        return keys_for_triangle(self.triangle, lengths)
 
     @property
     def description(self):
-        return _comment('△ %s %s %s is equilateral', *self.ABC)
+        return _comment('%s is equilateral', self.triangle)
 
     def __eq__(self, other):
         return isinstance(other, EquilateralTriangleProperty) and self.__point_set == other.__point_set
@@ -475,18 +475,18 @@ class SimilarTrianglesProperty(Property):
     """
     Two triangles are similar
     """
-    def __init__(self, ABC, DEF):
-        self.ABC = tuple(ABC)
-        self.DEF = tuple(DEF)
-        pairs = [frozenset([(ABC[i], ABC[j], ABC[k]), (DEF[i], DEF[j], DEF[k])]) for i, j, k in itertools.permutations(range(0, 3), 3)]
+    def __init__(self, points0, points1):
+        self.triangle0 = points0 if isinstance(points0, Triangle) else Triangle(points0)
+        self.triangle1 = points1 if isinstance(points1, Triangle) else Triangle(points1)
+        pairs = [frozenset([self.triangle0.permutation(indexes), self.triangle1.permutation(indexes)]) for indexes in itertools.permutations(range(0, 3), 3)]
         self.__triangle_set = frozenset(pairs)
 
     def keys(self, lengths=None):
-        return keys_for_triangle(Triangle(self.ABC), lengths) + keys_for_triangle(Triangle(self.DEF), lengths)
+        return keys_for_triangle(self.triangle0, lengths) + keys_for_triangle(self.triangle1, lengths)
 
     @property
     def description(self):
-        return _comment('△ %s %s %s ~ △ %s %s %s', *self.ABC, *self.DEF)
+        return _comment('%s ~ %s', self.triangle0, self.triangle1)
 
     def __eq__(self, other):
         return isinstance(other, SimilarTrianglesProperty) and \
@@ -499,18 +499,18 @@ class CongruentTrianglesProperty(Property):
     """
     Two triangles are congruent
     """
-    def __init__(self, ABC, DEF):
-        self.ABC = tuple(ABC)
-        self.DEF = tuple(DEF)
-        pairs = [frozenset([(ABC[i], ABC[j], ABC[k]), (DEF[i], DEF[j], DEF[k])]) for i, j, k in itertools.permutations(range(0, 3), 3)]
+    def __init__(self, points0, points1):
+        self.triangle0 = points0 if isinstance(points0, Triangle) else Triangle(points0)
+        self.triangle1 = points1 if isinstance(points1, Triangle) else Triangle(points1)
+        pairs = [frozenset([self.triangle0.permutation(indexes), self.triangle1.permutation(indexes)]) for indexes in itertools.permutations(range(0, 3), 3)]
         self.__triangle_set = frozenset(pairs)
 
     def keys(self, lengths=None):
-        return keys_for_triangle(Triangle(self.ABC), lengths) + keys_for_triangle(Triangle(self.DEF), lengths)
+        return keys_for_triangle(self.triangle0, lengths) + keys_for_triangle(self.triangle1, lengths)
 
     @property
     def description(self):
-        return _comment('△ %s %s %s = △ %s %s %s', *self.ABC, *self.DEF)
+        return _comment('%s = %s', self.triangle0, self.triangle1)
 
     def __eq__(self, other):
         return isinstance(other, CongruentTrianglesProperty) and \
