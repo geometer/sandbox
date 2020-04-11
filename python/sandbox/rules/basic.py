@@ -6,6 +6,21 @@ from sandbox.util import LazyComment, divide
 
 from .abstract import Rule, SingleSourceRule
 
+class ProportionalLengthsToLengthsRatioRule(SingleSourceRule):
+    property_type = LengthRatioProperty
+
+    def apply(self, prop):
+        ne = self.context.not_equal_property(*prop.segment0.points)
+        if ne is None:
+            ne = self.context.not_equal_property(*prop.segment1.points)
+        if ne is None or prop.reason.obsolete and ne.reason.obsolete:
+            return
+        yield (
+            RatioOfNonZeroLengthsProperty(prop.segment0, prop.segment1, prop.value),
+            prop.reason.comments,
+            [prop, ne]
+        )
+
 class DifferentAnglesToDifferentPointsRule(Rule):
     """
     For three vectors, v0, v1, v2, if it is known that

@@ -25,6 +25,7 @@ class Explainer:
         self.__rules = [
             DifferentAnglesToDifferentPointsRule(self.context),
             LengthRatioTransitivityRule(self.context),
+            ProportionalLengthsToLengthsRatioRule(self.context),
             SumAndRatioOfTwoAnglesRule(self.context),
             NonCollinearPointsAreDifferentRule(self.context),
             CoincidenceTransitivityRule(self.context),
@@ -1214,18 +1215,6 @@ class Explainer:
                         'Rotated', #TODO: better comment
                         [ca, co]
                     )
-
-            for lr in self.context.length_ratio_properties(allow_zeroes=True):
-                ne = self.context.not_equal_property(*lr.segment0.points)
-                if ne is None:
-                    ne = self.context.not_equal_property(*lr.segment1.points)
-                if ne is None or lr.reason.obsolete and ne.reason.obsolete:
-                    continue
-                yield (
-                    RatioOfNonZeroLengthsProperty(lr.segment0, lr.segment1, lr.value),
-                    lr.reason.comments,
-                    [lr, ne]
-                )
 
         for prop, comment in enumerate_predefined_properties(self.scene):
             self.__reason(prop, comment, [])
