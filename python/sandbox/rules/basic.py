@@ -54,7 +54,7 @@ class DifferentAnglesToDifferentPointsRule(Rule):
 
 class LengthRatioSimplificationRule(Rule):
     def sources(self):
-        return self.context.length_ratio_properties()
+        return self.context.length_ratio_properties(allow_zeroes=False)
 
     def apply(self, prop):
         if not prop.reason.obsolete:
@@ -408,11 +408,16 @@ class PerpendicularTransitivityRule(Rule):
         pt1 = next(pt for pt in seg1.points if pt != common_point)
         yield (
             PerpendicularSegmentsProperty(common, pt0.segment(pt1)),
-            LazyComment('%s and %s are perpendicular to non-zero %s', seg0, seg1, common),
+            LazyComment('%s and %s are perpendiculars to non-zero %s', seg0, seg1, common),
+            [perp0, perp1, ne]
+        )
+        yield (
+            PointsCollinearityProperty(common_point, pt0, pt1, True),
+            LazyComment('%s and %s are perpendiculars to non-zero %s', seg0, seg1, common),
             [perp0, perp1, ne]
         )
 
-class SinglePerpendicularBisectorRule(SingleSourceRule):
+class PerpendicularToEquidistantRule(SingleSourceRule):
     property_type = PerpendicularSegmentsProperty
 
     def apply(self, prop):
@@ -420,31 +425,64 @@ class SinglePerpendicularBisectorRule(SingleSourceRule):
             return
         segments = (prop.segment0, prop.segment1)
         for seg0, seg1 in (segments, reversed(segments)):
-            for i, j in ((0, 1), (1, 0)):
-                ppb = self.context[PointOnPerpendicularBisectorProperty(seg0.points[i], seg1)]
-                if ppb:
-                    if not (prop.reason.obsolete and ppb.reason.obsolete):
-                        yield (
-                            PointOnPerpendicularBisectorProperty(seg0.points[j], seg1),
-                            LazyComment('%s lies on the same perpendicular to %s as %s', seg0.points[j], seg1, seg0.points[i]),
-                            [prop, ppb]
-                        )
-                    break
-
-class PointOnPerpendicularBisectorIsEquidistantRule(SingleSourceRule):
-    """
-    A point on the perpendicular bisector of a segment,
-    is equidistant from the endpoints of the segment endpoints
-    """
-    property_type = PointOnPerpendicularBisectorProperty
-
-    def apply(self, prop):
-        if not prop.reason.obsolete:
-            yield (
-                LengthRatioProperty(prop.point.segment(prop.segment.points[0]), prop.point.segment(prop.segment.points[1]), 1),
-                LazyComment('A point on the perpendicular bisector to %s is equidistant from %s and %s', prop.segment, *prop.segment.points),
-                [prop]
+            segments = (
+                [seg0.points[0].segment(pt) for pt in seg1.points],
+                [seg0.points[1].segment(pt) for pt in seg1.points]
             )
+            cs = self.context.congruent_segments_property(*segments[0], True)
+            if cs:
+                if prop.reason.obsolete and cs.reason.obsolete:
+                    continue
+                new_prop = LengthRatioProperty(*segments[1], 1)
+            else:
+                cs = self.context.congruent_segments_property(*segments[1], True)
+                if cs is None or prop.reason.obsolete and cs.reason.obsolete:
+                    continue
+                new_prop = LengthRatioProperty(*segments[0], 1)
+            yield (
+                new_prop,
+                LazyComment('%s and %s lie on the same perpendicular to %s', *seg0.points, seg1),
+                [prop, cs]
+            )
+
+class EquidistantToPerpendicularRule(Rule):
+    def sources(self):
+        return itertools.combinations([p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1], 2)
+
+    def apply(self, src):
+        cs0, cs1 = src
+
+        common0 = next((pt for pt in cs0.segment0.points if pt in cs0.segment1.points), None)
+        if common0 is None:
+            return
+        common1 = next((pt for pt in cs1.segment0.points if pt in cs1.segment1.points), None)
+        if common1 is None:
+            return
+        pts0 = [pt for pt in cs0.segment0.points + cs0.segment1.points if pt != common0]
+        pts1 = [pt for pt in cs1.segment0.points + cs1.segment1.points if pt != common1]
+        if set(pts0) != set(pts1):
+            return
+        segment0 = common0.segment(common1)
+        segment1 = pts0[0].segment(pts0[1])
+        if not (cs0.reason.obsolete and cs1.reason.obsolete):
+            yield (
+                PerpendicularSegmentsProperty(segment0, segment1),
+                LazyComment('%s and %s are both equidistant from %s and %s', common0, common1, *pts0),
+                [cs0, cs1]
+            )
+        ne0 = self.context.not_equal_property(common0, common1)
+        if ne0 is None:
+            return
+        ne1 = self.context.not_equal_property(*pts0)
+        if ne1 is None:
+            return
+        if cs0.reason.obsolete and cs1.reason.obsolete and ne0.reason.obsolete and ne1.reason.obsolete:
+            return
+        yield (
+            SameOrOppositeSideProperty(segment0, *pts0, False),
+            LazyComment('Perpendicular bisector %s separates endpoints of the segment %s', segment0, segment1),
+            [cs0, cs1, ne0, ne1]
+        )
 
 class SeparatedPointsRule(SingleSourceRule):
     """

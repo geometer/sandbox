@@ -392,25 +392,6 @@ class LengthRatioProperty(Property):
     def __hash__(self):
         return hash(LengthRatioProperty) + hash(self.segment_set)
 
-class PointOnPerpendicularBisectorProperty(Property):
-    """
-    Point lies on perpendicular bisector of a segment
-    """
-    def __init__(self, point, segment):
-        self.point = point
-        self.segment = segment
-        self.unique_key = (point, segment)
-
-    @property
-    def description(self):
-        return LazyComment('%s lies on the perpendicular bisector of %s', self.point, self.segment)
-
-    def __eq__(self, other):
-        return isinstance(other, PointOnPerpendicularBisectorProperty) and self.unique_key == other.unique_key
-
-    def __hash__(self):
-        return hash(PointOnPerpendicularBisectorProperty) + hash(self.unique_key)
-
 class EqualLengthProductsProperty(Property):
     """
     Two segment lengths products are equal

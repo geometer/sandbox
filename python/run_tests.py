@@ -6,6 +6,7 @@ from tests.scene.midpoint import *
 
 from tests.explainer.altitudes import *
 from tests.explainer.inside_triangle import *
+from tests.explainer.perpendicular_bisector import *
 from tests.explainer.rog4578 import *
 from tests.explainer.rog4594 import *
 from tests.explainer.napoleon import *

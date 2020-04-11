@@ -551,7 +551,6 @@ class CoreScene:
             bisector = middle.perpendicular_line(line, **kwargs)
             comment=LazyComment('%s is a perpendicular bisector of %s', bisector, self)
             bisector.perpendicular_constraint(line, comment=comment)
-            self.scene.constraint(Constraint.Kind.perpendicular_bisector, bisector, self, comment=comment)
             return bisector
 
         def ratio_constraint(self, segment, coef, **kwargs):
@@ -684,7 +683,6 @@ class CoreScene:
         self.__objects = []
         self.validation_constraints = []
         self.adjustment_constraints = []
-        self.explanation_constraints = []
         self.__frozen = False
         self.__angles = {} # {vector, vector} => angle
         self.__segments = {} # {point, point} => angle
@@ -694,10 +692,8 @@ class CoreScene:
         if not self.__frozen:
             if kind.stage == Stage.validation:
                 self.validation_constraints.append(cns)
-            elif kind.stage == Stage.adjustment:
-                self.adjustment_constraints.append(cns)
             else:
-                self.explanation_constraints.append(cns)
+                self.adjustment_constraints.append(cns)
         return cns
 
     def equilateral_constraint(self, triangle, **kwargs):
@@ -742,10 +738,8 @@ class CoreScene:
     def constraints(self, kind):
         if kind.stage == Stage.validation:
             return [cnstr for cnstr in self.validation_constraints if cnstr.kind == kind]
-        elif kind.stage == Stage.adjustment:
-            return [cnstr for cnstr in self.adjustment_constraints if cnstr.kind == kind]
         else:
-            return [cnstr for cnstr in self.explanation_constraints if cnstr.kind == kind]
+            return [cnstr for cnstr in self.adjustment_constraints if cnstr.kind == kind]
 
     def assert_type(self, obj, *args):
         assert isinstance(obj, args), 'Unexpected type %s' % type(obj)
@@ -804,15 +798,11 @@ class CoreScene:
         if self.adjustment_constraints:
             print('\nAdjustment constraints:')
             print('\n'.join(['\t' + str(cnstr) for cnstr in self.adjustment_constraints]))
-        if self.explanation_constraints:
-            print('\nExplanation constraints:')
-            print('\n'.join(['\t' + str(cnstr) for cnstr in self.explanation_constraints]))
         print('')
 
 class Stage(Enum):
     validation        = auto()
     adjustment        = auto()
-    explanation       = auto()
 
 class Constraint:
     @unique
@@ -833,7 +823,6 @@ class Constraint:
         parallel_vectors          = ('parallel_vectors', Stage.adjustment, CoreScene.Vector, CoreScene.Vector)
         angles_ratio              = ('angles_ratio', Stage.adjustment, CoreScene.Angle, CoreScene.Angle, int)
         perpendicular             = ('perpendicular', Stage.adjustment, CoreScene.Line, CoreScene.Line)
-        perpendicular_bisector    = ('perpendicular_bisector', Stage.explanation, CoreScene.Line, CoreScene.Segment)
         acute_angle               = ('acute_angle', Stage.validation, CoreScene.Angle)
         obtuse_angle              = ('obtuse_angle', Stage.validation, CoreScene.Angle)
 

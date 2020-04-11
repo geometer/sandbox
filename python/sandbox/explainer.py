@@ -37,9 +37,9 @@ class Explainer:
             PerpendicularSegmentsRule(self.context),
             Degree90ToPerpendicularSegmentsRule(self.context),
             PerpendicularTransitivityRule(self.context),
-            SinglePerpendicularBisectorRule(self.context),
+            PerpendicularToEquidistantRule(self.context),
+            EquidistantToPerpendicularRule(self.context),
             SeparatedPointsRule(self.context),
-            PointOnPerpendicularBisectorIsEquidistantRule(self.context),
             SameSidePointInsideSegmentRule(self.context),
             TwoPerpendicularsRule(self.context),
             CommonPerpendicularRule(self.context),
@@ -1092,21 +1092,6 @@ class Explainer:
             def other_point(segment, point):
                 return segment.points[0] if point == segment.points[1] else segment.points[1]
 
-            for cs in congruent_segments:
-                common = common_point(cs.segment0, cs.segment1)
-                if common is None:
-                    continue
-                pt0 = next(pt for pt in cs.segment0.points if pt != common)
-                pt1 = next(pt for pt in cs.segment1.points if pt != common)
-                ne = self.context.not_equal_property(pt0, pt1)
-                if ne is None or cs.reason.obsolete and ne.reason.obsolete:
-                    continue
-                yield (
-                    PointOnPerpendicularBisectorProperty(common, pt0.segment(pt1)),
-                    LazyComment('%s is equidistant from %s and %s', common, pt0, pt1),
-                    [cs, ne]
-                )
-
             for cs0, cs1 in itertools.combinations(congruent_segments, 2):
                 if cs0.reason.obsolete and cs1.reason.obsolete:
                     continue
@@ -1246,36 +1231,6 @@ class Explainer:
                         AnglesRatioProperty(vertex.angle(pts0[0], pts1[1]), vertex.angle(pts0[1], pts1[0]), 1),
                         'Rotated', #TODO: better comment
                         [ca, co]
-                    )
-
-            pb_dict = {}
-            for ppb in self.context.list(PointOnPerpendicularBisectorProperty):
-                lst = pb_dict.get(ppb.segment)
-                if lst is None:
-                    lst = [ppb]
-                    pb_dict[ppb.segment] = lst
-                else:
-                    lst.append(ppb)
-
-            for segment, lst in pb_dict.items():
-                for ppb0, ppb1 in itertools.combinations(lst, 2):
-                    ne = self.context.not_equal_property(ppb0.point, ppb1.point)
-                    if ne is None or ppb0.reason.obsolete and ppb1.reason.obsolete and ne.reason.obsolete:
-                        continue
-                    line = ppb0.point.segment(ppb1.point)
-                    yield (
-                        SameOrOppositeSideProperty(line, *segment.points, False),
-                        LazyComment('Line %s is the perpendicular bisector of segment %s', line, segment),
-                        [ppb0, ppb1, ne]
-                    )
-
-                for triple in itertools.combinations(lst, 3):
-                    if all(ppb.reason.obsolete for ppb in triple):
-                        continue
-                    yield (
-                        PointsCollinearityProperty(*[ppb.point for ppb in triple], True),
-                        LazyComment('Three points on the perpendicular bisector of %s', segment),
-                        list(triple)
                     )
 
             for lr in self.context.list(LengthRatioProperty):

@@ -48,19 +48,6 @@ def enumerate_predefined_properties(scene):
                     cnstr.comments
                 )
 
-    for cnstr in scene.constraints(Constraint.Kind.perpendicular_bisector):
-        bisector = cnstr.params[0]
-        segment = cnstr.params[1]
-        if 'invisible' in [p.layer for p in segment.points]:
-            continue
-        for pt in bisector.all_points:
-            if pt.layer == 'invisible':
-                continue
-            yield (
-                PointOnPerpendicularBisectorProperty(pt, segment),
-                cnstr.comments
-            )
-
     for cnstr in scene.constraints(Constraint.Kind.acute_angle):
         angle = cnstr.params[0]
         if 'invisible' in [p.layer for p in angle.points]:
