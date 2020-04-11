@@ -11,7 +11,7 @@ from .rules.basic import *
 from .rules.trigonometric import *
 from .scene import Scene
 from .stats import Stats
-from .util import _comment, divide, side_of, angle_of
+from .util import _comment, divide, Triangle
 
 class Explainer:
     def __init__(self, scene, options=()):
@@ -189,11 +189,11 @@ class Explainer:
                 centre = next((pt for pt in op0.segment.points if pt in op1.segment.points), None)
                 if centre is None:
                     continue
-                triangle = [pt for pt in set0 if pt != centre]
-                comment = _comment('Line %s separates %s and %s, line %s separates %s and %s => the intersection %s lies inside △ %s %s %s', op0.segment, *op0.points, op1.segment, *op1.points, centre, *triangle)
+                triangle = Triangle([pt for pt in set0 if pt != centre])
+                comment = _comment('Line %s separates %s and %s, line %s separates %s and %s => the intersection %s lies inside △ %s %s %s', op0.segment, *op0.points, op1.segment, *op1.points, centre, *triangle.points)
                 for i in range(0, 3):
                     yield (
-                        PointInsideAngleProperty(centre, angle_of(triangle, i)),
+                        PointInsideAngleProperty(centre, triangle.angle_for_index(i)),
                         comment,
                         [op0, op1]
                     )
@@ -779,35 +779,38 @@ class Explainer:
                 )
 
             for equ in self.context.list(EquilateralTriangleProperty):
+                triangle = Triangle(equ.ABC)
                 ne = None
                 for i in range(0, 3):
-                    ne = self.context.not_equal_property(*side_of(equ.ABC, i).points)
+                    ne = self.context.not_equal_property(*triangle.side_for_index(i).points)
                     if ne:
                         break
                 if ne is not None and not equ.reason.obsolete and not ne.reason.obsolete:
                     for i in range(0, 3):
                         yield (
-                            AngleValueProperty(angle_of(equ.ABC, i), 60),
+                            AngleValueProperty(triangle.angle_for_index(i), 60),
                             _comment('Angle of non-degenerate equilateral △ %s %s %s', *equ.ABC),
                             [equ]
                         )
                 if not equ.reason.obsolete:
                     for i, j in itertools.combinations(range(0, 3), 2):
                         yield (
-                            LengthRatioProperty(side_of(equ.ABC, i), side_of(equ.ABC, j), 1),
+                            LengthRatioProperty(triangle.side_for_index(i), triangle.side_for_index(j), 1),
                             _comment('Sides of equilateral △ %s %s %s', *equ.ABC),
                             [equ]
                         )
 
             for ct in self.context.list(CongruentTrianglesProperty):
-                ncl = self.context.not_collinear_property(*ct.ABC)
+                triangle0 = Triangle(ct.ABC)
+                triangle1 = Triangle(ct.DEF)
+                ncl = self.context.not_collinear_property(*triangle0.points)
                 if ncl is None:
-                    ncl = self.context.not_collinear_property(*ct.DEF)
+                    ncl = self.context.not_collinear_property(*triangle1.points)
                 if ncl is None or ct.reason.obsolete and ncl.reason.obsolete:
                     continue
                 for i in range(0, 3):
-                    angle0 = angle_of(ct.ABC, i)
-                    angle1 = angle_of(ct.DEF, i)
+                    angle0 = triangle0.angle_for_index(i)
+                    angle1 = triangle1.angle_for_index(i)
                     if angle0 != angle1:
                         yield (
                             AnglesRatioProperty(angle0, angle1, 1),
@@ -816,9 +819,11 @@ class Explainer:
                         )
 
             for st in self.context.list(SimilarTrianglesProperty):
+                triangle0 = Triangle(st.ABC)
+                triangle1 = Triangle(st.DEF)
                 st_is_too_old = st.reason.obsolete
                 for i in range(0, 3):
-                    cs = self.context.congruent_segments_property(side_of(st.ABC, i), side_of(st.DEF, i), True)
+                    cs = self.context.congruent_segments_property(triangle0.side_for_index(i), triangle1.side_for_index(i), True)
                     if cs is None:
                         continue
                     if st_is_too_old and cs.reason.obsolete:
@@ -840,27 +845,31 @@ class Explainer:
                 )
 
             for st in self.context.list(SimilarTrianglesProperty):
+                triangle0 = Triangle(st.ABC)
+                triangle1 = Triangle(st.DEF)
                 st_is_too_old = st.reason.obsolete
                 for i in range(0, 3):
-                    lr, ratio = self.context.length_ratio_property_and_value(side_of(st.ABC, i), side_of(st.DEF, i), True)
+                    lr, ratio = self.context.length_ratio_property_and_value(triangle0.side_for_index(i), triangle1.side_for_index(i), True)
                     if lr is None:
                         continue
                     if ratio == 1 or st_is_too_old and lr.reason.obsolete:
                         break
                     for j in [j for j in range(0, 3) if j != i]:
                         yield (
-                            LengthRatioProperty(side_of(st.ABC, j), side_of(st.DEF, j), ratio),
+                            LengthRatioProperty(triangle0.side_for_index(j), triangle1.side_for_index(j), ratio),
                             'Ratios of sides in similar triangles',
                             [st, lr]
                         )
                     break
 
             for ct in self.context.list(CongruentTrianglesProperty):
+                triangle0 = Triangle(ct.ABC)
+                triangle1 = Triangle(ct.DEF)
                 if ct.reason.obsolete:
                     continue
                 for i in range(0, 3):
-                    segment0 = side_of(ct.ABC, i)
-                    segment1 = side_of(ct.DEF, i)
+                    segment0 = triangle0.side_for_index(i)
+                    segment1 = triangle1.side_for_index(i)
                     if segment0 != segment1:
                         yield (
                             LengthRatioProperty(segment0, segment1, 1),

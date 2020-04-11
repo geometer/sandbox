@@ -1,7 +1,7 @@
 import itertools
 
 from sandbox.property import *
-from sandbox.util import _comment, divide, side_of
+from sandbox.util import _comment, divide, Triangle
 
 from .abstract import Rule, SingleSourceRule
 
@@ -143,7 +143,8 @@ class TwoPointsBelongsToTwoLinesRule(SingleSourceRule):
         return prop.collinear
 
     def apply(self, cl0):
-        for side, pt0 in [(side_of(cl0.points, i), cl0.points[i]) for i in range(0, 3)]:
+        triangle = Triangle(cl0.points)
+        for side, pt0 in [(triangle.side_for_index(i), triangle.points[i]) for i in range(0, 3)]:
             third_points = [pt0]
             for cl1 in [p for p in self.context.list(PointsCollinearityProperty, [side]) if p.collinear and p != cl0]:
                 pt1 = next(pt for pt in cl1.points if pt not in side.points)
@@ -513,11 +514,13 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
     property_type = SimilarTrianglesProperty
 
     def apply(self, prop):
+        triangle0 = Triangle(prop.ABC)
+        triangle1 = Triangle(prop.DEF)
         for i, j in itertools.combinations(range(0, 3), 2):
             yield (
                 EqualLengthProductsProperty(
-                    side_of(prop.ABC, i), side_of(prop.ABC, j),
-                    side_of(prop.DEF, i), side_of(prop.DEF, j)
+                    triangle0.side_for_index(i), triangle0.side_for_index(j),
+                    triangle1.side_for_index(i), triangle1.side_for_index(j)
                 ),
                 'Relation of sides in similar triangles',
                 [prop]
@@ -634,15 +637,17 @@ class CorrespondingAnglesInSimilarTriangles(SingleSourceRule):
     property_type = SimilarTrianglesProperty
 
     def apply(self, prop):
+        triangle0 = Triangle(prop.ABC)
+        triangle1 = Triangle(prop.DEF)
         ne0 = []
         ne1 = []
         for i in range(0, 3):
-            ne0.append(self.context.not_equal_property(*side_of(prop.ABC, i).points))
-            ne1.append(self.context.not_equal_property(*side_of(prop.DEF, i).points))
+            ne0.append(self.context.not_equal_property(*triangle0.side_for_index(i).points))
+            ne1.append(self.context.not_equal_property(*triangle1.side_for_index(i).points))
 
         for i in range(0, 3):
-            angle0 = angle_of(prop.ABC, i)
-            angle1 = angle_of(prop.DEF, i)
+            angle0 = triangle0.angle_for_index(i)
+            angle1 = triangle1.angle_for_index(i)
             if angle0 == angle1:
                 continue
             ne = []

@@ -6,7 +6,7 @@ from . import Scene, iterative_placement
 from .placement import Placement
 from .property import *
 from .stats import Stats
-from .util import _comment, divide, side_of
+from .util import _comment, divide, Triangle
 
 ERROR = np.float128(5e-6)
 
@@ -19,7 +19,7 @@ class AngleWrapper:
     def __str__(self):
         return str(self.angle)
 
-class Triangle:
+class TriangleWrapper:
     def __init__(self, pts, side0, side1, side2):
         self.pts = list(pts)
         self.side0 = side0
@@ -28,15 +28,15 @@ class Triangle:
 
     def variation(self, index):
         if index == 1:
-            return Triangle((self.pts[0], self.pts[2], self.pts[1]), self.side0, self.side2, self.side1)
+            return TriangleWrapper((self.pts[0], self.pts[2], self.pts[1]), self.side0, self.side2, self.side1)
         if index == 2:
-            return Triangle((self.pts[1], self.pts[0], self.pts[2]), self.side1, self.side0, self.side2)
+            return TriangleWrapper((self.pts[1], self.pts[0], self.pts[2]), self.side1, self.side0, self.side2)
         if index == 3:
-            return Triangle((self.pts[1], self.pts[2], self.pts[0]), self.side1, self.side2, self.side0)
+            return TriangleWrapper((self.pts[1], self.pts[2], self.pts[0]), self.side1, self.side2, self.side0)
         if index == 4:
-            return Triangle((self.pts[2], self.pts[0], self.pts[1]), self.side2, self.side0, self.side1)
+            return TriangleWrapper((self.pts[2], self.pts[0], self.pts[1]), self.side2, self.side0, self.side1)
         if index == 5:
-            return Triangle((self.pts[2], self.pts[1], self.pts[0]), self.side2, self.side1, self.side0)
+            return TriangleWrapper((self.pts[2], self.pts[1], self.pts[0]), self.side2, self.side1, self.side0)
         return self
 
     def __eq__(self, other) -> bool:
@@ -187,7 +187,7 @@ class Hunter:
                         side0 = loc1.distance_to(loc2)
                         side1 = loc2.distance_to(loc0)
                         side2 = loc0.distance_to(loc1)
-                        yield Triangle((pt0, pt1, pt2), side0, side1, side2)
+                        yield TriangleWrapper((pt0, pt1, pt2), side0, side1, side2)
 
     def __lines(self):
         lines = []
@@ -323,13 +323,13 @@ class Hunter:
         for trn in equilaterals:
             self.__add(EquilateralTriangleProperty(trn.pts))
             for i in range(0, 3):
-                self.__add(IsoscelesTriangleProperty(trn.pts[i], side_of(trn.pts, i)))
+                self.__add(IsoscelesTriangleProperty(trn.pts[i], Triangle(trn.pts).side_for_index(i)))
 
         triangles = [trn for trn in triangles if not trn.equilateral()]
 
         isosceles = list(filter(None, [trn.isosceles() for trn in triangles]))
         for trn in isosceles:
-            self.__add(IsoscelesTriangleProperty(trn.pts[0], side_of(trn.pts, 0)))
+            self.__add(IsoscelesTriangleProperty(trn.pts[0], Triangle(trn.pts).side_for_index(0)))
 
         families = []
         for trn in triangles:

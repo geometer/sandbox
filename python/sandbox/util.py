@@ -1,10 +1,22 @@
 import sympy as sp
 
-def side_of(triangle, index):
-    return triangle[(index + 1) % 3].segment(triangle[(index + 2) % 3])
+class Triangle:
+    def __init__(self, points):
+        self.points = tuple(points)
 
-def angle_of(triangle, index):
-    return triangle[index].angle(triangle[(index + 1) % 3], triangle[(index + 2) % 3])
+    def side_for_index(self, index):
+        return self.points[(index + 1) % 3].segment(self.points[(index + 2) % 3])
+
+    def angle_for_index(self, index):
+        return self.points[index].angle(self.points[(index + 1) % 3], self.points[(index + 2) % 3])
+
+def keys_for_triangle(triangle, lengths):
+    collection = []
+    if lengths is None or 3 in lengths:
+        collection += [triangle.angle_for_index(i) for i in range(0, 3)]
+    if lengths is None or 2 in lengths:
+        collection += [triangle.side_for_index(i) for i in range(0, 3)]
+    return collection
 
 def divide(num0, num1):
     if isinstance(num0, int) and isinstance(num1, int):

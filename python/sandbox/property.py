@@ -1,14 +1,6 @@
 import itertools
 
-from .util import _comment, divide, good_angles, normalize_number, angle_of, side_of
-
-def keys_for_triangle(triangle, lengths):
-    keys = []
-    if lengths is None or 3 in lengths:
-        keys += [angle_of(triangle, i) for i in range(0, 3)]
-    if lengths is None or 2 in lengths:
-        keys += [side_of(triangle, i) for i in range(0, 3)]
-    return keys
+from .util import _comment, divide, good_angles, normalize_number, Triangle, keys_for_triangle
 
 class Property:
     def keys(self):
@@ -30,7 +22,7 @@ class PointsCollinearityProperty(Property):
         self.collinear = collinear
 
     def keys(self, lengths=None):
-        return keys_for_triangle(self.points, lengths)
+        return keys_for_triangle(Triangle(self.points), lengths)
 
     @property
     def description(self):
@@ -182,7 +174,7 @@ class EquilateralTriangleProperty(Property):
         self.__point_set = frozenset(self.ABC)
 
     def keys(self, lengths=None):
-        return keys_for_triangle(self.ABC, lengths)
+        return keys_for_triangle(Triangle(self.ABC), lengths)
 
     @property
     def description(self):
@@ -489,7 +481,7 @@ class SimilarTrianglesProperty(Property):
         self.__triangle_set = frozenset(pairs)
 
     def keys(self, lengths=None):
-        return keys_for_triangle(self.ABC, lengths) + keys_for_triangle(self.DEF, lengths)
+        return keys_for_triangle(Triangle(self.ABC), lengths) + keys_for_triangle(Triangle(self.DEF), lengths)
 
     @property
     def description(self):
@@ -513,7 +505,7 @@ class CongruentTrianglesProperty(Property):
         self.__triangle_set = frozenset(pairs)
 
     def keys(self, lengths=None):
-        return keys_for_triangle(self.ABC, lengths) + keys_for_triangle(self.DEF, lengths)
+        return keys_for_triangle(Triangle(self.ABC), lengths) + keys_for_triangle(Triangle(self.DEF), lengths)
 
     @property
     def description(self):
@@ -535,7 +527,7 @@ class IsoscelesTriangleProperty(Property):
         self.base = base
 
     def keys(self, lengths=None):
-        return keys_for_triangle([self.apex, *self.base.points], lengths)
+        return keys_for_triangle(Triangle([self.apex, *self.base.points]), lengths)
 
     @property
     def description(self):
