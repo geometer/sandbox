@@ -75,18 +75,18 @@ class CyclicOrderPropertySet:
         return fam.explanation(cycle0.reversed, cycle1.reversed)
 
 class AngleRatioPropertySet:
-    class Family:
-        def __init__(self):
-            self.angle_to_ratio = {}
-            self.premises_graph = nx.Graph()
-            self.degree = None
+    class CommentFromPath:
+        def __init__(self, path, multiplier, angle_to_ratio):
+            self.path = path
+            self.multiplier = multiplier
+            self.angle_to_ratio = dict(angle_to_ratio)
 
-        def explanation_from_path(self, path, multiplier):
+        def __str__(self):
             pattern = []
             params = []
-            for vertex in path:
+            for vertex in self.path:
                 if isinstance(vertex, CoreScene.Angle):
-                    coef = divide(multiplier, self.angle_to_ratio[vertex])
+                    coef = divide(self.multiplier, self.angle_to_ratio[vertex])
                     if coef == 1:
                         pattern.append('%s')
                         params.append(vertex)
@@ -96,10 +96,18 @@ class AngleRatioPropertySet:
                         params.append(vertex)
                 else:
                     pattern.append('%sº')
-                    params.append(multiplier * vertex)
-            comment = _comment(' = '.join(pattern), *params)
+                    params.append(self.multiplier * vertex)
+            return str(_comment(' = '.join(pattern), *params))
+
+    class Family:
+        def __init__(self):
+            self.angle_to_ratio = {}
+            self.premises_graph = nx.Graph()
+            self.degree = None
+
+        def explanation_from_path(self, path, multiplier):
             premises = [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
-            return (comment, premises)
+            return (AngleRatioPropertySet.CommentFromPath(path, multiplier, self.angle_to_ratio), premises)
 
         def value_property(self, angle):
             ratio = self.angle_to_ratio.get(angle)
