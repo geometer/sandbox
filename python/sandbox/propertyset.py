@@ -148,27 +148,6 @@ class AngleRatioPropertySet:
                 for angle0, angle1 in itertools.combinations(ar, 2):
                     yield (angle0, angle1)
 
-        def congruent_properties(self):
-            reverse_map = {}
-            for angle, ratio in self.angle_to_ratio.items():
-                rs = reverse_map.get(ratio)
-                if rs:
-                    rs.append(angle)
-                else:
-                    reverse_map[ratio] = [angle]
-            all_paths = dict(nx.algorithms.all_pairs_shortest_path(self.premises_graph))
-            for ar in reverse_map.values():
-                for angle0, angle1 in itertools.combinations(ar, 2):
-                    path = all_paths[angle0][angle1]
-                    if len(path) == 2:
-                        yield self.premises_graph[path[0]][path[1]]['prop']
-                    else:
-                        comment, premises = self.explanation_from_path(path, ratio)
-                        prop = AnglesRatioProperty(angle0, angle1, 1)
-                        prop.reason = Reason(-2, -2, comment, premises)
-                        prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-                        yield prop
-
         def same_triple_ratio_properties(self):
             angles_map = {}
             for item in self.angle_to_ratio.items():
@@ -268,11 +247,6 @@ class AngleRatioPropertySet:
     def congruent_angles(self):
         for fam in set(self.angle_to_family.values()):
             for prop in fam.congruent_angles():
-                yield prop
-
-    def congruent_properties(self):
-        for fam in set(self.angle_to_family.values()):
-            for prop in fam.congruent_properties():
                 yield prop
 
     def add(self, prop):
@@ -659,9 +633,6 @@ class PropertySet:
 
     def congruent_angles(self):
         return self.__angle_ratios.congruent_angles()
-
-    def congruent_angle_properties(self):
-        return self.__angle_ratios.congruent_properties()
 
     def length_ratio_properties(self, allow_zeroes):
         if allow_zeroes:
