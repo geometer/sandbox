@@ -48,6 +48,8 @@ class Explainer:
             LengthProductEqualityToRatioRule(self.context),
             SimilarTrianglesByTwoAnglesRule(self.context),
             SimilarTrianglesByAngleAndTwoSidesRule(self.context),
+            BaseAnglesOfIsoscelesRule(self.context),
+            LegsOfIsoscelesRule(self.context),
         ]
         if 'advanced' in options:
             self.__rules += [
@@ -708,28 +710,6 @@ class Explainer:
                     AngleValueProperty(other0.angle(other1), 0),
                     LazyComment('Both %s and %s are acute', aa0.angle, aa1.angle),
                     [aa0, aa1, col]
-                )
-
-            for iso in self.context.list(IsoscelesTriangleProperty):
-                if iso.reason.obsolete:
-                    continue
-                yield (
-                    AnglesRatioProperty(
-                        iso.base.points[0].angle(iso.apex, iso.base.points[1]),
-                        iso.base.points[1].angle(iso.apex, iso.base.points[0]),
-                        1
-                    ),
-                    LazyComment('Base angles of isosceles △ %s %s %s', iso.apex, *iso.base.points),
-                    [iso]
-                )
-                yield (
-                    LengthRatioProperty(
-                        iso.apex.segment(iso.base.points[0]),
-                        iso.apex.segment(iso.base.points[1]),
-                        1
-                    ),
-                    LazyComment('Legs of isosceles △ %s %s %s', iso.apex, *iso.base.points),
-                    [iso]
                 )
 
             for cs in [p for p in self.context.list(LengthRatioProperty) if p.value == 1]:

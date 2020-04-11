@@ -526,9 +526,10 @@ class IsoscelesTriangleProperty(Property):
     def __init__(self, apex, base):
         self.apex = apex
         self.base = base
+        self.triangle = Triangle((apex, *base.points))
 
     def keys(self, lengths=None):
-        return keys_for_triangle(Triangle([self.apex, *self.base.points]), lengths)
+        return keys_for_triangle(self.triangle, lengths)
 
     @property
     def description(self):

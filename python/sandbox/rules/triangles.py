@@ -124,3 +124,35 @@ class CorrespondingAnglesInSimilarTriangles(SingleSourceRule):
                 'Corresponding non-degenerate angles in similar triangles',
                 [prop] + ne
             )
+
+class BaseAnglesOfIsoscelesRule(SingleSourceRule):
+    property_type = IsoscelesTriangleProperty
+
+    def apply(self, prop):
+        if prop.reason.obsolete:
+            return
+        yield (
+            AnglesRatioProperty(
+                prop.base.points[0].angle(prop.apex, prop.base.points[1]),
+                prop.base.points[1].angle(prop.apex, prop.base.points[0]),
+                1
+            ),
+            LazyComment('Base angles of isosceles %s', prop.triangle),
+            [prop]
+        )
+
+class LegsOfIsoscelesRule(SingleSourceRule):
+    property_type = IsoscelesTriangleProperty
+
+    def apply(self, prop):
+        if prop.reason.obsolete:
+            return
+        yield (
+            LengthRatioProperty(
+                prop.apex.segment(prop.base.points[0]),
+                prop.apex.segment(prop.base.points[1]),
+                1
+            ),
+            LazyComment('Legs of isosceles %s', prop.triangle),
+            [prop]
+        )
