@@ -208,6 +208,7 @@ class AngleRatioPropertySet:
         self.angle_to_family = {}
         self.family_with_degree = None
         self.__value_cache = {} # angle => prop
+        self.__ratio_cache = {} # {angle, angle} => prop
 
     def value_property(self, angle):
         prop = self.__value_cache.get(angle)
@@ -224,6 +225,16 @@ class AngleRatioPropertySet:
         return fam.value_properties() if fam else []
 
     def ratio_property(self, angle0, angle1):
+        key = frozenset((angle0, angle1))
+        cached = self.__ratio_cache.get(key)
+        if cached:
+            return cached
+        prop = self.__ratio_property(angle0, angle1)
+        if prop:
+            self.__ratio_cache[key] = prop
+        return prop
+
+    def __ratio_property(self, angle0, angle1):
         fam = self.angle_to_family.get(angle0)
         if fam is None or angle1 not in fam.angle_to_ratio:
             return None
