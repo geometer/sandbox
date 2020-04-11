@@ -499,9 +499,6 @@ class Explainer:
                     [sos0, sos1]
                 )
 
-            congruent_angles = list(self.context.congruent_angle_properties())
-            congruent_angles_with_vertex = [ar for ar in congruent_angles if ar.angle0.vertex and ar.angle1.vertex]
-
             for ar in self.context.same_triple_angle_ratio_properties():
                 a0 = ar.angle0
                 a1 = ar.angle1
@@ -944,23 +941,26 @@ class Explainer:
                     return True
                 return self.context.congruent_segments_property(seg0, seg1, True)
 
-            for ca in congruent_angles_with_vertex:
-                ncl = self.context.not_collinear_property(*ca.angle0.points)
-                if ncl:
-                    if not ca.reason.obsolete or not ncl.reason.obsolete:
-                        yield (
-                            PointsCollinearityProperty(*ca.angle1.points, False),
-                            'Transitivity',
-                            [ca, ncl]
-                        )
+            for ang0, ang1 in self.context.congruent_angles():
+                if not ang0.vertex or not ang1.vertex:
+                    continue
+                ncl0 = self.context.not_collinear_property(*ang0.points)
+                ncl1 = self.context.not_collinear_property(*ang1.points)
+                if ncl0 and ncl1 or not ncl0 and not ncl1:
+                    continue
+                ca = self.context.angle_ratio_property(ang0, ang1)
+                if ncl0:
+                    yield (
+                        PointsCollinearityProperty(*ang1.points, False),
+                        'Transitivity',
+                        [ca, ncl0]
+                    )
                 else:
-                    ncl = self.context.not_collinear_property(*ca.angle1.points)
-                    if ncl and (not ca.reason.obsolete or not ncl.reason.obsolete):
-                        yield (
-                            PointsCollinearityProperty(*ca.angle0.points, False),
-                            'Transitivity',
-                            [ca, ncl]
-                        )
+                    yield (
+                        PointsCollinearityProperty(*ang0.points, False),
+                        'Transitivity',
+                        [ca, ncl1]
+                    )
 
             for zero in [p for p in self.context.list(AngleValueProperty) if p.angle.vertex is None and p.degree == 0]:
                 zero_is_too_old = zero.reason.obsolete
@@ -1027,10 +1027,10 @@ class Explainer:
                     comment, premises
                 )
 
-            for ca in congruent_angles_with_vertex:
-                ca_is_too_old = ca.reason.obsolete
-                ang0 = ca.angle0
-                ang1 = ca.angle1
+            for ang0, ang1 in self.context.congruent_angles():
+                if not ang0.vertex or not ang1.vertex:
+                    continue
+                ca = None
                 for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
                     rsn0 = congruent_segments(vec0.as_segment, ang1.vector0.as_segment)
                     if rsn0 is None:
@@ -1038,7 +1038,9 @@ class Explainer:
                     rsn1 = congruent_segments(vec1.as_segment, ang1.vector1.as_segment)
                     if rsn1 is None:
                         continue
-                    if ca_is_too_old and (rsn0 == True or rsn0.reason.obsolete) and (rsn1 == True or rsn1.reason.obsolete):
+                    if ca is None:
+                        ca = self.context.angle_ratio_property(ang0, ang1)
+                    if ca.reason.obsolete and (rsn0 == True or rsn0.reason.obsolete) and (rsn1 == True or rsn1.reason.obsolete):
                         continue
                     if rsn0 == True:
                         comment = LazyComment('Common side %s, pair of congruent sides, and angle between the sides', vec0)
@@ -1180,18 +1182,19 @@ class Explainer:
                     [sos]
                 )
 
-            for ca in congruent_angles_with_vertex:
-                vertex = ca.angle0.vertex
-                if vertex != ca.angle1.vertex:
+            for ang0, ang1 in self.context.congruent_angles():
+                vertex = ang0.vertex
+                if vertex is None or vertex != ang1.vertex:
                     continue
-                pts0 = ca.angle0.endpoints
-                pts1 = ca.angle1.endpoints
+                pts0 = ang0.endpoints
+                pts1 = ang1.endpoints
                 if next((p for p in pts0 if p in pts1), None) is not None:
                     continue
                 cycle0 = Cycle(vertex, *pts0)
                 cycle1 = Cycle(vertex, *pts1)
                 co = self.context.same_cyclic_order_property(cycle0, cycle1)
                 if co:
+                    ca = self.context.angle_ratio_property(ang0, ang1)
                     if ca.reason.obsolete and co.reason.obsolete:
                         continue
                     yield (
@@ -1201,7 +1204,10 @@ class Explainer:
                     )
                 else:
                     co = self.context.same_cyclic_order_property(cycle0, cycle1.reversed)
-                    if co is None or ca.reason.obsolete and co.reason.obsolete:
+                    if co is None:
+                        continue
+                    ca = self.context.angle_ratio_property(ang0, ang1)
+                    if ca.reason.obsolete and co.reason.obsolete:
                         continue
                     yield (
                         AnglesRatioProperty(vertex.angle(pts0[0], pts1[1]), vertex.angle(pts0[1], pts1[0]), 1),
