@@ -24,7 +24,6 @@ class Explainer:
         self.__iteration_step_count = -1
         self.__rules = [
             DifferentAnglesToDifferentPointsRule(self.context),
-            LengthRatioSimplificationRule(self.context),
             LengthRatioTransitivityRule(self.context),
             SumAndRatioOfTwoAnglesRule(self.context),
             NonCollinearPointsAreDifferentRule(self.context),
@@ -712,7 +711,7 @@ class Explainer:
                     [aa0, aa1, col]
                 )
 
-            for cs in [p for p in self.context.list(LengthRatioProperty) if p.value == 1]:
+            for cs in [p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1]:
                 if cs.reason.obsolete:
                     continue
                 common = next((p for p in cs.segment0.points if p in cs.segment1.points), None)
@@ -728,7 +727,7 @@ class Explainer:
                         [cs, cs2]
                     )
 
-            for cs in [p for p in self.context.list(LengthRatioProperty) if p.value == 1]:
+            for cs in [p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1]:
                 if cs.segment1.points[0] in cs.segment0.points:
                     apex = cs.segment1.points[0]
                     base0 = cs.segment1.points[1]
@@ -1080,7 +1079,7 @@ class Explainer:
                         [rsn0, rsn1, ca]
                     )
 
-            congruent_segments = [p for p in self.context.list(LengthRatioProperty) if p.value == 1]
+            congruent_segments = [p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1]
             def common_point(segment0, segment1):
                 if segment0.points[0] in segment1.points:
                     if segment0.points[1] in segment1.points:
@@ -1122,7 +1121,7 @@ class Explainer:
                                 [cs0, cs1, cs2]
                             )
 
-            for ps0, ps1 in itertools.combinations(self.context.list(LengthRatioProperty), 2):
+            for ps0, ps1 in itertools.combinations(self.context.length_ratio_properties(allow_zeroes=True), 2):
                 if ps0.value == 1 or ps0.value != ps1.value:
                     continue
                 ps_are_too_old = ps0.reason.obsolete and ps1.reason.obsolete
@@ -1233,7 +1232,7 @@ class Explainer:
                         [ca, co]
                     )
 
-            for lr in self.context.list(LengthRatioProperty):
+            for lr in self.context.length_ratio_properties(allow_zeroes=True):
                 ne = self.context.not_equal_property(*lr.segment0.points)
                 if ne is None:
                     ne = self.context.not_equal_property(*lr.segment1.points)

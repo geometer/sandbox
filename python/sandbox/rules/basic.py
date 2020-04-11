@@ -52,18 +52,6 @@ class DifferentAnglesToDifferentPointsRule(Rule):
 
         yield (prop, LazyComment('Otherwise, %s = %s', ang0, ang1), [av0, av1])
 
-class LengthRatioSimplificationRule(Rule):
-    def sources(self):
-        return self.context.length_ratio_properties(allow_zeroes=False)
-
-    def apply(self, prop):
-        if not prop.reason.obsolete:
-            yield (
-                LengthRatioProperty(prop.segment0, prop.segment1, prop.value),
-                prop.reason.comments,
-                prop.reason.premises
-            )
-
 class LengthRatioTransitivityRule(Rule):
     """
     For three segments seg0, seg1, and seg2, from
@@ -72,12 +60,12 @@ class LengthRatioTransitivityRule(Rule):
     we conclude that |seg0| = A B |seg2|
     """
     def sources(self):
-        return itertools.combinations(self.context.list(LengthRatioProperty), 2)
+        return itertools.combinations(self.context.length_ratio_properties(allow_zeroes=True), 2)
 
     def apply(self, src):
         lr0, lr1 = src
 
-        if lr0.reason.obsolete and lr1.reason.obsolete:
+        if lr0.reason.obsolete and lr1.reason.obsolete or lr0.value == 1 and lr1.value == 1:
             return
 
         def _cs(coef):
