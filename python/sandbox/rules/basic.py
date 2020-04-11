@@ -65,7 +65,7 @@ class LengthRatioTransitivityRule(Rule):
     def apply(self, src):
         lr0, lr1 = src
 
-        if lr0.reason.obsolete and lr1.reason.obsolete or lr0.value == 1 and lr1.value == 1:
+        if lr0.reason.obsolete and lr1.reason.obsolete:
             return
 
         def _cs(coef):
