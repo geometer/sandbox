@@ -131,7 +131,7 @@ class CorrespondingAnglesInSimilarTriangles(SingleSourceRule):
             if len(ne) < 3 or prop.reason.obsolete and all(p.reason.obsolete for p in ne):
                 continue
             yield (
-                AnglesRatioProperty(angle0, angle1, 1),
+                AngleRatioProperty(angle0, angle1, 1),
                 'Corresponding non-degenerate angles in similar triangles',
                 [prop] + ne
             )
@@ -143,7 +143,7 @@ class BaseAnglesOfIsoscelesRule(SingleSourceRule):
         if prop.reason.obsolete:
             return
         yield (
-            AnglesRatioProperty(
+            AngleRatioProperty(
                 prop.base.points[0].angle(prop.apex, prop.base.points[1]),
                 prop.base.points[1].angle(prop.apex, prop.base.points[0]),
                 1

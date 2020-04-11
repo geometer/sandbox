@@ -294,7 +294,7 @@ class Hunter:
         for fam in families:
             for pair in itertools.combinations(fam, 2):
                 ratio = divide(pair[1][1], pair[0][1])
-                self.__add(AnglesRatioProperty(pair[1][0].angle, pair[0][0].angle, ratio))
+                self.__add(AngleRatioProperty(pair[1][0].angle, pair[0][0].angle, ratio))
 
     def __hunt_equal_triangles(self):
         triangles = list(self.__triangles())

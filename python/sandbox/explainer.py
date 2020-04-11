@@ -211,7 +211,7 @@ class Explainer:
                 if len(ng0.points.union(ng1.points)) != 5:
                     continue
                 yield (
-                    AnglesRatioProperty(
+                    AngleRatioProperty(
                         ng0.vertex.angle(ng0.vector0.end, ng1.vector0.end),
                         ng0.vertex.angle(ng0.vector1.end, ng1.vector1.end),
                         1
@@ -220,7 +220,7 @@ class Explainer:
                     [av0, av1]
                 )
                 yield (
-                    AnglesRatioProperty(
+                    AngleRatioProperty(
                         ng0.vertex.angle(ng0.vector0.end, ng1.vector1.end),
                         ng0.vertex.angle(ng0.vector1.end, ng1.vector0.end),
                         1
@@ -239,7 +239,7 @@ class Explainer:
                     if pt in ang.points:
                         continue
                     yield (
-                        AnglesRatioProperty(
+                        AngleRatioProperty(
                             ang.vertex.angle(pt, ang.vector0.end),
                             ang.vertex.angle(pt, ang.vector1.end),
                             1
@@ -258,7 +258,7 @@ class Explainer:
                 if len(ng0.points.union(ng1.points)) != 5:
                     continue
                 yield (
-                    AnglesRatioProperty(
+                    AngleRatioProperty(
                         ng0.vertex.angle(ng0.vector0.end, ng1.vector0.end),
                         ng0.vertex.angle(ng0.vector1.end, ng1.vector1.end),
                         1
@@ -267,7 +267,7 @@ class Explainer:
                     [av0, av1]
                 )
                 yield (
-                    AnglesRatioProperty(
+                    AngleRatioProperty(
                         ng0.vertex.angle(ng0.vector0.end, ng1.vector1.end),
                         ng0.vertex.angle(ng0.vector1.end, ng1.vector0.end),
                         1
@@ -311,7 +311,7 @@ class Explainer:
                     for ngl0, cmpl0 in good_angles(vec, zero.angle.vector0):
                         for ngl1, cmpl1 in good_angles(vec, zero.angle.vector1):
                             if cmpl0 == cmpl1:
-                                prop = AnglesRatioProperty(ngl0, ngl1, 1)
+                                prop = AngleRatioProperty(ngl0, ngl1, 1)
                             else:
                                 prop = SumOfAnglesProperty(ngl0, ngl1, 180)
                             yield (
@@ -787,7 +787,7 @@ class Explainer:
                     angle1 = ct.triangle1.angle_for_index(i)
                     if angle0 != angle1:
                         yield (
-                            AnglesRatioProperty(angle0, angle1, 1),
+                            AngleRatioProperty(angle0, angle1, 1),
                             'Corresponding angles in congruent non-degenerate triangles',
                             [ct, ncl]
                         )
@@ -1198,7 +1198,7 @@ class Explainer:
                     if ca.reason.obsolete and co.reason.obsolete:
                         continue
                     yield (
-                        AnglesRatioProperty(vertex.angle(pts0[0], pts1[0]), vertex.angle(pts0[1], pts1[1]), 1),
+                        AngleRatioProperty(vertex.angle(pts0[0], pts1[0]), vertex.angle(pts0[1], pts1[1]), 1),
                         'Rotated', #TODO: better comment
                         [ca, co]
                     )
@@ -1210,7 +1210,7 @@ class Explainer:
                     if ca.reason.obsolete and co.reason.obsolete:
                         continue
                     yield (
-                        AnglesRatioProperty(vertex.angle(pts0[0], pts1[1]), vertex.angle(pts0[1], pts1[0]), 1),
+                        AngleRatioProperty(vertex.angle(pts0[0], pts1[1]), vertex.angle(pts0[1], pts1[0]), 1),
                         'Rotated', #TODO: better comment
                         [ca, co]
                     )

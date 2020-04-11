@@ -263,7 +263,7 @@ class AngleValueProperty(Property):
     def __hash__(self):
         return hash(AngleValueProperty) + hash(self.angle)
 
-class AnglesRatioProperty(Property):
+class AngleRatioProperty(Property):
     """
     Two angle values ratio
     """
@@ -295,11 +295,11 @@ class AnglesRatioProperty(Property):
         return self.value == other.value
 
     def __eq__(self, other):
-        return isinstance(other, AnglesRatioProperty) and self.angle_set == other.angle_set
+        return isinstance(other, AngleRatioProperty) and self.angle_set == other.angle_set
 
     def __hash__(self):
         if self.__hash is None:
-            self.__hash = hash(AnglesRatioProperty) + hash(self.angle_set)
+            self.__hash = hash(AngleRatioProperty) + hash(self.angle_set)
         return self.__hash
 
 class SumOfAnglesProperty(Property):

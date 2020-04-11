@@ -2,7 +2,7 @@ import itertools
 import networkx as nx
 
 from .core import CoreScene
-from .property import AngleValueProperty, AnglesRatioProperty, RatioOfNonZeroLengthsProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, LengthRatioProperty, PerpendicularSegmentsProperty
+from .property import AngleValueProperty, AngleRatioProperty, RatioOfNonZeroLengthsProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, LengthRatioProperty, PerpendicularSegmentsProperty
 from .reason import Reason
 from .stats import Stats
 from .util import LazyComment, divide
@@ -169,7 +169,7 @@ class AngleRatioPropertySet:
                         properties.append(self.premises_graph[path[0]][path[1]]['prop'])
                         continue
                     comment, premises = self.explanation_from_path(path, ratio0)
-                    prop = AnglesRatioProperty(angle0, angle1, divide(ratio0, ratio1))
+                    prop = AngleRatioProperty(angle0, angle1, divide(ratio0, ratio1))
                     prop.reason = Reason(-2, -2, comment, premises)
                     prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                     properties.append(prop)
@@ -244,7 +244,7 @@ class AngleRatioPropertySet:
         coef = fam.angle_to_ratio[path[0]]
         comment, premises = fam.explanation_from_path(path, coef)
         value = divide(coef, fam.angle_to_ratio[path[-1]])
-        prop = AnglesRatioProperty(angle0, angle1, value)
+        prop = AngleRatioProperty(angle0, angle1, value)
         prop.reason = Reason(-2, -2, comment, premises)
         prop.reason.obsolete = all(p.reason.obsolete for p in premises)
         return prop
@@ -261,7 +261,7 @@ class AngleRatioPropertySet:
                 yield prop
 
     def add(self, prop):
-        if isinstance(prop, AnglesRatioProperty):
+        if isinstance(prop, AngleRatioProperty):
             self.__add_ratio_property(prop)
         elif isinstance(prop, AngleValueProperty):
             self.__add_value_property(prop)
@@ -539,7 +539,7 @@ class PropertySet:
         self.__full_set[prop] = prop
         if type_key == AngleValueProperty:
             self.__angle_ratios.add(prop)
-        elif type_key == AnglesRatioProperty:
+        elif type_key == AngleRatioProperty:
             self.__angle_ratios.add(prop)
         elif type_key == LengthRatioProperty:
             self.__length_ratios.add(prop)
@@ -597,7 +597,7 @@ class PropertySet:
     def __contains__(self, prop):
         if self[prop] is not None:
             return True
-        if isinstance(prop, AnglesRatioProperty):
+        if isinstance(prop, AngleRatioProperty):
             #TODO: check ratio value for contradiction
             fam = self.__angle_ratios.angle_to_family.get(prop.angle0)
             return fam and prop.angle1 in fam.angle_to_ratio

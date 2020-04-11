@@ -140,6 +140,6 @@ def enumerate_predefined_properties(scene):
         if any(p.layer == 'invisible' for p in angle1.points):
             continue
         yield (
-            AnglesRatioProperty(angle0, angle1, cnstr.params[2]),
+            AngleRatioProperty(angle0, angle1, cnstr.params[2]),
             cnstr.comments
         )
