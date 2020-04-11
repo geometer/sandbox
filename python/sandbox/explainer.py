@@ -13,7 +13,7 @@ from .rules.triangles import *
 from .rules.trigonometric import *
 from .scene import Scene, Triangle
 from .stats import Stats
-from .util import _comment, divide
+from .util import LazyComment, divide
 
 class Explainer:
     def __init__(self, scene, options=()):
@@ -103,13 +103,13 @@ class Explainer:
                 if prop.same:
                     yield (
                         AngleValueProperty(crossing.angle(pt0, pt1), 0),
-                        _comment('%s is the intersection point of lines %s and %s', crossing, pt0.segment(pt1), prop.segment),
+                        LazyComment('%s is the intersection point of lines %s and %s', crossing, pt0.segment(pt1), prop.segment),
                         [prop] + reasons
                     )
                 else:
                     yield (
                         AngleValueProperty(crossing.angle(pt0, pt1), 180),
-                        _comment('%s is the intersection point of segment %s and line %s', crossing, pt0.segment(pt1), prop.segment),
+                        LazyComment('%s is the intersection point of segment %s and line %s', crossing, pt0.segment(pt1), prop.segment),
                         [prop] + reasons
                     )
 
@@ -165,7 +165,7 @@ class Explainer:
                     continue
                 if av0.reason.obsolete and av1.reason.obsolete and ncl.reason.obsolete and all(r.reason.obsolete for r in reasons):
                     continue
-                comment = _comment('%s is the intersection of cevians %s and %s with %s and %s inside the sides of △ %s %s %s', crossing, segment0, segment1, av1.angle.vertex, av0.angle.vertex, vertex, pt0, pt1)
+                comment = LazyComment('%s is the intersection of cevians %s and %s with %s and %s inside the sides of △ %s %s %s', crossing, segment0, segment1, av1.angle.vertex, av0.angle.vertex, vertex, pt0, pt1)
                 yield (
                     PointInsideAngleProperty(crossing, vertex.angle(pt0, pt1)),
                     comment,
@@ -192,7 +192,7 @@ class Explainer:
                 if centre is None:
                     continue
                 triangle = Triangle([pt for pt in set0 if pt != centre])
-                comment = _comment('Line %s separates %s and %s, line %s separates %s and %s => the intersection %s lies inside △ %s %s %s', op0.segment, *op0.points, op1.segment, *op1.points, centre, *triangle.points)
+                comment = LazyComment('Line %s separates %s and %s, line %s separates %s and %s => the intersection %s lies inside △ %s %s %s', op0.segment, *op0.points, op1.segment, *op1.points, centre, *triangle.points)
                 for i in range(0, 3):
                     yield (
                         PointInsideAngleProperty(centre, triangle.angle_for_index(i)),
@@ -315,7 +315,7 @@ class Explainer:
                                 prop = SumOfAnglesProperty(ngl0, ngl1, 180)
                             yield (
                                 prop,
-                                _comment('%s ↑↑ %s', zero.angle.vector0, zero.angle.vector1),
+                                LazyComment('%s ↑↑ %s', zero.angle.vector0, zero.angle.vector1),
                                 [zero, ne]
                             )
 
@@ -327,7 +327,7 @@ class Explainer:
                     angle = pia.angle.vertex.angle(vec.end, pia.point)
                     yield (
                         AcuteAngleProperty(angle),
-                        _comment('%s is a part of acute %s', angle, pia.angle),
+                        LazyComment('%s is a part of acute %s', angle, pia.angle),
                         [pia, acute]
                     )
 
@@ -339,7 +339,7 @@ class Explainer:
                     angle = pia.angle.vertex.angle(vec.end, pia.point)
                     yield (
                         AcuteAngleProperty(angle),
-                        _comment('%s is a part of right %s', angle, pia.angle),
+                        LazyComment('%s is a part of right %s', angle, pia.angle),
                         [pia, right]
                     )
 
@@ -356,7 +356,7 @@ class Explainer:
                 if pia.reason.obsolete and all(p.reason.obsolete for p in reasons):
                     continue
 
-                comment = _comment('%s is intersection of ray [%s %s) and segment [%s %s]', X, A, D, B, C)
+                comment = LazyComment('%s is intersection of ray [%s %s) and segment [%s %s]', X, A, D, B, C)
                 yield (AngleValueProperty(A.angle(D, X), 0), [comment], [pia] + reasons)
                 yield (AngleValueProperty(B.angle(C, X), 0), [comment], [pia] + reasons)
                 yield (AngleValueProperty(C.angle(B, X), 0), [comment], [pia] + reasons)
@@ -466,12 +466,12 @@ class Explainer:
                     angle = vertex.angle(*segment.points)
                     yield (
                         PointInsideAngleProperty(av.angle.vertex, angle),
-                        _comment('%s lies inside a segment with endpoints on sides of %s', av.angle.vertex, angle),
+                        LazyComment('%s lies inside a segment with endpoints on sides of %s', av.angle.vertex, angle),
                         [av, ncl]
                     )
                     yield (
                         SameOrOppositeSideProperty(av.angle.vertex.segment(vertex), *segment.points, False),
-                        _comment('%s lies inside segment %s, and %s is not on the line %s', av.angle.vertex, segment, vertex, segment),
+                        LazyComment('%s lies inside segment %s, and %s is not on the line %s', av.angle.vertex, segment, vertex, segment),
                         [av, ncl]
                     )
 
@@ -522,7 +522,7 @@ class Explainer:
                 #a0 + a1 = 180 - a2
                 a1_value = divide(180 - a2_reason.degree, 1 + ar.value)
                 a0_value = 180 - a2_reason.degree - a1_value
-                comment = _comment('%s + %s + %s = 180º', a0, a1, a2)
+                comment = LazyComment('%s + %s + %s = 180º', a0, a1, a2)
                 yield (AngleValueProperty(a0, a0_value), comment, [ar, a2_reason])
                 yield (AngleValueProperty(a1, a1_value), comment, [ar, a2_reason])
 
@@ -532,25 +532,25 @@ class Explainer:
                 if ka.degree < 90:
                     yield (
                         AcuteAngleProperty(ka.angle),
-                        _comment('0º < %sº < 90º', ka.degree),
+                        LazyComment('0º < %sº < 90º', ka.degree),
                         [ka]
                     )
                 elif ka.degree > 90:
                     yield (
                         ObtuseAngleProperty(ka.angle),
-                        _comment('90º < %sº < 180º', ka.degree),
+                        LazyComment('90º < %sº < 180º', ka.degree),
                         [ka]
                     )
                 ang = ka.angle
                 if ang.vertex and ka.degree >= 90:
                     yield (
                         AcuteAngleProperty(ang.vector0.end.angle(ang.vertex, ang.vector1.end)),
-                        _comment('An angle of △ %s %s %s, another angle = %sº', *ang.points, ka.degree),
+                        LazyComment('An angle of △ %s %s %s, another angle = %sº', *ang.points, ka.degree),
                         [ka]
                     )
                     yield (
                         AcuteAngleProperty(ang.vector1.end.angle(ang.vertex, ang.vector0.end)),
-                        _comment('An angle of △ %s %s %s, another angle = %sº', *ang.points, ka.degree),
+                        LazyComment('An angle of △ %s %s %s, another angle = %sº', *ang.points, ka.degree),
                         [ka]
                     )
 
@@ -567,7 +567,7 @@ class Explainer:
                             if ka is None or reasons_are_too_old and ka.reason.obsolete:
                                 continue
                             if ka.degree >= 90:
-                                comment = _comment(
+                                comment = LazyComment(
                                     '%s, %s, %s are collinear, %s is acute, and %s = %sº',
                                     pt, *vec0.points, base, angle, ka.degree
                                 )
@@ -592,7 +592,7 @@ class Explainer:
                             continue
                         yield (
                             AngleValueProperty(base.vertex.angle(vec0.end, foot), 0),
-                            _comment(
+                            LazyComment(
                                 '%s it the foot of the perpendicular from %s to %s, %s is acute',
                                 foot, vec1.end, vec0, base
                             ),
@@ -616,7 +616,7 @@ class Explainer:
                             continue
                         yield (
                             AngleValueProperty(base.vertex.angle(vec0.end, foot), 180),
-                            _comment(
+                            LazyComment(
                                 '%s it the foot of the perpendicular from %s to %s, %s is obtuse',
                                 foot, vec1.end, vec0, base
                             ),
@@ -640,7 +640,7 @@ class Explainer:
                             continue
                         yield (
                             PointsCoincidenceProperty(base.vertex, foot, True),
-                            _comment(
+                            LazyComment(
                                 '%s it the foot of the perpendicular from %s to %s, %s is right',
                                 foot, vec1.end, vec0, base
                             ),
@@ -660,7 +660,7 @@ class Explainer:
                             if ka is None or reasons_are_too_old and ka.reason.obsolete:
                                 continue
                             if ka.degree <= 90:
-                                comment = _comment(
+                                comment = LazyComment(
                                     '%s, %s, %s are collinear, %s is obtuse, and %s = %sº',
                                     pt, *vec0.points, base, angle, ka.degree
                                 )
@@ -682,7 +682,7 @@ class Explainer:
                             if ka2 is None or reasons_are_too_old and ka2.reason.obsolete:
                                 continue
                             if ka2.degree > ka.degree:
-                                comment = _comment(
+                                comment = LazyComment(
                                     '%s, %s, %s are collinear, %s is acute, and %s > %s',
                                     pt, *vec0.points, base, angle, base
                                 )
@@ -706,7 +706,7 @@ class Explainer:
                     continue
                 yield (
                     AngleValueProperty(other0.angle(other1), 0),
-                    _comment('Both %s and %s are acute', aa0.angle, aa1.angle),
+                    LazyComment('Both %s and %s are acute', aa0.angle, aa1.angle),
                     [aa0, aa1, col]
                 )
 
@@ -719,7 +719,7 @@ class Explainer:
                         iso.base.points[1].angle(iso.apex, iso.base.points[0]),
                         1
                     ),
-                    _comment('Base angles of isosceles △ %s %s %s', iso.apex, *iso.base.points),
+                    LazyComment('Base angles of isosceles △ %s %s %s', iso.apex, *iso.base.points),
                     [iso]
                 )
                 yield (
@@ -728,7 +728,7 @@ class Explainer:
                         iso.apex.segment(iso.base.points[1]),
                         1
                     ),
-                    _comment('Legs of isosceles △ %s %s %s', iso.apex, *iso.base.points),
+                    LazyComment('Legs of isosceles △ %s %s %s', iso.apex, *iso.base.points),
                     [iso]
                 )
 
@@ -790,14 +790,14 @@ class Explainer:
                     for i in range(0, 3):
                         yield (
                             AngleValueProperty(equ.triangle.angle_for_index(i), 60),
-                            _comment('Angle of non-degenerate equilateral %s', equ.triangle),
+                            LazyComment('Angle of non-degenerate equilateral %s', equ.triangle),
                             [equ]
                         )
                 if not equ.reason.obsolete:
                     for i, j in itertools.combinations(range(0, 3), 2):
                         yield (
                             LengthRatioProperty(equ.triangle.side_for_index(i), equ.triangle.side_for_index(j), 1),
-                            _comment('Sides of equilateral %s', equ.triangle),
+                            LazyComment('Sides of equilateral %s', equ.triangle),
                             [equ]
                         )
 
@@ -892,7 +892,7 @@ class Explainer:
                     for ang in second, third:
                         yield (
                             AngleValueProperty(ang, 0),
-                            _comment('%s = 180º', av.angle),
+                            LazyComment('%s = 180º', av.angle),
                             [av]
                         )
                 else:
@@ -902,7 +902,7 @@ class Explainer:
                             continue
                         yield (
                             AngleValueProperty(third, 180 - av.degree - second_reason.degree),
-                            _comment('%s + %s + %s = 180º', third, av.angle, second),
+                            LazyComment('%s + %s + %s = 180º', third, av.angle, second),
                             [av, second_reason]
                         )
                     else:
@@ -911,7 +911,7 @@ class Explainer:
                             continue
                         yield (
                             AngleValueProperty(second, 180 - av.degree - third_reason.degree),
-                            _comment('%s + %s + %s = 180º', second, av.angle, third),
+                            LazyComment('%s + %s + %s = 180º', second, av.angle, third),
                             [av, third_reason]
                         )
 
@@ -925,7 +925,7 @@ class Explainer:
                         continue
                     yield (
                         AngleValueProperty(sa.angle1, sa.degree - av0.degree),
-                        _comment('%sº - %sº', sa.degree, av0.degree),
+                        LazyComment('%sº - %sº', sa.degree, av0.degree),
                         [sa, av0]
                     )
                 elif av1:
@@ -933,7 +933,7 @@ class Explainer:
                         continue
                     yield (
                         AngleValueProperty(sa.angle0, sa.degree - av1.degree),
-                        _comment('%sº - %sº', sa.degree, av1.degree),
+                        LazyComment('%sº - %sº', sa.degree, av1.degree),
                         [sa, av1]
                     )
 
@@ -948,7 +948,7 @@ class Explainer:
                     continue
                 yield (
                     AngleValueProperty(ar.angle0.vertex.angle(pt0, pt1), 180),
-                    _comment('%s + %s', ar.angle0, ar.angle1),
+                    LazyComment('%s + %s', ar.angle0, ar.angle1),
                     [ar, oppo]
                 )
 
@@ -1024,7 +1024,7 @@ class Explainer:
                     continue
                 if zero.reason.obsolete and ncl.reason.obsolete and ne.reason.obsolete:
                     continue
-                comment = _comment('%s ↑↑ %s', ang.vector0, ang.vector1)
+                comment = LazyComment('%s ↑↑ %s', ang.vector0, ang.vector1)
                 premises = [zero, ncl, ne]
                 yield (
                     SameOrOppositeSideProperty(ang.vector0.as_segment, *ang.vector1.points, True),
@@ -1063,10 +1063,10 @@ class Explainer:
                     if ca_is_too_old and (rsn0 == True or rsn0.reason.obsolete) and (rsn1 == True or rsn1.reason.obsolete):
                         continue
                     if rsn0 == True:
-                        comment = _comment('Common side %s, pair of congruent sides, and angle between the sides', vec0)
+                        comment = LazyComment('Common side %s, pair of congruent sides, and angle between the sides', vec0)
                         premises = [rsn1, ca]
                     elif rsn1 == True:
-                        comment = _comment('Common side %s, pair of congruent sides, and angle between the sides', vec1)
+                        comment = LazyComment('Common side %s, pair of congruent sides, and angle between the sides', vec1)
                         premises = [rsn0, ca]
                     else:
                         comment = 'Two pairs of congruent sides, and angle between the sides'
@@ -1123,7 +1123,7 @@ class Explainer:
                     continue
                 yield (
                     PointOnPerpendicularBisectorProperty(common, pt0.segment(pt1)),
-                    _comment('%s is equidistant from %s and %s', common, pt0, pt1),
+                    LazyComment('%s is equidistant from %s and %s', common, pt0, pt1),
                     [cs, ne]
                 )
 
@@ -1145,7 +1145,7 @@ class Explainer:
                     if third0.as_segment == third1.as_segment:
                         yield (
                             prop,
-                            _comment('Common side %s, two pairs of congruent sides', third0),
+                            LazyComment('Common side %s, two pairs of congruent sides', third0),
                             [cs0, cs1]
                         )
                     else:
@@ -1196,7 +1196,7 @@ class Explainer:
                             continue
                         yield (
                             SameOrOppositeSideProperty(other.segment(pt), *sos.points, sos.same),
-                            _comment('%s is same line as %s', other.segment(pt), sos.segment),
+                            LazyComment('%s is same line as %s', other.segment(pt), sos.segment),
                             [sos, col, ne]
                         )
 
@@ -1212,7 +1212,7 @@ class Explainer:
                 second = next(pt for pt in ra1.angle.endpoints if pt != common)
                 yield (
                     PointsCollinearityProperty(vertex, first, second, True),
-                    _comment('There is only one perpendicular to %s at point %s', vertex.segment(common), vertex),
+                    LazyComment('There is only one perpendicular to %s at point %s', vertex.segment(common), vertex),
                     [ra0, ra1]
                 )
 
@@ -1285,7 +1285,7 @@ class Explainer:
                     line = ppb0.point.segment(ppb1.point)
                     yield (
                         SameOrOppositeSideProperty(line, *segment.points, False),
-                        _comment('Line %s is the perpendicular bisector of segment %s', line, segment),
+                        LazyComment('Line %s is the perpendicular bisector of segment %s', line, segment),
                         [ppb0, ppb1, ne]
                     )
 
@@ -1294,7 +1294,7 @@ class Explainer:
                         continue
                     yield (
                         PointsCollinearityProperty(*[ppb.point for ppb in triple], True),
-                        _comment('Three points on the perpendicular bisector of %s', segment),
+                        LazyComment('Three points on the perpendicular bisector of %s', segment),
                         list(triple)
                     )
 

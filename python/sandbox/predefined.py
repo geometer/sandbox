@@ -1,6 +1,6 @@
 from .core import Constraint, CoreScene
 from .property import *
-from .util import _comment
+from .util import LazyComment
 
 def enumerate_predefined_properties(scene):
     for cnstr in scene.constraints(Constraint.Kind.collinear):
@@ -114,7 +114,7 @@ def enumerate_predefined_properties(scene):
             if all(p.layer in CoreScene.layers_by('auxiliary') for p in pts):
                 yield (
                     PointsCollinearityProperty(*pts, True),
-                    [_comment('Three points on the line %s', line)]
+                    [LazyComment('Three points on the line %s', line)]
                 )
 
     for circle in scene.circles(max_layer='user'):
@@ -123,12 +123,12 @@ def enumerate_predefined_properties(scene):
             for rad in radiuses:
                 yield (
                     LengthRatioProperty(rad, circle.radius, 1),
-                    [_comment('Distance between centre %s and point %s on the circle of radius |%s|', circle.centre, rad.points[0], circle.radius)]
+                    [LazyComment('Distance between centre %s and point %s on the circle of radius |%s|', circle.centre, rad.points[0], circle.radius)]
                 )
         for rad0, rad1 in itertools.combinations(radiuses, 2):
             yield (
                 LengthRatioProperty(rad0, rad1, 1),
-                [_comment('Two radiuses of the same circle with centre %s', circle.centre)]
+                [LazyComment('Two radiuses of the same circle with centre %s', circle.centre)]
             )
 
     for cnstr in scene.constraints(Constraint.Kind.opposite_side):

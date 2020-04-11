@@ -5,7 +5,7 @@ This module is to be extended in the future to add more construction methods.
 import itertools
 
 from .core import CoreScene
-from .util import _comment
+from .util import LazyComment
 
 class Triangle:
     def __init__(self, points):
@@ -82,7 +82,7 @@ class Scene(CoreScene):
         for seg0, seg1 in itertools.combinations([centre.segment(v) for v in triangle], 2):
             seg0.congruent_constraint(
                 seg1,
-                comment=_comment('%s is circumcentre of △ %s %s %s', centre, *triangle)
+                comment=LazyComment('%s is circumcentre of △ %s %s %s', centre, *triangle)
             )
         return centre
 
@@ -111,7 +111,7 @@ class Scene(CoreScene):
         angle0.point_on_bisector_constraint(centre)
         angle1.point_on_bisector_constraint(centre)
         angle2.point_on_bisector_constraint(centre)
-        centre.inside_triangle_constraint(*triangle, comment=_comment('%s is incentre of %s %s %s', centre, *triangle))
+        centre.inside_triangle_constraint(*triangle, comment=LazyComment('%s is incentre of %s %s %s', centre, *triangle))
         return centre
 
     def incircle(self, triangle, **kwargs):
@@ -156,7 +156,7 @@ class Scene(CoreScene):
             self.assert_point(pt)
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
-            kwargs['comment'] = _comment('(%s, %s, %s) is a triangle', *triangle)
+            kwargs['comment'] = LazyComment('(%s, %s, %s) is a triangle', *triangle)
         triangle[0].not_collinear_constraint(triangle[1], triangle[2], **kwargs)
 
     def altitude(self, triangle, vertex, **kwargs):
@@ -171,7 +171,7 @@ class Scene(CoreScene):
         points.remove(vertex)
         base = points[0].line_through(points[1], layer='auxiliary')
         altitude = vertex.perpendicular_line(base, **kwargs)
-        altitude.perpendicular_constraint(base, comment=_comment('Altitude %s is perpendicular to the base %s', altitude, base), guaranteed=True)
+        altitude.perpendicular_constraint(base, comment=LazyComment('Altitude %s is perpendicular to the base %s', altitude, base), guaranteed=True)
         return altitude
 
     def parallelogram(self, labels=None):
@@ -196,7 +196,7 @@ class Scene(CoreScene):
         else:
             pts.append(self.free_point(**args))
 
-        comment = _comment('%s %s %s %s is a parallelogram', *pts)
+        comment = LazyComment('%s %s %s %s is a parallelogram', *pts)
         pts[0].vector(pts[1]).parallel_constraint(pts[3].vector(pts[2]), comment=comment)
         pts[0].vector(pts[3]).parallel_constraint(pts[1].vector(pts[2]), comment=comment)
         pts[0].segment(pts[1]).congruent_constraint(pts[2].segment(pts[3]), comment=comment)

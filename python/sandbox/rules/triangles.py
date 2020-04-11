@@ -2,7 +2,7 @@ import itertools
 
 from sandbox.property import *
 from sandbox.scene import Triangle
-from sandbox.util import _comment
+from sandbox.util import LazyComment
 
 from .abstract import Rule, SingleSourceRule
 
@@ -62,7 +62,7 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
 
         yield (
             SimilarTrianglesProperty(tr0, tr1),
-            _comment('Two pairs of congruent angles, and △ %s %s %s is non-degenerate', *(tr0 if first_non_degenerate else tr1)),
+            LazyComment('Two pairs of congruent angles, and △ %s %s %s is non-degenerate', *(tr0 if first_non_degenerate else tr1)),
             [ca0, ca1, ncl]
         )
 

@@ -1,6 +1,5 @@
 from sandbox import Scene
 from sandbox.property import LengthRatioProperty
-from sandbox.util import _comment
 
 from .base import ExplainerTest
 

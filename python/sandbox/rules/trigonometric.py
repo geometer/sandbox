@@ -3,7 +3,7 @@ import sympy as sp
 
 from sandbox.property import LengthRatioProperty
 from sandbox.scene import Triangle
-from sandbox.util import _comment
+from sandbox.util import LazyComment
 
 from .abstract import Rule
 
@@ -28,6 +28,6 @@ class LawOfSinesRule(Rule):
         for (sine0, side0), (sine1, side1) in itertools.combinations(zip(sines, sides), 2):
             yield (
                 LengthRatioProperty(side0, side1, sine0 / sine1),
-                _comment('Law of sines for △ %s %s %s', *triangle.points),
+                LazyComment('Law of sines for △ %s %s %s', *triangle.points),
                 [av0, av1]
             )

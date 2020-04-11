@@ -5,7 +5,7 @@ from .core import CoreScene
 from .property import AngleValueProperty, AnglesRatioProperty, RatioOfNonZeroLengthsProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, LengthRatioProperty, PerpendicularSegmentsProperty
 from .reason import Reason
 from .stats import Stats
-from .util import _comment, divide
+from .util import LazyComment, divide
 
 class CyclicOrderPropertySet:
     class Family:
@@ -19,7 +19,7 @@ class CyclicOrderPropertySet:
 
             path = nx.algorithms.shortest_path(self.premises_graph, cycle0, cycle1)
             pattern = ' = '.join(['%s'] * len(path))
-            comment = _comment(pattern, *path)
+            comment = LazyComment(pattern, *path)
             premises = [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
             return (comment, premises)
 
@@ -97,7 +97,7 @@ class AngleRatioPropertySet:
                 else:
                     pattern.append('%sº')
                     params.append(self.multiplier * vertex)
-            return str(_comment(' = '.join(pattern), *params))
+            return str(LazyComment(' = '.join(pattern), *params))
 
     class Family:
         def __init__(self):
@@ -364,7 +364,7 @@ class LengthRatioPropertySet:
         def explanation(self, ratio0, ratio1):
             path = nx.algorithms.shortest_path(self.premises_graph, ratio0, ratio1)
             pattern = ' = '.join(['|%s| / |%s|' if len(v) == 2 else '%s' for v in path])
-            comment = _comment(pattern, *sum(path, ()))
+            comment = LazyComment(pattern, *sum(path, ()))
             premises = [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
             return (comment, premises)
 

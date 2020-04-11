@@ -1,7 +1,6 @@
 # GEO0374 from http://hilbert.mat.uc.pt/TGTP/Problems/listing.php
 from sandbox import Scene
 from sandbox.property import AngleValueProperty
-from sandbox.util import _comment
 
 from .base import ExplainerTest
 

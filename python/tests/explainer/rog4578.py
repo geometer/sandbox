@@ -3,7 +3,6 @@
 
 from sandbox import Scene
 from sandbox.property import AngleValueProperty
-from sandbox.util import _comment
 
 from .base import ExplainerTest
 

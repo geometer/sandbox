@@ -7,7 +7,7 @@ from .placement import Placement
 from .property import *
 from .scene import Triangle
 from .stats import Stats
-from .util import _comment, divide
+from .util import LazyComment, divide
 
 ERROR = np.float128(5e-6)
 
@@ -44,7 +44,7 @@ class TriangleWrapper:
         return self.pts[0] == other.pts[0] and self.pts[1] == other.pts[1] and self.pts[2] == other.pts[2]
 
     def __str__(self):
-        return str(_comment('△ %s %s %s', *self.pts))
+        return str(Triangle(self.pts))
 
     def equilateral(self):
         return np.fabs(self.side0 - self.side1) < ERROR and \

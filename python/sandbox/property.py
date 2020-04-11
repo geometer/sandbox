@@ -1,7 +1,7 @@
 import itertools
 
 from .scene import Triangle
-from .util import _comment, divide, good_angles, normalize_number, keys_for_triangle
+from .util import LazyComment, divide, good_angles, normalize_number, keys_for_triangle
 
 class Property:
     def keys(self):
@@ -28,9 +28,9 @@ class PointsCollinearityProperty(Property):
     @property
     def description(self):
         if self.collinear:
-            return _comment('Points %s, %s, and %s are collinear', *self.points)
+            return LazyComment('Points %s, %s, and %s are collinear', *self.points)
         else:
-            return _comment('Points %s, %s, and %s are not collinear', *self.points)
+            return LazyComment('Points %s, %s, and %s are not collinear', *self.points)
 
     def compare_values(self, other):
         return self.collinear == other.collinear
@@ -55,7 +55,7 @@ class ParallelVectorsProperty(Property):
 
     @property
     def description(self):
-        return _comment('%s ↑↑ %s', self.vector0, self.vector1)
+        return LazyComment('%s ↑↑ %s', self.vector0, self.vector1)
 
     def __eq__(self, other):
         return isinstance(other, ParallelVectorsProperty) and \
@@ -78,7 +78,7 @@ class PerpendicularSegmentsProperty(Property):
 
     @property
     def description(self):
-        return _comment('%s ⟂ %s', self.segment0, self.segment1)
+        return LazyComment('%s ⟂ %s', self.segment0, self.segment1)
 
     def __eq__(self, other):
         return isinstance(other, PerpendicularSegmentsProperty) and \
@@ -102,9 +102,9 @@ class PointsCoincidenceProperty(Property):
     @property
     def description(self):
         if self.coincident:
-            return _comment('Points %s and %s are coincident', *self.points)
+            return LazyComment('Points %s and %s are coincident', *self.points)
         else:
-            return _comment('Points %s and %s are not coincident', *self.points)
+            return LazyComment('Points %s and %s are not coincident', *self.points)
 
     def compare_values(self, other):
         return self.coincident == other.coincident
@@ -131,9 +131,9 @@ class SameOrOppositeSideProperty(Property):
     @property
     def description(self):
         if self.same:
-            return _comment('%s, %s located on the same side of line %s', *self.points, self.segment)
+            return LazyComment('%s, %s located on the same side of line %s', *self.points, self.segment)
         else:
-            return _comment('%s, %s located on opposite sides of line %s', *self.points, self.segment)
+            return LazyComment('%s, %s located on opposite sides of line %s', *self.points, self.segment)
 
     def compare_values(self, other):
         return self.same == other.same
@@ -155,7 +155,7 @@ class PointInsideAngleProperty(Property):
 
     @property
     def description(self):
-        return _comment('%s lies inside %s', self.point, self.angle)
+        return LazyComment('%s lies inside %s', self.point, self.angle)
 
     def keys(self):
         return [self.point, self.angle]
@@ -179,7 +179,7 @@ class EquilateralTriangleProperty(Property):
 
     @property
     def description(self):
-        return _comment('%s is equilateral', self.triangle)
+        return LazyComment('%s is equilateral', self.triangle)
 
     def __eq__(self, other):
         return isinstance(other, EquilateralTriangleProperty) and self.__point_set == other.__point_set
@@ -199,7 +199,7 @@ class AcuteAngleProperty(Property):
 
     @property
     def description(self):
-        return _comment('%s is acute', self.angle)
+        return LazyComment('%s is acute', self.angle)
 
     def __eq__(self, other):
         return isinstance(other, AcuteAngleProperty) and self.angle == other.angle
@@ -219,7 +219,7 @@ class ObtuseAngleProperty(Property):
 
     @property
     def description(self):
-        return _comment('%s is obtuse', self.angle)
+        return LazyComment('%s is obtuse', self.angle)
 
     def __eq__(self, other):
         return isinstance(other, ObtuseAngleProperty) and self.angle == other.angle
@@ -247,10 +247,10 @@ class AngleValueProperty(Property):
     def description(self):
         if self.angle.vertex:
             if self.degree == 0:
-                return _comment('%s, %s in the same direction from %s', self.angle.vector0.end, self.angle.vector1.end, self.angle.vertex)
+                return LazyComment('%s, %s in the same direction from %s', self.angle.vector0.end, self.angle.vector1.end, self.angle.vertex)
             if self.degree == 180:
-                return _comment('%s lies inside segment %s', self.angle.vertex, self.angle.vector0.end.segment(self.angle.vector1.end))
-        return _comment('%s = %dº', self.angle, self.degree)
+                return LazyComment('%s lies inside segment %s', self.angle.vertex, self.angle.vector0.end.segment(self.angle.vector1.end))
+        return LazyComment('%s = %dº', self.angle, self.degree)
 
     def compare_values(self, other):
         return self.degree == other.degree
@@ -287,9 +287,9 @@ class AnglesRatioProperty(Property):
     @property
     def description(self):
         if self.value == 1:
-            return _comment('%s = %s', self.angle0, self.angle1)
+            return LazyComment('%s = %s', self.angle0, self.angle1)
         else:
-            return _comment('%s = %s %s', self.angle0, self.value, self.angle1)
+            return LazyComment('%s = %s %s', self.angle0, self.value, self.angle1)
 
     def compare_values(self, other):
         return self.value == other.value
@@ -317,7 +317,7 @@ class SumOfAnglesProperty(Property):
 
     @property
     def description(self):
-        return _comment('%s + %s = %sº', self.angle0, self.angle1, self.degree)
+        return LazyComment('%s + %s = %sº', self.angle0, self.angle1, self.degree)
 
     def compare_values(self, other):
         return self.degree == other.degree
@@ -348,7 +348,7 @@ class RatioOfNonZeroLengthsProperty(Property):
 
     @property
     def description(self):
-        return _comment('|%s| / |%s| = %s', self.segment0, self.segment1, self.value)
+        return LazyComment('|%s| / |%s| = %s', self.segment0, self.segment1, self.value)
 
     def compare_values(self, other):
         return self.value == other.value
@@ -380,8 +380,8 @@ class LengthRatioProperty(Property):
     @property
     def description(self):
         if self.value == 1:
-            return _comment('|%s| = |%s|', self.segment0, self.segment1)
-        return _comment('|%s| = %s |%s|', self.segment0, self.value, self.segment1)
+            return LazyComment('|%s| = |%s|', self.segment0, self.segment1)
+        return LazyComment('|%s| = %s |%s|', self.segment0, self.value, self.segment1)
 
     def compare_values(self, other):
         return self.value == other.value
@@ -403,7 +403,7 @@ class PointOnPerpendicularBisectorProperty(Property):
 
     @property
     def description(self):
-        return _comment('%s lies on the perpendicular bisector of %s', self.point, self.segment)
+        return LazyComment('%s lies on the perpendicular bisector of %s', self.point, self.segment)
 
     def __eq__(self, other):
         return isinstance(other, PointOnPerpendicularBisectorProperty) and self.unique_key == other.unique_key
@@ -433,7 +433,7 @@ class EqualLengthProductsProperty(Property):
 
     @property
     def description(self):
-        return _comment('|%s| * |%s| = |%s| * |%s|', *[self.segments[i] for i in (0, 3, 1, 2)])
+        return LazyComment('|%s| * |%s| = |%s| * |%s|', *[self.segments[i] for i in (0, 3, 1, 2)])
 
     def __eq__(self, other):
         return isinstance(other, EqualLengthProductsProperty) and self.key == other.key
@@ -463,7 +463,7 @@ class EqualLengthRatiosProperty(Property):
 
     @property
     def description(self):
-        return _comment('|%s| / |%s| = |%s| / |%s|', *self.segments)
+        return LazyComment('|%s| / |%s| = |%s| / |%s|', *self.segments)
 
     def __eq__(self, other):
         return isinstance(other, EqualLengthRatiosProperty) and self.key == other.key
@@ -486,7 +486,7 @@ class SimilarTrianglesProperty(Property):
 
     @property
     def description(self):
-        return _comment('%s ~ %s', self.triangle0, self.triangle1)
+        return LazyComment('%s ~ %s', self.triangle0, self.triangle1)
 
     def __eq__(self, other):
         return isinstance(other, SimilarTrianglesProperty) and \
@@ -510,7 +510,7 @@ class CongruentTrianglesProperty(Property):
 
     @property
     def description(self):
-        return _comment('%s = %s', self.triangle0, self.triangle1)
+        return LazyComment('%s = %s', self.triangle0, self.triangle1)
 
     def __eq__(self, other):
         return isinstance(other, CongruentTrianglesProperty) and \
@@ -532,7 +532,7 @@ class IsoscelesTriangleProperty(Property):
 
     @property
     def description(self):
-        return _comment('△ %s %s %s is isosceles (with apex %s)', self.apex, *self.base.points, self.apex)
+        return LazyComment('△ %s %s %s is isosceles (with apex %s)', self.apex, *self.base.points, self.apex)
 
     def __eq__(self, other):
         return isinstance(other, IsoscelesTriangleProperty) and \
@@ -576,7 +576,7 @@ class SameCyclicOrderProperty(Property):
 
     @property
     def description(self):
-        return _comment('%s and %s have the same order', self.cycle0, self.cycle1)
+        return LazyComment('%s and %s have the same order', self.cycle0, self.cycle1)
 
     def __eq__(self, other):
         return isinstance(other, SameCyclicOrderProperty) and self.__key == other.__key

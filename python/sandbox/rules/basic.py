@@ -2,7 +2,7 @@ import itertools
 
 from sandbox.property import *
 from sandbox.scene import Triangle
-from sandbox.util import _comment, divide
+from sandbox.util import LazyComment, divide
 
 from .abstract import Rule, SingleSourceRule
 
@@ -50,7 +50,7 @@ class DifferentAnglesToDifferentPointsRule(Rule):
         else:
             return
 
-        yield (prop, _comment('Otherwise, %s = %s', ang0, ang1), [av0, av1])
+        yield (prop, LazyComment('Otherwise, %s = %s', ang0, ang1), [av0, av1])
 
 class LengthRatioSimplificationRule(Rule):
     def sources(self):
@@ -87,28 +87,28 @@ class LengthRatioTransitivityRule(Rule):
             coef = divide(lr1.value, lr0.value)
             yield (
                 LengthRatioProperty(lr0.segment1, lr1.segment1, coef),
-                _comment('|%s| = %s|%s| = %s|%s|', lr0.segment1, _cs(divide(1, lr0.value)), lr0.segment0, _cs(coef), lr1.segment1),
+                LazyComment('|%s| = %s|%s| = %s|%s|', lr0.segment1, _cs(divide(1, lr0.value)), lr0.segment0, _cs(coef), lr1.segment1),
                 [lr0, lr1]
             )
         elif lr0.segment0 == lr1.segment1:
             coef = lr1.value * lr0.value
             yield (
                 LengthRatioProperty(lr1.segment0, lr0.segment1, coef),
-                _comment('|%s| = %s|%s| = %s|%s|', lr1.segment0, _cs(lr1.value), lr0.segment0, _cs(coef), lr0.segment1),
+                LazyComment('|%s| = %s|%s| = %s|%s|', lr1.segment0, _cs(lr1.value), lr0.segment0, _cs(coef), lr0.segment1),
                 [lr1, lr0]
             )
         elif lr0.segment1 == lr1.segment0:
             coef = lr1.value * lr0.value
             yield (
                 LengthRatioProperty(lr0.segment0, lr1.segment1, coef),
-                _comment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.value), lr0.segment1, _cs(coef), lr1.segment1),
+                LazyComment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.value), lr0.segment1, _cs(coef), lr1.segment1),
                 [lr0, lr1]
             )
         elif lr0.segment1 == lr1.segment1:
             coef = divide(lr0.value, lr1.value)
             yield (
                 LengthRatioProperty(lr0.segment0, lr1.segment0, coef),
-                _comment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.value), lr0.segment1, _cs(coef), lr1.segment0),
+                LazyComment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.value), lr0.segment1, _cs(coef), lr1.segment0),
                 [lr0, lr1]
             )
 
@@ -129,7 +129,7 @@ class CoincidenceTransitivityRule(Rule):
         pt1 = next(pt for pt in co1.points if pt != common)
         yield (
             PointsCoincidenceProperty(pt0, pt1, co0.coincident and co1.coincident),
-            _comment('%s %s %s %s %s', pt0, '=' if co0.coincident else '!=', common, '=' if co1.coincident else '!=', pt1),
+            LazyComment('%s %s %s %s %s', pt0, '=' if co0.coincident else '!=', common, '=' if co1.coincident else '!=', pt1),
             [co0, co1]
         )
 
@@ -161,7 +161,7 @@ class TwoPointsBelongsToTwoLinesRule(SingleSourceRule):
                     continue
                 yield (
                     PointsCoincidenceProperty(*side.points, True),
-                    _comment('%s and %s belong to two different lines %s and %s', *side.points, pt0.segment(ncl_pt), pt1.segment(ncl_pt)),
+                    LazyComment('%s and %s belong to two different lines %s and %s', *side.points, pt0.segment(ncl_pt), pt1.segment(ncl_pt)),
                     [cl0, cl1, ncl]
                 )
                 break
@@ -172,7 +172,7 @@ class TwoPointsBelongsToTwoLinesRule(SingleSourceRule):
                         lines = [pt.segment(side.points[0]) for pt in triple]
                         yield (
                             PointsCoincidenceProperty(*side.points, True),
-                            _comment('%s and %s belong to three lines %s, %s, and %s, at least two of them are different', *side.points, *lines),
+                            LazyComment('%s and %s belong to three lines %s, %s, and %s, at least two of them are different', *side.points, *lines),
                             [cl0, cl1, ncl]
                         )
                         break
@@ -203,7 +203,7 @@ class CollinearityCollisionRule(Rule):
         if not reasons_are_too_old:
             yield (
                 PointsCoincidenceProperty(pt_col, pt_ncl, False),
-                _comment('%s lies on the line %s %s, %s does not', pt_col, *common_points, pt_ncl),
+                LazyComment('%s lies on the line %s %s, %s does not', pt_col, *common_points, pt_ncl),
                 [ncl, col]
             )
         for common in common_points:
@@ -211,7 +211,7 @@ class CollinearityCollisionRule(Rule):
             if ne is not None and not (reasons_are_too_old and ne.reason.obsolete):
                 yield (
                     PointsCollinearityProperty(common, pt_col, pt_ncl, False),
-                    _comment(
+                    LazyComment(
                         '%s and %s lie on the line %s %s, %s does not',
                         common, pt_col, *common_points, pt_ncl
                     ),
@@ -252,11 +252,11 @@ class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
         value1 = divide(prop.degree, 1 + ar.value)
         value0 = prop.degree - value1
         if ar.value == 1:
-            comment0 = _comment('%s + %s = %s + %s = %sº', ar.angle0, ar.angle0, ar.angle0, ar.angle1, prop.degree)
-            comment1 = _comment('%s + %s = %s + %s = %sº', ar.angle1, ar.angle1, ar.angle1, ar.angle0, prop.degree)
+            comment0 = LazyComment('%s + %s = %s + %s = %sº', ar.angle0, ar.angle0, ar.angle0, ar.angle1, prop.degree)
+            comment1 = LazyComment('%s + %s = %s + %s = %sº', ar.angle1, ar.angle1, ar.angle1, ar.angle0, prop.degree)
         else:
-            comment0 = _comment('%s + %s / %s = %s + %s = %sº', ar.angle0, ar.angle0, ar.value, ar.angle0, ar.angle1, prop.degree)
-            comment1 = _comment('%s + %s %s = %s + %s = %sº', ar.angle1, ar.value, ar.angle1, ar.angle1, ar.angle0, prop.degree)
+            comment0 = LazyComment('%s + %s / %s = %s + %s = %sº', ar.angle0, ar.angle0, ar.value, ar.angle0, ar.angle1, prop.degree)
+            comment1 = LazyComment('%s + %s %s = %s + %s = %sº', ar.angle1, ar.value, ar.angle1, ar.angle1, ar.angle0, prop.degree)
         yield (AngleValueProperty(ar.angle0, value0), comment0, [prop, ar])
         yield (AngleValueProperty(ar.angle1, value1), comment1, [prop, ar])
 
@@ -272,11 +272,11 @@ class LengthRatioRule(SingleSourceRule):
         if ne0 is not None and ne1 is None:
             if prop.reason.obsolete and ne0.reason.obsolete:
                 return
-            yield (PointsCoincidenceProperty(*seg1.points, False), _comment('Otherwise, %s = %s', *seg0.points), [prop, ne0])
+            yield (PointsCoincidenceProperty(*seg1.points, False), LazyComment('Otherwise, %s = %s', *seg0.points), [prop, ne0])
         elif ne1 is not None and ne0 is None:
             if prop.reason.obsolete and ne1.reason.obsolete:
                 return
-            yield (PointsCoincidenceProperty(*seg0.points, False), _comment('Otherwise, %s = %s', *seg1.points), [prop, ne1])
+            yield (PointsCoincidenceProperty(*seg0.points, False), LazyComment('Otherwise, %s = %s', *seg1.points), [prop, ne1])
         elif ne0 is None and ne1 is None:
             common = next((pt for pt in seg0.points if pt in seg1.points), None)
             if common is None:
@@ -286,8 +286,8 @@ class LengthRatioRule(SingleSourceRule):
             ne = self.context.not_equal_property(pt0, pt1)
             if ne is None or prop.reason.obsolete and ne.reason.obsolete:
                 return
-            yield (PointsCoincidenceProperty(*seg0.points, False), _comment('Otherwise, %s = %s = %s', ne.points[0], common, ne.points[1]), [prop, ne])
-            yield (PointsCoincidenceProperty(*seg1.points, False), _comment('Otherwise, %s = %s = %s', ne.points[1], common, ne.points[0]), [prop, ne])
+            yield (PointsCoincidenceProperty(*seg0.points, False), LazyComment('Otherwise, %s = %s = %s', ne.points[0], common, ne.points[1]), [prop, ne])
+            yield (PointsCoincidenceProperty(*seg1.points, False), LazyComment('Otherwise, %s = %s = %s', ne.points[1], common, ne.points[0]), [prop, ne])
 
 class ParallelVectorsRule(SingleSourceRule):
     property_type = ParallelVectorsProperty
@@ -304,7 +304,7 @@ class ParallelVectorsRule(SingleSourceRule):
         for prop in AngleValueProperty.generate(vec0, vec1, 0):
             yield (
                 prop,
-                _comment('Non-zero parallel vectors %s and %s', vec0, vec1),
+                LazyComment('Non-zero parallel vectors %s and %s', vec0, vec1),
                 [para, ne0, ne1]
             )
 
@@ -325,7 +325,7 @@ class PerpendicularSegmentsRule(SingleSourceRule):
         for prop in AngleValueProperty.generate(vec0, vec1, 90):
             yield (
                 prop,
-                _comment('Non-zero perpendicular segments %s and %s', seg0, seg1),
+                LazyComment('Non-zero perpendicular segments %s and %s', seg0, seg1),
                 [pv, ne0, ne1]
             )
 
@@ -356,7 +356,7 @@ class CommonPerpendicularRule(SingleSourceRule):
                 other = perp.segment1 if seg0 == perp.segment0 else perp.segment0
                 yield (
                     PerpendicularSegmentsProperty(seg1, other),
-                    _comment('Any line perpendicular to %s is also perpendicular to %s', seg0, seg1),
+                    LazyComment('Any line perpendicular to %s is also perpendicular to %s', seg0, seg1),
                     [perp, prop]
                 )
 
@@ -381,7 +381,7 @@ class TwoPointsBelongsToTwoPerpendicularsRule(Rule):
             return
         yield (
             PointsCoincidenceProperty(*common.points, True),
-            _comment('%s and %s lie on perpendiculars to non-parallel lines %s and %s', *common.points, seg0, seg1),
+            LazyComment('%s and %s lie on perpendiculars to non-parallel lines %s and %s', *common.points, seg0, seg1),
             [perp0, perp1, ncl]
         )
 
@@ -408,7 +408,7 @@ class PerpendicularTransitivityRule(Rule):
         pt1 = next(pt for pt in seg1.points if pt != common_point)
         yield (
             PerpendicularSegmentsProperty(common, pt0.segment(pt1)),
-            _comment('%s and %s are perpendicular to non-zero %s', seg0, seg1, common),
+            LazyComment('%s and %s are perpendicular to non-zero %s', seg0, seg1, common),
             [perp0, perp1, ne]
         )
 
@@ -426,7 +426,7 @@ class SinglePerpendicularBisectorRule(SingleSourceRule):
                     if not (prop.reason.obsolete and ppb.reason.obsolete):
                         yield (
                             PointOnPerpendicularBisectorProperty(seg0.points[j], seg1),
-                            _comment('%s lies on the same perpendicular to %s as %s', seg0.points[j], seg1, seg0.points[i]),
+                            LazyComment('%s lies on the same perpendicular to %s as %s', seg0.points[j], seg1, seg0.points[i]),
                             [prop, ppb]
                         )
                     break
@@ -442,7 +442,7 @@ class PointOnPerpendicularBisectorIsEquidistantRule(SingleSourceRule):
         if not prop.reason.obsolete:
             yield (
                 LengthRatioProperty(prop.point.segment(prop.segment.points[0]), prop.point.segment(prop.segment.points[1]), 1),
-                _comment('A point on the perpendicular bisector to %s is equidistant from %s and %s', prop.segment, *prop.segment.points),
+                LazyComment('A point on the perpendicular bisector to %s is equidistant from %s and %s', prop.segment, *prop.segment.points),
                 [prop]
             )
 
@@ -459,7 +459,7 @@ class SeparatedPointsRule(SingleSourceRule):
         if not prop.reason.obsolete:
             yield (
                 PointsCoincidenceProperty(prop.points[0], prop.points[1], False),
-                _comment('%s and %s are separated by line %s', prop.points[0], prop.points[1], prop.segment),
+                LazyComment('%s and %s are separated by line %s', prop.points[0], prop.points[1], prop.segment),
                 [prop]
             )
 
@@ -483,7 +483,7 @@ class SameSidePointInsideSegmentRule(SingleSourceRule):
             for endpoint in prop.points:
                 yield (
                     SameOrOppositeSideProperty(prop.segment, endpoint, pt, True),
-                    _comment('Segment %s does not cross line %s', segment, prop.segment),
+                    LazyComment('Segment %s does not cross line %s', segment, prop.segment),
                     [prop, value]
                 )
 
@@ -507,7 +507,7 @@ class TwoPerpendicularsRule(SingleSourceRule):
         vec1 = foot1.vector(prop.points[1]) if prop.same else prop.points[1].vector(foot1)
         yield (
             ParallelVectorsProperty(vec0, vec1),
-            _comment('Two perpendiculars to line %s', prop.segment),
+            LazyComment('Two perpendiculars to line %s', prop.segment),
             premises
         )
 

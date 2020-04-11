@@ -9,7 +9,7 @@ import sympy as sp
 from typing import List
 
 from .reason import Reason
-from .util import _comment, divide
+from .util import LazyComment, divide
 
 class CoreScene:
     layers = ('user', 'auxiliary', 'invisible')
@@ -306,7 +306,7 @@ class CoreScene:
             A.not_collinear_constraint(B, C)
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = _comment(
+                kwargs['comment'] = LazyComment(
                     'Point %s is inside △ %s %s %s', self, A, B, C
                 )
             self.inside_constraint(A.angle(B, C), **kwargs)
@@ -455,8 +455,8 @@ class CoreScene:
         def angle(self, other):
             angle = self.scene._get_angle(self, other)
             if not self.scene.is_frozen:
-                self.as_segment.non_zero_length_constraint(comment=_comment('%s is side of %s', self, angle))
-                other.as_segment.non_zero_length_constraint(comment=_comment('%s is side of %s', other, angle))
+                self.as_segment.non_zero_length_constraint(comment=LazyComment('%s is side of %s', self, angle))
+                other.as_segment.non_zero_length_constraint(comment=LazyComment('%s is side of %s', other, angle))
             return angle
 
         @property
@@ -477,7 +477,7 @@ class CoreScene:
             return self.scene.constraint(Constraint.Kind.parallel_vectors, self, vector, **kwargs)
 
         def __str__(self):
-            return str(_comment('%s %s', self.start, self.end))
+            return str(LazyComment('%s %s', self.start, self.end))
 
     def _get_segment(self, point0, point1):
         assert isinstance(point0, CoreScene.Point)
@@ -527,7 +527,7 @@ class CoreScene:
                 guaranteed = False
             half0 = middle.segment(self.points[0])
             half1 = middle.segment(self.points[1])
-            comment = _comment('%s is the middle of segment %s', middle, self)
+            comment = LazyComment('%s is the middle of segment %s', middle, self)
             middle.inside_constraint(self, comment=comment, guaranteed=guaranteed)
             self.ratio_constraint(half0, 2, comment=comment, guaranteed=guaranteed)
             self.ratio_constraint(half1, 2, comment=comment, guaranteed=guaranteed)
@@ -549,7 +549,7 @@ class CoreScene:
             middle = self.middle_point(layer='auxiliary')
             line = self.line_through(layer='auxiliary')
             bisector = middle.perpendicular_line(line, **kwargs)
-            comment=_comment('%s is a perpendicular bisector of %s', bisector, self)
+            comment=LazyComment('%s is a perpendicular bisector of %s', bisector, self)
             bisector.perpendicular_constraint(line, comment=comment)
             self.scene.constraint(Constraint.Kind.perpendicular_bisector, bisector, self, comment=comment)
             return bisector
@@ -566,9 +566,9 @@ class CoreScene:
             comment = args.get('comment')
             if not comment:
                 if coef == 1:
-                    comment = _comment('Given: |%s| == |%s|', self, segment)
+                    comment = LazyComment('Given: |%s| == |%s|', self, segment)
                 else:
-                    comment = _comment('Given: |%s| == %s |%s|', self, coef, segment)
+                    comment = LazyComment('Given: |%s| == %s |%s|', self, coef, segment)
                 args['comment'] = comment
             return self.scene.constraint(Constraint.Kind.length_ratio, self, segment, coef, **args)
 
@@ -594,7 +594,7 @@ class CoreScene:
             self.scene.constraint(Constraint.Kind.distance, self, length, **kwargs)
 
         def __str__(self):
-            return str(_comment('%s %s', *self.points))
+            return str(LazyComment('%s %s', *self.points))
 
     def _get_angle(self, vector0, vector1):
         assert isinstance(vector0, CoreScene.Vector)
@@ -646,7 +646,7 @@ class CoreScene:
         def point_on_bisector_constraint(self, point, **kwargs):
             if kwargs.get('comment') is None:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = _comment(
+                kwargs['comment'] = LazyComment(
                     '[%s %s) is the bisector of %s', self.vertex, point, self
                 )
             angle0 = self.vertex.angle(self.vector0.end, point)
@@ -675,7 +675,7 @@ class CoreScene:
 
         def __str__(self):
             if self.vertex:
-                return str(_comment('∠ %s %s %s', self.vector0.end, self.vertex, self.vector1.end))
+                return str(LazyComment('∠ %s %s %s', self.vector0.end, self.vertex, self.vector1.end))
             return '∠(%s, %s)' % (self.vector0, self.vector1)
 
     def __init__(self, strategy='constructs'):
