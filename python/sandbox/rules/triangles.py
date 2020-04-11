@@ -159,7 +159,7 @@ class LegsOfIsoscelesRule(SingleSourceRule):
         if prop.reason.obsolete:
             return
         yield (
-            LengthRatioProperty(
+            ProportionalLengthsProperty(
                 prop.apex.segment(prop.base.points[0]),
                 prop.apex.segment(prop.base.points[1]),
                 1

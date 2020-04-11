@@ -2,7 +2,7 @@ import itertools
 import networkx as nx
 
 from .core import CoreScene
-from .property import AngleValueProperty, AngleRatioProperty, RatioOfNonZeroLengthsProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, LengthRatioProperty, PerpendicularSegmentsProperty
+from .property import AngleValueProperty, AngleRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty
 from .reason import Reason
 from .stats import Stats
 from .util import LazyComment, divide
@@ -353,7 +353,7 @@ class LengthRatioPropertySet:
             if isinstance(prop, EqualLengthRatiosProperty):
                 segs = prop.segments
                 self.premises_graph.add_edge((segs[0], segs[1]), (segs[2], segs[3]), prop=prop)
-            elif isinstance(prop, RatioOfNonZeroLengthsProperty):
+            elif isinstance(prop, LengthRatioProperty):
                 self.premises_graph.add_edge((prop.segment0, prop.segment1), (prop.value, ), prop=prop)
 
         def find_ratio(self, ratio):
@@ -377,7 +377,7 @@ class LengthRatioPropertySet:
         self.families = []
         self.ratio_to_family = {}
         self.__cache = {} # (segment, segment) => (prop, value)
-        self.possible_zeroes = {} # {segment, segment} => LengthRatioProperty
+        self.proportional_lengths = {} # {segment, segment} => ProportionalLengthsProperty
 
     def __add_lr(self, prop, ratio, value):
         def add_property_to(fam):
@@ -445,7 +445,7 @@ class LengthRatioPropertySet:
     def add(self, prop):
         if isinstance(prop, EqualLengthRatiosProperty):
             self.__add_elr(prop)
-        elif isinstance(prop, RatioOfNonZeroLengthsProperty):
+        elif isinstance(prop, LengthRatioProperty):
             ratio = (prop.segment0, prop.segment1)
             value = prop.value
             self.__add_lr(prop, ratio, value)
@@ -454,8 +454,8 @@ class LengthRatioPropertySet:
             value = divide(1, prop.value)
             self.__add_lr(prop, ratio, value)
             self.__cache[ratio] = (prop, value)
-        elif isinstance(prop, LengthRatioProperty):
-            self.possible_zeroes[prop.segment_set] = prop
+        elif isinstance(prop, ProportionalLengthsProperty):
+            self.proportional_lengths[prop.segment_set] = prop
 
     def explanation(self, ratio0, ratio1):
         fam = self.ratio_to_family.get(ratio0)
@@ -485,7 +485,7 @@ class LengthRatioPropertySet:
                 if len(premises) == 1:
                     yield premises[0]
                 else:
-                    prop = RatioOfNonZeroLengthsProperty(*ratio, fam.ratio_value)
+                    prop = LengthRatioProperty(*ratio, fam.ratio_value)
                     prop.reason = Reason(-2, -2, comment, premises)
                     prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                     yield prop
@@ -506,7 +506,7 @@ class LengthRatioPropertySet:
             ratio = (segment1, segment0)
             value = divide(1, fam.ratio_value)
         comment, premises = fam.value_explanation(ratio)
-        prop = RatioOfNonZeroLengthsProperty(*ratio, fam.ratio_value)
+        prop = LengthRatioProperty(*ratio, fam.ratio_value)
         prop.reason = Reason(-2, -2, comment, premises)
         prop.reason.obsolete = all(p.reason.obsolete for p in premises)
         pair = (prop, value)
@@ -541,9 +541,9 @@ class PropertySet:
             self.__angle_ratios.add(prop)
         elif type_key == AngleRatioProperty:
             self.__angle_ratios.add(prop)
-        elif type_key == LengthRatioProperty:
+        elif type_key == ProportionalLengthsProperty:
             self.__length_ratios.add(prop)
-        elif type_key == RatioOfNonZeroLengthsProperty:
+        elif type_key == LengthRatioProperty:
             self.__length_ratios.add(prop)
         elif type_key == PointsCoincidenceProperty:
             self.__coincidence[prop.point_set] = prop
@@ -605,7 +605,7 @@ class PropertySet:
             #TODO: check degree for contradiction
             fam = self.__angle_ratios.family_with_degree
             return fam and prop.angle in fam.angle_to_ratio
-        #TODO: RatioOfNonZeroLengthsProperty
+        #TODO: LengthRatioProperty
         #TODO: EqualLengthRatiosProperty
         #TODO: SameCyclicOrderProperty
         return False
@@ -650,22 +650,22 @@ class PropertySet:
             collection = []
             for prop in self.__length_ratios.value_properties():
                 key = frozenset([prop.segment0, prop.segment1])
-                if key not in self.__length_ratios.possible_zeroes:
+                if key not in self.__length_ratios.proportional_lengths:
                     collection.append(prop)
-            return list(self.__length_ratios.possible_zeroes.values()) + collection
+            return list(self.__length_ratios.proportional_lengths.values()) + collection
         else:
             return self.__length_ratios.value_properties()
 
     def length_ratio_property_and_value(self, segment0, segment1, allow_zeroes):
         if allow_zeroes:
-            prop = self.__length_ratios.possible_zeroes.get(frozenset([segment0, segment1]))
+            prop = self.__length_ratios.proportional_lengths.get(frozenset([segment0, segment1]))
             if prop:
                 return (prop, prop.value if prop.segment0 == segment0 else divide(1, prop.value))
         return self.__length_ratios.property_and_value(segment0, segment1)
 
     def congruent_segments_property(self, segment0, segment1, allow_zeroes):
         if allow_zeroes:
-            prop = self.__length_ratios.possible_zeroes.get(frozenset([segment0, segment1]))
+            prop = self.__length_ratios.proportional_lengths.get(frozenset([segment0, segment1]))
             if prop:
                 return prop if prop.value == 1 else None
         prop, value = self.__length_ratios.property_and_value(segment0, segment1)

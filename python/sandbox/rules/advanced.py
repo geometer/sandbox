@@ -1,6 +1,6 @@
 import sympy as sp
 
-from sandbox.property import AngleValueProperty, IsoscelesTriangleProperty, LengthRatioProperty, PerpendicularSegmentsProperty, PointsCollinearityProperty
+from sandbox.property import AngleValueProperty, IsoscelesTriangleProperty, LengthRatioProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, PointsCollinearityProperty
 from sandbox.util import LazyComment
 
 from .abstract import SingleSourceRule
@@ -27,7 +27,7 @@ class RightAngledTriangleMedianRule(SingleSourceRule):
             if value != 2:
                 continue
             yield (
-                LengthRatioProperty(hypot, med.segment(vertex), 2),
+                ProportionalLengthsProperty(hypot, med.segment(vertex), 2),
                 LazyComment('Median in right-angled △ %s %s %s is equal to half of the hypotenuse', vertex, pt0, pt1),
                 [prop, col, half0, half1]
             )

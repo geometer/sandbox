@@ -772,7 +772,7 @@ class Explainer:
                 if not equ.reason.obsolete:
                     for i, j in itertools.combinations(range(0, 3), 2):
                         yield (
-                            LengthRatioProperty(equ.triangle.side_for_index(i), equ.triangle.side_for_index(j), 1),
+                            ProportionalLengthsProperty(equ.triangle.side_for_index(i), equ.triangle.side_for_index(j), 1),
                             LazyComment('Sides of equilateral %s', equ.triangle),
                             [equ]
                         )
@@ -812,26 +812,10 @@ class Explainer:
                 if all(prop.reason.obsolete for prop in premises):
                     continue
                 yield (
-                    LengthRatioProperty(segment0, segment1, 1),
+                    ProportionalLengthsProperty(segment0, segment1, 1),
                     comment,
                     premises
                 )
-
-            for st in self.context.list(SimilarTrianglesProperty):
-                st_is_too_old = st.reason.obsolete
-                for i in range(0, 3):
-                    lr, ratio = self.context.length_ratio_property_and_value(st.triangle0.side_for_index(i), st.triangle1.side_for_index(i), True)
-                    if lr is None:
-                        continue
-                    if ratio == 1 or st_is_too_old and lr.reason.obsolete:
-                        break
-                    for j in [j for j in range(0, 3) if j != i]:
-                        yield (
-                            LengthRatioProperty(st.triangle0.side_for_index(j), st.triangle1.side_for_index(j), ratio),
-                            'Ratios of sides in similar triangles',
-                            [st, lr]
-                        )
-                    break
 
             for ct in self.context.list(CongruentTrianglesProperty):
                 if ct.reason.obsolete:
@@ -841,10 +825,25 @@ class Explainer:
                     segment1 = ct.triangle1.side_for_index(i)
                     if segment0 != segment1:
                         yield (
-                            LengthRatioProperty(segment0, segment1, 1),
+                            ProportionalLengthsProperty(segment0, segment1, 1),
                             'Corresponding sides in congruent triangles',
                             [ct]
                         )
+
+            for st in self.context.list(SimilarTrianglesProperty):
+                for i in range(0, 3):
+                    lr, ratio = self.context.length_ratio_property_and_value(st.triangle0.side_for_index(i), st.triangle1.side_for_index(i), True)
+                    if lr is None:
+                        continue
+                    if ratio == 1 or st.reason.obsolete and lr.reason.obsolete:
+                        break
+                    for j in [j for j in range(0, 3) if j != i]:
+                        yield (
+                            ProportionalLengthsProperty(st.triangle0.side_for_index(j), st.triangle1.side_for_index(j), ratio),
+                            'Ratios of sides in similar triangles',
+                            [st, lr]
+                        )
+                    break
 
             for ct in self.context.list(CongruentTrianglesProperty):
                 if ct.reason.obsolete:

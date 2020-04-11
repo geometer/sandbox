@@ -21,7 +21,7 @@ def enumerate_predefined_properties(scene):
     for cnstr in scene.constraints(Constraint.Kind.length_ratio):
         if all(param.layer != 'invisible' for param in [*cnstr.params[0].points, *cnstr.params[1].points]):
             yield (
-                LengthRatioProperty(cnstr.params[0], cnstr.params[1], cnstr.params[2]),
+                ProportionalLengthsProperty(cnstr.params[0], cnstr.params[1], cnstr.params[2]),
                 cnstr.comments
             )
 
@@ -109,12 +109,12 @@ def enumerate_predefined_properties(scene):
         if circle.centre not in circle.radius.points:
             for rad in radiuses:
                 yield (
-                    LengthRatioProperty(rad, circle.radius, 1),
+                    ProportionalLengthsProperty(rad, circle.radius, 1),
                     [LazyComment('Distance between centre %s and point %s on the circle of radius |%s|', circle.centre, rad.points[0], circle.radius)]
                 )
         for rad0, rad1 in itertools.combinations(radiuses, 2):
             yield (
-                LengthRatioProperty(rad0, rad1, 1),
+                ProportionalLengthsProperty(rad0, rad1, 1),
                 [LazyComment('Two radiuses of the same circle with centre %s', circle.centre)]
             )
 

@@ -7,7 +7,7 @@ from sandbox.util import LazyComment, divide
 from .abstract import Rule, SingleSourceRule
 
 class ProportionalLengthsToLengthsRatioRule(SingleSourceRule):
-    property_type = LengthRatioProperty
+    property_type = ProportionalLengthsProperty
 
     def apply(self, prop):
         ne = self.context.not_equal_property(*prop.segment0.points)
@@ -16,7 +16,7 @@ class ProportionalLengthsToLengthsRatioRule(SingleSourceRule):
         if ne is None or prop.reason.obsolete and ne.reason.obsolete:
             return
         yield (
-            RatioOfNonZeroLengthsProperty(prop.segment0, prop.segment1, prop.value),
+            LengthRatioProperty(prop.segment0, prop.segment1, prop.value),
             prop.reason.comments,
             [prop, ne]
         )
@@ -89,28 +89,28 @@ class LengthRatioTransitivityRule(Rule):
         if lr0.segment0 == lr1.segment0:
             coef = divide(lr1.value, lr0.value)
             yield (
-                LengthRatioProperty(lr0.segment1, lr1.segment1, coef),
+                ProportionalLengthsProperty(lr0.segment1, lr1.segment1, coef),
                 LazyComment('|%s| = %s|%s| = %s|%s|', lr0.segment1, _cs(divide(1, lr0.value)), lr0.segment0, _cs(coef), lr1.segment1),
                 [lr0, lr1]
             )
         elif lr0.segment0 == lr1.segment1:
             coef = lr1.value * lr0.value
             yield (
-                LengthRatioProperty(lr1.segment0, lr0.segment1, coef),
+                ProportionalLengthsProperty(lr1.segment0, lr0.segment1, coef),
                 LazyComment('|%s| = %s|%s| = %s|%s|', lr1.segment0, _cs(lr1.value), lr0.segment0, _cs(coef), lr0.segment1),
                 [lr1, lr0]
             )
         elif lr0.segment1 == lr1.segment0:
             coef = lr1.value * lr0.value
             yield (
-                LengthRatioProperty(lr0.segment0, lr1.segment1, coef),
+                ProportionalLengthsProperty(lr0.segment0, lr1.segment1, coef),
                 LazyComment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.value), lr0.segment1, _cs(coef), lr1.segment1),
                 [lr0, lr1]
             )
         elif lr0.segment1 == lr1.segment1:
             coef = divide(lr0.value, lr1.value)
             yield (
-                LengthRatioProperty(lr0.segment0, lr1.segment0, coef),
+                ProportionalLengthsProperty(lr0.segment0, lr1.segment0, coef),
                 LazyComment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.value), lr0.segment1, _cs(coef), lr1.segment0),
                 [lr0, lr1]
             )
@@ -264,7 +264,7 @@ class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
         yield (AngleValueProperty(ar.angle1, value1), comment1, [prop, ar])
 
 class LengthRatioRule(SingleSourceRule):
-    property_type = LengthRatioProperty
+    property_type = ProportionalLengthsProperty
 
     def apply(self, prop):
         seg0 = prop.segment0
@@ -436,12 +436,12 @@ class PerpendicularToEquidistantRule(SingleSourceRule):
             if cs:
                 if prop.reason.obsolete and cs.reason.obsolete:
                     continue
-                new_prop = LengthRatioProperty(*segments[1], 1)
+                new_prop = ProportionalLengthsProperty(*segments[1], 1)
             else:
                 cs = self.context.congruent_segments_property(*segments[1], True)
                 if cs is None or prop.reason.obsolete and cs.reason.obsolete:
                     continue
-                new_prop = LengthRatioProperty(*segments[0], 1)
+                new_prop = ProportionalLengthsProperty(*segments[0], 1)
             yield (
                 new_prop,
                 LazyComment('%s and %s lie on the same perpendicular to %s', *seg0.points, seg1),
@@ -561,19 +561,19 @@ class LengthProductEqualityToRatioRule(SingleSourceRule):
             if ne[j] and ne[l] and not (prop.reason.obsolete and ne[j].reason.obsolete and ne[l].reason.obsolete):
                 if prop.segments[j] == prop.segments[l]:
                     yield (
-                        LengthRatioProperty(prop.segments[i], prop.segments[k], 1),
+                        ProportionalLengthsProperty(prop.segments[i], prop.segments[k], 1),
                         prop.reason.comments,
                         prop.reason.premises + [ne[j], ne[l]]
                     )
                 elif prop.segments[i] == prop.segments[j]:
                     yield (
-                        LengthRatioProperty(prop.segments[k], prop.segments[l], 1),
+                        ProportionalLengthsProperty(prop.segments[k], prop.segments[l], 1),
                         prop.reason.comments,
                         prop.reason.premises + [ne[j]]
                     )
                 elif prop.segments[k] == prop.segments[l]:
                     yield (
-                        LengthRatioProperty(prop.segments[i], prop.segments[j], 1),
+                        ProportionalLengthsProperty(prop.segments[i], prop.segments[j], 1),
                         prop.reason.comments,
                         prop.reason.premises + [ne[l]]
                     )

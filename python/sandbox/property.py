@@ -328,7 +328,7 @@ class SumOfAnglesProperty(Property):
     def __hash__(self):
         return hash(SumOfAnglesProperty) + hash(self.angle_set)
 
-class RatioOfNonZeroLengthsProperty(Property):
+class LengthRatioProperty(Property):
     """
     Two non-zero segment lengths ratio
     """
@@ -354,12 +354,12 @@ class RatioOfNonZeroLengthsProperty(Property):
         return self.value == other.value
 
     def __eq__(self, other):
-        return isinstance(other, RatioOfNonZeroLengthsProperty) and self.segment_set == other.segment_set
+        return isinstance(other, LengthRatioProperty) and self.segment_set == other.segment_set
 
     def __hash__(self):
-        return hash(RatioOfNonZeroLengthsProperty) + hash(self.segment_set)
+        return hash(LengthRatioProperty) + hash(self.segment_set)
 
-class LengthRatioProperty(Property):
+class ProportionalLengthsProperty(Property):
     """
     Two segment lengths ratio
     """
@@ -387,10 +387,10 @@ class LengthRatioProperty(Property):
         return self.value == other.value
 
     def __eq__(self, other):
-        return isinstance(other, LengthRatioProperty) and self.segment_set == other.segment_set
+        return isinstance(other, ProportionalLengthsProperty) and self.segment_set == other.segment_set
 
     def __hash__(self):
-        return hash(LengthRatioProperty) + hash(self.segment_set)
+        return hash(ProportionalLengthsProperty) + hash(self.segment_set)
 
 class EqualLengthProductsProperty(Property):
     """
