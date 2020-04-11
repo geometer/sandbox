@@ -26,6 +26,7 @@ class ThreePointsOnPerpendicularBisectorCollinearity1(ExplainerTest):
         prop1 = SameOrOppositeSideProperty(D.segment(E), A, B, False)
         self.assertIn(prop0, self.explainer.context)
         self.assertNotIn(prop1, self.explainer.context)
+        self.assertEqual(len(self.explainer.explanation(prop0).reason.all_premises), 6)
 
 class ThreePointsOnPerpendicularBisectorCollinearity2(ExplainerTest):
     def createScene(self):

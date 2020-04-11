@@ -53,17 +53,13 @@ def run_sample(scene, prop=None):
 
         def all_premises(prop):
             premises = PropertySet()
-            def collect(p):
+            for p in prop.reason.all_premises:
                 premises.add(p)
-                if p.reason.premises:
-                    for pre in p.reason.premises:
-                        collect(pre)
-            collect(prop)
             return premises
 
         explanation = explainer.explanation(prop)
         if explanation:
             dump(explanation)
             print('Depth = %s' % depth(explanation))
-            print('Props = %s' % len(all_premises(explanation)))
+            print('Props = %s' % len(explanation.reason.all_premises))
             all_premises(explanation).stats().dump()
