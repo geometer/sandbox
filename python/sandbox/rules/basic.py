@@ -1,7 +1,8 @@
 import itertools
 
 from sandbox.property import *
-from sandbox.util import _comment, divide, Triangle
+from sandbox.scene import Triangle
+from sandbox.util import _comment, divide
 
 from .abstract import Rule, SingleSourceRule
 

@@ -1,15 +1,5 @@
 import sympy as sp
 
-class Triangle:
-    def __init__(self, points):
-        self.points = tuple(points)
-
-    def side_for_index(self, index):
-        return self.points[(index + 1) % 3].segment(self.points[(index + 2) % 3])
-
-    def angle_for_index(self, index):
-        return self.points[index].angle(self.points[(index + 1) % 3], self.points[(index + 2) % 3])
-
 def keys_for_triangle(triangle, lengths):
     collection = []
     if lengths is None or 3 in lengths:

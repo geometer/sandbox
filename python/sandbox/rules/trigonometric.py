@@ -2,7 +2,8 @@ import itertools
 import sympy as sp
 
 from sandbox.property import LengthRatioProperty
-from sandbox.util import _comment, Triangle
+from sandbox.scene import Triangle
+from sandbox.util import _comment
 
 from .abstract import Rule
 

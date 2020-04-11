@@ -3,15 +3,16 @@ import time
 import sympy as sp
 
 from .core import Constraint
+from .predefined import enumerate_predefined_properties
 from .property import *
 from .propertyset import PropertySet
 from .reason import Reason
 from .rules.advanced import *
 from .rules.basic import *
 from .rules.trigonometric import *
-from .scene import Scene
+from .scene import Scene, Triangle
 from .stats import Stats
-from .util import _comment, divide, Triangle
+from .util import _comment, divide
 
 class Explainer:
     def __init__(self, scene, options=()):
@@ -1317,7 +1318,7 @@ class Explainer:
                     [lr, ne]
                 )
 
-        for prop, comment in self.scene.enumerate_predefined_properties():
+        for prop, comment in enumerate_predefined_properties(self.scene):
             self.__reason(prop, comment, [])
 
         self.__iteration_step_count = 0

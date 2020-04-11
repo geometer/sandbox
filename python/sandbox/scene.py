@@ -7,6 +7,19 @@ import itertools
 from .core import CoreScene
 from .util import _comment
 
+class Triangle:
+    def __init__(self, points):
+        self.points = tuple(points)
+
+    def side_for_index(self, index):
+        return self.points[(index + 1) % 3].segment(self.points[(index + 2) % 3])
+
+    def angle_for_index(self, index):
+        return self.points[index].angle(self.points[(index + 1) % 3], self.points[(index + 2) % 3])
+
+    def __str__(self):
+        return '△ %s %s %s' % self.points
+
 class Scene(CoreScene):
     """
     The main class Scene.

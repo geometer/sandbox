@@ -1,6 +1,7 @@
 import itertools
 
-from .util import _comment, divide, good_angles, normalize_number, Triangle, keys_for_triangle
+from .scene import Triangle
+from .util import _comment, divide, good_angles, normalize_number, keys_for_triangle
 
 class Property:
     def keys(self):

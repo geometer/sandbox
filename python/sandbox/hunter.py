@@ -5,8 +5,9 @@ import numpy as np
 from . import Scene, iterative_placement
 from .placement import Placement
 from .property import *
+from .scene import Triangle
 from .stats import Stats
-from .util import _comment, divide, Triangle
+from .util import _comment, divide
 
 ERROR = np.float128(5e-6)
 
