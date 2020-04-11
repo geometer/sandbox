@@ -81,6 +81,7 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
 
     def apply(self, src):
         ang0, ang1 = src
+        ca = None
         for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
             segments = (
                 vec0.as_segment, vec1.as_segment,
@@ -92,7 +93,8 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
                     break
             else:
                 continue
-            ca = self.context.angle_ratio_property(ang0, ang1)
+            if ca is None:
+                ca = self.context.angle_ratio_property(ang0, ang1)
             if ca.reason.obsolete and elr.reason.obsolete:
                 continue
             yield (
