@@ -2,7 +2,7 @@ import itertools
 import networkx as nx
 
 from .core import CoreScene
-from .property import AngleValueProperty, AngleRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty
+from .property import AngleValueProperty, AngleRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, SimilarTrianglesProperty
 from .reason import Reason
 from .stats import Stats
 from .util import LazyComment, divide
@@ -551,6 +551,15 @@ class PropertySet:
         elif type_key == SameCyclicOrderProperty:
             self.__cyclic_orders.add(prop)
 
+    def single_point_premises(self, *points):
+        premises = []
+        for pt in points[1:]:
+            prop = self.__coincidence.get(frozenset([pt, points[0]]))
+            if not prop or not prop.coincident:
+                return None
+            premises.append(prop)
+        return premises
+
     def length_ratios_equal_to_one(self):
         ratio_to_explanation = {}
         for fam in self.__length_ratios.families:
@@ -611,7 +620,20 @@ class PropertySet:
         existing = self.__full_set.get(prop)
         #TODO: better way to report contradiction
         assert existing is None or existing.compare_values(prop), 'Contradiction: values are different for %s and %s' % (prop, existing)
-        return existing
+        if existing:
+            return existing
+        if isinstance(prop, SimilarTrianglesProperty):
+            for triangle in (prop.triangle0, prop.triangle1):
+                premises = self.single_point_premises(*triangle.points)
+                if premises:
+                    prop.reason = Reason(
+                        -2, -2,
+                        LazyComment('Single-point %s is similar to any triangle', triangle),
+                        premises
+                    )
+                    return prop
+        return None
+
 
     def collinearity_property(self, pt0, pt1, pt2):
         return self.__collinearity.get(frozenset([pt0, pt1, pt2]))

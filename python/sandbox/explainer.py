@@ -16,9 +16,12 @@ from .stats import Stats
 from .util import LazyComment, divide
 
 class Explainer:
-    def __init__(self, scene, options=()):
+    def __init__(self, scene, options=(), base=None):
         self.scene = scene
         self.context = PropertySet()
+        if base:
+            for prop in base.context.all:
+                self.context.add(prop)
         self.__options = options
         self.__explanation_time = None
         self.__iteration_step_count = -1
