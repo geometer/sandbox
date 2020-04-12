@@ -159,21 +159,19 @@ class AngleRatioPropertySet:
                     rs.append(item)
                 else:
                     angles_map[key] = [item]
-            properties = []
             for ar in angles_map.values():
                 for item0, item1 in itertools.combinations(ar, 2):
                     angle0, ratio0 = item0
                     angle1, ratio1 = item1
                     path = nx.algorithms.shortest_path(self.premises_graph, angle0, angle1)
                     if len(path) == 2:
-                        properties.append(self.premises_graph[path[0]][path[1]]['prop'])
-                        continue
-                    comment, premises = self.explanation_from_path(path, ratio0)
-                    prop = AngleRatioProperty(angle0, angle1, divide(ratio0, ratio1))
-                    prop.reason = Reason(-2, -2, comment, premises)
-                    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-                    properties.append(prop)
-            return properties
+                        yield self.premises_graph[path[0]][path[1]]['prop']
+                    else:
+                        comment, premises = self.explanation_from_path(path, ratio0)
+                        prop = AngleRatioProperty(angle0, angle1, divide(ratio0, ratio1))
+                        prop.reason = Reason(-2, -2, comment, premises)
+                        prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+                        yield prop
 
         def add_value_property(self, prop):
             ratio = self.angle_to_ratio.get(prop.angle)
@@ -250,15 +248,14 @@ class AngleRatioPropertySet:
         return prop
 
     def same_triple_ratio_properties(self):
-        properties = []
         for fam in set(self.angle_to_family.values()):
-            properties += fam.same_triple_ratio_properties()
-        return properties
+            for prop in fam.same_triple_ratio_properties():
+                yield prop
 
     def congruent_angles(self):
         for fam in set(self.angle_to_family.values()):
-            for prop in fam.congruent_angles():
-                yield prop
+            for angle in fam.congruent_angles():
+                yield angle
 
     def add(self, prop):
         if isinstance(prop, AngleRatioProperty):

@@ -504,18 +504,12 @@ class Explainer:
             for ar in self.context.same_triple_angle_ratio_properties():
                 a0 = ar.angle0
                 a1 = ar.angle1
-                if a0.vertex is None or a1.vertex is None:
-                    continue
-                s0 = {a0.vertex, a0.vector0.end, a0.vector1.end}
-                s1 = {a1.vertex, a1.vector0.end, a1.vector1.end}
-                if s0 != s1:
-                    continue
-                s0.remove(a0.vertex)
-                s0.remove(a1.vertex)
-                third_vertex = s0.pop()
+                third_vertex = next(pt for pt in a0.points if pt not in (a0.vertex, a1.vertex))
                 a2 = third_vertex.angle(a0.vertex, a1.vertex)
                 a2_reason = self.context.angle_value_property(a2)
-                if a2_reason is None or ar.reason.obsolete and a2_reason.reason.obsolete:
+                if a2_reason is None:
+                    continue
+                if ar.reason.obsolete and a2_reason.reason.obsolete:
                     continue
                 #a0 + a1 + a2 = 180
                 #a0 + a1 = 180 - a2
