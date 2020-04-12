@@ -1,8 +1,8 @@
-from runner import run_sample
 from sandbox import Scene
 from sandbox.explainer import Explainer
 from sandbox.property import SimilarTrianglesProperty
 from sandbox.property import AcuteAngleProperty, ObtuseAngleProperty, AngleValueProperty, PointsCollinearityProperty
+from sandbox.propertyset import ContradictionError
 from sandbox.reason import Reason
 
 scene = Scene()
@@ -41,11 +41,23 @@ if explainer0.explained(prop):
     print('Explained: %s' % explainer0.explained(prop))
 else:
     for angle in angles(explainer0.context):
-        for variant in (AngleValueProperty(angle, 90), AcuteAngleProperty(angle), ObtuseAngleProperty(angle)):
-            print('With assumption: %s' % variant)
-            explainer = Explainer(scene, base=explainer0)
-            variant.reason = Reason(-2, -2, 'Variant', [])
-            variant.reason.obsolete = False
-            explainer.context.add(variant)
-            explainer.explain()
-            print('Explained: %s' % explainer.explained(prop))
+        print('Trying variants for: %s' % angle)
+        success_count = 0
+        contradiction_count = 0
+        for assumption in (AngleValueProperty(angle, 90), AcuteAngleProperty(angle), ObtuseAngleProperty(angle)):
+            try:
+                explainer = Explainer(scene, base=explainer0)
+                assumption.reason = Reason(-2, -2, 'Assumption', [])
+                assumption.reason.obsolete = False
+                explainer.context.add(assumption)
+                explainer.explain()
+                if explainer.explained(prop):
+                    success_count += 1
+                else:
+                    break
+            except ContradictionError as error:
+                contradiction_count += 1
+        if success_count > 0 and success_count + contradiction_count == 3:
+            print('Success: %s proof(s), %s contradiction(s) found' % (success_count, contradiction_count))
+        else:
+            print('Failed: %s proof(s), %s contradiction(s) found' % (success_count, contradiction_count))
