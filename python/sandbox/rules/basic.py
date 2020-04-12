@@ -661,7 +661,22 @@ class AngleTypeByDegreeRule(Rule):
                 prop.reason.premises
             )
 
-class AngleTypesInObtuseangledTriangle(SingleSourceRule):
+class RightAngleDegreeRule(SingleSourceRule):
+    property_type = AngleKindProperty
+
+    def accepts(self, prop):
+        return prop.kind == AngleKindProperty.Kind.right
+
+    def apply(self, prop):
+        if prop.reason.obsolete:
+            return
+        yield (
+            AngleValueProperty(prop.angle, 90),
+            prop.reason.comments,
+            prop.reason.premises
+        )
+
+class AngleTypesInObtuseangledTriangleRule(SingleSourceRule):
     property_type = AngleKindProperty
 
     def accepts(self, prop):
