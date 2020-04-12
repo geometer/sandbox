@@ -737,18 +737,21 @@ class Explainer:
                         [cs, ne]
                     )
 
-            for ar in self.context.same_triple_angle_ratio_properties():
-                if ar.value != 1:
+            for ang0, ang1 in self.context.congruent_angles():
+                if ang0.vertex is None or set(ang0.points) != set(ang1.points):
                     continue
-                nc = self.context.not_collinear_property(*ar.angle0.points)
+                nc = self.context.not_collinear_property(*ang0.points)
                 if nc is None:
                     continue
-                base = ar.angle0.vertex.segment(ar.angle1.vertex)
-                apex = next(pt for pt in ar.angle0.points if pt not in base.points)
+                ca = self.context.angle_ratio_property(ang0, ang1)
+                if ca.reason.obsolete and nc.reason.obsolete:
+                    continue
+                base = ang0.vertex.segment(ang1.vertex)
+                apex = next(pt for pt in ang0.points if pt not in base.points)
                 yield (
                     IsoscelesTriangleProperty(apex, base),
                     'Congruent base angles',
-                    [ar]
+                    [ca, nc]
                 )
 
             for equ in self.context.list(EquilateralTriangleProperty):
