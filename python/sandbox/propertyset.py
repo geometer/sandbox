@@ -2,7 +2,7 @@ import itertools
 import networkx as nx
 
 from .core import CoreScene
-from .property import AngleValueProperty, AngleRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, SimilarTrianglesProperty
+from .property import AngleKindProperty, AngleValueProperty, AngleRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, SimilarTrianglesProperty
 from .reason import Reason
 from .stats import Stats
 from .util import LazyComment, divide
@@ -520,6 +520,7 @@ class PropertySet:
     def __init__(self):
         self.__combined = {} # (type, key) => [prop] and type => prop
         self.__full_set = {} # prop => prop
+        self.__angle_kinds = {} # angle => prop
         self.__angle_ratios = AngleRatioPropertySet()
         self.__length_ratios = LengthRatioPropertySet()
         self.__cyclic_orders = CyclicOrderPropertySet()
@@ -542,6 +543,8 @@ class PropertySet:
         self.__full_set[prop] = prop
         if type_key == AngleValueProperty:
             self.__angle_ratios.add(prop)
+        elif type_key == AngleKindProperty:
+            self.__angle_kinds[prop.angle] = prop
         elif type_key == AngleRatioProperty:
             self.__angle_ratios.add(prop)
         elif type_key == ProportionalLengthsProperty:
@@ -654,6 +657,9 @@ class PropertySet:
 
     def angle_value_property(self, angle):
         return self.__angle_ratios.value_property(angle)
+
+    def angle_kind_property(self, angle):
+        return self.__angle_kinds.get(angle)
 
     def nondegenerate_angle_value_properties(self):
         return self.__angle_ratios.value_properties()

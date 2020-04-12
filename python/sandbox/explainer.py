@@ -56,8 +56,6 @@ class Explainer:
             RotatedAngleRule(self.context),
             AngleTypeByDegreeRule(self.context),
             AngleTypesInObtuseangledTriangle(self.context),
-            AngleTypesInRightangledTriangle(self.context),
-            PartOfRightAngleIsAcuteRule(self.context),
             PartOfAcuteAngleIsAcuteRule(self.context),
         ]
         if 'advanced' in options:
@@ -503,7 +501,7 @@ class Explainer:
                 yield (AngleValueProperty(a0, a0_value), comment, [ar, a2_reason])
                 yield (AngleValueProperty(a1, a1_value), comment, [ar, a2_reason])
 
-            for aa in self.context.list(AcuteAngleProperty):
+            for aa in [p for p in self.context.list(AngleKindProperty) if p.kind == AngleKindProperty.Kind.acute]:
                 base = aa.angle
                 if base.vertex is None:
                     continue
@@ -524,7 +522,7 @@ class Explainer:
                                 yield (AngleValueProperty(zero, 0), comment, [col, aa, ka])
                             break
 
-            for aa in self.context.list(AcuteAngleProperty):
+            for aa in [p for p in self.context.list(AngleKindProperty) if p.kind == AngleKindProperty.Kind.acute]:
                 base = aa.angle
                 if base.vertex is None:
                     continue
@@ -548,7 +546,7 @@ class Explainer:
                             [perp, col, aa]
                         )
 
-            for aa in self.context.list(ObtuseAngleProperty):
+            for aa in [p for p in self.context.list(AngleKindProperty) if p.kind == AngleKindProperty.Kind.obtuse]:
                 base = aa.angle
                 if base.vertex is None:
                     continue
@@ -596,7 +594,7 @@ class Explainer:
                             [perp, col, aa]
                         )
 
-            for oa in self.context.list(ObtuseAngleProperty):
+            for oa in [p for p in self.context.list(AngleKindProperty) if p.kind == AngleKindProperty.Kind.obtuse]:
                 base = oa.angle
                 if base.vertex is None:
                     continue
@@ -639,7 +637,7 @@ class Explainer:
                                 yield (AngleValueProperty(zero, 0), comment, [ka, col, ka2])
                             break
 
-            for aa0, aa1 in itertools.combinations([a for a in self.context.list(AcuteAngleProperty) if a.angle.vertex], 2):
+            for aa0, aa1 in itertools.combinations([a for a in self.context.list(AngleKindProperty) if a.angle.vertex and a.kind == AngleKindProperty.Kind.acute], 2):
                 vertex = aa0.angle.vertex
                 if vertex != aa1.angle.vertex:
                     continue
