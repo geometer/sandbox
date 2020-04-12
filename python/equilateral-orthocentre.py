@@ -1,8 +1,6 @@
-import sys
-
 from sandbox import Scene
-from sandbox.hunter import Hunter
-from sandbox.explainer import Explainer
+
+from runner import run_sample
 
 scene = Scene()
 
@@ -11,15 +9,4 @@ A.segment(C).congruent_constraint(A.segment(B))
 B.segment(C).congruent_constraint(A.segment(B))
 scene.orthocentre_point((A, B, C), label='D')
 
-hunter = Hunter(scene, max_layer='auxiliary')
-hunter.hunt()
-
-explainer = Explainer(scene, hunter.properties)
-if '--profile' in sys.argv[1:]:
-    import cProfile
-    cProfile.run('explainer.explain()')
-else:
-    explainer.explain()
-if '--dump' in sys.argv[1:]:
-    explainer.dump()
-explainer.stats().dump()
+run_sample(scene)

@@ -1,6 +1,6 @@
 from sandbox import Scene
-from sandbox.hunter import Hunter
-from sandbox.explainer import Explainer
+
+from runner import run_sample
 
 scene = Scene()
 
@@ -9,10 +9,4 @@ A.segment(C).congruent_constraint(A.segment(B))
 B.segment(C).congruent_constraint(A.segment(B))
 scene.centroid_point((A, B, C), label='D')
 
-hunter = Hunter(scene, max_layer='auxiliary')
-hunter.hunt()
-
-explainer = Explainer(scene, hunter.properties)
-explainer.explain()
-#explainer.dump()
-explainer.stats().dump()
+run_sample(scene)
