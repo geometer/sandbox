@@ -619,3 +619,93 @@ class RotatedAngleRule(Rule):
                 'Rotated', #TODO: better comment
                 [ca, co]
             )
+
+class PartOfAcuteAngleIsAcuteRule(SingleSourceRule):
+    property_type = PointInsideAngleProperty
+
+    def apply(self, prop):
+        acute = self.context[AcuteAngleProperty(prop.angle)]
+        if acute is None or prop.reason.obsolete and acute.reason.obsolete:
+            return
+        for vec in prop.angle.vector0, prop.angle.vector1:
+            angle = prop.angle.vertex.angle(vec.end, prop.point)
+            yield (
+                AcuteAngleProperty(angle),
+                LazyComment('%s is a part of acute %s', angle, prop.angle),
+                [prop, acute]
+            )
+
+class PartOfRightAngleIsAcuteRule(SingleSourceRule):
+    property_type = PointInsideAngleProperty
+
+    def apply(self, prop):
+        right = self.context.angle_value_property(prop.angle)
+        if right is None or right.degree != 90 or prop.reason.obsolete and right.reason.obsolete:
+            return
+        for vec in prop.angle.vector0, prop.angle.vector1:
+            angle = prop.angle.vertex.angle(vec.end, prop.point)
+            yield (
+                AcuteAngleProperty(angle),
+                LazyComment('%s is a part of right %s', angle, prop.angle),
+                [prop, right]
+            )
+
+class AngleTypeByDegreeRule(Rule):
+    def sources(self):
+        return self.context.nondegenerate_angle_value_properties()
+
+    def apply(self, prop):
+        if prop.reason.obsolete:
+            return
+        if prop.degree < 90:
+            yield (
+                AcuteAngleProperty(prop.angle),
+                LazyComment('0º < %sº < 90º', prop.degree),
+                [prop]
+            )
+        elif prop.degree > 90:
+            yield (
+                ObtuseAngleProperty(prop.angle),
+                LazyComment('90º < %sº < 180º', prop.degree),
+                [prop]
+            )
+
+class AngleTypesInRightangledTriangle(Rule):
+    def sources(self):
+        return [p for p in self.context.nondegenerate_angle_value_properties() if p.degree == 90 and p.angle.vertex]
+
+    def apply(self, prop):
+        if prop.reason.obsolete:
+            return
+        ang = prop.angle
+        yield (
+            AcuteAngleProperty(ang.vector0.end.angle(ang.vertex, ang.vector1.end)),
+            LazyComment('An angle of △ %s %s %s, another angle is right', *ang.points),
+            [prop]
+        )
+        yield (
+            AcuteAngleProperty(ang.vector1.end.angle(ang.vertex, ang.vector0.end)),
+            LazyComment('An angle of △ %s %s %s, another angle is right', *ang.points),
+            [prop]
+        )
+
+class AngleTypesInObtuseangledTriangle(SingleSourceRule):
+    property_type = ObtuseAngleProperty
+
+    def accepts(self, prop):
+        return prop.angle.vertex is not None
+
+    def apply(self, prop):
+        if prop.reason.obsolete:
+            return
+        ang = prop.angle
+        yield (
+            AcuteAngleProperty(ang.vector0.end.angle(ang.vertex, ang.vector1.end)),
+            LazyComment('An angle of △ %s %s %s, another angle is right', *ang.points),
+            [prop]
+        )
+        yield (
+            AcuteAngleProperty(ang.vector1.end.angle(ang.vertex, ang.vector0.end)),
+            LazyComment('An angle of △ %s %s %s, another angle is right', *ang.points),
+            [prop]
+        )

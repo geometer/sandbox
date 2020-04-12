@@ -51,6 +51,11 @@ class Explainer:
             BaseAnglesOfIsoscelesRule(self.context),
             LegsOfIsoscelesRule(self.context),
             RotatedAngleRule(self.context),
+            AngleTypeByDegreeRule(self.context),
+            AngleTypesInObtuseangledTriangle(self.context),
+            AngleTypesInRightangledTriangle(self.context),
+            PartOfRightAngleIsAcuteRule(self.context),
+            PartOfAcuteAngleIsAcuteRule(self.context),
         ]
         if 'advanced' in options:
             self.__rules += [
@@ -323,30 +328,6 @@ class Explainer:
                             )
 
             for pia in self.context.list(PointInsideAngleProperty):
-                acute = self.context[AcuteAngleProperty(pia.angle)]
-                if acute is None or pia.reason.obsolete and acute.reason.obsolete:
-                    continue
-                for vec in pia.angle.vector0, pia.angle.vector1:
-                    angle = pia.angle.vertex.angle(vec.end, pia.point)
-                    yield (
-                        AcuteAngleProperty(angle),
-                        LazyComment('%s is a part of acute %s', angle, pia.angle),
-                        [pia, acute]
-                    )
-
-            for pia in self.context.list(PointInsideAngleProperty):
-                right = self.context.angle_value_property(pia.angle)
-                if right is None or right.degree != 90 or pia.reason.obsolete and right.reason.obsolete:
-                    continue
-                for vec in pia.angle.vector0, pia.angle.vector1:
-                    angle = pia.angle.vertex.angle(vec.end, pia.point)
-                    yield (
-                        AcuteAngleProperty(angle),
-                        LazyComment('%s is a part of right %s', angle, pia.angle),
-                        [pia, right]
-                    )
-
-            for pia in self.context.list(PointInsideAngleProperty):
                 A = pia.angle.vertex
                 B = pia.angle.vector0.end
                 C = pia.angle.vector1.end
@@ -518,34 +499,6 @@ class Explainer:
                 comment = LazyComment('%s + %s + %s = 180º', a0, a1, a2)
                 yield (AngleValueProperty(a0, a0_value), comment, [ar, a2_reason])
                 yield (AngleValueProperty(a1, a1_value), comment, [ar, a2_reason])
-
-            for ka in self.context.nondegenerate_angle_value_properties():
-                if ka.reason.obsolete:
-                    continue
-                if ka.degree < 90:
-                    yield (
-                        AcuteAngleProperty(ka.angle),
-                        LazyComment('0º < %sº < 90º', ka.degree),
-                        [ka]
-                    )
-                elif ka.degree > 90:
-                    yield (
-                        ObtuseAngleProperty(ka.angle),
-                        LazyComment('90º < %sº < 180º', ka.degree),
-                        [ka]
-                    )
-                ang = ka.angle
-                if ang.vertex and ka.degree >= 90:
-                    yield (
-                        AcuteAngleProperty(ang.vector0.end.angle(ang.vertex, ang.vector1.end)),
-                        LazyComment('An angle of △ %s %s %s, another angle = %sº', *ang.points, ka.degree),
-                        [ka]
-                    )
-                    yield (
-                        AcuteAngleProperty(ang.vector1.end.angle(ang.vertex, ang.vector0.end)),
-                        LazyComment('An angle of △ %s %s %s, another angle = %sº', *ang.points, ka.degree),
-                        [ka]
-                    )
 
             for aa in self.context.list(AcuteAngleProperty):
                 base = aa.angle
