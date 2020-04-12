@@ -7,6 +7,12 @@ from .reason import Reason
 from .stats import Stats
 from .util import LazyComment, divide
 
+class ContradictionError(Exception):
+    def __init__(self, message, prop0, prop1):
+        self.message = message
+        self.prop0 = prop0
+        self.prop1 = prop1
+
 class CyclicOrderPropertySet:
     class Family:
         def __init__(self):
@@ -618,8 +624,8 @@ class PropertySet:
 
     def __getitem__(self, prop):
         existing = self.__full_set.get(prop)
-        #TODO: better way to report contradiction
-        assert existing is None or existing.compare_values(prop), 'Contradiction: values are different for %s and %s' % (prop, existing)
+        if existing and not existing.compare_values(prop):
+            raise ContradictionError(LazyComment('Contradiction: \'%s\' vs \'%s\'' % (prop, existing)), prop, existing)
         if existing:
             return existing
         if isinstance(prop, SimilarTrianglesProperty):
