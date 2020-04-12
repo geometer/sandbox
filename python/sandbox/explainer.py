@@ -55,7 +55,8 @@ class Explainer:
             LegsOfIsoscelesRule(self.context),
             RotatedAngleRule(self.context),
             AngleTypeByDegreeRule(self.context),
-            AngleTypesInObtuseangledTriangle(self.context),
+            RightAngleDegreeRule(self.context),
+            AngleTypesInObtuseangledTriangleRule(self.context),
             PartOfAcuteAngleIsAcuteRule(self.context),
         ]
         if 'advanced' in options:

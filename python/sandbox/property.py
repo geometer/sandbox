@@ -197,6 +197,9 @@ class AngleKindProperty(Property):
         right  = auto()
         obtuse = auto()
 
+        def __str__(self):
+            return self.name
+
     def __init__(self, angle, kind):
         self.angle = angle
         self.kind = kind
