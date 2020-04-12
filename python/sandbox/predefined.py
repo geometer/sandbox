@@ -53,7 +53,7 @@ def enumerate_predefined_properties(scene):
         if 'invisible' in [p.layer for p in angle.points]:
             continue
         yield (
-            AcuteAngleProperty(angle),
+            AngleKindProperty(angle, AngleKindProperty.Kind.acute),
             cnstr.comments
         )
 
@@ -62,7 +62,7 @@ def enumerate_predefined_properties(scene):
         if 'invisible' in [p.layer for p in angle.points]:
             continue
         yield (
-            ObtuseAngleProperty(angle),
+            AngleKindProperty(angle, AngleKindProperty.Kind.obtuse),
             cnstr.comments
         )
 

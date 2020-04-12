@@ -624,30 +624,15 @@ class PartOfAcuteAngleIsAcuteRule(SingleSourceRule):
     property_type = PointInsideAngleProperty
 
     def apply(self, prop):
-        acute = self.context[AcuteAngleProperty(prop.angle)]
-        if acute is None or prop.reason.obsolete and acute.reason.obsolete:
+        kind = self.context.angle_kind_property(prop.angle)
+        if kind is None or kind.kind == AngleKindProperty.Kind.obtuse or prop.reason.obsolete and kind.reason.obsolete:
             return
         for vec in prop.angle.vector0, prop.angle.vector1:
             angle = prop.angle.vertex.angle(vec.end, prop.point)
             yield (
-                AcuteAngleProperty(angle),
-                LazyComment('%s is a part of acute %s', angle, prop.angle),
-                [prop, acute]
-            )
-
-class PartOfRightAngleIsAcuteRule(SingleSourceRule):
-    property_type = PointInsideAngleProperty
-
-    def apply(self, prop):
-        right = self.context.angle_value_property(prop.angle)
-        if right is None or right.degree != 90 or prop.reason.obsolete and right.reason.obsolete:
-            return
-        for vec in prop.angle.vector0, prop.angle.vector1:
-            angle = prop.angle.vertex.angle(vec.end, prop.point)
-            yield (
-                AcuteAngleProperty(angle),
-                LazyComment('%s is a part of right %s', angle, prop.angle),
-                [prop, right]
+                AngleKindProperty(angle, AngleKindProperty.Kind.acute),
+                LazyComment('%s is a part of %s %s', angle, kind.kind, prop.angle),
+                [prop, kind]
             )
 
 class AngleTypeByDegreeRule(Rule):
@@ -659,53 +644,40 @@ class AngleTypeByDegreeRule(Rule):
             return
         if prop.degree < 90:
             yield (
-                AcuteAngleProperty(prop.angle),
+                AngleKindProperty(prop.angle, AngleKindProperty.Kind.acute),
                 LazyComment('0º < %sº < 90º', prop.degree),
                 [prop]
             )
         elif prop.degree > 90:
             yield (
-                ObtuseAngleProperty(prop.angle),
+                AngleKindProperty(prop.angle, AngleKindProperty.Kind.obtuse),
                 LazyComment('90º < %sº < 180º', prop.degree),
                 [prop]
             )
-
-class AngleTypesInRightangledTriangle(Rule):
-    def sources(self):
-        return [p for p in self.context.nondegenerate_angle_value_properties() if p.degree == 90 and p.angle.vertex]
-
-    def apply(self, prop):
-        if prop.reason.obsolete:
-            return
-        ang = prop.angle
-        yield (
-            AcuteAngleProperty(ang.vector0.end.angle(ang.vertex, ang.vector1.end)),
-            LazyComment('An angle of △ %s %s %s, another angle is right', *ang.points),
-            [prop]
-        )
-        yield (
-            AcuteAngleProperty(ang.vector1.end.angle(ang.vertex, ang.vector0.end)),
-            LazyComment('An angle of △ %s %s %s, another angle is right', *ang.points),
-            [prop]
-        )
+        else:
+            yield (
+                AngleKindProperty(prop.angle, AngleKindProperty.Kind.right),
+                prop.reason.comments,
+                prop.reason.premises
+            )
 
 class AngleTypesInObtuseangledTriangle(SingleSourceRule):
-    property_type = ObtuseAngleProperty
+    property_type = AngleKindProperty
 
     def accepts(self, prop):
-        return prop.angle.vertex is not None
+        return prop.angle.vertex and prop.kind != AngleKindProperty.Kind.acute
 
     def apply(self, prop):
         if prop.reason.obsolete:
             return
         ang = prop.angle
         yield (
-            AcuteAngleProperty(ang.vector0.end.angle(ang.vertex, ang.vector1.end)),
-            LazyComment('An angle of △ %s %s %s, another angle is right', *ang.points),
+            AngleKindProperty(ang.vector0.end.angle(ang.vertex, ang.vector1.end), AngleKindProperty.Kind.acute),
+            LazyComment('An angle of △ %s %s %s, another angle is %s', *ang.points, prop.kind),
             [prop]
         )
         yield (
-            AcuteAngleProperty(ang.vector1.end.angle(ang.vertex, ang.vector0.end)),
-            LazyComment('An angle of △ %s %s %s, another angle is right', *ang.points),
+            AngleKindProperty(ang.vector1.end.angle(ang.vertex, ang.vector0.end), AngleKindProperty.Kind.acute),
+            LazyComment('An angle of △ %s %s %s, another angle is %s', *ang.points, prop.kind),
             [prop]
         )

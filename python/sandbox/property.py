@@ -1,3 +1,4 @@
+from enum import Enum, auto
 import itertools
 
 from .scene import Triangle
@@ -187,45 +188,34 @@ class EquilateralTriangleProperty(Property):
     def __hash__(self):
         return hash(EquilateralTriangleProperty) + hash(self.__point_set)
 
-class AcuteAngleProperty(Property):
+class AngleKindProperty(Property):
     """
-    An angle is acute
+    An angle is acute/obtuse/right
     """
-    def __init__(self, angle):
+    class Kind(Enum):
+        acute  = auto()
+        right  = auto()
+        obtuse = auto()
+
+    def __init__(self, angle, kind):
         self.angle = angle
+        self.kind = kind
 
     def keys(self):
         return [self.angle]
 
     @property
     def description(self):
-        return LazyComment('%s is acute', self.angle)
+        return LazyComment('%s is %s', self.angle, self.kind)
+
+    def compare_values(self, other):
+        return self.kind == other.kind
 
     def __eq__(self, other):
-        return isinstance(other, AcuteAngleProperty) and self.angle == other.angle
+        return isinstance(other, AngleKindProperty) and self.angle == other.angle
 
     def __hash__(self):
-        return hash(AcuteAngleProperty) + hash(self.angle)
-
-class ObtuseAngleProperty(Property):
-    """
-    An angle is obtuse
-    """
-    def __init__(self, angle):
-        self.angle = angle
-
-    def keys(self):
-        return [self.angle]
-
-    @property
-    def description(self):
-        return LazyComment('%s is obtuse', self.angle)
-
-    def __eq__(self, other):
-        return isinstance(other, ObtuseAngleProperty) and self.angle == other.angle
-
-    def __hash__(self):
-        return hash(ObtuseAngleProperty) + hash(self.angle)
+        return hash(AngleKindProperty) + hash(self.angle)
 
 class AngleValueProperty(Property):
     """
