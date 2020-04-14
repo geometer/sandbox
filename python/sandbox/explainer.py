@@ -143,7 +143,7 @@ class Explainer:
                     if ne.coincident or av_is_too_old and ne.reason.obsolete:
                         continue
                     pt = ne.points[0] if ang.vertex == ne.points[1] else ne.points[1]
-                    if pt in ang.points:
+                    if pt in ang.point_set:
                         continue
                     yield (
                         SumOfAnglesProperty(
@@ -217,7 +217,7 @@ class Explainer:
                 ng1 = av1.angle
                 if ng0.vertex != ng1.vertex:
                     continue
-                if len(ng0.points.union(ng1.points)) != 5:
+                if len(ng0.point_set.union(ng1.point_set)) != 5:
                     continue
                 yield (
                     AngleRatioProperty(
@@ -245,7 +245,7 @@ class Explainer:
                     if ne.coincident or av_is_too_old and ne.reason.obsolete:
                         continue
                     pt = ne.points[0] if ang.vertex == ne.points[1] else ne.points[1]
-                    if pt in ang.points:
+                    if pt in ang.point_set:
                         continue
                     yield (
                         AngleRatioProperty(
@@ -264,7 +264,7 @@ class Explainer:
                 ng1 = av1.angle
                 if ng0.vertex != ng1.vertex:
                     continue
-                if len(ng0.points.union(ng1.points)) != 5:
+                if len(ng0.point_set.union(ng1.point_set)) != 5:
                     continue
                 yield (
                     AngleRatioProperty(
@@ -487,7 +487,7 @@ class Explainer:
             for ar in self.context.same_triple_angle_ratio_properties():
                 a0 = ar.angle0
                 a1 = ar.angle1
-                third_vertex = next(pt for pt in a0.points if pt not in (a0.vertex, a1.vertex))
+                third_vertex = next(pt for pt in a0.point_set if pt not in (a0.vertex, a1.vertex))
                 a2 = third_vertex.angle(a0.vertex, a1.vertex)
                 a2_reason = self.context.angle_value_property(a2)
                 if a2_reason is None:
@@ -693,16 +693,16 @@ class Explainer:
                     )
 
             for ang0, ang1 in self.context.congruent_angles():
-                if ang0.vertex is None or set(ang0.points) != set(ang1.points):
+                if ang0.vertex is None or ang0.point_set != ang1.point_set:
                     continue
-                nc = self.context.not_collinear_property(*ang0.points)
+                nc = self.context.not_collinear_property(*ang0.point_set)
                 if nc is None:
                     continue
                 ca = self.context.angle_ratio_property(ang0, ang1)
                 if ca.reason.obsolete and nc.reason.obsolete:
                     continue
                 base = ang0.vertex.segment(ang1.vertex)
-                apex = next(pt for pt in ang0.points if pt not in base.points)
+                apex = next(pt for pt in ang0.point_set if pt not in base.point_set)
                 yield (
                     IsoscelesTriangleProperty(apex, base),
                     'Congruent base angles',
@@ -877,7 +877,7 @@ class Explainer:
                 if av.reason.obsolete or av.angle.vertex is None:
                     continue
                 yield (
-                    PointsCollinearityProperty(*av.angle.points, av.degree in (0, 180)),
+                    PointsCollinearityProperty(*av.angle.point_set, av.degree in (0, 180)),
                     '',#TODO: write comment
                     [av]
                 )
@@ -890,20 +890,20 @@ class Explainer:
             for ang0, ang1 in self.context.congruent_angles():
                 if not ang0.vertex or not ang1.vertex:
                     continue
-                ncl0 = self.context.not_collinear_property(*ang0.points)
-                ncl1 = self.context.not_collinear_property(*ang1.points)
+                ncl0 = self.context.not_collinear_property(*ang0.point_set)
+                ncl1 = self.context.not_collinear_property(*ang1.point_set)
                 if ncl0 and ncl1 or not ncl0 and not ncl1:
                     continue
                 ca = self.context.angle_ratio_property(ang0, ang1)
                 if ncl0:
                     yield (
-                        PointsCollinearityProperty(*ang1.points, False),
+                        PointsCollinearityProperty(*ang1.point_set, False),
                         'Transitivity',
                         [ca, ncl0]
                     )
                 else:
                     yield (
-                        PointsCollinearityProperty(*ang0.points, False),
+                        PointsCollinearityProperty(*ang0.point_set, False),
                         'Transitivity',
                         [ca, ncl1]
                     )
@@ -974,7 +974,7 @@ class Explainer:
                 )
 
             for ang0, ang1 in self.context.congruent_angles():
-                if not ang0.vertex or not ang1.vertex or set(ang0.points) == set(ang1.points):
+                if not ang0.vertex or not ang1.vertex or ang0.point_set == ang1.point_set:
                     continue
                 ca = None
                 for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:

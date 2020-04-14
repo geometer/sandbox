@@ -59,9 +59,9 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
     def sources(self):
         groups = {}
         for a0, a1 in self.context.congruent_angles():
-            if not a0.vertex or not a1.vertex or set(a0.points) == set(a1.points):
+            if not a0.vertex or not a1.vertex or a0.point_set == a1.point_set:
                 continue
-            key = frozenset([frozenset(a0.points), frozenset(a1.points)])
+            key = frozenset([a0.point_set, a1.point_set])
             lst = groups.get(key)
             if lst:
                 lst.append((a0, a1))
@@ -86,23 +86,23 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
     def apply(self, src):
         ca0, ca1 = src
 
-        ncl = self.context.not_collinear_property(*ca0.angle0.points)
+        ncl = self.context.not_collinear_property(*ca0.angle0.point_set)
         first_non_degenerate = True
         if ncl is None:
-            ncl = self.context.not_collinear_property(*ca1.angle1.points)
+            ncl = self.context.not_collinear_property(*ca1.angle1.point_set)
             first_non_degenerate = False
         if ncl is None or ca0.reason.obsolete and ca1.reason.obsolete and ncl.reason.obsolete:
             return
 
         #this code ensures that vertices are listed in corresponding orders
-        if ca0.angle0.points == ca1.angle0.points:
+        if ca0.angle0.point_set == ca1.angle0.point_set:
             tr0 = [ca0.angle0.vertex, ca1.angle0.vertex]
             tr1 = [ca0.angle1.vertex, ca1.angle1.vertex]
         else:
             tr0 = [ca0.angle0.vertex, ca1.angle1.vertex]
             tr1 = [ca0.angle1.vertex, ca1.angle0.vertex]
-        tr0.append(next(p for p in ca0.angle0.points if p not in tr0))
-        tr1.append(next(p for p in ca0.angle1.points if p not in tr1))
+        tr0.append(next(p for p in ca0.angle0.point_set if p not in tr0))
+        tr1.append(next(p for p in ca0.angle1.point_set if p not in tr1))
         if not self.context.triangles_are_similar(tuple(tr0), tuple(tr1)):
             yield (
                 SimilarTrianglesProperty(tr0, tr1),
@@ -112,7 +112,7 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
 
 class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
     def sources(self):
-        return [(a0, a1) for a0, a1 in self.context.congruent_angles() if a0.vertex and a1.vertex and set(a0.points) != set(a1.points)]
+        return [(a0, a1) for a0, a1 in self.context.congruent_angles() if a0.vertex and a1.vertex and a0.point_set != a1.point_set]
 
     def apply(self, src):
         ang0, ang1 = src
