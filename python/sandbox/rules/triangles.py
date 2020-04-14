@@ -11,14 +11,40 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
 
     def apply(self, prop):
         for i, j in itertools.combinations(range(0, 3), 2):
-            yield (
-                EqualLengthProductsProperty(
-                    prop.triangle0.side_for_index(i), prop.triangle0.side_for_index(j),
-                    prop.triangle1.side_for_index(i), prop.triangle1.side_for_index(j)
-                ),
-                'Relation of sides in similar triangles',
-                [prop]
-            )
+            seg0 = prop.triangle0.side_for_index(i)
+            seg1 = prop.triangle0.side_for_index(j)
+            seg2 = prop.triangle1.side_for_index(i)
+            seg3 = prop.triangle1.side_for_index(j)
+            if seg0 == seg1:
+                yield (
+                    ProportionalLengthsProperty(seg2, seg3, 1),
+                    'Relation of sides in similar triangles',
+                    [prop]
+                )
+            elif seg0 == seg2:
+                yield (
+                    ProportionalLengthsProperty(seg1, seg3, 1),
+                    'Relation of sides in similar triangles',
+                    [prop]
+                )
+            elif seg1 == seg3:
+                yield (
+                    ProportionalLengthsProperty(seg0, seg2, 1),
+                    'Relation of sides in similar triangles',
+                    [prop]
+                )
+            elif seg2 == seg3:
+                yield (
+                    ProportionalLengthsProperty(seg0, seg1, 1),
+                    'Relation of sides in similar triangles',
+                    [prop]
+                )
+            else:
+                yield (
+                    EqualLengthProductsProperty(seg0, seg1, seg2, seg3),
+                    'Relation of sides in similar triangles',
+                    [prop]
+                )
 
 class SimilarTrianglesByTwoAnglesRule(Rule):
     def sources(self):
