@@ -690,13 +690,12 @@ class PropertySet:
         return self.__length_ratios.contains((segment0, segment1), (segment2, segment3))
 
     def equal_length_ratios_property(self, segment0, segment1, segment2, segment3):
-        prop = EqualLengthRatiosProperty(segment0, segment1, segment2, segment3)
-        existing = self[prop]
-        if existing:
-            return existing
         comment, premises = self.__length_ratios.explanation((segment0, segment1), (segment2, segment3))
         if comment is None:
             return None
+        if len(premises) == 1:
+            return premises[0]
+        prop = EqualLengthRatiosProperty(segment0, segment1, segment2, segment3)
         prop.reason = Reason(-2, -2, comment, premises)
         prop.reason.obsolete = all(p.reason.obsolete for p in premises)
         return prop
