@@ -558,12 +558,9 @@ class PropertySet:
         ratio_to_explanation = {}
         for fam in self.__length_ratios.families:
             for ratio0, ratio1 in itertools.combinations(fam.ratio_set, 2):
-                if ratio0[0] == ratio1[0]:
-                    key = (ratio0[1], ratio1[1])
-                elif ratio0[1] == ratio1[1]:
-                    key = (ratio0[0], ratio1[0])
-                else:
+                if ratio0[1] != ratio1[1]:
                     continue
+                key = (ratio0[0], ratio1[0])
                 previous_value = ratio_to_explanation.get(key)
                 if previous_value is None:
                     previous_value = ratio_to_explanation.get((key[1], key[0]))
