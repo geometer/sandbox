@@ -800,15 +800,6 @@ class Explainer:
                         )
                     break
 
-            for ct in self.context.list(CongruentTrianglesProperty):
-                if ct.reason.obsolete:
-                    continue
-                yield (
-                    SimilarTrianglesProperty(ct.triangle0, ct.triangle1),
-                    'Congruent triangles are similar',
-                    [ct]
-                )
-
             for av in self.context.angle_value_properties():
                 if av.angle.vertex is None:
                     continue
@@ -983,7 +974,7 @@ class Explainer:
                 )
 
             for ang0, ang1 in self.context.congruent_angles():
-                if not ang0.vertex or not ang1.vertex:
+                if not ang0.vertex or not ang1.vertex or set(ang0.points) == set(ang1.points):
                     continue
                 ca = None
                 for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
@@ -1029,9 +1020,10 @@ class Explainer:
                 if cs0.reason.obsolete and cs1.reason.obsolete:
                     continue
                 for seg0, seg1 in [(cs0.segment0, cs0.segment1), (cs0.segment1, cs0.segment0)]:
-                    common0 = common_point(seg0, cs1.segment0)
-                    if common0 is None:
+                    points0 = set((*seg0.points, *cs1.segment0.points))
+                    if len(points0) != 3 or points0 == set((*seg1.points, *cs1.segment1.points)):
                         continue
+                    common0 = common_point(seg0, cs1.segment0)
                     common1 = common_point(seg1, cs1.segment1)
                     if common1 is None:
                         continue
