@@ -103,12 +103,12 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
             tr1 = [ca0.angle1.vertex, ca1.angle0.vertex]
         tr0.append(next(p for p in ca0.angle0.points if p not in tr0))
         tr1.append(next(p for p in ca0.angle1.points if p not in tr1))
-
-        yield (
-            SimilarTrianglesProperty(tr0, tr1),
-            LazyComment('Two pairs of congruent angles, and △ %s %s %s is non-degenerate', *(tr0 if first_non_degenerate else tr1)),
-            [ca0, ca1, ncl]
-        )
+        if not self.context.triangles_are_similar(tuple(tr0), tuple(tr1)):
+            yield (
+                SimilarTrianglesProperty(tr0, tr1),
+                LazyComment('Two pairs of congruent angles, and △ %s %s %s is non-degenerate', *(tr0 if first_non_degenerate else tr1)),
+                [ca0, ca1, ncl]
+            )
 
 class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
     def sources(self):
@@ -118,7 +118,7 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
         ang0, ang1 = src
         ca = None
         for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
-            if self.context.trianlges_are_similar( \
+            if self.context.triangles_are_similar( \
                 (vec0.start, vec0.end, vec1.end), \
                 (ang1.vertex, ang1.vector0.end, ang1.vector1.end) \
             ):

@@ -682,7 +682,7 @@ class PropertySet:
         prop, value = self.__length_ratios.property_and_value(segment0, segment1)
         return prop if value == 1 else None
 
-    def trianlges_are_similar(self, points0, points1):
+    def triangles_are_similar(self, points0, points1):
         triples = self.__similar_triangles.get(points0)
         return triples and points1 in triples
 
