@@ -460,6 +460,10 @@ class LengthRatioPropertySet:
         elif isinstance(prop, ProportionalLengthsProperty):
             self.proportional_lengths[prop.segment_set] = prop
 
+    def contains(self, ratio0, ratio1):
+        fam = self.ratio_to_family.get(ratio0)
+        return fam and ratio1 in fam.ratio_set
+
     def explanation(self, ratio0, ratio1):
         fam = self.ratio_to_family.get(ratio0)
         if fam is None or ratio1 not in fam.ratio_set:
@@ -690,6 +694,9 @@ class PropertySet:
                 return prop if prop.value == 1 else None
         prop, value = self.__length_ratios.property_and_value(segment0, segment1)
         return prop if value == 1 else None
+
+    def length_ratios_are_equal(self, segment0, segment1, segment2, segment3):
+        return self.__length_ratios.contains((segment0, segment1), (segment2, segment3))
 
     def equal_length_ratios_property(self, segment0, segment1, segment2, segment3):
         prop = EqualLengthRatiosProperty(segment0, segment1, segment2, segment3)
