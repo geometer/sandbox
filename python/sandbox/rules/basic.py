@@ -688,11 +688,11 @@ class AngleTypesInObtuseangledTriangleRule(SingleSourceRule):
         ang = prop.angle
         yield (
             AngleKindProperty(ang.vector0.end.angle(ang.vertex, ang.vector1.end), AngleKindProperty.Kind.acute),
-            LazyComment('An angle of △ %s %s %s, another angle is %s', *ang.points, prop.kind),
+            LazyComment('An angle of △ %s %s %s, another angle is %s', *ang.point_set, prop.kind),
             [prop]
         )
         yield (
             AngleKindProperty(ang.vector1.end.angle(ang.vertex, ang.vector0.end), AngleKindProperty.Kind.acute),
-            LazyComment('An angle of △ %s %s %s, another angle is %s', *ang.points, prop.kind),
+            LazyComment('An angle of △ %s %s %s, another angle is %s', *ang.point_set, prop.kind),
             [prop]
         )

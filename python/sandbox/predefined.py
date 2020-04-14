@@ -50,7 +50,7 @@ def enumerate_predefined_properties(scene):
 
     for cnstr in scene.constraints(Constraint.Kind.acute_angle):
         angle = cnstr.params[0]
-        if 'invisible' in [p.layer for p in angle.points]:
+        if 'invisible' in [p.layer for p in angle.point_set]:
             continue
         yield (
             AngleKindProperty(angle, AngleKindProperty.Kind.acute),
@@ -59,7 +59,7 @@ def enumerate_predefined_properties(scene):
 
     for cnstr in scene.constraints(Constraint.Kind.obtuse_angle):
         angle = cnstr.params[0]
-        if 'invisible' in [p.layer for p in angle.points]:
+        if 'invisible' in [p.layer for p in angle.point_set]:
             continue
         yield (
             AngleKindProperty(angle, AngleKindProperty.Kind.obtuse),
@@ -73,7 +73,7 @@ def enumerate_predefined_properties(scene):
     for cnstr in scene.constraints(Constraint.Kind.inside_angle):
         point = cnstr.params[0]
         angle = cnstr.params[1]
-        if point.layer != 'invisible' and all(p.layer != 'invisible' for p in angle.points):
+        if point.layer != 'invisible' and all(p.layer != 'invisible' for p in angle.point_set):
             yield (
                 PointInsideAngleProperty(point, angle),
                 cnstr.comments
@@ -135,9 +135,9 @@ def enumerate_predefined_properties(scene):
     for cnstr in scene.constraints(Constraint.Kind.angles_ratio):
         angle0 = cnstr.params[0]
         angle1 = cnstr.params[1]
-        if any(p.layer == 'invisible' for p in angle0.points):
+        if any(p.layer == 'invisible' for p in angle0.point_set):
             continue
-        if any(p.layer == 'invisible' for p in angle1.points):
+        if any(p.layer == 'invisible' for p in angle1.point_set):
             continue
         yield (
             AngleRatioProperty(angle0, angle1, cnstr.params[2]),

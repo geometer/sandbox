@@ -153,7 +153,7 @@ class AngleRatioPropertySet:
             for item in self.angle_to_ratio.items():
                 if item[0].vertex is None:
                     continue
-                key = item[0].points
+                key = item[0].point_set
                 rs = angles_map.get(key)
                 if rs:
                     rs.append(item)
