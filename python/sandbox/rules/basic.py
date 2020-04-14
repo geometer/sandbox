@@ -696,3 +696,36 @@ class AngleTypesInObtuseangledTriangleRule(SingleSourceRule):
             LazyComment('An angle of △ %s %s %s, another angle is %s', *ang.point_set, prop.kind),
             [prop]
         )
+
+class VerticalAnglesRule(Rule):
+    def sources(self):
+        return itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 180], 2)
+
+    def apply(self, src):
+        av0, av1 = src
+        if av0.reason.obsolete and av1.reason.obsolete:
+            return
+        ng0 = av0.angle
+        ng1 = av1.angle
+        if ng0.vertex != ng1.vertex:
+            return
+        if len(ng0.point_set.union(ng1.point_set)) != 5:
+            return
+        yield (
+            AngleRatioProperty(
+                ng0.vertex.angle(ng0.vector0.end, ng1.vector0.end),
+                ng0.vertex.angle(ng0.vector1.end, ng1.vector1.end),
+                1
+            ),
+            'Vertical angles',
+            [av0, av1]
+        )
+        yield (
+            AngleRatioProperty(
+                ng0.vertex.angle(ng0.vector0.end, ng1.vector1.end),
+                ng0.vertex.angle(ng0.vector1.end, ng1.vector0.end),
+                1
+            ),
+            'Vertical angles',
+            [av0, av1]
+        )
