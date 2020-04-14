@@ -118,6 +118,11 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
         ang0, ang1 = src
         ca = None
         for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
+            if self.context.trianlges_are_similar( \
+                (vec0.start, vec0.end, vec1.end), \
+                (ang1.vertex, ang1.vector0.end, ang1.vector1.end) \
+            ):
+                continue
             segments = (
                 vec0.as_segment, vec1.as_segment,
                 ang1.vector0.as_segment, ang1.vector1.as_segment

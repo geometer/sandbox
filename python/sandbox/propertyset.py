@@ -2,7 +2,7 @@ import itertools
 import networkx as nx
 
 from .core import CoreScene
-from .property import AngleKindProperty, AngleValueProperty, AngleRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty
+from .property import AngleKindProperty, AngleValueProperty, AngleRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, SimilarTrianglesProperty, CongruentTrianglesProperty
 from .reason import Reason
 from .stats import Stats
 from .util import LazyComment, divide
@@ -525,6 +525,7 @@ class PropertySet:
         self.__coincidence = {} # {point, point} => prop
         self.__collinearity = {} # {point, point, point} => prop
         self.__intersections = {} # {segment, segment} => point, [reasons]
+        self.__similar_triangles = {} # (three points) => {(three points)}
 
     def add(self, prop):
         def put(key):
@@ -557,6 +558,20 @@ class PropertySet:
             self.__length_ratios.add(prop)
         elif type_key == SameCyclicOrderProperty:
             self.__cyclic_orders.add(prop)
+        elif type_key in (SimilarTrianglesProperty, CongruentTrianglesProperty):
+            for perm in itertools.permutations(range(0, 3), 3):
+                key0 = prop.triangle0.permutation(perm)
+                key1 = prop.triangle1.permutation(perm)
+                triples = self.__similar_triangles.get(key0)
+                if triples:
+                    triples.add(key1)
+                else:
+                    self.__similar_triangles[key0] = {key1}
+                triples = self.__similar_triangles.get(key1)
+                if triples:
+                    triples.add(key0)
+                else:
+                    self.__similar_triangles[key1] = {key0}
 
     def equal_length_ratios_with_common_denominator(self):
         pairs = []
@@ -666,6 +681,10 @@ class PropertySet:
                 return prop if prop.value == 1 else None
         prop, value = self.__length_ratios.property_and_value(segment0, segment1)
         return prop if value == 1 else None
+
+    def trianlges_are_similar(self, points0, points1):
+        triples = self.__similar_triangles.get(points0)
+        return triples and points1 in triples
 
     def length_ratios_are_equal(self, segment0, segment1, segment2, segment3):
         return self.__length_ratios.contains((segment0, segment1), (segment2, segment3))
