@@ -50,7 +50,7 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
     def sources(self):
         groups = {}
         for a0, a1 in self.context.congruent_angles():
-            if not a0.vertex or not a1.vertex:
+            if not a0.vertex or not a1.vertex or set(a0.points) == set(a1.points):
                 continue
             key = frozenset([frozenset(a0.points), frozenset(a1.points)])
             lst = groups.get(key)
@@ -103,7 +103,7 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
 
 class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
     def sources(self):
-        return [(a0, a1) for a0, a1 in self.context.congruent_angles() if a0.vertex and a1.vertex]
+        return [(a0, a1) for a0, a1 in self.context.congruent_angles() if a0.vertex and a1.vertex and set(a0.points) != set(a1.points)]
 
     def apply(self, src):
         ang0, ang1 = src
