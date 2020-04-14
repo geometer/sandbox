@@ -761,13 +761,15 @@ class Explainer:
                     )
                     break
 
-            for segment0, segment1, comment, premises in self.context.length_ratios_equal_to_one():
-                if all(prop.reason.obsolete for prop in premises):
+            for ratio0, ratio1 in self.context.equal_length_ratios_with_common_denominator():
+                prop = self.context.congruent_segments_property(ratio0[0], ratio1[0], True)
+                if prop:
                     continue
+                ratio_prop = self.context.equal_length_ratios_property(*ratio0, *ratio1)
                 yield (
-                    ProportionalLengthsProperty(segment0, segment1, 1),
-                    comment,
-                    premises
+                    ProportionalLengthsProperty(ratio0[0], ratio1[0], 1),
+                    ratio_prop.reason.comments,
+                    ratio_prop.reason.premises
                 )
 
             for ct in self.context.list(CongruentTrianglesProperty):

@@ -569,23 +569,15 @@ class PropertySet:
             premises.append(prop)
         return premises
 
-    def length_ratios_equal_to_one(self):
-        ratio_to_explanation = {}
+    def equal_length_ratios_with_common_denominator(self):
+        pairs = []
         for fam in self.__length_ratios.families:
+            pairs_set = set()
             for ratio0, ratio1 in itertools.combinations(fam.ratio_set, 2):
-                if ratio0[1] != ratio1[1]:
-                    continue
-                key = (ratio0[0], ratio1[0])
-                previous_value = ratio_to_explanation.get(key)
-                if previous_value is None:
-                    previous_value = ratio_to_explanation.get((key[1], key[0]))
-                if previous_value is not None and len(previous_value[1]) == 1:
-                    continue
-                value = fam.explanation(ratio0, ratio1)
-                if previous_value is None or len(value[1]) < len(previous_value[1]):
-                    ratio_to_explanation[key] = value
-
-        return [(*key, *value) for key, value in ratio_to_explanation.items()]
+                if ratio0[1] == ratio1[1]:
+                    pairs_set.add((ratio0, ratio1))
+            pairs += list(pairs_set)
+        return pairs
 
     def list(self, property_type, keys=None):
         if keys:
