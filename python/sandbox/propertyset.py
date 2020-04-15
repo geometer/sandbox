@@ -47,9 +47,7 @@ class CyclicOrderPropertySet:
                 else:
                     for cycle in fam1.cycle_set:
                         fam0.cycle_set.add(cycle.reversed)
-                fam0.premises_graph.add_edges_from(fam1.premises_graph.edges)
-                for v0, v1 in fam1.premises_graph.edges:
-                    fam0.premises_graph[v0][v1].update(fam1.premises_graph[v0][v1])
+                fam0.premises_graph.add_edges_from(fam1.premises_graph.edges(data=True))
                 self.families.remove(fam1)
             fam = fam0
         elif fam0:
@@ -279,9 +277,7 @@ class AngleRatioPropertySet:
                 for key in self.angle_to_family:
                     if self.angle_to_family[key] == fam:
                         self.angle_to_family[key] = self.family_with_degree
-                self.family_with_degree.premises_graph.add_edges_from(fam.premises_graph.edges)
-                for a0, a1 in fam.premises_graph.edges:
-                    self.family_with_degree.premises_graph[a0][a1].update(fam.premises_graph[a0][a1])
+                self.family_with_degree.premises_graph.add_edges_from(fam.premises_graph.edges(data=True))
         elif fam:
             self.family_with_degree = fam
         elif self.family_with_degree:
@@ -342,9 +338,7 @@ class LengthRatioPropertySet:
                 self.ratio_value = other.ratio_value
 
             self.ratio_set.update(other.ratio_set)
-            self.premises_graph.add_edges_from(other.premises_graph.edges)
-            for v0, v1 in other.premises_graph.edges:
-                self.premises_graph[v0][v1].update(other.premises_graph[v0][v1])
+            self.premises_graph.add_edges_from(other.premises_graph.edges(data=True))
 
         def add_property(self, prop):
             if isinstance(prop, EqualLengthRatiosProperty):
