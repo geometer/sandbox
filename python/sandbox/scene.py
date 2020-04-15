@@ -88,9 +88,9 @@ class Scene(CoreScene):
         self.triangle_constraint(triangle)
         median0 = triangle[0].line_through(triangle[1].segment(triangle[2]).middle_point(layer='auxiliary'), layer='auxiliary')
         median1 = triangle[1].line_through(triangle[2].segment(triangle[0]).middle_point(layer='auxiliary'), layer='auxiliary')
+        median2 = triangle[2].line_through(triangle[0].segment(triangle[1]).middle_point(layer='auxiliary'), layer='auxiliary')
         centre = median0.intersection_point(median1, **kwargs)
-        #median2 = triangle[2].line_through(triangle[0].segment(triangle[1]).middle_point(layer='auxiliary'), layer='auxiliary')
-        #centre.belongs_to(median2)
+        centre.belongs_to(median2)
         return centre
 
     def circumcentre_point(self, triangle, **kwargs):
@@ -101,9 +101,9 @@ class Scene(CoreScene):
         if self.strategy == 'constructs':
             bisector0 = triangle[0].segment(triangle[1]).perpendicular_bisector_line(layer='auxiliary')
             bisector1 = triangle[0].segment(triangle[2]).perpendicular_bisector_line(layer='auxiliary')
-            #bisector2 = triangle[1].segment(triangle[2]).perpendicular_bisector_line(layer='auxiliary')
+            bisector2 = triangle[1].segment(triangle[2]).perpendicular_bisector_line(layer='auxiliary')
             centre = bisector0.intersection_point(bisector1, **kwargs)
-            #centre.belongs_to(bisector2)
+            centre.belongs_to(bisector2)
         else: #self.scene.strategy == 'constraints'
             centre = self.free_point(**kwargs)
         for seg0, seg1 in itertools.combinations([centre.segment(v) for v in triangle], 2):
