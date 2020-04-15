@@ -25,7 +25,7 @@ class RightAngledTriangleMedian(ExplainerTest):
 
 class RightAngledTriangleMedianAdvanced(RightAngledTriangleMedian):
     def explainer_options(self):
-        return {'advanced'}
+        return {'advanced': True}
 
     def test(self):
         self.assertIn(self.prop, self.explainer.context)

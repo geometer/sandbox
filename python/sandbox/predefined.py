@@ -2,31 +2,33 @@ from .core import Constraint, CoreScene
 from .property import *
 from .util import LazyComment
 
-def enumerate_predefined_properties(scene):
+def enumerate_predefined_properties(scene, max_layer):
+    layer_set = CoreScene.layers_by(max_layer)
+
     for cnstr in scene.constraints(Constraint.Kind.collinear):
-        if all(param.layer != 'invisible' for param in cnstr.params):
+        if all(param.layer in layer_set for param in cnstr.params):
             yield (PointsCollinearityProperty(*cnstr.params, True), cnstr.comments)
 
     for cnstr in scene.constraints(Constraint.Kind.not_collinear):
-        if all(param.layer != 'invisible' for param in cnstr.params):
+        if all(param.layer in layer_set for param in cnstr.params):
             yield (PointsCollinearityProperty(*cnstr.params, False), cnstr.comments)
             yield (PointsCoincidenceProperty(*cnstr.params[0:2], False), cnstr.comments)
             yield (PointsCoincidenceProperty(*cnstr.params[1:3], False), cnstr.comments)
             yield (PointsCoincidenceProperty(cnstr.params[0], cnstr.params[2], False), cnstr.comments)
 
     for cnstr in scene.constraints(Constraint.Kind.not_equal):
-        if all(param.layer != 'invisible' for param in cnstr.params):
+        if all(param.layer in layer_set for param in cnstr.params):
             yield (PointsCoincidenceProperty(cnstr.params[0], cnstr.params[1], False), cnstr.comments)
 
     for cnstr in scene.constraints(Constraint.Kind.length_ratio):
-        if all(param.layer != 'invisible' for param in [*cnstr.params[0].points, *cnstr.params[1].points]):
+        if all(param.layer in layer_set for param in [*cnstr.params[0].points, *cnstr.params[1].points]):
             yield (
                 ProportionalLengthsProperty(cnstr.params[0], cnstr.params[1], cnstr.params[2]),
                 cnstr.comments
             )
 
     for cnstr in scene.constraints(Constraint.Kind.same_direction):
-        if all(param.layer != 'invisible' for param in cnstr.params):
+        if all(param.layer in layer_set for param in cnstr.params):
             yield (
                 AngleValueProperty(cnstr.params[0].angle(*cnstr.params[1:]), 0),
                 cnstr.comments
@@ -36,10 +38,10 @@ def enumerate_predefined_properties(scene):
         line0 = cnstr.params[0]
         line1 = cnstr.params[1]
         for pts0 in itertools.combinations(line0.all_points, 2):
-            if 'invisible' in [p.layer for p in pts0]:
+            if not all(p.layer in layer_set for p in pts0):
                 continue
             for pts1 in itertools.combinations(line1.all_points, 2):
-                if 'invisible' in [p.layer for p in pts1]:
+                if not all(p.layer in layer_set for p in pts1):
                     continue
                 yield (
                     PerpendicularSegmentsProperty(
@@ -50,37 +52,35 @@ def enumerate_predefined_properties(scene):
 
     for cnstr in scene.constraints(Constraint.Kind.acute_angle):
         angle = cnstr.params[0]
-        if 'invisible' in [p.layer for p in angle.point_set]:
-            continue
-        yield (
-            AngleKindProperty(angle, AngleKindProperty.Kind.acute),
-            cnstr.comments
-        )
+        if all(p.layer in layer_set for p in angle.point_set):
+            yield (
+                AngleKindProperty(angle, AngleKindProperty.Kind.acute),
+                cnstr.comments
+            )
 
     for cnstr in scene.constraints(Constraint.Kind.obtuse_angle):
         angle = cnstr.params[0]
-        if 'invisible' in [p.layer for p in angle.point_set]:
-            continue
-        yield (
-            AngleKindProperty(angle, AngleKindProperty.Kind.obtuse),
-            cnstr.comments
-        )
+        if all(p.layer in layer_set for p in angle.point_set):
+            yield (
+                AngleKindProperty(angle, AngleKindProperty.Kind.obtuse),
+                cnstr.comments
+            )
 
     for cnstr in scene.constraints(Constraint.Kind.parallel_vectors):
-        if all(all(p.layer != 'invisible' for p in param.points) for param in cnstr.params):
+        if all(all(p.layer in layer_set for p in param.points) for param in cnstr.params):
             yield (ParallelVectorsProperty(*cnstr.params), cnstr.comments)
 
     for cnstr in scene.constraints(Constraint.Kind.inside_angle):
         point = cnstr.params[0]
         angle = cnstr.params[1]
-        if point.layer != 'invisible' and all(p.layer != 'invisible' for p in angle.point_set):
+        if point.layer in layer_set and all(p.layer in layer_set for p in angle.point_set):
             yield (
                 PointInsideAngleProperty(point, angle),
                 cnstr.comments
             )
 
     for cnstr in scene.constraints(Constraint.Kind.inside_segment):
-        if all(p.layer != 'invisible' for p in (cnstr.params[0], *cnstr.params[1].points)):
+        if all(p.layer in layer_set for p in (cnstr.params[0], *cnstr.params[1].points)):
             yield (
                 PointsCoincidenceProperty(*cnstr.params[1].points, False),
                 cnstr.comments
@@ -98,7 +98,7 @@ def enumerate_predefined_properties(scene):
 
     for line in scene.lines(max_layer='auxiliary'):
         for pts in itertools.combinations([p for p in line.all_points], 3):
-            if all(p.layer in CoreScene.layers_by('auxiliary') for p in pts):
+            if all(p.layer in layer_set for p in pts):
                 yield (
                     PointsCollinearityProperty(*pts, True),
                     [LazyComment('Three points on the line %s', line)]
@@ -135,11 +135,8 @@ def enumerate_predefined_properties(scene):
     for cnstr in scene.constraints(Constraint.Kind.angles_ratio):
         angle0 = cnstr.params[0]
         angle1 = cnstr.params[1]
-        if any(p.layer == 'invisible' for p in angle0.point_set):
-            continue
-        if any(p.layer == 'invisible' for p in angle1.point_set):
-            continue
-        yield (
-            AngleRatioProperty(angle0, angle1, cnstr.params[2]),
-            cnstr.comments
-        )
+        if all(p.layer in layer_set for p in angle0.point_set) and all(p.layer in layer_set for p in angle1.point_set):
+            yield (
+                AngleRatioProperty(angle0, angle1, cnstr.params[2]),
+                cnstr.comments
+            )
