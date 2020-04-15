@@ -55,8 +55,8 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
 class SimilarTrianglesByTwoAnglesRule(Rule):
     def sources(self):
         groups = {}
-        for a0, a1 in self.context.congruent_angles():
-            if not a0.vertex or not a1.vertex or a0.point_set == a1.point_set:
+        for a0, a1 in self.context.congruent_angles_with_vertex():
+            if a0.point_set == a1.point_set:
                 continue
             key = frozenset([a0.point_set, a1.point_set])
             lst = groups.get(key)
@@ -109,7 +109,7 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
 
 class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
     def sources(self):
-        return [(a0, a1) for a0, a1 in self.context.congruent_angles() if a0.vertex and a1.vertex and a0.point_set != a1.point_set]
+        return [(a0, a1) for a0, a1 in self.context.congruent_angles_with_vertex() if a0.point_set != a1.point_set]
 
     def apply(self, src):
         ang0, ang1 = src

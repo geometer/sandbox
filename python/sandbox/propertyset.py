@@ -140,9 +140,11 @@ class AngleRatioPropertySet:
                 properties.append(prop)
             return properties
 
-        def congruent_angles(self):
+        def congruent_angles_with_vertex(self):
             reverse_map = {}
             for angle, ratio in self.angle_to_ratio.items():
+                if angle.vertex is None:
+                    continue
                 rs = reverse_map.get(ratio)
                 if rs:
                     rs.append(angle)
@@ -256,9 +258,9 @@ class AngleRatioPropertySet:
             for prop in fam.same_triple_ratio_properties():
                 yield prop
 
-    def congruent_angles(self):
+    def congruent_angles_with_vertex(self):
         for fam in set(self.angle_to_family.values()):
-            for angle in fam.congruent_angles():
+            for angle in fam.congruent_angles_with_vertex():
                 yield angle
 
     def add(self, prop):
@@ -673,8 +675,8 @@ class PropertySet:
     def same_triple_angle_ratio_properties(self):
         return self.__angle_ratios.same_triple_ratio_properties()
 
-    def congruent_angles(self):
-        return self.__angle_ratios.congruent_angles()
+    def congruent_angles_with_vertex(self):
+        return self.__angle_ratios.congruent_angles_with_vertex()
 
     def length_ratio_properties(self, allow_zeroes):
         if allow_zeroes:

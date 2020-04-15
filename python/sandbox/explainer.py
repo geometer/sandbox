@@ -666,8 +666,8 @@ class Explainer:
                         [cs, ne]
                     )
 
-            for ang0, ang1 in self.context.congruent_angles():
-                if ang0.vertex is None or ang0.point_set != ang1.point_set:
+            for ang0, ang1 in self.context.congruent_angles_with_vertex():
+                if ang0.point_set != ang1.point_set:
                     continue
                 nc = self.context.not_collinear_property(*ang0.point_set)
                 if nc is None:
@@ -869,9 +869,7 @@ class Explainer:
                     return True
                 return self.context.congruent_segments_property(seg0, seg1, True)
 
-            for ang0, ang1 in self.context.congruent_angles():
-                if not ang0.vertex or not ang1.vertex:
-                    continue
+            for ang0, ang1 in self.context.congruent_angles_with_vertex():
                 ncl0 = self.context.not_collinear_property(*ang0.point_set)
                 ncl1 = self.context.not_collinear_property(*ang1.point_set)
                 if ncl0 and ncl1 or not ncl0 and not ncl1:
@@ -955,8 +953,8 @@ class Explainer:
                     comment, premises
                 )
 
-            for ang0, ang1 in self.context.congruent_angles():
-                if not ang0.vertex or not ang1.vertex or ang0.point_set == ang1.point_set:
+            for ang0, ang1 in self.context.congruent_angles_with_vertex():
+                if ang0.point_set == ang1.point_set:
                     continue
                 ca = None
                 for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:

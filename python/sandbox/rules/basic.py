@@ -587,7 +587,7 @@ class LengthProductEqualityToRatioRule(SingleSourceRule):
 
 class RotatedAngleRule(Rule):
     def sources(self):
-        return [(a0, a1) for a0, a1 in self.context.congruent_angles() if a0.vertex and a0.vertex == a1.vertex]
+        return [(a0, a1) for a0, a1 in self.context.congruent_angles_with_vertex() if a0.vertex == a1.vertex]
 
     def apply(self, src):
         ang0, ang1 = src
