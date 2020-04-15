@@ -452,7 +452,7 @@ class SimilarTrianglesProperty(Property):
     def __init__(self, points0, points1):
         self.triangle0 = points0 if isinstance(points0, Triangle) else Triangle(points0)
         self.triangle1 = points1 if isinstance(points1, Triangle) else Triangle(points1)
-        pairs = [frozenset([self.triangle0.permutation(indexes), self.triangle1.permutation(indexes)]) for indexes in itertools.permutations(range(0, 3), 3)]
+        pairs = [frozenset(perms) for perms in zip(self.triangle0.permutations, self.triangle1.permutations)]
         self.__triangle_set = frozenset(pairs)
 
     def keys(self, lengths=None):
@@ -476,7 +476,7 @@ class CongruentTrianglesProperty(Property):
     def __init__(self, points0, points1):
         self.triangle0 = points0 if isinstance(points0, Triangle) else Triangle(points0)
         self.triangle1 = points1 if isinstance(points1, Triangle) else Triangle(points1)
-        pairs = [frozenset([self.triangle0.permutation(indexes), self.triangle1.permutation(indexes)]) for indexes in itertools.permutations(range(0, 3), 3)]
+        pairs = [frozenset(perms) for perms in zip(self.triangle0.permutations, self.triangle1.permutations)]
         self.__triangle_set = frozenset(pairs)
 
     def keys(self, lengths=None):

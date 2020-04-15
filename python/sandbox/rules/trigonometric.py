@@ -16,7 +16,7 @@ class LawOfSinesRule(Rule):
 
     def apply(self, av0):
         triangle = Triangle([av0.angle.vertex, *av0.angle.endpoints])
-        av1 = self.context.angle_value_property(triangle.angle_for_index(1))
+        av1 = self.context.angle_value_property(triangle.angles[1])
         if av1 is None or av0.reason.obsolete and av1.reason.obsolete:
             return
         sines = (
@@ -24,7 +24,7 @@ class LawOfSinesRule(Rule):
             sp.sin(sp.pi * av1.degree / 180),
             sp.sin(sp.pi * (180 - av0.degree - av1.degree) / 180)
         )
-        sides = [triangle.side_for_index(i) for i in range(0, 3)]
+        sides = triangle.sides
         for (sine0, side0), (sine1, side1) in itertools.combinations(zip(sines, sides), 2):
             yield (
                 ProportionalLengthsProperty(side0, side1, sine0 / sine1),

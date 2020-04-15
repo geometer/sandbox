@@ -204,9 +204,10 @@ class Explainer:
                     continue
                 triangle = Triangle([pt for pt in set0 if pt != centre])
                 comment = LazyComment('Line %s separates %s and %s, line %s separates %s and %s => the intersection %s lies inside △ %s %s %s', op0.segment, *op0.points, op1.segment, *op1.points, centre, *triangle.points)
+                angles = triangle.angles
                 for i in range(0, 3):
                     yield (
-                        PointInsideAngleProperty(centre, triangle.angle_for_index(i)),
+                        PointInsideAngleProperty(centre, angles[i]),
                         comment,
                         [op0, op1]
                     )
@@ -684,21 +685,23 @@ class Explainer:
 
             for equ in self.context.list(EquilateralTriangleProperty):
                 ne = None
+                sides = equ.triangle.sides
                 for i in range(0, 3):
-                    ne = self.context.not_equal_property(*equ.triangle.side_for_index(i).points)
+                    ne = self.context.not_equal_property(*sides[i].points)
                     if ne:
                         break
                 if ne is not None and not equ.reason.obsolete and not ne.reason.obsolete:
+                    angles = equ.triangle.angles
                     for i in range(0, 3):
                         yield (
-                            AngleValueProperty(equ.triangle.angle_for_index(i), 60),
+                            AngleValueProperty(angles[i], 60),
                             LazyComment('Angle of non-degenerate equilateral %s', equ.triangle),
                             [equ]
                         )
                 if not equ.reason.obsolete:
                     for i, j in itertools.combinations(range(0, 3), 2):
                         yield (
-                            ProportionalLengthsProperty(equ.triangle.side_for_index(i), equ.triangle.side_for_index(j), 1),
+                            ProportionalLengthsProperty(sides[i], sides[j], 1),
                             LazyComment('Sides of equilateral %s', equ.triangle),
                             [equ]
                         )
@@ -709,20 +712,22 @@ class Explainer:
                     ncl = self.context.not_collinear_property(*ct.triangle1.points)
                 if ncl is None or ct.reason.obsolete and ncl.reason.obsolete:
                     continue
+                angles0 = ct.triangle0.angles
+                angles1 = ct.triangle1.angles
                 for i in range(0, 3):
-                    angle0 = ct.triangle0.angle_for_index(i)
-                    angle1 = ct.triangle1.angle_for_index(i)
-                    if angle0 != angle1:
+                    if angles0[i] != angles1[i]:
                         yield (
-                            AngleRatioProperty(angle0, angle1, 1),
+                            AngleRatioProperty(angles0[i], angles1[i], 1),
                             'Corresponding angles in congruent non-degenerate triangles',
                             [ct, ncl]
                         )
 
             for st in self.context.list(SimilarTrianglesProperty):
                 st_is_too_old = st.reason.obsolete
+                sides0 = st.triangle0.sides
+                sides1 = st.triangle1.sides
                 for i in range(0, 3):
-                    cs = self.context.congruent_segments_property(st.triangle0.side_for_index(i), st.triangle1.side_for_index(i), True)
+                    cs = self.context.congruent_segments_property(sides0[i], sides1[i], True)
                     if cs is None:
                         continue
                     if st_is_too_old and cs.reason.obsolete:
@@ -748,9 +753,11 @@ class Explainer:
             for ct in self.context.list(CongruentTrianglesProperty):
                 if ct.reason.obsolete:
                     continue
+                sides0 = ct.triangle0.sides
+                sides1 = ct.triangle1.sides
                 for i in range(0, 3):
-                    segment0 = ct.triangle0.side_for_index(i)
-                    segment1 = ct.triangle1.side_for_index(i)
+                    segment0 = sides0[i]
+                    segment1 = sides1[i]
                     if segment0 != segment1:
                         yield (
                             ProportionalLengthsProperty(segment0, segment1, 1),
@@ -759,15 +766,17 @@ class Explainer:
                         )
 
             for st in self.context.list(SimilarTrianglesProperty):
+                sides0 = st.triangle0.sides
+                sides1 = st.triangle1.sides
                 for i in range(0, 3):
-                    lr, ratio = self.context.length_ratio_property_and_value(st.triangle0.side_for_index(i), st.triangle1.side_for_index(i), True)
+                    lr, ratio = self.context.length_ratio_property_and_value(sides0[i], sides1[i], True)
                     if lr is None:
                         continue
                     if ratio == 1 or st.reason.obsolete and lr.reason.obsolete:
                         break
                     for j in [j for j in range(0, 3) if j != i]:
                         yield (
-                            ProportionalLengthsProperty(st.triangle0.side_for_index(j), st.triangle1.side_for_index(j), ratio),
+                            ProportionalLengthsProperty(sides0[j], sides1[j], ratio),
                             'Ratios of sides in similar triangles',
                             [st, lr]
                         )

@@ -10,15 +10,42 @@ from .util import LazyComment
 class Triangle:
     def __init__(self, points):
         self.points = tuple(points)
+        self.__sides = None
+        self.__angles = None
+        self.__permutations = None
 
-    def side_for_index(self, index):
-        return self.points[(index + 1) % 3].segment(self.points[(index + 2) % 3])
+    @property
+    def sides(self):
+        if self.__sides is None:
+            self.__sides = (
+                self.points[1].segment(self.points[2]),
+                self.points[0].segment(self.points[2]),
+                self.points[0].segment(self.points[1])
+            )
+        return self.__sides
 
-    def angle_for_index(self, index):
-        return self.points[index].angle(self.points[(index + 1) % 3], self.points[(index + 2) % 3])
+    @property
+    def angles(self):
+        if self.__angles is None:
+            self.__angles = (
+                self.points[0].angle(self.points[1], self.points[2]),
+                self.points[1].angle(self.points[0], self.points[2]),
+                self.points[2].angle(self.points[0], self.points[1])
+            )
+        return self.__angles
 
-    def permutation(self, indexes):
-        return tuple(self.points[i] for i in indexes)
+    @property
+    def permutations(self):
+        if self.__permutations is None:
+            self.__permutations = (
+                (self.points[0], self.points[1], self.points[2]),
+                (self.points[0], self.points[2], self.points[1]),
+                (self.points[1], self.points[0], self.points[2]),
+                (self.points[1], self.points[2], self.points[0]),
+                (self.points[2], self.points[0], self.points[1]),
+                (self.points[2], self.points[1], self.points[0])
+            )
+        return self.__permutations
 
     def __str__(self):
         return '△ %s %s %s' % self.points

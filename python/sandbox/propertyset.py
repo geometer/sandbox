@@ -565,9 +565,7 @@ class PropertySet:
         elif type_key == SameCyclicOrderProperty:
             self.__cyclic_orders.add(prop)
         elif type_key in (SimilarTrianglesProperty, CongruentTrianglesProperty):
-            for perm in itertools.permutations(range(0, 3), 3):
-                key0 = prop.triangle0.permutation(perm)
-                key1 = prop.triangle1.permutation(perm)
+            for key0, key1 in zip(prop.triangle0.permutations, prop.triangle1.permutations):
                 triples = self.__similar_triangles.get(key0)
                 if triples:
                     triples.add(key1)

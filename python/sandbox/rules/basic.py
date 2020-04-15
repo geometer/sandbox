@@ -148,7 +148,8 @@ class TwoPointsBelongsToTwoLinesRule(SingleSourceRule):
 
     def apply(self, cl0):
         triangle = Triangle(cl0.points)
-        for side, pt0 in [(triangle.side_for_index(i), triangle.points[i]) for i in range(0, 3)]:
+        sides = triangle.sides
+        for side, pt0 in [(sides[i], triangle.points[i]) for i in range(0, 3)]:
             third_points = [pt0]
             for cl1 in [p for p in self.context.list(PointsCollinearityProperty, [side]) if p.collinear and p != cl0]:
                 pt1 = next(pt for pt in cl1.points if pt not in side.points)
