@@ -3,9 +3,9 @@ import sympy as sp
 def keys_for_triangle(triangle, lengths):
     collection = []
     if lengths is None or 3 in lengths:
-        collection += [triangle.angle_for_index(i) for i in range(0, 3)]
+        collection += triangle.angles
     if lengths is None or 2 in lengths:
-        collection += [triangle.side_for_index(i) for i in range(0, 3)]
+        collection += triangle.sides
     return collection
 
 def divide(num0, num1):

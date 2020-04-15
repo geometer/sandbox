@@ -10,13 +10,10 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
     property_type = SimilarTrianglesProperty
 
     def apply(self, prop):
+        sides0 = prop.triangle0.sides
+        sides1 = prop.triangle1.sides
         for i, j in itertools.combinations(range(0, 3), 2):
-            segments = (
-                prop.triangle0.side_for_index(i),
-                prop.triangle0.side_for_index(j),
-                prop.triangle1.side_for_index(i),
-                prop.triangle1.side_for_index(j)
-            )
+            segments = (sides0[i], sides0[j], sides1[i], sides1[j])
             found_four_ratio_equalities = True
             for inds in [(0, 1, 2, 3), (0, 2, 1, 3), (1, 0, 3, 2), (1, 3, 0, 2)]:
                 if not self.context.length_ratios_are_equal(*[segments[i] for i in inds]):
@@ -152,14 +149,16 @@ class CorrespondingAnglesInSimilarTriangles(SingleSourceRule):
     def apply(self, prop):
         ne0 = []
         ne1 = []
+        sides0 = prop.triangle0.sides
+        sides1 = prop.triangle1.sides
         for i in range(0, 3):
-            ne0.append(self.context.not_equal_property(*prop.triangle0.side_for_index(i).points))
-            ne1.append(self.context.not_equal_property(*prop.triangle1.side_for_index(i).points))
+            ne0.append(self.context.not_equal_property(*sides0[i].points))
+            ne1.append(self.context.not_equal_property(*sides1[i].points))
 
+        angles0 = prop.triangle0.angles
+        angles1 = prop.triangle1.angles
         for i in range(0, 3):
-            angle0 = prop.triangle0.angle_for_index(i)
-            angle1 = prop.triangle1.angle_for_index(i)
-            if angle0 == angle1:
+            if angles0[i] == angles1[i]:
                 continue
             ne = []
             for j in range(0, 3):
@@ -171,7 +170,7 @@ class CorrespondingAnglesInSimilarTriangles(SingleSourceRule):
             if len(ne) < 3 or prop.reason.obsolete and all(p.reason.obsolete for p in ne):
                 continue
             yield (
-                AngleRatioProperty(angle0, angle1, 1),
+                AngleRatioProperty(angles0[i], angles1[i], 1),
                 'Corresponding non-degenerate angles in similar triangles',
                 [prop] + ne
             )
