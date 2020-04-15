@@ -17,11 +17,15 @@ def run_sample(scene, prop=None):
     else:
         properties = []
 
-    options = set()
+    options = {}
     if '--use-trigonometry' in sys.argv[1:]:
-        options.add('trigonometric')
+        options['trigonometric'] = True
     if '--use-advanced' in sys.argv[1:]:
-        options.add('advanced')
+        options['advanced'] = True
+    if '--max-layer-auxiliary' in sys.argv[1:]:
+        options['max_layer'] = 'auxiliary'
+    if '--max-layer-invisible' in sys.argv[1:]:
+        options['max_layer'] = 'invisible'
     explainer = Explainer(scene, options=options)
 
     if '--profile' in sys.argv[1:]:

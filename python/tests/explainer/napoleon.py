@@ -52,7 +52,7 @@ class NapoleonInward(ExplainerTest):
 
 class NapoleonInwardPlusTrigonometry(NapoleonInward):
     def explainer_options(self):
-        return {'trigonometric'}
+        return {'trigonometric': True}
 
     def testEquilateral(self):
         prop = EquilateralTriangleProperty((self.scene.get('A2'), self.scene.get('B2'), self.scene.get('C2')))
@@ -60,7 +60,7 @@ class NapoleonInwardPlusTrigonometry(NapoleonInward):
 
 class NapoleonInwardPlusAdvanced(NapoleonInward):
     def explainer_options(self):
-        return {'advanced'}
+        return {'advanced': True}
 
     def testEquilateral(self):
         prop = EquilateralTriangleProperty((self.scene.get('A2'), self.scene.get('B2'), self.scene.get('C2')))

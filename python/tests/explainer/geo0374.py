@@ -27,14 +27,14 @@ class GEO0374(ExplainerTest):
 
 class GEO0374Advanced(GEO0374):
     def explainer_options(self):
-        return {'advanced'}
+        return {'advanced': True}
 
     def test(self):
         self.assertIn(self.prop, self.explainer.context)
 
 class GEO0374Trigonometric(GEO0374):
     def explainer_options(self):
-        return {'trigonometric'}
+        return {'trigonometric': True}
 
     def test(self):
         self.assertIn(self.prop, self.explainer.context)

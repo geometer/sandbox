@@ -16,7 +16,7 @@ from .stats import Stats
 from .util import LazyComment, divide
 
 class Explainer:
-    def __init__(self, scene, options=(), base=None):
+    def __init__(self, scene, options={}, base=None):
         self.scene = scene
         self.context = PropertySet()
         if base:
@@ -60,13 +60,13 @@ class Explainer:
             PartOfAcuteAngleIsAcuteRule(self.context),
             VerticalAnglesRule(self.context),
         ]
-        if 'advanced' in options:
+        if options.get('advanced'):
             self.__rules += [
                 RightAngledTriangleMedianRule(self.context),
                 Triangle30_60_90SidesRule(self.context),
                 Triangle30_30_120SidesRule(self.context),
             ]
-        if 'trigonometric' in options:
+        if options.get('trigonometric'):
             self.__rules += [
                 LawOfSinesRule(self.context),
             ]
@@ -1093,7 +1093,7 @@ class Explainer:
                     [sos]
                 )
 
-        for prop, comment in enumerate_predefined_properties(self.scene):
+        for prop, comment in enumerate_predefined_properties(self.scene, max_layer=self.__options.get('max_layer', 'user')):
             self.__reason(prop, comment, [])
 
         self.__iteration_step_count = 0
