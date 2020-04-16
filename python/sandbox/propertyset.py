@@ -257,6 +257,14 @@ class AngleRatioPropertySet:
             for angle in fam.congruent_angles_with_vertex():
                 yield angle
 
+    def congruent_angles_for(self, angle):
+        fam = self.angle_to_family.get(angle)
+        if fam:
+            ratio = fam.angle_to_ratio[angle]
+            for a, r in fam.angle_to_ratio.items():
+                if r == ratio and a != angle:
+                    yield a
+
     def add(self, prop):
         if isinstance(prop, AngleRatioProperty):
             self.__add_ratio_property(prop)
@@ -649,6 +657,9 @@ class PropertySet:
 
     def congruent_angles_with_vertex(self):
         return self.__angle_ratios.congruent_angles_with_vertex()
+
+    def congruent_angles_for(self, angle):
+        return sefl.__angle_ratios.congruent_angles_for(angle)
 
     def length_ratio_properties(self, allow_zeroes):
         if allow_zeroes:

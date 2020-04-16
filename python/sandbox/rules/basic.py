@@ -730,3 +730,48 @@ class VerticalAnglesRule(Rule):
             'Vertical angles',
             [av0, av1]
         )
+
+class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
+    property_type = SameOrOppositeSideProperty
+
+    def apply(self, prop):
+        lp0 = prop.segment.points[0]
+        lp1 = prop.segment.points[1]
+        for pt0, pt1 in [prop.points, reversed(prop.points)]:
+            angle0 = lp0.angle(pt0, lp1)
+            angle1 = lp1.angle(pt1, lp0)
+            if prop.same:
+                sum_reason = self.context[SumOfAnglesProperty(angle0, angle1, 180)]
+                ratio_reason = None
+                if sum_reason is None:
+                    for cnd in [p for p in self.context.list(SumOfAnglesProperty, [angle0]) if p.degree == 180]:
+                        other = cnd.angle0 if cnd.angle1 == angle0 else cnd.angle1
+                        ratio_reason = self.context.angle_ratio_property(other, angle1)
+                        if ratio_reason:
+                            if ratio_reason.value == 1:
+                                sum_reason = cnd
+                            break
+                if sum_reason is None:
+                    for cnd in [p for p in self.context.list(SumOfAnglesProperty, [angle1]) if p.degree == 180]:
+                        other = cnd.angle0 if cnd.angle1 == angle1 else cnd.angle1
+                        ratio_reason = self.context.angle_ratio_property(other, angle0)
+                        if ratio_reason:
+                            if ratio_reason.value == 1:
+                                sum_reason = cnd
+                            break
+                if sum_reason is None:
+                    continue
+                reasons = [prop, sum_reason]
+                if ratio_reason:
+                    reasons.append(ratio_reason)
+                if all(p.reason.obsolete for p in reasons):
+                    continue
+                for p in AngleValueProperty.generate(lp0.vector(pt0), lp1.vector(pt1), 0):
+                    yield (p, 'Sum of alternate angles = 180º', reasons)
+            else:
+                ratio_reason = self.context.angle_ratio_property(angle0, angle1)
+                if ratio_reason is None or prop.reason.obsolete and ratio_reason.reason.obsolete:
+                    continue
+                if ratio_reason.value == 1:
+                    for p in AngleValueProperty.generate(lp0.vector(pt0), pt1.vector(lp1), 0):
+                        yield (p, 'Equal corresponding angles', [prop, ratio_reason])

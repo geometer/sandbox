@@ -56,6 +56,7 @@ class Explainer:
             AngleTypesInObtuseangledTriangleRule(self.context),
             PartOfAcuteAngleIsAcuteRule(self.context),
             VerticalAnglesRule(self.context),
+            CorrespondingAndAlternateAnglesRule(self.context),
         ]
         if options.get('advanced'):
             self.__rules += [
@@ -255,30 +256,6 @@ class Explainer:
                     'Same angle',
                     [av0, av1]
                 )
-
-            for so in self.context.list(SameOrOppositeSideProperty):
-                so_is_too_old = so.reason.obsolete
-                lp0 = so.segment.points[0]
-                lp1 = so.segment.points[1]
-                ne = self.context.not_equal_property(lp0, lp1)
-                if ne is None:
-                    continue
-                reasons_are_too_old = so_is_too_old and ne.reason.obsolete
-                for pt0, pt1 in [so.points, reversed(so.points)]:
-                    if so.same:
-                        sum_reason = self.context[SumOfAnglesProperty(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0), 180)]
-                        if sum_reason is None or reasons_are_too_old and sum_reason.reason.obsolete:
-                            continue
-                        if sum_reason.degree == 180:
-                            for prop in AngleValueProperty.generate(lp0.vector(pt0), lp1.vector(pt1), 0):
-                                yield (prop, 'Alternate angles', [so, sum_reason, ne])
-                    else:
-                        ratio_reason = self.context.angle_ratio_property(lp0.angle(pt0, lp1), lp1.angle(pt1, lp0))
-                        if ratio_reason is None or reasons_are_too_old and ratio_reason.reason.obsolete:
-                            continue
-                        if ratio_reason.value == 1:
-                            for prop in AngleValueProperty.generate(lp0.vector(pt0), pt1.vector(lp1), 0):
-                                yield (prop, 'Corresponding angles', [so, ratio_reason, ne])
 
             for zero in [av for av in self.context.list(AngleValueProperty) if av.degree == 0]:
                 zero_is_too_old = zero.reason.obsolete
