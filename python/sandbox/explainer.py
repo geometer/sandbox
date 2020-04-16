@@ -1055,16 +1055,6 @@ class Explainer:
             for sos in self.context.list(SameOrOppositeSideProperty):
                 if sos.reason.obsolete:
                     continue
-                for pt in sos.points:
-                    yield (
-                        PointsCollinearityProperty(*sos.segment.points, pt, False),
-                        '', #TODO: write comment
-                        [sos]
-                    )
-
-            for sos in self.context.list(SameOrOppositeSideProperty):
-                if sos.reason.obsolete:
-                    continue
                 cycle0 = Cycle(*sos.segment.points, sos.points[0])
                 cycle1 = Cycle(*sos.segment.points, sos.points[1])
                 if not sos.same:
