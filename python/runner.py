@@ -9,15 +9,13 @@ from sandbox.propertyset import PropertySet
 def run_sample(scene, prop=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--max-layer', default='user', choices=CoreScene.layers)
-    parser.add_argument('--dump-scene', action='store_true')
+    parser.add_argument('--dump', nargs='+', choices=('scene', 'stats', 'properties', 'explanation'), default='stats')
     parser.add_argument('--run-hunter', action='store_true')
     parser.add_argument('--extra-rules', nargs='+', choices=('advanced', 'trigonometric'), default=())
     parser.add_argument('--profile', action='store_true')
-    parser.add_argument('--dump', action='store_true')
-    parser.add_argument('--explain', action='store_true')
     args = parser.parse_args()
 
-    if args.dump_scene:
+    if 'scene' in args.dump:
         scene.dump()
 
     if args.run_hunter:
@@ -38,9 +36,10 @@ def run_sample(scene, prop=None):
         cProfile.runctx('explainer.explain()', {'explainer': explainer}, {})
     else:
         explainer.explain()
-    if args.dump:
+    if 'properties' in args.dump:
         explainer.dump(properties)
-    explainer.stats(properties).dump()
+    if 'stats' in args.dump:
+        explainer.stats(properties).dump()
 
     if prop:
         if explainer.explained(prop):
@@ -48,7 +47,7 @@ def run_sample(scene, prop=None):
         else:
             print('\tNot explained: %s' % prop)
 
-    if args.explain:
+    if 'explanation' in args.dump:
         def dump(prop, level=0):
             print('\t' + '  ' * level + str(prop) + ': ' + ' + '.join([str(com) for com in prop.reason.comments]))
             if prop.reason.premises:
@@ -67,8 +66,21 @@ def run_sample(scene, prop=None):
             return premises
 
         explanation = explainer.explanation(prop)
+        print('XXX: %s' % explanation)
         if explanation:
             dump(explanation)
             print('Depth = %s' % depth(explanation))
             print('Props = %s' % len(explanation.reason.all_premises))
             all_premises(explanation).stats().dump()
+            rules_map = {}
+            for prop in explanation.reason.all_premises:
+                if hasattr(prop, 'generation') and prop.generation == -1:
+                    key = 'Given'
+                else:
+                    key = type(prop.rule).__name__ if hasattr(prop, 'rule') else 'Unknown'
+                rules_map[key] = rules_map.get(key, 0) + 1
+            items = list(rules_map.items())
+            items.sort(key=lambda pair: -pair[1])
+            print('Rules:')
+            for pair in items:
+                print('\t%s: %s' % pair)
