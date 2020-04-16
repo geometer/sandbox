@@ -102,8 +102,9 @@ class Explainer:
     def __explain_all(self):
         def iteration():
             for rule in self.__rules:
-                for reason in rule.generate():
-                    yield reason
+                for prop, comment, premises in rule.generate():
+                    prop.rule = rule
+                    yield (prop, comment, premises)
 
             for prop in self.context.list(SameOrOppositeSideProperty):
                 pt0 = prop.points[0]
