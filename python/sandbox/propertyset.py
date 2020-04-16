@@ -478,6 +478,20 @@ class LengthRatioPropertySet:
             return (None, None)
         return fam.value_explanation(ratio)
 
+    def values(self):
+        for fam in set(self.ratio_to_family.values()):
+            if fam.ratio_value is None or fam.ratio_value < 1:
+                continue
+
+            unique = set() if fam.ratio_value == 1 else None
+            for ratio in fam.ratio_set:
+                if unique is not None:
+                    key = frozenset(ratio)
+                    if key in unique:
+                        continue
+                    unique.add(key)
+                yield (*ratio, fam.ratio_value)
+
     def value_properties(self):
         for fam in set(self.ratio_to_family.values()):
             if fam.ratio_value is None or fam.ratio_value < 1:
@@ -677,6 +691,19 @@ class PropertySet:
 
     def congruent_angles_for(self, angle):
         return sefl.__angle_ratios.congruent_angles_for(angle)
+
+    def length_ratios(self, allow_zeroes):
+        if allow_zeroes:
+            collection = []
+            for prop in self.__length_ratios.proportional_lengths.values():
+                collection.append((prop.segment0, prop.segment1, prop.value))
+            for seg0, seg1, value in self.__length_ratios.values():
+                key = frozenset([seg0, seg1])
+                if key not in self.__length_ratios.proportional_lengths:
+                    collection.append((seg0, seg1, value))
+            return collection
+        else:
+            return self.__length_ratios.values()
 
     def length_ratio_properties(self, allow_zeroes):
         if allow_zeroes:
