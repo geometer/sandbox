@@ -373,11 +373,7 @@ class CoreScene:
             """
             self ⟂ other
             """
-            for cnstr in self.scene.constraints(Constraint.Kind.perpendicular):
-                if set(cnstr.params) == {self, other}:
-                    cnstr.update(kwargs)
-                    return
-            self.scene.constraint(Constraint.Kind.perpendicular, self, other, **kwargs)
+            self.point0.segment(self.point1).perpendicular_constraint(other.point0.segment(other.point1), **kwargs)
 
         def __contains__(self, obj):
             if obj is None:
@@ -553,6 +549,16 @@ class CoreScene:
             bisector.perpendicular_constraint(line, comment=comment)
             return bisector
 
+        def perpendicular_constraint(self, other, **kwargs):
+            """
+            self ⟂ other
+            """
+            for cnstr in self.scene.constraints(Constraint.Kind.perpendicular):
+                if set(cnstr.params) == {self, other}:
+                    cnstr.update(kwargs)
+                    return
+            self.scene.constraint(Constraint.Kind.perpendicular, self, other, **kwargs)
+
         def ratio_constraint(self, segment, coef, **kwargs):
             """
             |self| == |segment| * coef
@@ -714,18 +720,6 @@ class CoreScene:
         assert len(points) > 3
         self.constraint(Constraint.Kind.convex_polygon, points, **kwargs)
 
-    def perpendicular_constraint(self, AB, CD, **kwargs):
-        """
-        AB ⟂ CD
-        AB and CD are tuples or lists of two points
-        """
-        assert len(AB) == 2 and len(CD) == 2
-        AB[0].not_equal_constraint(AB[1], **kwargs)
-        CD[0].not_equal_constraint(CD[1], **kwargs)
-        lineAB = AB[0].line_through(AB[1], layer='auxiliary')
-        lineCD = CD[0].line_through(CD[1], layer='auxiliary')
-        lineAB.perpendicular_constraint(lineCD, **kwargs)
-
     def points(self, max_layer='invisible'):
         return [p for p in self.__objects if isinstance(p, CoreScene.Point) and p.layer in CoreScene.layers_by(max_layer)]
 
@@ -765,6 +759,17 @@ class CoreScene:
 
     def free_point(self, **kwargs):
         return CoreScene.Point(self, origin=CoreScene.Point.Origin.free, **kwargs)
+
+    def existing_line(self, point0, point1):
+        for cnstr in self.constraints(Constraint.Kind.not_equal):
+            if {point0, point1} == {*cnstr.params}:
+                break
+        else:
+            return None
+        for line in self.lines():
+            if point0 in line and point1 in line:
+                return line
+        return None
 
     def add(self, obj: Object):
         if not self.__frozen:
@@ -822,7 +827,7 @@ class Constraint:
         length_ratio              = ('length_ratio', Stage.adjustment, CoreScene.Segment, CoreScene.Segment, int)
         parallel_vectors          = ('parallel_vectors', Stage.adjustment, CoreScene.Vector, CoreScene.Vector)
         angles_ratio              = ('angles_ratio', Stage.adjustment, CoreScene.Angle, CoreScene.Angle, int)
-        perpendicular             = ('perpendicular', Stage.adjustment, CoreScene.Line, CoreScene.Line)
+        perpendicular             = ('perpendicular', Stage.adjustment, CoreScene.Segment, CoreScene.Segment)
         acute_angle               = ('acute_angle', Stage.validation, CoreScene.Angle)
         obtuse_angle              = ('obtuse_angle', Stage.validation, CoreScene.Angle)
 

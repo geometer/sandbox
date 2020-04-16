@@ -8,7 +8,7 @@ class RightAngledTriangleMedian(ExplainerTest):
         scene = Scene()
 
         A, B, C = scene.triangle(labels=('A', 'B', 'C'))
-        scene.perpendicular_constraint((A, C), (B, C), comment='Given: AC ⟂ BC')
+        A.segment(C).perpendicular_constraint(B.segment(C), comment='Given: AC ⟂ BC')
         D = A.segment(B).middle_point(label='D')
 
         return scene
