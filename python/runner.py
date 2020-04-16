@@ -66,7 +66,6 @@ def run_sample(scene, prop=None):
             return premises
 
         explanation = explainer.explanation(prop)
-        print('XXX: %s' % explanation)
         if explanation:
             dump(explanation)
             print('Depth = %s' % depth(explanation))
