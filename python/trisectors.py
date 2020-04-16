@@ -40,8 +40,8 @@ angle = B1.angle(C1, A1)
 
 print('\tGuessed: %s = %s' % (angle, hunter.guessed(angle)))
 
-explainer = Explainer(scene, hunter.properties)
+explainer = Explainer(scene)
 explainer.explain()
 print('\tExplainer stats:')
-explainer.stats().dump()
+explainer.stats(hunter.properties).dump()
 print('\tExplained: %s = %s' % (angle, explainer.explained(angle)))
