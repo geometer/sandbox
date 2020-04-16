@@ -608,18 +608,6 @@ class RotatedAngleRule(Rule):
                 'Rotated', #TODO: better comment
                 [ca, co]
             )
-        else:
-            co = self.context.same_cyclic_order_property(cycle0, cycle1.reversed)
-            if co is None:
-                return
-            ca = self.context.angle_ratio_property(ang0, ang1)
-            if ca.reason.obsolete and co.reason.obsolete:
-                return
-            yield (
-                AngleRatioProperty(vertex.angle(pts0[0], pts1[1]), vertex.angle(pts0[1], pts1[0]), 1),
-                'Rotated', #TODO: better comment
-                [ca, co]
-            )
 
 class PartOfAcuteAngleIsAcuteRule(SingleSourceRule):
     property_type = PointInsideAngleProperty
