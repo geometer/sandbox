@@ -39,8 +39,15 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
             )
 
     for cnstr in scene.constraints(Constraint.Kind.perpendicular):
-        line0 = cnstr.params[0]
-        line1 = cnstr.params[1]
+        line0 = scene.existing_line(*cnstr.params[0].points)
+        line1 = scene.existing_line(*cnstr.params[1].points)
+        if line0 is None or line1 is None:
+            yield (
+                PerpendicularSegmentsProperty(cnstr.params[0], cnstr.params[1]),
+                cnstr.comments
+            )
+            continue
+
         for pts0 in itertools.combinations(line0.all_points, 2):
             if not all_visible(pts0):
                 continue
