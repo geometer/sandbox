@@ -26,19 +26,21 @@ class TriangleWrapper:
         self.side0 = side0
         self.side1 = side1
         self.side2 = side2
+        self.__variations = None
+        self.__ratios = None
 
-    def variation(self, index):
-        if index == 1:
-            return TriangleWrapper((self.pts[0], self.pts[2], self.pts[1]), self.side0, self.side2, self.side1)
-        if index == 2:
-            return TriangleWrapper((self.pts[1], self.pts[0], self.pts[2]), self.side1, self.side0, self.side2)
-        if index == 3:
-            return TriangleWrapper((self.pts[1], self.pts[2], self.pts[0]), self.side1, self.side2, self.side0)
-        if index == 4:
-            return TriangleWrapper((self.pts[2], self.pts[0], self.pts[1]), self.side2, self.side0, self.side1)
-        if index == 5:
-            return TriangleWrapper((self.pts[2], self.pts[1], self.pts[0]), self.side2, self.side1, self.side0)
-        return self
+    @property
+    def variations(self):
+        if self.__variations is None:
+            self.__variations = ( \
+                self, \
+                TriangleWrapper((self.pts[0], self.pts[2], self.pts[1]), self.side0, self.side2, self.side1), \
+                TriangleWrapper((self.pts[1], self.pts[0], self.pts[2]), self.side1, self.side0, self.side2), \
+                TriangleWrapper((self.pts[1], self.pts[2], self.pts[0]), self.side1, self.side2, self.side0), \
+                TriangleWrapper((self.pts[2], self.pts[0], self.pts[1]), self.side2, self.side0, self.side1), \
+                TriangleWrapper((self.pts[2], self.pts[1], self.pts[0]), self.side2, self.side1, self.side0) \
+            )
+        return self.__variations
 
     def __eq__(self, other) -> bool:
         return self.pts[0] == other.pts[0] and self.pts[1] == other.pts[1] and self.pts[2] == other.pts[2]
@@ -53,17 +55,26 @@ class TriangleWrapper:
 
     def isosceles(self):
         if np.fabs(self.side0 - self.side1) < ERROR:
-            return self.variation(4)
+            return self.variations[4]
         if np.fabs(self.side0 - self.side2) < ERROR:
-            return self.variation(2)
+            return self.variations[2]
         if np.fabs(self.side1 - self.side2) < ERROR:
             return self
 
+    @property
+    def ratios(self):
+        if self.__ratios is None:
+            self.__ratios = (self.side0 / self.side1, self.side1 / self.side2)
+        return self.__ratios
+
     def similar(self, other) -> bool:
-        ratio = self.side0 / other.side0
-        if np.fabs(ratio / self.side1 * other.side1 - 1) >= ERROR:
+        r0 = self.ratios
+        r1 = other.ratios
+        d0 = r0[0] - r1[0]
+        if d0 <= -ERROR or d0 >= ERROR:
             return False
-        return np.fabs(ratio / self.side2 * other.side2 - 1) < ERROR
+        d1 = r0[1] - r1[1]
+        return -ERROR < d1 and d1 < ERROR
 
     def equal(self, other) -> bool:
         if np.fabs(self.side0 - other.side0) >= ERROR:
@@ -302,8 +313,7 @@ class Hunter:
         for trn in triangles:
             found = False
             for fam in families:
-                for variation in range(0, 6):
-                    var = trn.variation(variation)
+                for var in trn.variations:
                     if fam[0].equal(var):
                         fam.append(var)
                         found = True
@@ -337,8 +347,7 @@ class Hunter:
         for trn in triangles:
             found = False
             for fam in families:
-                for variation in range(0, 6):
-                    var = trn.variation(variation)
+                for var in trn.variations:
                     if fam[0].similar(var):
                         fam.append(var)
                         found = True
