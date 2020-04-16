@@ -550,6 +550,16 @@ class PropertySet:
         self.__collinearity = {} # {point, point, point} => prop
         self.__intersections = {} # {segment, segment} => point, [reasons]
         self.__similar_triangles = {} # (three points) => {(three points)}
+        self.__hints = {} # type_of_property => [properties]
+
+    def set_hints(self, properties):
+        for prop in properties:
+            type_of_prop = type(prop)
+            ar = self.__hints.get(type_of_prop)
+            if ar is None:
+                self.__hints[type_of_prop] = [prop]
+            else:
+                ar.append(prop)
 
     def add(self, prop):
         def put(key):
