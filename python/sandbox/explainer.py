@@ -1009,30 +1009,40 @@ class Explainer:
                                 [cs0, cs1, cs2]
                             )
 
-            for ps0, ps1 in itertools.combinations(self.context.length_ratio_properties(allow_zeroes=True), 2):
-                if ps0.value == 1 or ps0.value != ps1.value:
+            for triple0, triple1 in itertools.combinations(self.context.length_ratios(allow_zeroes=True), 2):
+                num0, den0, value0 = triple0
+                num1, den1, value1 = triple1
+                if value0 == 1:
                     continue
-                ps_are_too_old = ps0.reason.obsolete and ps1.reason.obsolete
-                common0 = common_point(ps0.segment0, ps1.segment0)
+                if value0 * value1 == 1:
+                    num1, den1, value1 = den1, num1, value0
+                elif value0 != value1:
+                    continue
+                common0 = common_point(num0, num1)
                 if common0 is None:
                     continue
-                common1 = common_point(ps0.segment1, ps1.segment1)
+                common1 = common_point(den0, den1)
                 if common1 is None:
                     continue
-                third0 = other_point(ps0.segment0, common0).vector(other_point(ps1.segment0, common0))
-                third1 = other_point(ps0.segment1, common1).vector(other_point(ps1.segment1, common1))
+                third0 = other_point(num0, common0).vector(other_point(num1, common0))
+                third1 = other_point(den0, common1).vector(other_point(den1, common1))
                 ncl = self.context.not_collinear_property(common0, *third0.points)
-                if ncl is None or ps_are_too_old and ncl.reason.obsolete:
+                if ncl is None:
                     continue
                 ps2, value2 = self.context.length_ratio_property_and_value(third0.as_segment, third1.as_segment, True)
-                if ps2 and value2 == ps0.value:
-                    yield (
-                        SimilarTrianglesProperty(
-                            (common0, *third0.points), (common1, *third1.points)
-                        ),
-                        'Three pairs of sides with the same ratio',
-                        [ps0, ps1, ps2, ncl]
-                    )
+                if ps2 is None or value2 != value0:
+                    continue
+                ps0, _ = self.context.length_ratio_property_and_value(num0, den0, allow_zeroes=True)
+                ps1, _ = self.context.length_ratio_property_and_value(num1, den1, allow_zeroes=True)
+                if ncl is None or ps0.reason.obsolete and ps1.reason.obsolete and ps2.reason.obsolete and ncl.reason.obsolete:
+                    continue
+                yield (
+                    SimilarTrianglesProperty(
+                        (common0, *third0.points), (common1, *third1.points)
+                    ),
+                    'Three pairs of sides with the same ratio',
+                    [ps0, ps1, ps2, ncl]
+                )
 
             for sos in self.context.list(SameOrOppositeSideProperty):
                 for col in [p for p in self.context.list(PointsCollinearityProperty) if p.collinear]:
