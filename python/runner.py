@@ -11,8 +11,7 @@ def run_sample(scene, prop=None):
     parser.add_argument('--max-layer', default='user', choices=CoreScene.layers)
     parser.add_argument('--dump-scene', action='store_true')
     parser.add_argument('--run-hunter', action='store_true')
-    parser.add_argument('--use-trigonometry', action='store_true')
-    parser.add_argument('--use-advanced', action='store_true')
+    parser.add_argument('--extra-rules', nargs='+', choices=('advanced', 'trigonometric'), default=())
     parser.add_argument('--profile', action='store_true')
     parser.add_argument('--dump', action='store_true')
     parser.add_argument('--explain', action='store_true')
@@ -29,11 +28,9 @@ def run_sample(scene, prop=None):
     else:
         properties = []
 
-    options = {
-        'max_layer': args.max_layer,
-        'trigonometric': args.use_trigonometry,
-        'advanced': args.use_advanced,
-    }
+    options = { 'max_layer': args.max_layer }
+    for extra in args.extra_rules:
+        options[extra] = True
     explainer = Explainer(scene, options=options)
 
     if args.profile:
