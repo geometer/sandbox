@@ -21,24 +21,25 @@ class AngleWrapper:
         return str(self.angle)
 
 class TriangleWrapper:
-    def __init__(self, pts, side0, side1, side2):
-        self.pts = list(pts)
+    def __init__(self, triangle, side0, side1, side2):
+        self.triangle = triangle
+        self.pts = list(triangle.points)
         self.side0 = side0
         self.side1 = side1
         self.side2 = side2
         self.__variations = None
-        self.__ratios = None
+        self.ratios = None
 
     @property
     def variations(self):
         if self.__variations is None:
             self.__variations = ( \
                 self, \
-                TriangleWrapper((self.pts[0], self.pts[2], self.pts[1]), self.side0, self.side2, self.side1), \
-                TriangleWrapper((self.pts[1], self.pts[0], self.pts[2]), self.side1, self.side0, self.side2), \
-                TriangleWrapper((self.pts[1], self.pts[2], self.pts[0]), self.side1, self.side2, self.side0), \
-                TriangleWrapper((self.pts[2], self.pts[0], self.pts[1]), self.side2, self.side0, self.side1), \
-                TriangleWrapper((self.pts[2], self.pts[1], self.pts[0]), self.side2, self.side1, self.side0) \
+                TriangleWrapper(Triangle((self.pts[0], self.pts[2], self.pts[1])), self.side0, self.side2, self.side1), \
+                TriangleWrapper(Triangle((self.pts[1], self.pts[0], self.pts[2])), self.side1, self.side0, self.side2), \
+                TriangleWrapper(Triangle((self.pts[1], self.pts[2], self.pts[0])), self.side1, self.side2, self.side0), \
+                TriangleWrapper(Triangle((self.pts[2], self.pts[0], self.pts[1])), self.side2, self.side0, self.side1), \
+                TriangleWrapper(Triangle((self.pts[2], self.pts[1], self.pts[0])), self.side2, self.side1, self.side0) \
             )
         return self.__variations
 
@@ -46,7 +47,7 @@ class TriangleWrapper:
         return self.pts[0] == other.pts[0] and self.pts[1] == other.pts[1] and self.pts[2] == other.pts[2]
 
     def __str__(self):
-        return str(Triangle(self.pts))
+        return str(self.triangle)
 
     def equilateral(self):
         return np.fabs(self.side0 - self.side1) < ERROR and \
@@ -60,21 +61,6 @@ class TriangleWrapper:
             return self.variations[2]
         if np.fabs(self.side1 - self.side2) < ERROR:
             return self
-
-    @property
-    def ratios(self):
-        if self.__ratios is None:
-            self.__ratios = (self.side0 / self.side1, self.side1 / self.side2)
-        return self.__ratios
-
-    def similar(self, other) -> bool:
-        r0 = self.ratios
-        r1 = other.ratios
-        d0 = r0[0] - r1[0]
-        if d0 <= -ERROR or d0 >= ERROR:
-            return False
-        d1 = r0[1] - r1[1]
-        return -ERROR < d1 and d1 < ERROR
 
     def equal(self, other) -> bool:
         if np.fabs(self.side0 - other.side0) >= ERROR:
@@ -178,6 +164,8 @@ class Hunter:
         self.properties = []
         self.max_layer = max_layer
         self.__hunting_time = None
+        self.__point_location = {} # point -> TwoDCoordinates
+        self.__segment_length = {} # segment -> number
 
     def __vectors(self):
         points = self.placement.scene.points(max_layer=self.max_layer)
@@ -188,18 +176,15 @@ class Hunter:
 
     def __triangles(self):
         points = self.placement.scene.points(max_layer=self.max_layer)
-        for index0, pt0 in enumerate(points):
-            loc0 = self.placement.location(pt0)
-            for index1, pt1 in enumerate(points[index0 + 1:], start=index0 + 1):
-                loc1 = self.placement.location(pt1)
-                for pt2 in points[index1 + 1:]:
-                    loc2 = self.placement.location(pt2)
-                    area = loc0.x * (loc1.y - loc2.y) + loc1.x * (loc2.y - loc0.y) + loc2.x * (loc0.y - loc1.y)
-                    if np.fabs(area) > ERROR:
-                        side0 = loc1.distance_to(loc2)
-                        side1 = loc2.distance_to(loc0)
-                        side2 = loc0.distance_to(loc1)
-                        yield TriangleWrapper((pt0, pt1, pt2), side0, side1, side2)
+        for pt0, pt1, pt2 in itertools.combinations(points, 3):
+            loc0 = self.__point_location[pt0]
+            loc1 = self.__point_location[pt1]
+            loc2 = self.__point_location[pt2]
+            area = loc0.x * (loc1.y - loc2.y) + loc1.x * (loc2.y - loc0.y) + loc2.x * (loc0.y - loc1.y)
+            if np.fabs(area) > ERROR:
+                triangle = Triangle((pt0, pt1, pt2))
+                sides = triangle.sides
+                yield TriangleWrapper(triangle, *[self.__segment_length[s] for s in sides])
 
     def __lines(self):
         lines = []
@@ -343,23 +328,49 @@ class Hunter:
         for trn in isosceles:
             self.__add(IsoscelesTriangleProperty(trn.pts[0], Triangle(trn.pts).sides[0]))
 
+        def similar(trn0, trn1) -> bool:
+            ratios0 = trn0.ratios
+            if ratios0 is None:
+                sides = trn0.triangle.sides
+                ratios0 = (
+                    self.__segment_length[sides[0]] / self.__segment_length[sides[1]],
+                    self.__segment_length[sides[0]] / self.__segment_length[sides[2]]
+                )
+                trn0.ratios = ratios0
+            ratios1 = trn1.ratios
+            if ratios1 is None:
+                sides = trn1.triangle.sides
+                ratios1 = (
+                    self.__segment_length[sides[0]] / self.__segment_length[sides[1]],
+                    self.__segment_length[sides[0]] / self.__segment_length[sides[2]]
+                )
+                trn1.ratios = ratios1
+
+            delta = ratios0[0] - ratios1[0]
+            if delta <= -ERROR or delta >= ERROR:
+                return False
+            delta = ratios0[1] - ratios1[1]
+            return -ERROR < delta and delta < ERROR
+
         families = []
         for trn in triangles:
             found = False
             for fam in families:
-                for var in trn.variations:
-                    if fam[0].similar(var):
-                        fam.append(var)
-                        found = True
-                if found:
+                lst = [var for var in trn.variations if similar(fam[0][0], var)]
+                if lst:
+                    fam.append(lst)
                     break
             else:
-                families.append([trn])
+                families.append([[trn]])
 
         for fam in families:
-            for pair in itertools.combinations(fam, 2):
-                if set(pair[0].pts) != set(pair[1].pts):
-                    self.__add(SimilarTrianglesProperty(pair[0].pts, pair[1].pts))
+#            print('DEBUG FAM')
+#            for trn in fam:
+#                print('DEBUG %s' % trn.triangle)
+            for lst0, lst1 in itertools.combinations(fam, 2):
+                trn0 = lst0[0].triangle
+                for wrapper in lst1:
+                    self.__add(SimilarTrianglesProperty(trn0, wrapper.triangle))
 
     def stats(self):
         return Stats([
@@ -378,6 +389,13 @@ class Hunter:
         self.__hunting_time = time.time() - start
 
     def __hunt(self, options):
+        for pt in self.placement.scene.points(max_layer=self.max_layer):
+            self.__point_location[pt] = self.placement.location(pt)
+        for pt0, pt1 in itertools.combinations(self.__point_location.keys(), 2):
+            loc0 = self.__point_location.get(pt0)
+            loc1 = self.__point_location.get(pt1)
+            self.__segment_length[pt0.segment(pt1)] = loc0.distance_to(loc1)
+
         all_vectors = list(self.__vectors())
         all_vectors.sort(key=lambda v: self.placement.length(v))
 
