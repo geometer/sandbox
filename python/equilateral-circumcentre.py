@@ -2,7 +2,7 @@ from sandbox import Scene
 
 from runner import run_sample
 
-scene = Scene(strategy='constraints')
+scene = Scene()
 
 A, B, C = scene.triangle(labels=['A', 'B', 'C'])
 scene.equilateral_constraint((A, B, C))
