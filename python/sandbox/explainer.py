@@ -72,6 +72,7 @@ class Explainer:
             VerticalAnglesRule(self.context),
             CorrespondingAndAlternateAnglesRule(self.context),
             SimilarTrianglesWithCongruentSide(self.context),
+            IsoscelesTriangleByConrguentLegs(self.context),
         ]
         if options.get('advanced'):
             self.__rules += [
@@ -646,23 +647,6 @@ class Explainer:
                         'Congruent legs',
                         [cs, ne]
                     )
-
-            for ang0, ang1 in self.context.congruent_angles_with_vertex():
-                if ang0.point_set != ang1.point_set:
-                    continue
-                nc = self.context.not_collinear_property(*ang0.point_set)
-                if nc is None:
-                    continue
-                ca = self.context.angle_ratio_property(ang0, ang1)
-                if ca.reason.obsolete and nc.reason.obsolete:
-                    continue
-                base = ang0.vertex.segment(ang1.vertex)
-                apex = next(pt for pt in ang0.point_set if pt not in base.point_set)
-                yield (
-                    IsoscelesTriangleProperty(apex, base),
-                    'Congruent base angles',
-                    [ca, nc]
-                )
 
             for equ in self.context.list(EquilateralTriangleProperty):
                 ne = None

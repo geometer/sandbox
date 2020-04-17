@@ -310,3 +310,25 @@ class SimilarTrianglesByThreeSidesRule(RuleWithHints):
                     return
 
         yield (prop, 'Same sides ratios', premises)
+
+class IsoscelesTriangleByConrguentLegs(Rule):
+    def sources(self):
+        return self.context.congruent_angles_with_vertex()
+
+    def apply(self, src):
+        ang0, ang1 = src
+        if ang0.point_set != ang1.point_set:
+            return
+        nc = self.context.not_collinear_property(*ang0.point_set)
+        if nc is None:
+            return
+        ca = self.context.angle_ratio_property(ang0, ang1)
+        if ca.reason.obsolete and nc.reason.obsolete:
+            return
+        base = ang0.vertex.segment(ang1.vertex)
+        apex = next(pt for pt in ang0.point_set if pt not in base.point_set)
+        yield (
+            IsoscelesTriangleProperty(apex, base),
+            'Congruent base angles',
+            [ca, nc]
+        )
