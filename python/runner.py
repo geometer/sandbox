@@ -10,21 +10,12 @@ def run_sample(scene, prop=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--max-layer', default='user', choices=CoreScene.layers)
     parser.add_argument('--dump', nargs='+', choices=('scene', 'stats', 'properties', 'explanation'), default='stats')
-    parser.add_argument('--run-hunter', action='store_true')
     parser.add_argument('--extra-rules', nargs='+', choices=('advanced', 'trigonometric'), default=())
     parser.add_argument('--profile', action='store_true')
     args = parser.parse_args()
 
     if 'scene' in args.dump:
         scene.dump()
-
-    if args.run_hunter:
-        placement = iterative_placement(scene)
-        hunter = Hunter(placement)
-        hunter.hunt()
-        properties = hunter.properties
-    else:
-        properties = []
 
     options = { 'max_layer': args.max_layer }
     for extra in args.extra_rules:
@@ -37,9 +28,9 @@ def run_sample(scene, prop=None):
     else:
         explainer.explain()
     if 'properties' in args.dump:
-        explainer.dump(properties)
+        explainer.dump()
     if 'stats' in args.dump:
-        explainer.stats(properties).dump()
+        explainer.stats().dump()
 
     if prop:
         if explainer.explained(prop):
