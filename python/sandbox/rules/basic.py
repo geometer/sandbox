@@ -21,52 +21,6 @@ class ProportionalLengthsToLengthsRatioRule(SingleSourceRule):
             [prop, ne]
         )
 
-class DifferentAnglesToDifferentPointsRule(Rule):
-    """
-    For three vectors, v0, v1, v2, if it is known that
-        v1 and v2 have common start (or end), and
-        ∠(v0, v1) != ∠(v0, v2),
-    then ends (starts) of v1 and v2 are different
-    """
-    def sources(self):
-        return itertools.combinations(self.context.angle_value_properties(), 2)
-
-    def apply(self, src):
-        av0, av1 = src
-
-        if av0.degree == av1.degree or av0.reason.obsolete and av1.reason.obsolete:
-            return
-        ang0 = av0.angle
-        ang1 = av1.angle
-
-        if ang0.vector0 == ang1.vector0:
-            vec0, vec1 = ang0.vector1, ang1.vector1
-        elif ang0.vector0 == ang1.vector1:
-            vec0, vec1 = ang0.vector1, ang1.vector0
-        elif ang0.vector1 == ang1.vector0:
-            vec0, vec1 = ang0.vector0, ang1.vector1
-        elif ang0.vector1 == ang1.vector1:
-            vec0, vec1 = ang0.vector0, ang1.vector0
-        elif ang0.vector0 == ang1.vector0.reversed:
-            vec0, vec1 = ang0.vector1, ang1.vector1.reversed
-        elif ang0.vector0 == ang1.vector1.reversed:
-            vec0, vec1 = ang0.vector1, ang1.vector0.reversed
-        elif ang0.vector1 == ang1.vector0.reversed:
-            vec0, vec1 = ang0.vector0, ang1.vector1.reversed
-        elif ang0.vector1 == ang1.vector1.reversed:
-            vec0, vec1 = ang0.vector0, ang1.vector0.reversed
-        else:
-            return
-
-        if vec0.start == vec1.start:
-            prop = PointsCoincidenceProperty(vec0.end, vec1.end, False)
-        elif vec0.end == vec1.end:
-            prop = PointsCoincidenceProperty(vec0.start, vec1.start, False)
-        else:
-            return
-
-        yield (prop, LazyComment('Otherwise, %s = %s', ang0, ang1), [av0, av1])
-
 class LengthRatioTransitivityRule(Rule):
     """
     For three segments seg0, seg1, and seg2, from
