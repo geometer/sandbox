@@ -97,8 +97,6 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
         return [prop for prop in self.context.hints(SimilarTrianglesProperty) if prop.reason is None]
 
     def apply(self, prop):
-        if self.context.triangles_are_similar(prop.triangle0, prop.triangle1):
-            return
         angles0 = prop.triangle0.angles
         angles1 = prop.triangle1.angles
         sides0 = prop.triangle0.sides
@@ -110,8 +108,8 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
                 continue
             j, k = (i + 1) % 3, (i + 2) % 3
             segments = (sides0[j], sides0[k], sides1[j], sides1[k])
-            for inds in [(0, 1, 2, 3), (0, 2, 1, 3), (1, 0, 3, 2), (1, 3, 0, 2)]:
-                elr = self.context.equal_length_ratios_property(*[segments[i] for i in inds])
+            for inds in [(0, 1, 2, 3), (0, 2, 1, 3), (1, 0, 3, 2), (2, 0, 3, 1)]:
+                elr = self.context.equal_length_ratios_property(*[segments[n] for n in inds])
                 if elr:
                     break
             else:
