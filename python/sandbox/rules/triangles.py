@@ -101,15 +101,15 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
             return
         angles0 = prop.triangle0.angles
         angles1 = prop.triangle1.angles
+        sides0 = prop.triangle0.sides
+        sides1 = prop.triangle1.sides
         for i in range(0, 3):
             ang0, ang1 = angles0[i], angles1[i]
             ca = self.context.angle_ratio_property(ang0, ang1)
             if ca is None:
                 continue
-            segments = (
-                ang0.vector0.as_segment, ang0.vector1.as_segment,
-                ang1.vector0.as_segment, ang1.vector1.as_segment
-            )
+            j, k = (i + 1) % 3, (i + 2) % 3
+            segments = (sides0[j], sides0[k], sides1[j], sides1[k])
             for inds in [(0, 1, 2, 3), (0, 2, 1, 3), (1, 0, 3, 2), (1, 3, 0, 2)]:
                 elr = self.context.equal_length_ratios_property(*[segments[i] for i in inds])
                 if elr:
