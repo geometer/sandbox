@@ -92,6 +92,45 @@ class SimilarTrianglesByTwoAnglesRule(RuleWithHints):
                 cas + [ncl]
             )
 
+class CongruentTrianglesByAngleAndTwoSidesRule(RuleWithHints):
+    property_type = CongruentTrianglesProperty
+
+    def apply(self, prop):
+        angles0 = prop.triangle0.angles
+        angles1 = prop.triangle1.angles
+        sides0 = prop.triangle0.sides
+        sides1 = prop.triangle1.sides
+
+        def congruent_segments(seg0, seg1):
+            if seg0 == seg1:
+                return True
+            return self.context.congruent_segments_property(seg0, seg1, True)
+
+        for i in range(0, 3):
+            ang0, ang1 = angles0[i], angles1[i]
+            ca = self.context.angle_ratio_property(ang0, ang1)
+            if ca is None:
+                continue
+            # TODO: report contradiction in ca.value != 1
+            j, k = (i + 1) % 3, (i + 2) % 3
+            rsn0 = congruent_segments(sides0[j], sides1[j])
+            if rsn0 is None:
+                continue
+            rsn1 = congruent_segments(sides0[k], sides1[k])
+            if rsn1 is None:
+                continue
+            if rsn0 == True:
+                comment = LazyComment('Common side %s, pair of congruent sides, and angle between the sides', sides0[j])
+                premises = [rsn1, ca]
+            elif rsn1 == True:
+                comment = LazyComment('Common side %s, pair of congruent sides, and angle between the sides', sides0[k])
+                premises = [rsn0, ca]
+            else:
+                comment = 'Two pairs of congruent sides, and angle between the sides'
+                premises = [rsn0, rsn1, ca]
+            yield (prop, comment, premises)
+            return
+
 class SimilarTrianglesByAngleAndTwoSidesRule(RuleWithHints):
     property_type = SimilarTrianglesProperty
 
@@ -105,6 +144,7 @@ class SimilarTrianglesByAngleAndTwoSidesRule(RuleWithHints):
             ca = self.context.angle_ratio_property(ang0, ang1)
             if ca is None:
                 continue
+            # TODO: report contradiction in ca.value != 1
             j, k = (i + 1) % 3, (i + 2) % 3
             segments = (sides0[j], sides0[k], sides1[j], sides1[k])
             for inds in [(0, 1, 2, 3), (0, 2, 1, 3), (1, 0, 3, 2), (2, 0, 3, 1)]:
@@ -118,6 +158,7 @@ class SimilarTrianglesByAngleAndTwoSidesRule(RuleWithHints):
                 'Two pairs of sides with the same ratio, and angle between the sides',
                 [elr, ca]
             )
+            return
 
 class CorrespondingAnglesInSimilarTriangles(SingleSourceRule):
     property_type = SimilarTrianglesProperty
