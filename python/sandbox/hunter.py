@@ -286,16 +286,22 @@ class Hunter:
 
         equilaterals = [trn for trn in triangles if trn.equilateral()]
         for trn in equilaterals:
-            self.__add(EquilateralTriangleProperty(trn.pts))
+            equilateral_prop = EquilateralTriangleProperty(trn.pts)
+            equilateral_prop.variants = []
+            self.__add(equilateral_prop)
             sides = Triangle(trn.pts).sides
             for i in range(0, 3):
-                self.__add(IsoscelesTriangleProperty(trn.pts[i], sides[i]))
+                isosceles_prop = IsoscelesTriangleProperty(trn.pts[i], sides[i])
+                isosceles_prop.variants = [equilateral_prop]
+                self.__add(isosceles_prop)
 
         triangles = [trn for trn in triangles if not trn.equilateral()]
 
         isosceles = list(filter(None, [trn.isosceles() for trn in triangles]))
         for trn in isosceles:
-            self.__add(IsoscelesTriangleProperty(trn.pts[0], Triangle(trn.pts).sides[0]))
+            isosceles_prop = IsoscelesTriangleProperty(trn.pts[0], Triangle(trn.pts).sides[0])
+            isosceles_prop.variants = []
+            self.__add(isosceles_prop)
 
         def similar(trn0, trn1):
             ratios0 = trn0.ratios

@@ -50,7 +50,7 @@ class Explainer:
             PerpendicularTransitivityRule(self.context),
             PerpendicularToEquidistantRule(self.context),
             EquidistantToPerpendicularRule(self.context),
-            SeparatedPointsRule(self.context),
+            PointsSeparatedByLineAreNotCoincidentRule(self.context),
             SameSidePointInsideSegmentRule(self.context),
             TwoPerpendicularsRule(self.context),
             CommonPerpendicularRule(self.context),
@@ -924,25 +924,24 @@ class Explainer:
             if len(self.context) == explained_size:
                 break
 
-    def dump(self, properties_to_explain=[]):
+    def dump(self):
         if len(self.context) > 0:
             print('Explained:')
             explained = self.context.all
             explained.sort(key=lambda p: p.reason.index)
             for prop in explained:
                 print('\t%2d (%d): %s [%s]' % (prop.reason.index, prop.reason.generation, prop, prop.reason))
-        if properties_to_explain:
-            unexplained = [prop for prop in properties_to_explain if prop not in self.context]
-            if len(unexplained) > 0:
-                print('\nNot explained:')
-                for prop in unexplained:
-                    print('\t%s' % prop)
+        unexplained = self.context.all_hints()
+        if len(unexplained) > 0:
+            print('\nNot explained:')
+            for prop in unexplained:
+                print('\t%s' % prop)
 
-    def stats(self, properties_to_explain=[]):
+    def stats(self):
         def type_presentation(kind):
             return kind.__doc__.strip() if kind.__doc__ else kind.__name__
 
-        unexplained = [prop for prop in properties_to_explain if prop not in self.context]
+        unexplained = self.context.all_hints()
         unexplained_by_kind = {}
         for prop in unexplained:
             kind = type(prop)

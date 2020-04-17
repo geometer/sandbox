@@ -16,6 +16,4 @@ class SingleSourceRule(Rule):
 
 class RuleWithHints(Rule):
     def sources(self):
-        def is_reasoned(prop):
-            return prop.reason or any(p.reason for p in prop.variants)
-        return [p for p in self.context.hints(type(self).property_type) if not is_reasoned(p)]
+        return self.context.hints(type(self).property_type)
