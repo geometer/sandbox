@@ -98,14 +98,11 @@ class Scene(CoreScene):
         Circumcentre of the triangle (i.e., centre of the circumcircle)
         """
         self.triangle_constraint(triangle)
-        if self.strategy == 'constructs':
-            bisector0 = triangle[0].segment(triangle[1]).perpendicular_bisector_line(layer='auxiliary')
-            bisector1 = triangle[0].segment(triangle[2]).perpendicular_bisector_line(layer='auxiliary')
-            bisector2 = triangle[1].segment(triangle[2]).perpendicular_bisector_line(layer='auxiliary')
-            centre = bisector0.intersection_point(bisector1, **kwargs)
-            centre.belongs_to(bisector2)
-        else: #self.scene.strategy == 'constraints'
-            centre = self.free_point(**kwargs)
+        bisector0 = triangle[0].segment(triangle[1]).perpendicular_bisector_line(layer='auxiliary')
+        bisector1 = triangle[0].segment(triangle[2]).perpendicular_bisector_line(layer='auxiliary')
+        bisector2 = triangle[1].segment(triangle[2]).perpendicular_bisector_line(layer='auxiliary')
+        centre = bisector0.intersection_point(bisector1, **kwargs)
+        centre.belongs_to(bisector2)
         for seg0, seg1 in itertools.combinations([centre.segment(v) for v in triangle], 2):
             seg0.congruent_constraint(
                 seg1,
@@ -218,10 +215,7 @@ class Scene(CoreScene):
         args = {}
         if labels and labels[3]:
             args['label'] = labels[3]
-        if self.strategy == 'constructs':
-            pts.append(pts[0].translated_point(pts[1].vector(pts[2]), **args))
-        else:
-            pts.append(self.free_point(**args))
+        pts.append(pts[0].translated_point(pts[1].vector(pts[2]), **args))
 
         comment = LazyComment('%s %s %s %s is a parallelogram', *pts)
         pts[0].vector(pts[1]).parallel_constraint(pts[3].vector(pts[2]), comment=comment)

@@ -5,7 +5,6 @@ from sandbox import Scene
 from sandbox.property import EquilateralTriangleProperty
 from sandbox.util import LazyComment
 
-#scene = Scene(strategy='constraints')
 scene = Scene()
 
 A, B, C = scene.triangle(labels=['A', 'B', 'C'])
