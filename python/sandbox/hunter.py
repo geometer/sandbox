@@ -288,26 +288,6 @@ class Hunter:
                 ratio = divide(pair[1][1], pair[0][1])
                 self.__add(AngleRatioProperty(pair[1][0].angle, pair[0][0].angle, ratio))
 
-    def __hunt_equal_triangles(self):
-        triangles = list(self.__triangles())
-        families = []
-        for trn in triangles:
-            found = False
-            for fam in families:
-                for var in trn.variations:
-                    if fam[0].equal(var):
-                        fam.append(var)
-                        found = True
-                if found:
-                    break
-            else:
-                families.append([trn])
-
-        for fam in families:
-            for pair in itertools.combinations(fam, 2):
-                if set(pair[0].pts) != set(pair[1].pts):
-                    self.__add(CongruentTrianglesProperty(pair[0].pts, pair[1].pts))
-
     def __hunt_similar_triangles(self):
         triangles = list(self.__triangles())
 
@@ -324,7 +304,7 @@ class Hunter:
         for trn in isosceles:
             self.__add(IsoscelesTriangleProperty(trn.pts[0], Triangle(trn.pts).sides[0]))
 
-        def similar(trn0, trn1) -> bool:
+        def similar(trn0, trn1):
             ratios0 = trn0.ratios
             if ratios0 is None:
                 sides = trn0.triangle.sides
@@ -365,8 +345,13 @@ class Hunter:
 #                print('DEBUG %s' % trn.triangle)
             for lst0, lst1 in itertools.combinations(fam, 2):
                 trn0 = lst0[0].triangle
+                len0 = self.__segment_length[trn0.sides[0]]
                 for wrapper in lst1:
-                    self.__add(SimilarTrianglesProperty(trn0, wrapper.triangle))
+                    delta = len0 - self.__segment_length[wrapper.triangle.sides[0]]
+                    if -ERROR < delta and delta < ERROR:
+                        self.__add(CongruentTrianglesProperty(trn0, wrapper.triangle))
+                    else:
+                        self.__add(SimilarTrianglesProperty(trn0, wrapper.triangle))
 
     def stats(self):
         return Stats([
@@ -418,9 +403,6 @@ class Hunter:
 
         if 'angle_values' in options or 'default' in options:
             self.__hunt_angle_values(all_angles)
-
-        if 'equal_triangles' in options or 'default' in options:
-            self.__hunt_equal_triangles()
 
         if 'similar_triangles' in options or 'default' in options:
             self.__hunt_similar_triangles()
