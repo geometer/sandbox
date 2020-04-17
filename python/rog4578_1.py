@@ -10,8 +10,8 @@ scene = Scene()
 A, B, C = scene.triangle(labels=('A', 'B', 'C'))
 D = scene.orthocentre_point((A, B, C), label='D')
 D.inside_triangle_constraint(A, B, C)
-#H = A.line_through(D).intersection_point(B.line_through(C), label='H')
-#G = C.line_through(D).intersection_point(A.line_through(B), label='G')
+H = A.line_through(D).intersection_point(B.line_through(C), label='H')
+G = C.line_through(D).intersection_point(A.line_through(B), label='G')
 A.segment(B).congruent_constraint(C.segment(D), comment='Given: |AB| = |CD|')
 
 #Proof

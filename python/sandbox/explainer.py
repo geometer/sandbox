@@ -72,6 +72,7 @@ class Explainer:
             VerticalAnglesRule(self.context),
             CorrespondingAndAlternateAnglesRule(self.context),
             SimilarTrianglesWithCongruentSideRule(self.context),
+            EquilateralTriangleByThreeSidesRule(self.context),
             IsoscelesTriangleByConrguentLegsRule(self.context),
             IsoscelesTriangleByConrguentBaseAnglesRule(self.context),
         ]
@@ -614,22 +615,6 @@ class Explainer:
                     LazyComment('Both %s and %s are acute', aa0.angle, aa1.angle),
                     [aa0, aa1, col]
                 )
-
-            for cs in [p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1]:
-                if cs.reason.obsolete:
-                    continue
-                common = next((p for p in cs.segment0.points if p in cs.segment1.points), None)
-                if common is None:
-                    continue
-                pt0 = next(p for p in cs.segment0.points if p != common)
-                pt1 = next(p for p in cs.segment1.points if p != common)
-                cs2 = self.context.congruent_segments_property(common.segment(pt0), pt0.segment(pt1), True)
-                if cs2:
-                    yield (
-                        EquilateralTriangleProperty((common, pt0, pt1)),
-                        'Congruent sides',
-                        [cs, cs2]
-                    )
 
             for equ in self.context.list(EquilateralTriangleProperty):
                 ne = None
