@@ -62,13 +62,6 @@ class TriangleWrapper:
         if np.fabs(self.side1 - self.side2) < ERROR:
             return self
 
-    def equal(self, other) -> bool:
-        if np.fabs(self.side0 - other.side0) >= ERROR:
-            return False
-        if np.fabs(self.side1 - other.side1) >= ERROR:
-            return False
-        return np.fabs(self.side2 - other.side2) < ERROR
-
 class LengthFamily:
     def __init__(self, vector: Scene.Vector, placement: Placement):
         self.base = vector
