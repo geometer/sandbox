@@ -16,8 +16,8 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
         for i, j in itertools.combinations(range(0, 3), 2):
             segments = (sides0[i], sides0[j], sides1[i], sides1[j])
             found_four_ratio_equalities = True
-            for inds in [(0, 1, 2, 3), (0, 2, 1, 3), (1, 0, 3, 2), (1, 3, 0, 2)]:
-                if not self.context.length_ratios_are_equal(*[segments[i] for i in inds]):
+            for inds in [(0, 1, 2, 3), (0, 2, 1, 3), (1, 0, 3, 2), (2, 0, 3, 1)]:
+                if not self.context.length_ratios_are_equal(*[segments[n] for n in inds]):
                     found_four_ratio_equalities = False
                     break
             if found_four_ratio_equalities:
@@ -257,3 +257,25 @@ class SimilarTrianglesWithCongruentSide(RuleWithHints):
                 'Similar triangles with congruent corresponding sides',
                 [similar, cs]
             )
+
+class SimilarTrianglesByThreeSidesRule(RuleWithHints):
+    property_type = SimilarTrianglesProperty
+
+    def apply(self, prop):
+        sides0 = prop.triangle0.sides
+        sides1 = prop.triangle1.sides
+        premises = []
+        failures = 0
+        for i, j in [(0, 1), (0, 2), (1, 2)]:
+            segments = (sides0[i], sides0[j], sides1[i], sides1[j])
+            for inds in [(0, 1, 2, 3), (0, 2, 1, 3), (1, 0, 3, 2), (2, 0, 3, 1)]:
+                elr = self.context.equal_length_ratios_property(*[segments[n] for n in inds])
+                if elr:
+                    premises.append(elr)
+                    break
+            else:
+                failures += 1
+                if failures == 2:
+                    return
+
+        yield (prop, 'Same sides ratios', premises)
