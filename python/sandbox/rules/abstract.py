@@ -12,4 +12,10 @@ class SingleSourceRule(Rule):
         return True
 
     def sources(self):
-        return [p for p in self.context.list(self.property_type) if self.accepts(p)]
+        return [p for p in self.context.list(type(self).property_type) if self.accepts(p)]
+
+class RuleWithHints(Rule):
+    def sources(self):
+        def is_reasoned(prop):
+            return prop.reason or any(p.reason for p in prop.variants)
+        return [p for p in self.context.hints(type(self).property_type) if not is_reasoned(p)]

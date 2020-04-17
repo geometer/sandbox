@@ -5,7 +5,7 @@ from sandbox.property import *
 from sandbox.scene import Triangle
 from sandbox.util import LazyComment
 
-from .abstract import Rule, SingleSourceRule
+from .abstract import Rule, SingleSourceRule, RuleWithHints
 
 class SideProductsInSimilarTrianglesRule(SingleSourceRule):
     property_type = SimilarTrianglesProperty
@@ -53,9 +53,8 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
                     [prop]
                 )
 
-class SimilarTrianglesByTwoAnglesRule(Rule):
-    def sources(self):
-        return self.context.hints(SimilarTrianglesProperty)
+class SimilarTrianglesByTwoAnglesRule(RuleWithHints):
+    property_type = SimilarTrianglesProperty
 
     def apply(self, prop):
         ncl = self.context.not_collinear_property(*prop.triangle0.points)
@@ -93,9 +92,8 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
                 cas + [ncl]
             )
 
-class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
-    def sources(self):
-        return self.context.hints(SimilarTrianglesProperty)
+class SimilarTrianglesByAngleAndTwoSidesRule(RuleWithHints):
+    property_type = SimilarTrianglesProperty
 
     def apply(self, prop):
         angles0 = prop.triangle0.angles
@@ -185,9 +183,8 @@ class LegsOfIsoscelesRule(SingleSourceRule):
             [prop]
         )
 
-class SimilarTrianglesWithCongruentSide(Rule):
-    def sources(self):
-        return self.context.hints(CongruentTrianglesProperty)
+class SimilarTrianglesWithCongruentSide(RuleWithHints):
+    property_type = CongruentTrianglesProperty
 
     def apply(self, prop):
         similar = self.context[SimilarTrianglesProperty(prop.triangle0, prop.triangle1)]
