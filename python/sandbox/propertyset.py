@@ -242,9 +242,9 @@ class AngleRatioPropertySet:
         path = nx.algorithms.shortest_path(fam.premises_graph, angle0, angle1)
         if len(path) == 2:
             return fam.premises_graph[path[0]][path[1]]['prop']
-        coef = fam.angle_to_ratio[path[0]]
+        coef = fam.angle_to_ratio[angle0]
         comment, premises = fam.explanation_from_path(path, coef)
-        value = divide(coef, fam.angle_to_ratio[path[-1]])
+        value = divide(coef, fam.angle_to_ratio[angle1])
         prop = AngleRatioProperty(angle0, angle1, value)
         prop.synthetic = True
         prop.reason = Reason(-2, -2, comment, premises)
