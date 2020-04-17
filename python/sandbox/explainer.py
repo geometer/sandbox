@@ -143,19 +143,6 @@ class Explainer:
                         [prop] + reasons
                     )
 
-            for ra in [av for av in self.context.nondegenerate_angle_value_properties() if av.degree == 90]:
-                ra_is_too_old = ra.reason.obsolete
-                vectors = (ra.angle.vector0, ra.angle.vector1)
-                for vec0, vec1 in (vectors, reversed(vectors)):
-                    for col in [p for p in self.context.list(PointsCollinearityProperty, [vec0.as_segment]) if p.collinear]:
-                        reasons_are_too_old = ra_is_too_old and col.reason.obsolete
-                        pt0 = next(p for p in col.points if p not in vec0.points)
-                        for pt1 in vec0.points:
-                            ne = self.context.not_equal_property(pt0, pt1)
-                            if ne is not None and not (reasons_are_too_old and ne.reason.obsolete):
-                                for prop in AngleValueProperty.generate(vec1, pt0.vector(pt1), 90):
-                                    yield (prop, '', [ra, col, ne]) #TODO: write comment
-
             for av in [av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 180]:
                 av_is_too_old = av.reason.obsolete
                 ang = av.angle
