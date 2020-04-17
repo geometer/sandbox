@@ -554,12 +554,16 @@ class PropertySet:
 
     def set_hints(self, properties):
         for prop in properties:
+            prop.reason = None
             type_of_prop = type(prop)
             ar = self.__hints.get(type_of_prop)
             if ar is None:
                 self.__hints[type_of_prop] = [prop]
             else:
                 ar.append(prop)
+
+    def hints(self, type_of_prop):
+        return self.__hints.get(type_of_prop, [])
 
     def add(self, prop):
         def put(key):

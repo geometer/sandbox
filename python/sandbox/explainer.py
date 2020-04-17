@@ -27,7 +27,8 @@ class Explainer:
         self.__placement_time = time.time() - start
         start = time.time()
         hunter = Hunter(placement, max_layer=options.get('max_layer', 'user'))
-        cProfile.runctx("hunter.hunt(options={'similar_triangles'})", {'hunter': hunter}, {})
+        #cProfile.runctx("hunter.hunt(options={'similar_triangles'})", {'hunter': hunter}, {})
+        hunter.hunt(options={'similar_triangles'})
         self.__hunting_time = time.time() - start
         self.context.set_hints(hunter.properties)
         self.__options = options

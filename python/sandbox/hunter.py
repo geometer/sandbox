@@ -177,13 +177,9 @@ class Hunter:
     def __triangles(self):
         points = self.placement.scene.points(max_layer=self.max_layer)
         for pt0, pt1, pt2 in itertools.combinations(points, 3):
-            loc0 = self.__point_location[pt0]
-            loc1 = self.__point_location[pt1]
-            loc2 = self.__point_location[pt2]
-            area = loc0.x * (loc1.y - loc2.y) + loc1.x * (loc2.y - loc0.y) + loc2.x * (loc0.y - loc1.y)
-            if np.fabs(area) > ERROR:
-                triangle = Triangle((pt0, pt1, pt2))
-                sides = triangle.sides
+            triangle = Triangle((pt0, pt1, pt2))
+            sides = triangle.sides
+            if all(self.__segment_length[side] > ERROR for side in sides):
                 yield TriangleWrapper(triangle, *[self.__segment_length[s] for s in sides])
 
     def __lines(self):

@@ -54,74 +54,60 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
 
 class SimilarTrianglesByTwoAnglesRule(Rule):
     def sources(self):
-        groups = {}
-        for a0, a1 in self.context.congruent_angles_with_vertex():
-            if a0.point_set == a1.point_set:
-                continue
-            key = frozenset([a0.point_set, a1.point_set])
-            lst = groups.get(key)
-            if lst:
-                lst.append((a0, a1))
-            else:
-                groups[key] = [(a0, a1)]
+        return [prop for prop in self.context.hints(SimilarTrianglesProperty) if prop.reason is None]
 
-        pair_to_prop = {}
-        def prop_for(pair):
-            prop = pair_to_prop.get(pair)
-            if prop is None:
-                prop = self.context.angle_ratio_property(pair[0], pair[1])
-                pair_to_prop[pair] = prop
-            return prop
-
-        for group in groups.values():
-            for pair0, pair1 in itertools.combinations(group, 2):
-                common = next((angle for angle in pair0 if angle in pair1), None)
-                if common:
-                    continue
-                yield (prop_for(pair0), prop_for(pair1))
-
-    def apply(self, src):
-        ca0, ca1 = src
-
-        ncl = self.context.not_collinear_property(*ca0.angle0.point_set)
-        first_non_degenerate = True
+    def apply(self, prop):
+        ncl = self.context.not_collinear_property(*prop.triangle0.points)
+        non_degenerate = prop.triangle0
         if ncl is None:
-            ncl = self.context.not_collinear_property(*ca1.angle1.point_set)
-            first_non_degenerate = False
-        if ncl is None or ca0.reason.obsolete and ca1.reason.obsolete and ncl.reason.obsolete:
+            ncl = self.context.not_collinear_property(*prop.triangle1.points)
+            non_degenerate = prop.triangle1
+        if ncl is None:
             return
 
-        #this code ensures that vertices are listed in corresponding orders
-        if ca0.angle0.point_set == ca1.angle0.point_set:
-            tr0 = [ca0.angle0.vertex, ca1.angle0.vertex]
-            tr1 = [ca0.angle1.vertex, ca1.angle1.vertex]
-        else:
-            tr0 = [ca0.angle0.vertex, ca1.angle1.vertex]
-            tr1 = [ca0.angle1.vertex, ca1.angle0.vertex]
-        tr0.append(next(p for p in ca0.angle0.point_set if p not in tr0))
-        tr1.append(next(p for p in ca0.angle1.point_set if p not in tr1))
-        if not self.context.triangles_are_similar(tuple(tr0), tuple(tr1)):
+        angles0 = prop.triangle0.angles
+        angles1 = prop.triangle1.angles
+
+        cas = []
+        ca = self.context.angle_ratio_property(angles0[0], angles1[0])
+        if ca:
+            #TODO: report contradiction if ca.value != 1
+            cas.append(ca)
+        ca = self.context.angle_ratio_property(angles0[1], angles1[1])
+        if ca:
+            #TODO: report contradiction if ca.value != 1
+            cas.append(ca)
+        if len(cas) == 0:
+            return
+        if len(cas) == 1:
+            ca = self.context.angle_ratio_property(angles0[2], angles1[2])
+            if ca:
+                #TODO: report contradiction if ca.value != 1
+                cas.append(ca)
+
+        if len(cas) == 2:
             yield (
-                SimilarTrianglesProperty(tr0, tr1),
-                LazyComment('Two pairs of congruent angles, and △ %s %s %s is non-degenerate', *(tr0 if first_non_degenerate else tr1)),
-                [ca0, ca1, ncl]
+                prop,
+                LazyComment('Two pairs of congruent angles, and %s is non-degenerate', non_degenerate),
+                cas + [ncl]
             )
 
 class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
     def sources(self):
-        return [(a0, a1) for a0, a1 in self.context.congruent_angles_with_vertex() if a0.point_set != a1.point_set]
+        return [prop for prop in self.context.hints(SimilarTrianglesProperty) if prop.reason is None]
 
-    def apply(self, src):
-        ang0, ang1 = src
-        ca = None
-        for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
-            if self.context.triangles_are_similar( \
-                (vec0.start, vec0.end, vec1.end), \
-                (ang1.vertex, ang1.vector0.end, ang1.vector1.end) \
-            ):
+    def apply(self, prop):
+        if self.context.triangles_are_similar(prop.triangle0, prop.triangle1):
+            return
+        angles0 = prop.triangle0.angles
+        angles1 = prop.triangle1.angles
+        for i in range(0, 3):
+            ang0, ang1 = angles0[i], angles1[i]
+            ca = self.context.angle_ratio_property(ang0, ang1)
+            if ca is None:
                 continue
             segments = (
-                vec0.as_segment, vec1.as_segment,
+                ang0.vector0.as_segment, ang0.vector1.as_segment,
                 ang1.vector0.as_segment, ang1.vector1.as_segment
             )
             for inds in [(0, 1, 2, 3), (0, 2, 1, 3), (1, 0, 3, 2), (1, 3, 0, 2)]:
@@ -130,15 +116,8 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
                     break
             else:
                 continue
-            if ca is None:
-                ca = self.context.angle_ratio_property(ang0, ang1)
-            if ca.reason.obsolete and elr.reason.obsolete:
-                continue
             yield (
-                SimilarTrianglesProperty(
-                    (ang0.vertex, vec0.end, vec1.end),
-                    (ang1.vertex, ang1.vector0.end, ang1.vector1.end)
-                ),
+                prop,
                 'Two pairs of sides with the same ratio, and angle between the sides',
                 [elr, ca]
             )
