@@ -354,13 +354,6 @@ class LengthRatioPropertySet:
             self.ratio_set.update(other.ratio_set)
             self.premises_graph.add_edges_from(other.premises_graph.edges(data=True))
 
-        def add_property(self, prop):
-            if isinstance(prop, EqualLengthRatiosProperty):
-                segs = prop.segments
-                self.premises_graph.add_edge((segs[0], segs[1]), (segs[2], segs[3]), prop=prop)
-            elif isinstance(prop, LengthRatioProperty):
-                self.premises_graph.add_edge((prop.segment0, prop.segment1), (prop.value, ), prop=prop)
-
         def find_ratio(self, ratio):
             if ratio in self.ratio_set:
                 return 1
@@ -420,6 +413,10 @@ class LengthRatioPropertySet:
     def __add_elr(self, prop):
         ratio0 = (prop.segments[0], prop.segments[1])
         ratio1 = (prop.segments[2], prop.segments[3])
+
+        def add_property_to(fam):
+            fam.premises_graph.add_edge(ratio0, ratio1, prop=prop)
+
         fam0 = self.ratio_to_family.get(ratio0)
         fam1 = self.ratio_to_family.get(ratio1)
         if fam0 and fam1:
@@ -429,20 +426,20 @@ class LengthRatioPropertySet:
                 for k in list(self.ratio_to_family.keys()):
                     if self.ratio_to_family[k] == fam1:
                         self.ratio_to_family[k] = fam0
-            fam0.add_property(prop)
+            add_property_to(fam0)
         elif fam0:
             fam0.add_ratio(ratio1)
-            fam0.add_property(prop)
+            add_property_to(fam0)
             self.ratio_to_family[ratio1] = fam0
         elif fam1:
             fam1.add_ratio(ratio0)
-            fam1.add_property(prop)
+            add_property_to(fam1)
             self.ratio_to_family[ratio0] = fam1
         else:
             fam = LengthRatioPropertySet.Family()
             fam.add_ratio(ratio0)
             fam.add_ratio(ratio1)
-            fam.add_property(prop)
+            add_property_to(fam)
             self.families.append(fam)
             self.ratio_to_family[ratio0] = fam
             self.ratio_to_family[ratio1] = fam
