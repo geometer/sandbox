@@ -563,7 +563,9 @@ class PropertySet:
                 ar.append(prop)
 
     def hints(self, type_of_prop):
-        return self.__hints.get(type_of_prop, [])
+        def is_reasoned(prop):
+            return prop.reason or any(p.reason for p in prop.variants)
+        return [p for p in self.__hints.get(type_of_prop, []) if not is_reasoned(p)]
 
     def add(self, prop):
         def put(key):

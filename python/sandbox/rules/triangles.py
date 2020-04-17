@@ -1,5 +1,6 @@
 import itertools
 
+from sandbox.core import CoreScene
 from sandbox.property import *
 from sandbox.scene import Triangle
 from sandbox.util import LazyComment
@@ -54,7 +55,7 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
 
 class SimilarTrianglesByTwoAnglesRule(Rule):
     def sources(self):
-        return [prop for prop in self.context.hints(SimilarTrianglesProperty) if prop.reason is None]
+        return self.context.hints(SimilarTrianglesProperty)
 
     def apply(self, prop):
         ncl = self.context.not_collinear_property(*prop.triangle0.points)
@@ -94,7 +95,7 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
 
 class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
     def sources(self):
-        return [prop for prop in self.context.hints(SimilarTrianglesProperty) if prop.reason is None]
+        return self.context.hints(SimilarTrianglesProperty)
 
     def apply(self, prop):
         angles0 = prop.triangle0.angles
@@ -183,3 +184,38 @@ class LegsOfIsoscelesRule(SingleSourceRule):
             LazyComment('Legs of isosceles %s', prop.triangle),
             [prop]
         )
+
+class SimilarTrianglesWithCongruentSide(Rule):
+    def sources(self):
+        return self.context.hints(CongruentTrianglesProperty)
+
+    def apply(self, prop):
+        similar = self.context[SimilarTrianglesProperty(prop.triangle0, prop.triangle1)]
+        if not similar:
+            return
+        sides0 = prop.triangle0.sides
+        sides1 = prop.triangle1.sides
+        for i in range(0, 3):
+            if sides0[i] == sides1[i]:
+                cs = sides0[i]
+                break
+        else:
+            for i in range(0, 3):
+                cs = self.context.congruent_segments_property(sides0[i], sides1[i], True)
+                if cs:
+                    break
+            else:
+                return
+
+        if isinstance(cs, CoreScene.Segment):
+            yield (
+                prop,
+                LazyComment('Similar triangles with common side %s', cs),
+                [similar]
+            )
+        else:
+            yield (
+                prop,
+                'Similar triangles with congruent corresponding sides',
+                [similar, cs]
+            )

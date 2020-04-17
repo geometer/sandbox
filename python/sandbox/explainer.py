@@ -69,6 +69,7 @@ class Explainer:
             PartOfAcuteAngleIsAcuteRule(self.context),
             VerticalAnglesRule(self.context),
             CorrespondingAndAlternateAnglesRule(self.context),
+            SimilarTrianglesWithCongruentSide(self.context),
         ]
         if options.get('advanced'):
             self.__rules += [
@@ -712,23 +713,6 @@ class Explainer:
                             'Corresponding angles in congruent non-degenerate triangles',
                             [ct, ncl]
                         )
-
-            for st in self.context.list(SimilarTrianglesProperty):
-                st_is_too_old = st.reason.obsolete
-                sides0 = st.triangle0.sides
-                sides1 = st.triangle1.sides
-                for i in range(0, 3):
-                    cs = self.context.congruent_segments_property(sides0[i], sides1[i], True)
-                    if cs is None:
-                        continue
-                    if st_is_too_old and cs.reason.obsolete:
-                        break
-                    yield (
-                        CongruentTrianglesProperty(st.triangle0, st.triangle1),
-                        'Similar triangles with congruent corresponding sides',
-                        [st, cs]
-                    )
-                    break
 
             for ratio0, ratio1 in self.context.equal_length_ratios_with_common_denominator():
                 prop = self.context.congruent_segments_property(ratio0[0], ratio1[0], True)

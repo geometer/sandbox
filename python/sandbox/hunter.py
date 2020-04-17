@@ -347,10 +347,15 @@ class Hunter:
                 trn0 = lst0[0].triangle
                 len0 = self.__segment_length[trn0.sides[0]]
                 for wrapper in lst1:
+                    prop = SimilarTrianglesProperty(trn0, wrapper.triangle)
+                    prop.variants = []
+                    self.__add(prop)
                     delta = len0 - self.__segment_length[wrapper.triangle.sides[0]]
                     if -ERROR < delta and delta < ERROR:
-                        self.__add(CongruentTrianglesProperty(trn0, wrapper.triangle))
-                    self.__add(SimilarTrianglesProperty(trn0, wrapper.triangle))
+                        prop_congruent = CongruentTrianglesProperty(trn0, wrapper.triangle)
+                        self.__add(prop_congruent)
+                        prop_congruent.variants = []
+                        prop.variants.append(prop_congruent)
 
     def stats(self):
         return Stats([
