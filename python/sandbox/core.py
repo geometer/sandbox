@@ -501,33 +501,28 @@ class CoreScene:
             """
             Constructs middle point of the segment
             """
-            if self.scene.strategy == 'constructs':
-                delta = self.points[0].vector(self.points[1])
-                coef = divide(1, 2)
-                for pt in self.scene.points():
-                    if pt.origin == CoreScene.Point.Origin.translated:
-                        if pt.base == self.points[0] and pt.delta == delta and pt.coef == coef:
-                            middle = pt
-                            break
-                        if pt.base == self.points[1] and pt.delta == delta.reversed and pt.coef == coef:
-                            middle = pt
-                            break
-                else:
-                    middle = CoreScene.Point(
-                        self.scene, CoreScene.Point.Origin.translated,
-                        base=self.points[0], delta=delta, coef=coef, **kwargs
-                    )
-                guaranteed = True
-            else: # self.scene.strategy == 'constraints'
-                middle = self.free_point(**kwargs)
-                guaranteed = False
+            delta = self.points[0].vector(self.points[1])
+            coef = divide(1, 2)
+            for pt in self.scene.points():
+                if pt.origin == CoreScene.Point.Origin.translated:
+                    if pt.base == self.points[0] and pt.delta == delta and pt.coef == coef:
+                        middle = pt
+                        break
+                    if pt.base == self.points[1] and pt.delta == delta.reversed and pt.coef == coef:
+                        middle = pt
+                        break
+            else:
+                middle = CoreScene.Point(
+                    self.scene, CoreScene.Point.Origin.translated,
+                    base=self.points[0], delta=delta, coef=coef, **kwargs
+                )
             half0 = middle.segment(self.points[0])
             half1 = middle.segment(self.points[1])
             comment = LazyComment('%s is the middle of segment %s', middle, self)
-            middle.inside_constraint(self, comment=comment, guaranteed=guaranteed)
-            self.ratio_constraint(half0, 2, comment=comment, guaranteed=guaranteed)
-            self.ratio_constraint(half1, 2, comment=comment, guaranteed=guaranteed)
-            half0.ratio_constraint(half1, 1, comment=comment, guaranteed=guaranteed)
+            middle.inside_constraint(self, comment=comment, guaranteed=True)
+            self.ratio_constraint(half0, 2, comment=comment, guaranteed=True)
+            self.ratio_constraint(half1, 2, comment=comment, guaranteed=True)
+            half0.ratio_constraint(half1, 1, comment=comment, guaranteed=True)
             return middle
 
         def free_point(self, **kwargs):
@@ -635,17 +630,12 @@ class CoreScene:
 
         def bisector_line(self, **kwargs):
             assert self.vertex, 'Cannot construct bisector of angle %s with no vertex' % self
-            if self.scene.strategy == 'constructs':
-                circle = self.vertex.circle_through(self.vector0.end, layer='invisible')
-                line = self.vertex.line_through(self.vector1.end, layer='invisible')
-                X = circle.intersection_point(line, layer='invisible')
-                self.vertex.same_direction_constraint(X, self.vector1.end)
-                Y = X.translated_point(self.vector0, layer='invisible')
-                guaranteed = True
-            else: #self.scene.strategy == 'constraints'
-                Y = self.scene.free_point(layer='invisible')
-                guaranteed = False
-            self.point_on_bisector_constraint(Y, guaranteed=guaranteed)
+            circle = self.vertex.circle_through(self.vector0.end, layer='invisible')
+            line = self.vertex.line_through(self.vector1.end, layer='invisible')
+            X = circle.intersection_point(line, layer='invisible')
+            self.vertex.same_direction_constraint(X, self.vector1.end)
+            Y = X.translated_point(self.vector0, layer='invisible')
+            self.point_on_bisector_constraint(Y, guaranteed=True)
             return self.vertex.line_through(Y, **kwargs)
 
         def point_on_bisector_constraint(self, point, **kwargs):
@@ -683,9 +673,7 @@ class CoreScene:
                 return str(LazyComment('∠ %s %s %s', self.vector0.end, self.vertex, self.vector1.end))
             return '∠(%s, %s)' % (self.vector0, self.vector1)
 
-    def __init__(self, strategy='constructs'):
-        assert strategy in ('constructs', 'constraints')
-        self.strategy = strategy
+    def __init__(self):
         self.__objects = []
         self.validation_constraints = []
         self.adjustment_constraints = []
