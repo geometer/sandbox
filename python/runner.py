@@ -73,7 +73,7 @@ def run_sample(scene, prop=None):
             all_premises(explanation).stats().dump()
             rules_map = {}
             for prop in explanation.reason.all_premises:
-                if hasattr(prop, 'generation') and prop.generation == -1:
+                if prop.reason.generation == -1:
                     key = 'Given'
                 else:
                     key = type(prop.rule).__name__ if hasattr(prop, 'rule') else 'Unknown'
