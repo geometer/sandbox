@@ -55,7 +55,7 @@ class Explainer:
             TwoPerpendicularsRule(self.context),
             CommonPerpendicularRule(self.context),
             SideProductsInSimilarTrianglesRule(self.context),
-            CorrespondingAnglesInSimilarTriangles(self.context),
+            CorrespondingAnglesInSimilarTrianglesRule(self.context),
             LengthProductEqualityToRatioRule(self.context),
             SimilarTrianglesByTwoAnglesRule(self.context),
             CongruentTrianglesByAngleAndTwoSidesRule(self.context),
@@ -71,8 +71,9 @@ class Explainer:
             PartOfAcuteAngleIsAcuteRule(self.context),
             VerticalAnglesRule(self.context),
             CorrespondingAndAlternateAnglesRule(self.context),
-            SimilarTrianglesWithCongruentSide(self.context),
-            IsoscelesTriangleByConrguentLegs(self.context),
+            SimilarTrianglesWithCongruentSideRule(self.context),
+            IsoscelesTriangleByConrguentLegsRule(self.context),
+            IsoscelesTriangleByConrguentBaseAnglesRule(self.context),
         ]
         if options.get('advanced'):
             self.__rules += [
@@ -628,24 +629,6 @@ class Explainer:
                         EquilateralTriangleProperty((common, pt0, pt1)),
                         'Congruent sides',
                         [cs, cs2]
-                    )
-
-            for cs in [p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1]:
-                if cs.segment1.points[0] in cs.segment0.points:
-                    apex = cs.segment1.points[0]
-                    base0 = cs.segment1.points[1]
-                elif cs.segment1.points[1] in cs.segment0.points:
-                    apex = cs.segment1.points[1]
-                    base0 = cs.segment1.points[0]
-                else:
-                    continue
-                base1 = cs.segment0.points[0] if apex == cs.segment0.points[1] else cs.segment0.points[1]
-                ne = self.context.not_equal_property(base0, base1)
-                if ne and not (cs.reason.obsolete and ne.reason.obsolete):
-                    yield (
-                        IsoscelesTriangleProperty(apex, base0.segment(base1)),
-                        'Congruent legs',
-                        [cs, ne]
                     )
 
             for equ in self.context.list(EquilateralTriangleProperty):

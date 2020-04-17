@@ -160,7 +160,7 @@ class SimilarTrianglesByAngleAndTwoSidesRule(RuleWithHints):
             )
             return
 
-class CorrespondingAnglesInSimilarTriangles(SingleSourceRule):
+class CorrespondingAnglesInSimilarTrianglesRule(SingleSourceRule):
     property_type = SimilarTrianglesProperty
 
     def apply(self, prop):
@@ -224,7 +224,7 @@ class LegsOfIsoscelesRule(SingleSourceRule):
             [prop]
         )
 
-class SimilarTrianglesWithCongruentSide(RuleWithHints):
+class SimilarTrianglesWithCongruentSideRule(RuleWithHints):
     property_type = CongruentTrianglesProperty
 
     def apply(self, prop):
@@ -311,7 +311,29 @@ class SimilarTrianglesByThreeSidesRule(RuleWithHints):
 
         yield (prop, 'Same sides ratios', premises)
 
-class IsoscelesTriangleByConrguentLegs(Rule):
+class IsoscelesTriangleByConrguentLegsRule(Rule):
+    def sources(self):
+        return [p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1]
+
+    def apply(self, prop):
+        if prop.segment1.points[0] in prop.segment0.points:
+            apex = prop.segment1.points[0]
+            base0 = prop.segment1.points[1]
+        elif prop.segment1.points[1] in prop.segment0.points:
+            apex = prop.segment1.points[1]
+            base0 = prop.segment1.points[0]
+        else:
+            return
+        base1 = prop.segment0.points[0] if apex == prop.segment0.points[1] else prop.segment0.points[1]
+        ne = self.context.not_equal_property(base0, base1)
+        if ne and not (prop.reason.obsolete and ne.reason.obsolete):
+            yield (
+                IsoscelesTriangleProperty(apex, base0.segment(base1)),
+                'Congruent legs',
+                [prop, ne]
+            )
+
+class IsoscelesTriangleByConrguentBaseAnglesRule(Rule):
     def sources(self):
         return self.context.congruent_angles_with_vertex()
 
