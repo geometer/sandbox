@@ -350,8 +350,7 @@ class Hunter:
                     delta = len0 - self.__segment_length[wrapper.triangle.sides[0]]
                     if -ERROR < delta and delta < ERROR:
                         self.__add(CongruentTrianglesProperty(trn0, wrapper.triangle))
-                    else:
-                        self.__add(SimilarTrianglesProperty(trn0, wrapper.triangle))
+                    self.__add(SimilarTrianglesProperty(trn0, wrapper.triangle))
 
     def stats(self):
         return Stats([
