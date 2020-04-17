@@ -258,6 +258,37 @@ class SimilarTrianglesWithCongruentSide(RuleWithHints):
                 [similar, cs]
             )
 
+class CongruentTrianglesByThreeSidesRule(RuleWithHints):
+    property_type = CongruentTrianglesProperty
+
+    def apply(self, prop):
+        sides0 = prop.triangle0.sides
+        sides1 = prop.triangle1.sides
+        premises = []
+        common_side = None
+        for side0, side1 in zip(sides0, sides1):
+            if side0 == side1:
+                common_side = side0
+            else:
+                ratio_prop = self.context.congruent_segments_property(side0, side1, allow_zeroes=True)
+                if ratio_prop:
+                    premises.append(ratio_prop)
+                else:
+                    return
+
+        if common_side:
+            yield (
+                prop,
+                LazyComment('Common side %s, two pairs of congruent sides', common_side),
+                premises
+            )
+        else:
+            yield (
+                prop,
+                'Three pairs of congruent sides',
+                premises
+            )
+
 class SimilarTrianglesByThreeSidesRule(RuleWithHints):
     property_type = SimilarTrianglesProperty
 
