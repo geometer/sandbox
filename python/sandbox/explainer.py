@@ -68,6 +68,7 @@ class Explainer:
             IsoscelesTriangleByConrguentLegsRule(self.context),
             IsoscelesTriangleByConrguentBaseAnglesRule(self.context),
             CyclicOrderRule(self.context),
+            PlanePositionsToLinePositionsRule(self.context),
         ]
         if options.get('advanced'):
             self.__rules += [
@@ -116,27 +117,6 @@ class Explainer:
                 for prop, comment, premises in rule.generate():
                     prop.rule = rule
                     yield (prop, comment, premises)
-
-            for prop in self.context.list(SameOrOppositeSideProperty):
-                pt0 = prop.points[0]
-                pt1 = prop.points[1]
-                crossing, reasons = self.context.intersection_of_lines(prop.segment, pt0.segment(pt1))
-                if not crossing:
-                    continue
-                if prop.reason.obsolete and all(p.reason.obsolete for p in reasons):
-                    continue
-                if prop.same:
-                    yield (
-                        AngleValueProperty(crossing.angle(pt0, pt1), 0),
-                        LazyComment('%s is the intersection point of lines %s and %s', crossing, pt0.segment(pt1), prop.segment),
-                        [prop] + reasons
-                    )
-                else:
-                    yield (
-                        AngleValueProperty(crossing.angle(pt0, pt1), 180),
-                        LazyComment('%s is the intersection point of segment %s and line %s', crossing, pt0.segment(pt1), prop.segment),
-                        [prop] + reasons
-                    )
 
             for av0, av1 in itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 180], 2):
                 ends0 = (av0.angle.vector0.end, av0.angle.vector1.end)

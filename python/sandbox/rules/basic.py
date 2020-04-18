@@ -781,3 +781,27 @@ class SameAngleRule(SingleSourceRule):
                 'Same angle',
                 [prop, ne]
             )
+
+class PlanePositionsToLinePositionsRule(SingleSourceRule):
+    property_type = SameOrOppositeSideProperty
+
+    def apply(self, prop):
+        pt0 = prop.points[0]
+        pt1 = prop.points[1]
+        crossing, reasons = self.context.intersection_of_lines(prop.segment, pt0.segment(pt1))
+        if not crossing:
+            return
+        if prop.reason.obsolete and all(p.reason.obsolete for p in reasons):
+            return
+        if prop.same:
+            yield (
+                AngleValueProperty(crossing.angle(pt0, pt1), 0),
+                LazyComment('%s is the intersection point of lines %s and %s', crossing, pt0.segment(pt1), prop.segment),
+                [prop] + reasons
+            )
+        else:
+            yield (
+                AngleValueProperty(crossing.angle(pt0, pt1), 180),
+                LazyComment('%s is the intersection point of segment %s and line %s', crossing, pt0.segment(pt1), prop.segment),
+                [prop] + reasons
+            )
