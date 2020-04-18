@@ -63,6 +63,7 @@ class Explainer:
             CyclicOrderRule(self.context),
             PlanePositionsToLinePositionsRule(self.context),
             CeviansIntersectionRule(self.context),
+            TwoAnglesWithCommonSideRule(self.context),
         ]
         if options.get('advanced'):
             self.__rules += [
@@ -229,18 +230,6 @@ class Explainer:
                     PointInsideAngleProperty(common, vertex.angle(other0, other1)),
                     '', #TODO: write comment
                     reasons
-                )
-
-            for pia in self.context.list(PointInsideAngleProperty):
-                av = self.context.angle_value_property(pia.angle)
-                if av is None or pia.reason.obsolete and av.reason.obsolete:
-                    continue
-                angle0 = pia.angle.vertex.angle(pia.angle.vector0.end, pia.point)
-                angle1 = pia.angle.vertex.angle(pia.angle.vector1.end, pia.point)
-                yield (
-                    SumOfAnglesProperty(angle0, angle1, av.degree),
-                    'Two angles with common side',
-                    [pia, av]
                 )
 
             angle_values = [prop for prop in self.context.angle_value_properties() \
