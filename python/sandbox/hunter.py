@@ -21,27 +21,27 @@ class AngleWrapper:
         return str(self.angle)
 
 class TriangleWrapper:
-    def __init__(self, triangle):
-        self.triangle = triangle
-        self.pts = list(triangle.points)
+    def __init__(self, pts):
+        self.triangle = pts if isinstance(pts, Triangle) else Triangle(pts)
         self.__variations = None
         self.ratios = None
 
     @property
     def variations(self):
         if self.__variations is None:
+            pts = self.triangle.points
             self.__variations = ( \
                 self, \
-                TriangleWrapper(Triangle((self.pts[0], self.pts[2], self.pts[1]))), \
-                TriangleWrapper(Triangle((self.pts[1], self.pts[0], self.pts[2]))), \
-                TriangleWrapper(Triangle((self.pts[1], self.pts[2], self.pts[0]))), \
-                TriangleWrapper(Triangle((self.pts[2], self.pts[0], self.pts[1]))), \
-                TriangleWrapper(Triangle((self.pts[2], self.pts[1], self.pts[0]))) \
+                TriangleWrapper((pts[0], pts[2], pts[1])), \
+                TriangleWrapper((pts[1], pts[0], pts[2])), \
+                TriangleWrapper((pts[1], pts[2], pts[0])), \
+                TriangleWrapper((pts[2], pts[0], pts[1])), \
+                TriangleWrapper((pts[2], pts[1], pts[0])) \
             )
         return self.__variations
 
     def __eq__(self, other) -> bool:
-        return self.pts[0] == other.pts[0] and self.pts[1] == other.pts[1] and self.pts[2] == other.pts[2]
+        return self.triangle.points == other.triangle.points
 
     def __str__(self):
         return str(self.triangle)
@@ -153,8 +153,8 @@ class Hunter:
 
     def __triangles(self):
         points = self.placement.scene.points(max_layer=self.max_layer)
-        for pt0, pt1, pt2 in itertools.combinations(points, 3):
-            triangle = Triangle((pt0, pt1, pt2))
+        for triple in itertools.combinations(points, 3):
+            triangle = Triangle(triple)
             sides = triangle.sides
             if all(self.__segment_length[side] > ERROR for side in sides):
                 yield TriangleWrapper(triangle)
@@ -281,23 +281,23 @@ class Hunter:
             s1 = self.__segment_length[sides[1]]
             delta = s0 - s1
             if -ERROR < delta and delta < ERROR:
-                return trn.variations[4]
+                return TriangleWrapper([trn.triangle.points[i] for i in (2, 0, 1)])
             s2 = self.__segment_length[sides[2]]
             delta = s0 - s2
             if -ERROR < delta and delta < ERROR:
-                return trn.variations[2]
+                return TriangleWrapper([trn.triangle.points[i] for i in (1, 0, 2)])
             delta = s1 - s2
             if -ERROR < delta and delta < ERROR:
                 return trn
 
         equilaterals = [trn for trn in triangles if equilateral(trn)]
         for trn in equilaterals:
-            equilateral_prop = EquilateralTriangleProperty(trn.pts)
+            equilateral_prop = EquilateralTriangleProperty(trn.triangle)
             equilateral_prop.variants = []
             self.__add(equilateral_prop)
-            sides = Triangle(trn.pts).sides
+            sides = trn.triangle.sides
             for i in range(0, 3):
-                isosceles_prop = IsoscelesTriangleProperty(trn.pts[i], sides[i])
+                isosceles_prop = IsoscelesTriangleProperty(trn.triangle.points[i], sides[i])
                 isosceles_prop.variants = [equilateral_prop]
                 self.__add(isosceles_prop)
 
@@ -305,7 +305,7 @@ class Hunter:
 
         isosceles = list(filter(None, [isosceles(trn) for trn in triangles]))
         for trn in isosceles:
-            isosceles_prop = IsoscelesTriangleProperty(trn.pts[0], Triangle(trn.pts).sides[0])
+            isosceles_prop = IsoscelesTriangleProperty(trn.triangle.points[0], trn.triangle.sides[0])
             isosceles_prop.variants = []
             self.__add(isosceles_prop)
 
