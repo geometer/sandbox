@@ -851,3 +851,45 @@ class PlanePositionsToLinePositionsRule(SingleSourceRule):
                 LazyComment('%s is the intersection point of segment %s and line %s', crossing, pt0.segment(pt1), prop.segment),
                 [prop] + reasons
             )
+
+class CeviansIntersectionRule(Rule):
+    def sources(self):
+        return itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 180], 2)
+
+    def apply(self, src):
+        av0, av1 = src
+        ends0 = (av0.angle.vector0.end, av0.angle.vector1.end)
+        ends1 = (av1.angle.vector0.end, av1.angle.vector1.end)
+        vertex = next((pt for pt in ends0 if pt in ends1), None)
+        if vertex is None:
+            return
+        pt0 = next(pt for pt in ends0 if pt != vertex)
+        pt1 = next(pt for pt in ends1 if pt != vertex)
+        if pt0 == pt1:
+            return
+        ncl = self.context.not_collinear_property(vertex, pt0, pt1)
+        if ncl is None:
+            return
+        segment0 = pt0.segment(av1.angle.vertex)
+        segment1 = pt1.segment(av0.angle.vertex)
+        crossing, reasons = self.context.intersection_of_lines(segment0, segment1)
+        if crossing is None:
+            return
+        if av0.reason.obsolete and av1.reason.obsolete and ncl.reason.obsolete and all(r.reason.obsolete for r in reasons):
+            return
+        comment = LazyComment('%s is the intersection of cevians %s and %s with %s and %s inside the sides of △ %s %s %s', crossing, segment0, segment1, av1.angle.vertex, av0.angle.vertex, vertex, pt0, pt1)
+        yield (
+            PointInsideAngleProperty(crossing, vertex.angle(pt0, pt1)),
+            comment,
+            [ncl, av0, av1] + reasons
+        )
+        yield (
+            PointInsideAngleProperty(crossing, pt0.angle(vertex, pt1)),
+            comment,
+            [ncl, av0, av1] + reasons
+        )
+        yield (
+            PointInsideAngleProperty(crossing, pt1.angle(vertex, pt0)),
+            comment,
+            [ncl, av0, av1] + reasons
+        )
