@@ -442,7 +442,7 @@ class EquidistantToPerpendicularRule(Rule):
             [cs0, cs1, ne0, ne1]
         )
 
-class SeparatedPointsRule(SingleSourceRule):
+class PointsSeparatedByLineAreNotCoincidentRule(SingleSourceRule):
     """
     If two points are separated by a line, the points are not coincident
     """
