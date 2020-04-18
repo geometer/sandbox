@@ -919,22 +919,3 @@ class SameSideToInsideAngleRule(Rule):
                 comment,
                 [op0, op1]
             )
-
-class CorrespondingAnglesInCongruentTrianglesRule(SingleSourceRule):
-    property_type = CongruentTrianglesProperty
-
-    def apply(self, prop):
-        ncl = self.context.not_collinear_property(*prop.triangle0.points)
-        if ncl is None:
-            ncl = self.context.not_collinear_property(*prop.triangle1.points)
-        if ncl is None or prop.reason.obsolete and ncl.reason.obsolete:
-            return
-        angles0 = prop.triangle0.angles
-        angles1 = prop.triangle1.angles
-        for i in range(0, 3):
-            if angles0[i] != angles1[i]:
-                yield (
-                    AngleRatioProperty(angles0[i], angles1[i], 1),
-                    'Corresponding angles in congruent non-degenerate triangles',
-                    [prop, ncl]
-                )
