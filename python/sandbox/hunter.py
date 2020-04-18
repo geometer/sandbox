@@ -21,53 +21,30 @@ class AngleWrapper:
         return str(self.angle)
 
 class TriangleWrapper:
-    def __init__(self, triangle, side0, side1, side2):
-        self.triangle = triangle
-        self.pts = list(triangle.points)
-        self.side0 = side0
-        self.side1 = side1
-        self.side2 = side2
+    def __init__(self, pts):
+        self.triangle = pts if isinstance(pts, Triangle) else Triangle(pts)
         self.__variations = None
         self.ratios = None
 
     @property
     def variations(self):
         if self.__variations is None:
+            pts = self.triangle.points
             self.__variations = ( \
                 self, \
-                TriangleWrapper(Triangle((self.pts[0], self.pts[2], self.pts[1])), self.side0, self.side2, self.side1), \
-                TriangleWrapper(Triangle((self.pts[1], self.pts[0], self.pts[2])), self.side1, self.side0, self.side2), \
-                TriangleWrapper(Triangle((self.pts[1], self.pts[2], self.pts[0])), self.side1, self.side2, self.side0), \
-                TriangleWrapper(Triangle((self.pts[2], self.pts[0], self.pts[1])), self.side2, self.side0, self.side1), \
-                TriangleWrapper(Triangle((self.pts[2], self.pts[1], self.pts[0])), self.side2, self.side1, self.side0) \
+                TriangleWrapper((pts[0], pts[2], pts[1])), \
+                TriangleWrapper((pts[1], pts[0], pts[2])), \
+                TriangleWrapper((pts[1], pts[2], pts[0])), \
+                TriangleWrapper((pts[2], pts[0], pts[1])), \
+                TriangleWrapper((pts[2], pts[1], pts[0])) \
             )
         return self.__variations
 
     def __eq__(self, other) -> bool:
-        return self.pts[0] == other.pts[0] and self.pts[1] == other.pts[1] and self.pts[2] == other.pts[2]
+        return self.triangle.points == other.triangle.points
 
     def __str__(self):
         return str(self.triangle)
-
-    def equilateral(self):
-        return np.fabs(self.side0 - self.side1) < ERROR and \
-               np.fabs(self.side0 - self.side2) < ERROR and \
-               np.fabs(self.side1 - self.side2) < ERROR
-
-    def isosceles(self):
-        if np.fabs(self.side0 - self.side1) < ERROR:
-            return self.variations[4]
-        if np.fabs(self.side0 - self.side2) < ERROR:
-            return self.variations[2]
-        if np.fabs(self.side1 - self.side2) < ERROR:
-            return self
-
-    def equal(self, other) -> bool:
-        if np.fabs(self.side0 - other.side0) >= ERROR:
-            return False
-        if np.fabs(self.side1 - other.side1) >= ERROR:
-            return False
-        return np.fabs(self.side2 - other.side2) < ERROR
 
 class LengthFamily:
     def __init__(self, vector: Scene.Vector, placement: Placement):
@@ -176,15 +153,11 @@ class Hunter:
 
     def __triangles(self):
         points = self.placement.scene.points(max_layer=self.max_layer)
-        for pt0, pt1, pt2 in itertools.combinations(points, 3):
-            loc0 = self.__point_location[pt0]
-            loc1 = self.__point_location[pt1]
-            loc2 = self.__point_location[pt2]
-            area = loc0.x * (loc1.y - loc2.y) + loc1.x * (loc2.y - loc0.y) + loc2.x * (loc0.y - loc1.y)
-            if np.fabs(area) > ERROR:
-                triangle = Triangle((pt0, pt1, pt2))
-                sides = triangle.sides
-                yield TriangleWrapper(triangle, *[self.__segment_length[s] for s in sides])
+        for triple in itertools.combinations(points, 3):
+            triangle = Triangle(triple)
+            sides = triangle.sides
+            if all(self.__segment_length[side] > ERROR for side in sides):
+                yield TriangleWrapper(triangle)
 
     def __lines(self):
         lines = []
@@ -292,43 +265,51 @@ class Hunter:
                 ratio = divide(pair[1][1], pair[0][1])
                 self.__add(AngleRatioProperty(pair[1][0].angle, pair[0][0].angle, ratio))
 
-    def __hunt_equal_triangles(self):
-        triangles = list(self.__triangles())
-        families = []
-        for trn in triangles:
-            found = False
-            for fam in families:
-                for var in trn.variations:
-                    if fam[0].equal(var):
-                        fam.append(var)
-                        found = True
-                if found:
-                    break
-            else:
-                families.append([trn])
-
-        for fam in families:
-            for pair in itertools.combinations(fam, 2):
-                if set(pair[0].pts) != set(pair[1].pts):
-                    self.__add(CongruentTrianglesProperty(pair[0].pts, pair[1].pts))
-
     def __hunt_similar_triangles(self):
         triangles = list(self.__triangles())
 
-        equilaterals = [trn for trn in triangles if trn.equilateral()]
+        def equilateral(trn):
+            sides = trn.triangle.sides
+            s0 = self.__segment_length[sides[0]]
+            d0 = s0 - self.__segment_length[sides[1]]
+            d1 = s0 - self.__segment_length[sides[2]]
+            return -ERROR < d0 and d0 < ERROR and -ERROR < d1 and d1 < ERROR
+
+        def isosceles(trn):
+            sides = trn.triangle.sides
+            s0 = self.__segment_length[sides[0]]
+            s1 = self.__segment_length[sides[1]]
+            delta = s0 - s1
+            if -ERROR < delta and delta < ERROR:
+                return TriangleWrapper([trn.triangle.points[i] for i in (2, 0, 1)])
+            s2 = self.__segment_length[sides[2]]
+            delta = s0 - s2
+            if -ERROR < delta and delta < ERROR:
+                return TriangleWrapper([trn.triangle.points[i] for i in (1, 0, 2)])
+            delta = s1 - s2
+            if -ERROR < delta and delta < ERROR:
+                return trn
+
+        equilaterals = [trn for trn in triangles if equilateral(trn)]
         for trn in equilaterals:
-            self.__add(EquilateralTriangleProperty(trn.pts))
-            sides = Triangle(trn.pts).sides
+            equilateral_prop = EquilateralTriangleProperty(trn.triangle)
+            equilateral_prop.variants = []
+            self.__add(equilateral_prop)
+            sides = trn.triangle.sides
             for i in range(0, 3):
-                self.__add(IsoscelesTriangleProperty(trn.pts[i], sides[i]))
+                isosceles_prop = IsoscelesTriangleProperty(trn.triangle.points[i], sides[i])
+                isosceles_prop.variants = [equilateral_prop]
+                self.__add(isosceles_prop)
 
-        triangles = [trn for trn in triangles if not trn.equilateral()]
+        triangles = [trn for trn in triangles if trn not in equilaterals]
 
-        isosceles = list(filter(None, [trn.isosceles() for trn in triangles]))
+        isosceles = list(filter(None, [isosceles(trn) for trn in triangles]))
         for trn in isosceles:
-            self.__add(IsoscelesTriangleProperty(trn.pts[0], Triangle(trn.pts).sides[0]))
+            isosceles_prop = IsoscelesTriangleProperty(trn.triangle.points[0], trn.triangle.sides[0])
+            isosceles_prop.variants = []
+            self.__add(isosceles_prop)
 
-        def similar(trn0, trn1) -> bool:
+        def similar(trn0, trn1):
             ratios0 = trn0.ratios
             if ratios0 is None:
                 sides = trn0.triangle.sides
@@ -369,8 +350,17 @@ class Hunter:
 #                print('DEBUG %s' % trn.triangle)
             for lst0, lst1 in itertools.combinations(fam, 2):
                 trn0 = lst0[0].triangle
+                len0 = self.__segment_length[trn0.sides[0]]
                 for wrapper in lst1:
-                    self.__add(SimilarTrianglesProperty(trn0, wrapper.triangle))
+                    prop = SimilarTrianglesProperty(trn0, wrapper.triangle)
+                    prop.variants = []
+                    self.__add(prop)
+                    delta = len0 - self.__segment_length[wrapper.triangle.sides[0]]
+                    if -ERROR < delta and delta < ERROR:
+                        prop_congruent = CongruentTrianglesProperty(trn0, wrapper.triangle)
+                        self.__add(prop_congruent)
+                        prop_congruent.variants = []
+                        prop.variants.append(prop_congruent)
 
     def stats(self):
         return Stats([
@@ -422,9 +412,6 @@ class Hunter:
 
         if 'angle_values' in options or 'default' in options:
             self.__hunt_angle_values(all_angles)
-
-        if 'equal_triangles' in options or 'default' in options:
-            self.__hunt_equal_triangles()
 
         if 'similar_triangles' in options or 'default' in options:
             self.__hunt_similar_triangles()
