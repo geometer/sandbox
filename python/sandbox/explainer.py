@@ -67,6 +67,9 @@ class Explainer:
             SameSideToInsideAngleRule(self.context),
             TwoAnglesWithCommonSideRule(self.context),
 
+            EquilateralTriangleByThreeSidesRule(self.context),
+            IsoscelesTriangleByConrguentLegsRule(self.context),
+            IsoscelesTriangleByConrguentBaseAnglesRule(self.context),
             CongruentTrianglesByAngleAndTwoSidesRule(self.context),
             CongruentTrianglesByThreeSidesRule(self.context),
             SimilarTrianglesByTwoAnglesRule(self.context),
@@ -457,57 +460,6 @@ class Explainer:
                     AngleValueProperty(other0.angle(other1), 0),
                     LazyComment('Both %s and %s are acute', aa0.angle, aa1.angle),
                     [aa0, aa1, col]
-                )
-
-            for cs in [p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1]:
-                if cs.reason.obsolete:
-                    continue
-                common = next((p for p in cs.segment0.points if p in cs.segment1.points), None)
-                if common is None:
-                    continue
-                pt0 = next(p for p in cs.segment0.points if p != common)
-                pt1 = next(p for p in cs.segment1.points if p != common)
-                cs2 = self.context.congruent_segments_property(common.segment(pt0), pt0.segment(pt1), True)
-                if cs2:
-                    yield (
-                        EquilateralTriangleProperty((common, pt0, pt1)),
-                        'Congruent sides',
-                        [cs, cs2]
-                    )
-
-            for cs in [p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1]:
-                if cs.segment1.points[0] in cs.segment0.points:
-                    apex = cs.segment1.points[0]
-                    base0 = cs.segment1.points[1]
-                elif cs.segment1.points[1] in cs.segment0.points:
-                    apex = cs.segment1.points[1]
-                    base0 = cs.segment1.points[0]
-                else:
-                    continue
-                base1 = cs.segment0.points[0] if apex == cs.segment0.points[1] else cs.segment0.points[1]
-                ne = self.context.not_equal_property(base0, base1)
-                if ne and not (cs.reason.obsolete and ne.reason.obsolete):
-                    yield (
-                        IsoscelesTriangleProperty(apex, base0.segment(base1)),
-                        'Congruent legs',
-                        [cs, ne]
-                    )
-
-            for ang0, ang1 in self.context.congruent_angles_with_vertex():
-                if ang0.point_set != ang1.point_set:
-                    continue
-                nc = self.context.not_collinear_property(*ang0.point_set)
-                if nc is None:
-                    continue
-                ca = self.context.angle_ratio_property(ang0, ang1)
-                if ca.reason.obsolete and nc.reason.obsolete:
-                    continue
-                base = ang0.vertex.segment(ang1.vertex)
-                apex = next(pt for pt in ang0.point_set if pt not in base.point_set)
-                yield (
-                    IsoscelesTriangleProperty(apex, base),
-                    'Congruent base angles',
-                    [ca, nc]
                 )
 
             for equ in self.context.list(EquilateralTriangleProperty):

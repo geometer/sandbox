@@ -257,3 +257,67 @@ class SimilarTrianglesByThreeSidesRule(Rule):
             'Three pairs of sides with the same ratio',
             [ps0, ps1, ps2, ncl]
         )
+
+class EquilateralTriangleByThreeSidesRule(Rule):
+    def sources(self):
+        return [p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1]
+
+    def apply(self, prop):
+        if prop.reason.obsolete:
+            return
+        common = next((p for p in prop.segment0.points if p in prop.segment1.points), None)
+        if common is None:
+            return
+        pt0 = next(p for p in prop.segment0.points if p != common)
+        pt1 = next(p for p in prop.segment1.points if p != common)
+        cs2 = self.context.congruent_segments_property(common.segment(pt0), pt0.segment(pt1), True)
+        if cs2:
+            yield (
+                EquilateralTriangleProperty((common, pt0, pt1)),
+                'Congruent sides',
+                [prop, cs2]
+            )
+
+class IsoscelesTriangleByConrguentLegsRule(Rule):
+    def sources(self):
+        return [p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1]
+
+    def apply(self, prop):
+        if prop.segment1.points[0] in prop.segment0.points:
+            apex = prop.segment1.points[0]
+            base0 = prop.segment1.points[1]
+        elif prop.segment1.points[1] in prop.segment0.points:
+            apex = prop.segment1.points[1]
+            base0 = prop.segment1.points[0]
+        else:
+            return
+        base1 = prop.segment0.points[0] if apex == prop.segment0.points[1] else prop.segment0.points[1]
+        ne = self.context.not_equal_property(base0, base1)
+        if ne and not (prop.reason.obsolete and ne.reason.obsolete):
+            yield (
+                IsoscelesTriangleProperty(apex, base0.segment(base1)),
+                'Congruent legs',
+                [prop, ne]
+            )
+
+class IsoscelesTriangleByConrguentBaseAnglesRule(Rule):
+    def sources(self):
+        return self.context.congruent_angles_with_vertex()
+
+    def apply(self, src):
+        ang0, ang1 = src
+        if ang0.point_set != ang1.point_set:
+            return
+        nc = self.context.not_collinear_property(*ang0.point_set)
+        if nc is None:
+            return
+        ca = self.context.angle_ratio_property(ang0, ang1)
+        if ca.reason.obsolete and nc.reason.obsolete:
+            return
+        base = ang0.vertex.segment(ang1.vertex)
+        apex = next(pt for pt in ang0.point_set if pt not in base.point_set)
+        yield (
+            IsoscelesTriangleProperty(apex, base),
+            'Congruent base angles',
+            [ca, nc]
+        )
