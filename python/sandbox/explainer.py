@@ -59,6 +59,7 @@ class Explainer:
             RightAngleDegreeRule(self.context),
             AngleTypesInObtuseangledTriangleRule(self.context),
             PartOfAcuteAngleIsAcuteRule(self.context),
+            SupplementaryAnglesRule(self.context),
             VerticalAnglesRule(self.context),
             CorrespondingAndAlternateAnglesRule(self.context),
             SimilarTrianglesWithCongruentSideRule(self.context),
@@ -134,25 +135,6 @@ class Explainer:
                         AngleValueProperty(crossing.angle(pt0, pt1), 180),
                         LazyComment('%s is the intersection point of segment %s and line %s', crossing, pt0.segment(pt1), prop.segment),
                         [prop] + reasons
-                    )
-
-            for av in [av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 180]:
-                av_is_too_old = av.reason.obsolete
-                ang = av.angle
-                for ne in self.context.list(PointsCoincidenceProperty, [ang.vertex]):
-                    if ne.coincident or av_is_too_old and ne.reason.obsolete:
-                        continue
-                    pt = ne.points[0] if ang.vertex == ne.points[1] else ne.points[1]
-                    if pt in ang.point_set:
-                        continue
-                    yield (
-                        SumOfAnglesProperty(
-                            ang.vertex.angle(ang.vector0.end, pt),
-                            ang.vertex.angle(pt, ang.vector1.end),
-                            180
-                        ),
-                        'Supplementary angles',
-                        [av, ne]
                     )
 
             for av0, av1 in itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 180], 2):
