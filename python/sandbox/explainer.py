@@ -46,6 +46,7 @@ class Explainer:
             TwoPerpendicularsRule(self.context),
             CommonPerpendicularRule(self.context),
             SideProductsInSimilarTrianglesRule(self.context),
+            CorrespondingAnglesInCongruentTrianglesRule(self.context),
             CorrespondingAnglesInSimilarTrianglesRule(self.context),
             LengthProductEqualityToRatioRule(self.context),
             BaseAnglesOfIsoscelesRule(self.context),
@@ -482,22 +483,6 @@ class Explainer:
                             ProportionalLengthsProperty(sides[i], sides[j], 1),
                             LazyComment('Sides of equilateral %s', equ.triangle),
                             [equ]
-                        )
-
-            for ct in self.context.list(CongruentTrianglesProperty):
-                ncl = self.context.not_collinear_property(*ct.triangle0.points)
-                if ncl is None:
-                    ncl = self.context.not_collinear_property(*ct.triangle1.points)
-                if ncl is None or ct.reason.obsolete and ncl.reason.obsolete:
-                    continue
-                angles0 = ct.triangle0.angles
-                angles1 = ct.triangle1.angles
-                for i in range(0, 3):
-                    if angles0[i] != angles1[i]:
-                        yield (
-                            AngleRatioProperty(angles0[i], angles1[i], 1),
-                            'Corresponding angles in congruent non-degenerate triangles',
-                            [ct, ncl]
                         )
 
             for ratio0, ratio1 in self.context.equal_length_ratios_with_common_denominator():
