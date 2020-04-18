@@ -56,6 +56,7 @@ class Explainer:
             AngleTypesInObtuseangledTriangleRule(self.context),
             PartOfAcuteAngleIsAcuteRule(self.context),
             SameAngleRule(self.context),
+            SameAngleRule2(self.context),
             SupplementaryAnglesRule(self.context),
             VerticalAnglesRule(self.context),
             CorrespondingAndAlternateAnglesRule(self.context),
@@ -129,34 +130,6 @@ class Explainer:
                         comment,
                         [op0, op1]
                     )
-
-            for av0, av1 in itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 0], 2):
-                if av0.reason.obsolete and av1.reason.obsolete:
-                    continue
-                ng0 = av0.angle
-                ng1 = av1.angle
-                if ng0.vertex != ng1.vertex:
-                    continue
-                if len(ng0.point_set.union(ng1.point_set)) != 5:
-                    continue
-                yield (
-                    AngleRatioProperty(
-                        ng0.vertex.angle(ng0.vector0.end, ng1.vector0.end),
-                        ng0.vertex.angle(ng0.vector1.end, ng1.vector1.end),
-                        1
-                    ),
-                    'Same angle',
-                    [av0, av1]
-                )
-                yield (
-                    AngleRatioProperty(
-                        ng0.vertex.angle(ng0.vector0.end, ng1.vector1.end),
-                        ng0.vertex.angle(ng0.vector1.end, ng1.vector0.end),
-                        1
-                    ),
-                    'Same angle',
-                    [av0, av1]
-                )
 
             for zero in [av for av in self.context.list(AngleValueProperty) if av.degree == 0]:
                 zero_is_too_old = zero.reason.obsolete
