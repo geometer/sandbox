@@ -12,8 +12,8 @@ from .reason import Reason
 from .rules.advanced import *
 from .rules.basic import *
 from .rules.triangles import *
-from .rules.triangles_hints import *
 from .rules.trigonometric import *
+from .rules import triangles_hints
 from .scene import Scene, Triangle
 from .stats import Stats
 from .util import LazyComment, divide
@@ -48,11 +48,6 @@ class Explainer:
             SideProductsInSimilarTrianglesRule(self.context),
             CorrespondingAnglesInSimilarTrianglesRule(self.context),
             LengthProductEqualityToRatioRule(self.context),
-            SimilarTrianglesByTwoAnglesRule(self.context),
-            CongruentTrianglesByAngleAndTwoSidesRule(self.context),
-            SimilarTrianglesByAngleAndTwoSidesRule(self.context),
-            CongruentTrianglesByThreeSidesRule(self.context),
-            SimilarTrianglesByThreeSidesRule(self.context),
             BaseAnglesOfIsoscelesRule(self.context),
             LegsOfIsoscelesRule(self.context),
             RotatedAngleRule(self.context),
@@ -65,15 +60,21 @@ class Explainer:
             SupplementaryAnglesRule(self.context),
             VerticalAnglesRule(self.context),
             CorrespondingAndAlternateAnglesRule(self.context),
-            SimilarTrianglesWithCongruentSideRule(self.context),
-            EquilateralTriangleByThreeSidesRule(self.context),
-            IsoscelesTriangleByConrguentLegsRule(self.context),
-            IsoscelesTriangleByConrguentBaseAnglesRule(self.context),
             CyclicOrderRule(self.context),
             PlanePositionsToLinePositionsRule(self.context),
             CeviansIntersectionRule(self.context),
             SameSideToInsideAngleRule(self.context),
             TwoAnglesWithCommonSideRule(self.context),
+
+            triangles_hints.EquilateralTriangleByThreeSidesRule(self.context),
+            triangles_hints.IsoscelesTriangleByConrguentLegsRule(self.context),
+            triangles_hints.IsoscelesTriangleByConrguentBaseAnglesRule(self.context),
+            triangles_hints.CongruentTrianglesByAngleAndTwoSidesRule(self.context),
+            triangles_hints.CongruentTrianglesByThreeSidesRule(self.context),
+            triangles_hints.SimilarTrianglesByTwoAnglesRule(self.context),
+            triangles_hints.SimilarTrianglesByAngleAndTwoSidesRule(self.context),
+            triangles_hints.SimilarTrianglesByThreeSidesRule(self.context),
+            triangles_hints.SimilarTrianglesWithCongruentSideRule(self.context),
         ]
         if options.get('advanced'):
             self.__rules += [
