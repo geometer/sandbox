@@ -24,7 +24,7 @@ from tests.placement.rog4580 import *
 from tests.placement.median import *
 from tests.placement.mccme7 import *
 from tests.placement.triangle_points import *
-from tests.placement.trisectors import *
+from tests.placement.morley import *
 from tests.placement.pentagon import *
 from tests.placement.parallel import *
 
