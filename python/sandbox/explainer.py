@@ -65,6 +65,7 @@ class Explainer:
             EquilateralTriangleByThreeSidesRule(self.context),
             IsoscelesTriangleByConrguentLegsRule(self.context),
             IsoscelesTriangleByConrguentBaseAnglesRule(self.context),
+            CyclicOrderRule(self.context),
         ]
         if options.get('advanced'):
             self.__rules += [
@@ -871,19 +872,6 @@ class Explainer:
                             LazyComment('%s is same line as %s', other.segment(pt), sos.segment),
                             [sos, col, ne]
                         )
-
-            for sos in self.context.list(SameOrOppositeSideProperty):
-                if sos.reason.obsolete:
-                    continue
-                cycle0 = Cycle(*sos.segment.points, sos.points[0])
-                cycle1 = Cycle(*sos.segment.points, sos.points[1])
-                if not sos.same:
-                    cycle1 = cycle1.reversed
-                yield (
-                    SameCyclicOrderProperty(cycle0, cycle1),
-                    '', #TODO: write comment
-                    [sos]
-                )
 
         for prop, comment in enumerate_predefined_properties(self.scene, max_layer=self.__options.get('max_layer', 'user')):
             self.__reason(prop, comment, [])

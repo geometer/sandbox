@@ -717,3 +717,19 @@ class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
                 if ratio_reason.value == 1:
                     for p in AngleValueProperty.generate(lp0.vector(pt0), pt1.vector(lp1), 0):
                         yield (p, 'Equal corresponding angles', [prop, ratio_reason])
+
+class CyclicOrderRule(SingleSourceRule):
+    property_type = SameOrOppositeSideProperty
+
+    def apply(self, prop):
+        if prop.reason.obsolete:
+            return
+        cycle0 = Cycle(*prop.segment.points, prop.points[0])
+        cycle1 = Cycle(*prop.segment.points, prop.points[1])
+        if not prop.same:
+            cycle1 = cycle1.reversed
+        yield (
+            SameCyclicOrderProperty(cycle0, cycle1),
+            '', #TODO: write comment
+            [prop]
+        )
