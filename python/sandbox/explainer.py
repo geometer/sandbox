@@ -1,4 +1,3 @@
-import cProfile
 import itertools
 import time
 import sympy as sp
@@ -22,15 +21,6 @@ class Explainer:
     def __init__(self, scene, options={}):
         self.scene = scene
         self.context = PropertySet()
-        start = time.time()
-        placement = iterative_placement(scene)
-        self.__placement_time = time.time() - start
-        start = time.time()
-        hunter = Hunter(placement, max_layer=options.get('max_layer', 'user'))
-        #cProfile.runctx("hunter.hunt(options={'similar_triangles'})", {'hunter': hunter}, {})
-        hunter.hunt(options={'similar_triangles'})
-        self.__hunting_time = time.time() - start
-        self.context.set_hints(hunter.properties)
         self.__options = options
         self.__explanation_time = None
         self.__iteration_step_count = -1
@@ -897,6 +887,15 @@ class Explainer:
 
         for prop, comment in enumerate_predefined_properties(self.scene, max_layer=self.__options.get('max_layer', 'user')):
             self.__reason(prop, comment, [])
+
+        start = time.time()
+        placement = iterative_placement(self.scene)
+        self.__placement_time = time.time() - start
+        start = time.time()
+        hunter = Hunter(placement, max_layer=self.__options.get('max_layer', 'user'))
+        hunter.hunt(options={'similar_triangles'})
+        self.__hunting_time = time.time() - start
+        self.context.add_hints(hunter.properties)
 
         self.__iteration_step_count = 0
         while itertools.count():

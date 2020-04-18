@@ -549,9 +549,10 @@ class PropertySet:
         self.__similar_triangles = {} # (three points) => {(three points)}
         self.__hints = {} # type_of_property => [properties]
 
-    def set_hints(self, properties):
+    def add_hints(self, properties):
         for prop in properties:
-            prop.reason = None
+            existing = self[prop]
+            prop.reason = existing.reason if existing else None
             type_of_prop = type(prop)
             ar = self.__hints.get(type_of_prop)
             if ar is None:
