@@ -8,7 +8,9 @@ scene = Scene()
 A, B, C = scene.triangle(labels=['A', 'B', 'C'])
 
 def napoleonic(A, B, C):
-    V = A.scene.free_point(label=C.label + '1')
+    circleAB = A.circle_through(B, layer='invisible')
+    circleBA = B.circle_through(A, layer='invisible')
+    V = circleAB.intersection_point(circleBA, label=C.label + '1')
     A.scene.equilateral_constraint((A, B, V), comment=LazyComment('Given: △ %s %s %s is an equilateral triangle', V, A, B))
     line = A.line_through(B, layer='auxiliary')
     V.opposite_side_constraint(C, line, comment=LazyComment('Given: %s is outward of △ %s %s %s', V, A, B, C))
