@@ -119,7 +119,7 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
                 vec0.as_segment, vec1.as_segment,
                 ang1.vector0.as_segment, ang1.vector1.as_segment
             )
-            for inds in [(0, 1, 2, 3), (0, 2, 1, 3), (1, 0, 3, 2), (1, 3, 0, 2)]:
+            for inds in [(0, 1, 2, 3), (0, 2, 1, 3), (1, 0, 3, 2), (2, 0, 3, 1)]:
                 elr = self.context.equal_length_ratios_property(*[segments[i] for i in inds])
                 if elr:
                     break
