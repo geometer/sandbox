@@ -3,7 +3,7 @@ import itertools
 from sandbox.property import *
 from sandbox.util import LazyComment
 
-from .abstract import Rule
+from .abstract import Rule, SingleSourceRule
 
 class SimilarTrianglesByTwoAnglesRule(Rule):
     def sources(self):
@@ -138,7 +138,26 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
                 [elr, ca]
             )
 
-class SimilarTrianglesWithCongruentSideRule(Rule):
+class SimilarTrianglesWithCongruentSideRule(SingleSourceRule):
+    property_type = SimilarTrianglesProperty
+
+    def apply(self, prop):
+        sides0 = prop.triangle0.sides
+        sides1 = prop.triangle1.sides
+        for i in range(0, 3):
+            cs = self.context.congruent_segments_property(sides0[i], sides1[i], True)
+            if cs is None:
+                continue
+            if prop.reason.obsolete and cs.reason.obsolete:
+                break
+            yield (
+                CongruentTrianglesProperty(prop.triangle0, prop.triangle1),
+                'Similar triangles with congruent corresponding sides',
+                [prop, cs]
+            )
+            break
+
+class SimilarTrianglesByThreeSidesRule(Rule):
     def sources(self):
         return itertools.combinations(self.context.length_ratios(allow_zeroes=True), 2)
 
