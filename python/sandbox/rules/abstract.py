@@ -12,4 +12,4 @@ class SingleSourceRule(Rule):
         return True
 
     def sources(self):
-        return [p for p in self.context.list(self.property_type) if self.accepts(p)]
+        return [p for p in self.context.list(type(self).property_type) if self.accepts(p)]
