@@ -941,3 +941,27 @@ class TwoAnglesWithCommonSideRule(SingleSourceRule):
             'Two angles with common side',
             [prop, av]
         )
+
+class SameSideToInsideAngleRule(Rule):
+    def sources(self):
+        return itertools.combinations([op for op in self.context.list(SameOrOppositeSideProperty) if not op.same], 2)
+
+    def apply(self, src):
+        op0, op1 = src
+        if op0.reason.obsolete and op1.reason.obsolete:
+            return
+        set0 = {*op0.points, *op0.segment.points}
+        if set0 != {*op1.points, *op1.segment.points}:
+            return
+        centre = next((pt for pt in op0.segment.points if pt in op1.segment.points), None)
+        if centre is None:
+            return
+        triangle = Triangle([pt for pt in set0 if pt != centre])
+        comment = LazyComment('Line %s separates %s and %s, line %s separates %s and %s => the intersection %s lies inside △ %s %s %s', op0.segment, *op0.points, op1.segment, *op1.points, centre, *triangle.points)
+        angles = triangle.angles
+        for i in range(0, 3):
+            yield (
+                PointInsideAngleProperty(centre, angles[i]),
+                comment,
+                [op0, op1]
+            )

@@ -66,6 +66,7 @@ class Explainer:
             CyclicOrderRule(self.context),
             PlanePositionsToLinePositionsRule(self.context),
             CeviansIntersectionRule(self.context),
+            SameSideToInsideAngleRule(self.context),
             TwoAnglesWithCommonSideRule(self.context),
         ]
         if options.get('advanced'):
@@ -115,25 +116,6 @@ class Explainer:
                 for prop, comment, premises in rule.generate():
                     prop.rule = rule
                     yield (prop, comment, premises)
-
-            for op0, op1 in itertools.combinations([op for op in self.context.list(SameOrOppositeSideProperty) if not op.same], 2):
-                if op0.reason.obsolete and op1.reason.obsolete:
-                    continue
-                set0 = {*op0.points, *op0.segment.points}
-                if set0 != {*op1.points, *op1.segment.points}:
-                    continue
-                centre = next((pt for pt in op0.segment.points if pt in op1.segment.points), None)
-                if centre is None:
-                    continue
-                triangle = Triangle([pt for pt in set0 if pt != centre])
-                comment = LazyComment('Line %s separates %s and %s, line %s separates %s and %s => the intersection %s lies inside △ %s %s %s', op0.segment, *op0.points, op1.segment, *op1.points, centre, *triangle.points)
-                angles = triangle.angles
-                for i in range(0, 3):
-                    yield (
-                        PointInsideAngleProperty(centre, angles[i]),
-                        comment,
-                        [op0, op1]
-                    )
 
             for zero in [av for av in self.context.list(AngleValueProperty) if av.degree == 0]:
                 zero_is_too_old = zero.reason.obsolete
