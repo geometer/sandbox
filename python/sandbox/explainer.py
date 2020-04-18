@@ -11,9 +11,9 @@ from .propertyset import PropertySet
 from .reason import Reason
 from .rules.advanced import *
 from .rules.basic import *
+from .rules.triangle_elements import *
 from .rules.triangles import *
 from .rules.trigonometric import *
-from .rules import triangles_hints
 from .scene import Scene, Triangle
 from .stats import Stats
 from .util import LazyComment, divide
@@ -66,15 +66,15 @@ class Explainer:
             SameSideToInsideAngleRule(self.context),
             TwoAnglesWithCommonSideRule(self.context),
 
-            triangles_hints.EquilateralTriangleByThreeSidesRule(self.context),
-            triangles_hints.IsoscelesTriangleByConrguentLegsRule(self.context),
-            triangles_hints.IsoscelesTriangleByConrguentBaseAnglesRule(self.context),
-            triangles_hints.CongruentTrianglesByAngleAndTwoSidesRule(self.context),
-            triangles_hints.CongruentTrianglesByThreeSidesRule(self.context),
-            triangles_hints.SimilarTrianglesByTwoAnglesRule(self.context),
-            triangles_hints.SimilarTrianglesByAngleAndTwoSidesRule(self.context),
-            triangles_hints.SimilarTrianglesByThreeSidesRule(self.context),
-            triangles_hints.SimilarTrianglesWithCongruentSideRule(self.context),
+            EquilateralTriangleByThreeSidesRule(self.context),
+            IsoscelesTriangleByConrguentLegsRule(self.context),
+            IsoscelesTriangleByConrguentBaseAnglesRule(self.context),
+            CongruentTrianglesByAngleAndTwoSidesRule(self.context),
+            CongruentTrianglesByThreeSidesRule(self.context),
+            SimilarTrianglesByTwoAnglesRule(self.context),
+            SimilarTrianglesByAngleAndTwoSidesRule(self.context),
+            SimilarTrianglesByThreeSidesRule(self.context),
+            SimilarTrianglesWithCongruentSideRule(self.context),
         ]
         if options.get('advanced'):
             self.__rules += [
