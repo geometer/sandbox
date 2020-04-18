@@ -172,7 +172,7 @@ class EquilateralTriangleProperty(Property):
     Equilateral triangle
     """
     def __init__(self, points):
-        self.triangle = Triangle(points)
+        self.triangle = points if isinstance(points, Triangle) else Triangle(points)
         self.__point_set = frozenset(self.triangle.points)
 
     def keys(self, lengths=None):
