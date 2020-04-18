@@ -779,3 +779,27 @@ class CyclicOrderRule(SingleSourceRule):
             '', #TODO: write comment
             [prop]
         )
+
+class SupplementaryAnglesRule(SingleSourceRule):
+    property_type = AngleValueProperty
+
+    def accepts(self, prop):
+        return prop.angle.vertex and prop.degree == 180
+
+    def apply(self, prop):
+        ang = prop.angle
+        for ne in self.context.list(PointsCoincidenceProperty, [ang.vertex]):
+            if ne.coincident or prop.reason.obsolete and ne.reason.obsolete:
+                continue
+            pt = ne.points[0] if ang.vertex == ne.points[1] else ne.points[1]
+            if pt in ang.point_set:
+                continue
+            yield (
+                SumOfAnglesProperty(
+                    ang.vertex.angle(ang.vector0.end, pt),
+                    ang.vertex.angle(pt, ang.vector1.end),
+                    180
+                ),
+                'Supplementary angles',
+                [prop, ne]
+            )
