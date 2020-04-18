@@ -137,3 +137,55 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
                 'Two pairs of sides with the same ratio, and angle between the sides',
                 [elr, ca]
             )
+
+class SimilarTrianglesWithCongruentSideRule(Rule):
+    def sources(self):
+        return itertools.combinations(self.context.length_ratios(allow_zeroes=True), 2)
+
+    def apply(self, src):
+        triple0, triple1 = src
+        num0, den0, value0 = triple0
+        num1, den1, value1 = triple1
+        if value0 == 1:
+            return
+        if value0 * value1 == 1:
+            num1, den1, value1 = den1, num1, value0
+        elif value0 != value1:
+            return
+
+        def common_point(segment0, segment1):
+            if segment0.points[0] in segment1.points:
+                if segment0.points[1] in segment1.points:
+                    return None
+                return segment0.points[0]
+            if segment0.points[1] in segment1.points:
+                return segment0.points[1]
+            return None
+        def other_point(segment, point):
+            return segment.points[0] if point == segment.points[1] else segment.points[1]
+
+        common0 = common_point(num0, num1)
+        if common0 is None:
+            return
+        common1 = common_point(den0, den1)
+        if common1 is None:
+            return
+        third0 = other_point(num0, common0).vector(other_point(num1, common0))
+        third1 = other_point(den0, common1).vector(other_point(den1, common1))
+        ncl = self.context.not_collinear_property(common0, *third0.points)
+        if ncl is None:
+            return
+        ps2, value2 = self.context.length_ratio_property_and_value(third0.as_segment, third1.as_segment, True)
+        if ps2 is None or value2 != value0:
+            return
+        ps0, _ = self.context.length_ratio_property_and_value(num0, den0, allow_zeroes=True)
+        ps1, _ = self.context.length_ratio_property_and_value(num1, den1, allow_zeroes=True)
+        if ncl is None or ps0.reason.obsolete and ps1.reason.obsolete and ps2.reason.obsolete and ncl.reason.obsolete:
+            return
+        yield (
+            SimilarTrianglesProperty(
+                (common0, *third0.points), (common1, *third1.points)
+            ),
+            'Three pairs of sides with the same ratio',
+            [ps0, ps1, ps2, ncl]
+        )
