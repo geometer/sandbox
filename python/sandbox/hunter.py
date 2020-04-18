@@ -21,12 +21,9 @@ class AngleWrapper:
         return str(self.angle)
 
 class TriangleWrapper:
-    def __init__(self, triangle, side0, side1, side2):
+    def __init__(self, triangle):
         self.triangle = triangle
         self.pts = list(triangle.points)
-        self.side0 = side0
-        self.side1 = side1
-        self.side2 = side2
         self.__variations = None
         self.ratios = None
 
@@ -35,11 +32,11 @@ class TriangleWrapper:
         if self.__variations is None:
             self.__variations = ( \
                 self, \
-                TriangleWrapper(Triangle((self.pts[0], self.pts[2], self.pts[1])), self.side0, self.side2, self.side1), \
-                TriangleWrapper(Triangle((self.pts[1], self.pts[0], self.pts[2])), self.side1, self.side0, self.side2), \
-                TriangleWrapper(Triangle((self.pts[1], self.pts[2], self.pts[0])), self.side1, self.side2, self.side0), \
-                TriangleWrapper(Triangle((self.pts[2], self.pts[0], self.pts[1])), self.side2, self.side0, self.side1), \
-                TriangleWrapper(Triangle((self.pts[2], self.pts[1], self.pts[0])), self.side2, self.side1, self.side0) \
+                TriangleWrapper(Triangle((self.pts[0], self.pts[2], self.pts[1]))), \
+                TriangleWrapper(Triangle((self.pts[1], self.pts[0], self.pts[2]))), \
+                TriangleWrapper(Triangle((self.pts[1], self.pts[2], self.pts[0]))), \
+                TriangleWrapper(Triangle((self.pts[2], self.pts[0], self.pts[1]))), \
+                TriangleWrapper(Triangle((self.pts[2], self.pts[1], self.pts[0]))) \
             )
         return self.__variations
 
@@ -48,19 +45,6 @@ class TriangleWrapper:
 
     def __str__(self):
         return str(self.triangle)
-
-    def equilateral(self):
-        return np.fabs(self.side0 - self.side1) < ERROR and \
-               np.fabs(self.side0 - self.side2) < ERROR and \
-               np.fabs(self.side1 - self.side2) < ERROR
-
-    def isosceles(self):
-        if np.fabs(self.side0 - self.side1) < ERROR:
-            return self.variations[4]
-        if np.fabs(self.side0 - self.side2) < ERROR:
-            return self.variations[2]
-        if np.fabs(self.side1 - self.side2) < ERROR:
-            return self
 
 class LengthFamily:
     def __init__(self, vector: Scene.Vector, placement: Placement):
@@ -173,7 +157,7 @@ class Hunter:
             triangle = Triangle((pt0, pt1, pt2))
             sides = triangle.sides
             if all(self.__segment_length[side] > ERROR for side in sides):
-                yield TriangleWrapper(triangle, *[self.__segment_length[s] for s in sides])
+                yield TriangleWrapper(triangle)
 
     def __lines(self):
         lines = []
@@ -284,7 +268,29 @@ class Hunter:
     def __hunt_similar_triangles(self):
         triangles = list(self.__triangles())
 
-        equilaterals = [trn for trn in triangles if trn.equilateral()]
+        def equilateral(trn):
+            sides = trn.triangle.sides
+            s0 = self.__segment_length[sides[0]]
+            d0 = s0 - self.__segment_length[sides[1]]
+            d1 = s0 - self.__segment_length[sides[2]]
+            return -ERROR < d0 and d0 < ERROR and -ERROR < d1 and d1 < ERROR
+
+        def isosceles(trn):
+            sides = trn.triangle.sides
+            s0 = self.__segment_length[sides[0]]
+            s1 = self.__segment_length[sides[1]]
+            delta = s0 - s1
+            if -ERROR < delta and delta < ERROR:
+                return trn.variations[4]
+            s2 = self.__segment_length[sides[2]]
+            delta = s0 - s2
+            if -ERROR < delta and delta < ERROR:
+                return trn.variations[2]
+            delta = s1 - s2
+            if -ERROR < delta and delta < ERROR:
+                return trn
+
+        equilaterals = [trn for trn in triangles if equilateral(trn)]
         for trn in equilaterals:
             equilateral_prop = EquilateralTriangleProperty(trn.pts)
             equilateral_prop.variants = []
@@ -295,9 +301,9 @@ class Hunter:
                 isosceles_prop.variants = [equilateral_prop]
                 self.__add(isosceles_prop)
 
-        triangles = [trn for trn in triangles if not trn.equilateral()]
+        triangles = [trn for trn in triangles if trn not in equilaterals]
 
-        isosceles = list(filter(None, [trn.isosceles() for trn in triangles]))
+        isosceles = list(filter(None, [isosceles(trn) for trn in triangles]))
         for trn in isosceles:
             isosceles_prop = IsoscelesTriangleProperty(trn.pts[0], Triangle(trn.pts).sides[0])
             isosceles_prop.variants = []
