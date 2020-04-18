@@ -114,3 +114,60 @@ class LegsOfIsoscelesRule(SingleSourceRule):
             LazyComment('Legs of isosceles %s', prop.triangle),
             [prop]
         )
+
+class CorrespondingAnglesInCongruentTrianglesRule(SingleSourceRule):
+    property_type = CongruentTrianglesProperty
+
+    def apply(self, prop):
+        ncl = self.context.not_collinear_property(*prop.triangle0.points)
+        if ncl is None:
+            ncl = self.context.not_collinear_property(*prop.triangle1.points)
+        if ncl is None or prop.reason.obsolete and ncl.reason.obsolete:
+            return
+        angles0 = prop.triangle0.angles
+        angles1 = prop.triangle1.angles
+        for i in range(0, 3):
+            if angles0[i] != angles1[i]:
+                yield (
+                    AngleRatioProperty(angles0[i], angles1[i], 1),
+                    'Corresponding angles in congruent non-degenerate triangles',
+                    [prop, ncl]
+                )
+
+class CorrespondingSidesInCongruentTrianglesRule(SingleSourceRule):
+    property_type = CongruentTrianglesProperty
+
+    def apply(self, prop):
+        if prop.reason.obsolete:
+            return
+        sides0 = prop.triangle0.sides
+        sides1 = prop.triangle1.sides
+        for i in range(0, 3):
+            segment0 = sides0[i]
+            segment1 = sides1[i]
+            if segment0 != segment1:
+                yield (
+                    ProportionalLengthsProperty(segment0, segment1, 1),
+                    'Corresponding sides in congruent triangles',
+                    [prop]
+                )
+
+class CorrespondingSidesInSimilarTrianglesRule(SingleSourceRule):
+    property_type = SimilarTrianglesProperty
+
+    def apply(self, prop):
+        sides0 = prop.triangle0.sides
+        sides1 = prop.triangle1.sides
+        for i in range(0, 3):
+            lr, ratio = self.context.length_ratio_property_and_value(sides0[i], sides1[i], True)
+            if lr is None:
+                continue
+            if ratio == 1 or prop.reason.obsolete and lr.reason.obsolete:
+                break
+            for j in [j for j in range(0, 3) if j != i]:
+                yield (
+                    ProportionalLengthsProperty(sides0[j], sides1[j], ratio),
+                    'Ratios of sides in similar triangles',
+                    [prop, lr]
+                )
+            break

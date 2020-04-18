@@ -48,6 +48,8 @@ class Explainer:
             SideProductsInSimilarTrianglesRule(self.context),
             CorrespondingAnglesInCongruentTrianglesRule(self.context),
             CorrespondingAnglesInSimilarTrianglesRule(self.context),
+            CorrespondingSidesInCongruentTrianglesRule(self.context),
+            CorrespondingSidesInSimilarTrianglesRule(self.context),
             LengthProductEqualityToRatioRule(self.context),
             BaseAnglesOfIsoscelesRule(self.context),
             LegsOfIsoscelesRule(self.context),
@@ -495,38 +497,6 @@ class Explainer:
                     ratio_prop.reason.comments,
                     ratio_prop.reason.premises
                 )
-
-            for ct in self.context.list(CongruentTrianglesProperty):
-                if ct.reason.obsolete:
-                    continue
-                sides0 = ct.triangle0.sides
-                sides1 = ct.triangle1.sides
-                for i in range(0, 3):
-                    segment0 = sides0[i]
-                    segment1 = sides1[i]
-                    if segment0 != segment1:
-                        yield (
-                            ProportionalLengthsProperty(segment0, segment1, 1),
-                            'Corresponding sides in congruent triangles',
-                            [ct]
-                        )
-
-            for st in self.context.list(SimilarTrianglesProperty):
-                sides0 = st.triangle0.sides
-                sides1 = st.triangle1.sides
-                for i in range(0, 3):
-                    lr, ratio = self.context.length_ratio_property_and_value(sides0[i], sides1[i], True)
-                    if lr is None:
-                        continue
-                    if ratio == 1 or st.reason.obsolete and lr.reason.obsolete:
-                        break
-                    for j in [j for j in range(0, 3) if j != i]:
-                        yield (
-                            ProportionalLengthsProperty(sides0[j], sides1[j], ratio),
-                            'Ratios of sides in similar triangles',
-                            [st, lr]
-                        )
-                    break
 
             for av in self.context.angle_value_properties():
                 if av.angle.vertex is None:
