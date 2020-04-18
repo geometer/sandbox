@@ -5,7 +5,7 @@ from sandbox.property import *
 from sandbox.scene import Triangle
 from sandbox.util import LazyComment
 
-from .abstract import Rule, SingleSourceRule, RuleWithHints
+from .abstract import SingleSourceRule, RuleWithHints
 
 class SideProductsInSimilarTrianglesRule(SingleSourceRule):
     property_type = SimilarTrianglesProperty
