@@ -65,6 +65,7 @@ class Explainer:
             TwoAnglesWithCommonSideRule(self.context),
 
             CongruentTrianglesByAngleAndTwoSidesRule(self.context),
+            CongruentTrianglesByThreeSidesRule(self.context),
             SimilarTrianglesByTwoAnglesRule(self.context),
             SimilarTrianglesByAngleAndTwoSidesRule(self.context),
             SimilarTrianglesByThreeSidesRule(self.context),
@@ -753,49 +754,6 @@ class Explainer:
                     ),
                     comment, premises
                 )
-
-            congruent_segments = [p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1]
-            def common_point(segment0, segment1):
-                if segment0.points[0] in segment1.points:
-                    if segment0.points[1] in segment1.points:
-                        return None
-                    return segment0.points[0]
-                if segment0.points[1] in segment1.points:
-                    return segment0.points[1]
-                return None
-            def other_point(segment, point):
-                return segment.points[0] if point == segment.points[1] else segment.points[1]
-
-            for cs0, cs1 in itertools.combinations(congruent_segments, 2):
-                if cs0.reason.obsolete and cs1.reason.obsolete:
-                    continue
-                for seg0, seg1 in [(cs0.segment0, cs0.segment1), (cs0.segment1, cs0.segment0)]:
-                    points0 = set((*seg0.points, *cs1.segment0.points))
-                    if len(points0) != 3 or points0 == set((*seg1.points, *cs1.segment1.points)):
-                        continue
-                    common0 = common_point(seg0, cs1.segment0)
-                    common1 = common_point(seg1, cs1.segment1)
-                    if common1 is None:
-                        continue
-                    third0 = other_point(seg0, common0).vector(other_point(cs1.segment0, common0))
-                    third1 = other_point(seg1, common1).vector(other_point(cs1.segment1, common1))
-                    prop = CongruentTrianglesProperty(
-                        (common0, *third0.points), (common1, *third1.points)
-                    )
-                    if third0.as_segment == third1.as_segment:
-                        yield (
-                            prop,
-                            LazyComment('Common side %s, two pairs of congruent sides', third0),
-                            [cs0, cs1]
-                        )
-                    else:
-                        cs2 = self.context.congruent_segments_property(third0.as_segment, third1.as_segment, True)
-                        if cs2:
-                            yield (
-                                prop,
-                                'Three pairs of congruent sides',
-                                [cs0, cs1, cs2]
-                            )
 
             for sos in self.context.list(SameOrOppositeSideProperty):
                 for col in [p for p in self.context.list(PointsCollinearityProperty) if p.collinear]:
