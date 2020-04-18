@@ -880,3 +880,18 @@ class CeviansIntersectionRule(Rule):
             comment,
             [ncl, av0, av1] + reasons
         )
+
+class TwoAnglesWithCommonSideRule(SingleSourceRule):
+    property_type = PointInsideAngleProperty
+
+    def apply(self, prop):
+        av = self.context.angle_value_property(prop.angle)
+        if av is None or prop.reason.obsolete and av.reason.obsolete:
+            return
+        angle0 = prop.angle.vertex.angle(prop.angle.vector0.end, prop.point)
+        angle1 = prop.angle.vertex.angle(prop.angle.vector1.end, prop.point)
+        yield (
+            SumOfAnglesProperty(angle0, angle1, av.degree),
+            'Two angles with common side',
+            [prop, av]
+        )
