@@ -41,7 +41,7 @@ class Explainer:
             PerpendicularTransitivityRule(self.context),
             PerpendicularToEquidistantRule(self.context),
             EquidistantToPerpendicularRule(self.context),
-            SeparatedPointsRule(self.context),
+            PointsSeparatedByLineAreNotCoincidentRule(self.context),
             SameSidePointInsideSegmentRule(self.context),
             TwoPerpendicularsRule(self.context),
             CommonPerpendicularRule(self.context),
