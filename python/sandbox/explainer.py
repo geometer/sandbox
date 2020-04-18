@@ -55,6 +55,7 @@ class Explainer:
             RightAngleDegreeRule(self.context),
             AngleTypesInObtuseangledTriangleRule(self.context),
             PartOfAcuteAngleIsAcuteRule(self.context),
+            SameAngleRule(self.context),
             SupplementaryAnglesRule(self.context),
             VerticalAnglesRule(self.context),
             CorrespondingAndAlternateAnglesRule(self.context),
@@ -183,25 +184,6 @@ class Explainer:
                         PointInsideAngleProperty(centre, angles[i]),
                         comment,
                         [op0, op1]
-                    )
-
-            for av in [av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 0]:
-                av_is_too_old = av.reason.obsolete
-                ang = av.angle
-                for ne in self.context.list(PointsCoincidenceProperty, [ang.vertex]):
-                    if ne.coincident or av_is_too_old and ne.reason.obsolete:
-                        continue
-                    pt = ne.points[0] if ang.vertex == ne.points[1] else ne.points[1]
-                    if pt in ang.point_set:
-                        continue
-                    yield (
-                        AngleRatioProperty(
-                            ang.vertex.angle(pt, ang.vector0.end),
-                            ang.vertex.angle(pt, ang.vector1.end),
-                            1
-                        ),
-                        'Same angle',
-                        [av, ne]
                     )
 
             for av0, av1 in itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 0], 2):

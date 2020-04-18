@@ -803,3 +803,27 @@ class SupplementaryAnglesRule(SingleSourceRule):
                 'Supplementary angles',
                 [prop, ne]
             )
+
+class SameAngleRule(SingleSourceRule):
+    property_type = AngleValueProperty
+
+    def accepts(self, prop):
+        return prop.angle.vertex and prop.degree == 0
+
+    def apply(self, prop):
+        ang = prop.angle
+        for ne in self.context.list(PointsCoincidenceProperty, [ang.vertex]):
+            if ne.coincident or prop and ne.reason.obsolete:
+                continue
+            pt = ne.points[0] if ang.vertex == ne.points[1] else ne.points[1]
+            if pt in ang.point_set:
+                continue
+            yield (
+                AngleRatioProperty(
+                    ang.vertex.angle(pt, ang.vector0.end),
+                    ang.vertex.angle(pt, ang.vector1.end),
+                    1
+                ),
+                'Same angle',
+                [prop, ne]
+            )
