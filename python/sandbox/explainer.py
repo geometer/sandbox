@@ -52,6 +52,8 @@ class Explainer:
             CorrespondingSidesInCongruentTrianglesRule(self.context),
             CorrespondingSidesInSimilarTrianglesRule(self.context),
             LengthProductEqualityToRatioRule(self.context),
+            EquilateralTriangleAnglesRule(self.context),
+            EquilateralTriangleSidesRule(self.context),
             BaseAnglesOfIsoscelesRule(self.context),
             LegsOfIsoscelesRule(self.context),
             RotatedAngleRule(self.context),
@@ -464,29 +466,6 @@ class Explainer:
                     LazyComment('Both %s and %s are acute', aa0.angle, aa1.angle),
                     [aa0, aa1, col]
                 )
-
-            for equ in self.context.list(EquilateralTriangleProperty):
-                ne = None
-                sides = equ.triangle.sides
-                for i in range(0, 3):
-                    ne = self.context.not_equal_property(*sides[i].points)
-                    if ne:
-                        break
-                if ne is not None and not equ.reason.obsolete and not ne.reason.obsolete:
-                    angles = equ.triangle.angles
-                    for i in range(0, 3):
-                        yield (
-                            AngleValueProperty(angles[i], 60),
-                            LazyComment('Angle of non-degenerate equilateral %s', equ.triangle),
-                            [equ]
-                        )
-                if not equ.reason.obsolete:
-                    for i, j in itertools.combinations(range(0, 3), 2):
-                        yield (
-                            ProportionalLengthsProperty(sides[i], sides[j], 1),
-                            LazyComment('Sides of equilateral %s', equ.triangle),
-                            [equ]
-                        )
 
             for ratio0, ratio1 in self.context.equal_length_ratios_with_common_denominator():
                 prop = self.context.congruent_segments_property(ratio0[0], ratio1[0], True)
