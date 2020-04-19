@@ -145,7 +145,7 @@ class SimilarTrianglesWithCongruentSideRule(SingleSourceRule):
         sides0 = prop.triangle0.sides
         sides1 = prop.triangle1.sides
         for i in range(0, 3):
-            cs = self.context.congruent_segments_property(sides0[i], sides1[i], True)
+            cs = self.context.congruent_segments_property(sides0[i], sides1[i], False)
             if cs is None:
                 continue
             if prop.reason.obsolete and cs.reason.obsolete:
