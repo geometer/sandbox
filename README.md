@@ -42,7 +42,7 @@ The goal of the project is to create an app that takes a human-readable descript
 * Introduce a machine-readable format for tasks (or use some existing, if any; maybe GeoGebra language?)
 * Make a web-based frontend (based on [JSXGraph](https://jsxgraph.uni-bayreuth.de/wp/index.html) or [GeoGebra](https://github.com/geogebra/geogebra))
 * Create/collect/find a big task set in machine-readable form (using own task format, or python, or some existing format + parser)
-* For each property, introduce a negated property. E.g., for “the triangles are similar”, there should be “the triangles are **not** similar”. This would be useful for detecting contradictions as soon as possible, and also for speeding up the algorithm. There is no need to test for similarity again and again on each iteration if it is already known, but also if its negation is already known. Of course, there is no need to generate all possible negated properties. Only the negations that are found in a natural way (i.e., during looking for “positive” properties) should be stored.
+* For each property, introduce a negated property. E.g., for “two triangles are similar”, there should be “two triangles are **not** similar”. This would be useful for detecting contradictions as soon as possible, and also for speeding up the algorithm. There is no need to test for similarity again and again on each iteration if it is already known, but also if its negation is already known. Of course, there is no need to generate all possible negated properties. Only the negations that are found in a natural way (i.e., during looking for “positive” properties) should be stored.
 
 **Ideas, I don't know how to implement**:
 
