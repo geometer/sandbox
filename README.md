@@ -22,7 +22,7 @@ The goal of the project is to create an app that takes a human-readable descript
 **Tests and samples**:
 
 * To run the tests, run `pyhton run_tests.py` in `python` folder
-* The samples are assorted files in the `python` folder. Please note that some of them might be outdated. Good idea is to start from `napoleon.py`. The common command-line interface is provided bu `runner.py` file that is imported in most of the samples. Run `python napoleon.py -h` for options
+* The samples are assorted files in the `python` folder. Please note that some of them might be outdated. Good idea is to start from [napoleon.py](python/napoleon.py). The common command-line interface is provided bu `runner.py` file that is imported in most of the samples. Run `python napoleon.py -h` for options
 
 ## Plans
 
