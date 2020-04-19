@@ -7,19 +7,19 @@ The goal of the project is to create an app that takes a human-readable descript
 
 ## Current state
 
-Prerequisits:
+**Prerequisits**:
 
 * Python 3 (tested with 3.6 and 3.7)
 * Python libraries: numpy, scipy, sympy, networkx
 
-Everything is written in python:
+**Python library/app prototype(s)**:
 
-* Simple set of python functions for creating scenes (sandbox/core.py, sandbox/scene.py)
-* Scene placement: a simple app that takes a scene and tries to find a configuration of objects that meets all the constraints (sandbox/placement.py)
-* Property hunter: a script that takes a scene placement and collects properties like 'similar triangles' or 'integer ratio of two angles' (sandbox/hunter.py)
-* An explainer, a simple app that takes a scene, and applies rules to prove the facts about the scene. The explainer does not adds any additional constructions nor makes assumptions to analyse separate variants (sandbox/explainer.py)
+* Simple set of python functions for creating scenes ([core.py](python/sandbox/core.py), [scene.py](python/sandbox/scene.py))
+* Scene placement: a simple app that takes a scene and tries to find a configuration of objects that meets all the constraints ([placement.py](python/sandbox/placement.py))
+* Property hunter: a script that takes a scene placement and collects properties like 'similar triangles' or 'integer ratio of two angles' ([hunter.py](python/sandbox/hunter.py))
+* An explainer, a simple app that takes a scene, and applies rules to prove the facts about the scene. The explainer does not adds any additional constructions nor makes assumptions to analyse separate variants ([explainer.py](python/sandbox/explainer.py))
 
-Tests and sumples:
+**Tests and sumples**:
 
 * To run the tests, use `run_tests.py` script
 * The samples are assorted files in the `python` folder. Please note that some of them might be outdated. Good idea is to start from `napoleon.py`. Common command line interface is provided bu `runner.py` file that is imported in most of the samples. Run `napoleon.py -h` for options.
