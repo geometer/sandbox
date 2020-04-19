@@ -17,7 +17,7 @@ The goal of the project is to create an app that takes a human-readable descript
 * Simple set of python functions for creating scenes ([core.py](python/sandbox/core.py), [scene.py](python/sandbox/scene.py))
 * Scene placement: a simple app that takes a scene and tries to find a configuration of objects that meets all the constraints ([placement.py](python/sandbox/placement.py))
 * Property hunter: a script that takes a scene placement and collects properties like “two triangles are similar” or “the ratio of two angles is integer” ([hunter.py](python/sandbox/hunter.py))
-* An explainer, a simple app that takes a scene, and applies rules to prove the facts about the scene. The explainer does not adds any additional constructions nor makes assumptions to analyse separate variants ([explainer.py](python/sandbox/explainer.py))
+* An explainer, a simple app that takes a scene, and applies rules to prove the facts about the scene. The explainer does not add any additional constructions nor make assumptions to analyse separate variants ([explainer.py](python/sandbox/explainer.py))
 
 **Tests and samples**:
 
