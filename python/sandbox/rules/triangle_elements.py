@@ -171,3 +171,37 @@ class CorrespondingSidesInSimilarTrianglesRule(SingleSourceRule):
                     [prop, lr]
                 )
             break
+
+class EquilateralTriangleAnglesRule(SingleSourceRule):
+    property_type = EquilateralTriangleProperty
+
+    def apply(self, prop):
+        ne = None
+        for side in prop.triangle.sides:
+            ne = self.context.not_equal_property(*side.points)
+            if ne:
+                break
+        else:
+            return
+        if prop.reason.obsolete and ne.reason.obsolete:
+            return
+        for angle in prop.triangle.angles:
+            yield (
+                AngleValueProperty(angle, 60),
+                LazyComment('Angle of non-degenerate equilateral %s', prop.triangle),
+                [prop]
+            )
+
+class EquilateralTriangleSidesRule(SingleSourceRule):
+    property_type = EquilateralTriangleProperty
+
+    def apply(self, prop):
+        if prop.reason.obsolete:
+            return
+        sides = prop.triangle.sides
+        for side0, side1 in itertools.combinations(prop.triangle.sides, 2):
+            yield (
+                ProportionalLengthsProperty(side0, side1, 1),
+                LazyComment('Sides of equilateral %s', prop.triangle),
+                [prop]
+            )
