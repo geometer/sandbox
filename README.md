@@ -36,7 +36,7 @@ The goal of the project is to create an app that takes a human-readable descript
 
 * Write documentation that explains the existing code API
 * Introduce a machine-readable format for tasks (or use some existing, if any; maybe GeoGebra language?)
-* Make a web-based frontend (based on JSXGraph or geogebra)
+* Make a web-based frontend (based on [JSXGraph](https://jsxgraph.uni-bayreuth.de/wp/index.html) or [GeoGebra](https://github.com/geogebra/geogebra))
 * Create/collect/find a big task set in machine-readable form (using own task format, or python, or some existing format + parser)
 
 **Minor features**:
