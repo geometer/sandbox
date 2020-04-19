@@ -687,7 +687,7 @@ class PropertySet:
         return self.__angle_ratios.congruent_angles_with_vertex()
 
     def congruent_angles_for(self, angle):
-        return sefl.__angle_ratios.congruent_angles_for(angle)
+        return self.__angle_ratios.congruent_angles_for(angle)
 
     def length_ratios(self, allow_zeroes):
         if allow_zeroes:
