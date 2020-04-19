@@ -162,9 +162,7 @@ class AngleRatioPropertySet:
                 else:
                     angles_map[key] = [item]
             for ar in angles_map.values():
-                for item0, item1 in itertools.combinations(ar, 2):
-                    angle0, ratio0 = item0
-                    angle1, ratio1 = item1
+                for (angle0, ratio0), (angle1, ratio1) in itertools.combinations(ar, 2):
                     path = nx.algorithms.shortest_path(self.premises_graph, angle0, angle1)
                     if len(path) == 2:
                         yield self.premises_graph[path[0]][path[1]]['prop']
