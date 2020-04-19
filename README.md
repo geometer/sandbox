@@ -39,6 +39,10 @@ The goal of the project is to create an app that takes a human-readable descript
 * Make a web-based frontend (based on [JSXGraph](https://jsxgraph.uni-bayreuth.de/wp/index.html) or [GeoGebra](https://github.com/geogebra/geogebra))
 * Create/collect/find a big task set in machine-readable form (using own task format, or python, or some existing format + parser)
 
+**Ideas, I don't know how to implement**:
+
+* Re-write explainer rules from python into some compact language, that describes the source properties, the target property, and the matching rules
+
 **Minor features**:
 
 * If the idea works, re-write most important parts in a low-level language (C++?) for perfomance
