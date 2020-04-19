@@ -9,8 +9,8 @@ A, B, C = scene.triangle(labels=['A', 'B', 'C'])
 
 def napoleonic(A, B, C):
     # Change to True, if you want to construct the point explicitly.
-    # This change does not affect the explanation but finds placement a little bit quicker.
-    # Not a matter for the sample, but for more complicated construction this might be useful,
+    # This change does not affect the explanation but makes placement a little bit quicker.
+    # Not a matter for the sample, but for more complicated construction this might be useful
     # if you want to run the hunter.
     constructive = False
     if constructive:
