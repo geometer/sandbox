@@ -7,7 +7,7 @@ The goal of the project is to create an app that takes a human-readable descript
 
 ## Current state
 
-**Prerequisits**:
+**Prerequisites**:
 
 * Python 3 (tested with 3.6 and 3.7)
 * Python libraries: numpy, scipy, sympy, networkx
