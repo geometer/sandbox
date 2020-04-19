@@ -691,7 +691,6 @@ class CoreScene:
         return cns
 
     def equilateral_constraint(self, triangle, **kwargs):
-        self.triangle_constraint(triangle, **kwargs)
         self.constraint(Constraint.Kind.equilateral, *triangle, **kwargs)
 
     def quadrilateral_constraint(self, A, B, C, D, **kwargs):

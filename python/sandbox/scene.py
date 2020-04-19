@@ -73,7 +73,7 @@ class Scene(CoreScene):
         """
         Orthocentre of the triangle (intersection of the altitudes)
         """
-        self.triangle_constraint(triangle)
+        self.nondegenerate_triangle_constraint(triangle)
         altitude0 = self.altitude(triangle, triangle[0], layer='auxiliary')
         altitude1 = self.altitude(triangle, triangle[1], layer='auxiliary')
         altitude2 = self.altitude(triangle, triangle[2], layer='auxiliary')
@@ -85,7 +85,7 @@ class Scene(CoreScene):
         """
         Centroid of the triangle (intersection of the medians)
         """
-        self.triangle_constraint(triangle)
+        self.nondegenerate_triangle_constraint(triangle)
         median0 = triangle[0].line_through(triangle[1].segment(triangle[2]).middle_point(layer='auxiliary'), layer='auxiliary')
         median1 = triangle[1].line_through(triangle[2].segment(triangle[0]).middle_point(layer='auxiliary'), layer='auxiliary')
         median2 = triangle[2].line_through(triangle[0].segment(triangle[1]).middle_point(layer='auxiliary'), layer='auxiliary')
@@ -97,7 +97,7 @@ class Scene(CoreScene):
         """
         Circumcentre of the triangle (i.e., centre of the circumcircle)
         """
-        self.triangle_constraint(triangle)
+        self.nondegenerate_triangle_constraint(triangle)
         bisector0 = triangle[0].segment(triangle[1]).perpendicular_bisector_line(layer='auxiliary')
         bisector1 = triangle[0].segment(triangle[2]).perpendicular_bisector_line(layer='auxiliary')
         bisector2 = triangle[1].segment(triangle[2]).perpendicular_bisector_line(layer='auxiliary')
@@ -123,7 +123,7 @@ class Scene(CoreScene):
         """
         Centre of the inscribed circle of the triangle
         """
-        self.triangle_constraint(triangle)
+        self.nondegenerate_triangle_constraint(triangle)
         angle0 = triangle[0].angle(triangle[1], triangle[2])
         angle1 = triangle[1].angle(triangle[0], triangle[2])
         angle2 = triangle[2].angle(triangle[0], triangle[1])
@@ -168,10 +168,10 @@ class Scene(CoreScene):
             return self.free_point(**args)
 
         points = (point(0), point(1), point(2))
-        self.triangle_constraint(points)
+        self.nondegenerate_triangle_constraint(points)
         return points
 
-    def triangle_constraint(self, triangle, **kwargs):
+    def nondegenerate_triangle_constraint(self, triangle, **kwargs):
         """
         Parameter triangle is triple of non-collinear points
         """
@@ -189,7 +189,7 @@ class Scene(CoreScene):
         """
         if isinstance(triangle, CoreScene.Point):
             triangle, vertex = vertex, triangle
-        self.triangle_constraint(triangle)
+        self.nondegenerate_triangle_constraint(triangle)
         assert vertex in triangle
         points = list(triangle)
         points.remove(vertex)
