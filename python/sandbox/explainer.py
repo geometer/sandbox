@@ -401,26 +401,26 @@ class Explainer:
                             [perp, col, aa]
                         )
 
-            for oa in [p for p in self.context.list(AngleKindProperty) if p.kind == AngleKindProperty.Kind.obtuse]:
-                base = oa.angle
-                if base.vertex is None:
-                    continue
-                for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
-                    for col in [p for p in self.context.list(PointsCollinearityProperty, [vec0.as_segment]) if p.collinear]:
-                        reasons_are_too_old = oa.reason.obsolete and col.reason.obsolete
-                        pt = next(pt for pt in col.points if pt not in vec0.points)
-                        for angle in [pt.angle(vec1.end, p) for p in vec0.points]:
-                            ka = self.context.angle_value_property(angle)
-                            if ka is None or reasons_are_too_old and ka.reason.obsolete:
-                                continue
-                            if ka.degree <= 90:
-                                comment = LazyComment(
-                                    '%s, %s, %s are collinear, %s is obtuse, and %s = %sº',
-                                    pt, *vec0.points, base, angle, ka.degree
-                                )
-                                zero = base.vertex.angle(vec0.end, pt)
-                                yield (AngleValueProperty(zero, 180), comment, [col, oa, ka])
-                            break
+#            for oa in [p for p in self.context.list(AngleKindProperty) if p.kind == AngleKindProperty.Kind.obtuse]:
+#                base = oa.angle
+#                if base.vertex is None:
+#                    continue
+#                for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
+#                    for col in [p for p in self.context.list(PointsCollinearityProperty, [vec0.as_segment]) if p.collinear]:
+#                        reasons_are_too_old = oa.reason.obsolete and col.reason.obsolete
+#                        pt = next(pt for pt in col.points if pt not in vec0.points)
+#                        for angle in [pt.angle(vec1.end, p) for p in vec0.points]:
+#                            ka = self.context.angle_value_property(angle)
+#                            if ka is None or reasons_are_too_old and ka.reason.obsolete:
+#                                continue
+#                            if ka.degree <= 90:
+#                                comment = LazyComment(
+#                                    '%s, %s, %s are collinear, %s is obtuse, and %s = %sº',
+#                                    pt, *vec0.points, base, angle, ka.degree
+#                                )
+#                                zero = base.vertex.angle(vec0.end, pt)
+#                                yield (AngleValueProperty(zero, 180), comment, [col, oa, ka])
+#                            break
 
             for ka in self.context.nondegenerate_angle_value_properties():
                 base = ka.angle
