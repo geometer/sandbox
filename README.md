@@ -21,10 +21,10 @@ The goal of the project is to create an app that takes a human-readable descript
 
 **Tests and samples**:
 
-* To run the tests, use `run_tests.py` script
-* The samples are assorted files in the `python` folder. Please note that some of them might be outdated. Good idea is to start from `napoleon.py`. The common command-line interface is provided bu `runner.py` file that is imported in most of the samples. Run `napoleon.py -h` for options.
+* To run the tests, run `pyhton run_tests.py` in `python` folder
+* The samples are assorted files in the `python` folder. Please note that some of them might be outdated. Good idea is to start from `napoleon.py`. The common command-line interface is provided bu `runner.py` file that is imported in most of the samples. Run `python napoleon.py -h` for options
 
-# Plans
+## Plans
 
 **Most important features to code**:
 
@@ -38,6 +38,10 @@ The goal of the project is to create an app that takes a human-readable descript
 * Introduce a machine-readable format for tasks (or use some existing, if any; maybe GeoGebra language?)
 * Make a web-based frontend (based on [JSXGraph](https://jsxgraph.uni-bayreuth.de/wp/index.html) or [GeoGebra](https://github.com/geogebra/geogebra))
 * Create/collect/find a big task set in machine-readable form (using own task format, or python, or some existing format + parser)
+
+**Ideas, I don't know how to implement**:
+
+* Re-write explainer rules from python into some compact language, that describes the source properties, the target property, and the matching rules
 
 **Minor features**:
 
