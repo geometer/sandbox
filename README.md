@@ -34,7 +34,7 @@ The goal of the project is to create an app that takes a human-readable descript
 
 * In the explainer, introduce `ContradictionException`, that raises if the reason generates a contradiction. This is an important part of the meta explainer (see the next item)
 * Meta explainer, that uses existing explainer and supports (a brut-force enumerated) additional constructions as well as assumptions (e.g., if the direct explainer fails, it might consider variants “the angle A is acute”, “is obtuse”, and “is right”)
-* Generate an html presentation for explanations (a tree with expandable/collapsable nodes and hideable “non-essential” branches)
+* Generate an HTML presentation for explanations (a tree with expandable/collapsable nodes and hideable “non-essential” branches)
 
 **Other features**:
 
