@@ -8,9 +8,17 @@ scene = Scene()
 A, B, C = scene.triangle(labels=['A', 'B', 'C'])
 
 def napoleonic(A, B, C):
-    circleAB = A.circle_through(B, layer='invisible')
-    circleBA = B.circle_through(A, layer='invisible')
-    V = circleAB.intersection_point(circleBA, label=C.label + '1')
+    # Change to True, if you want to construct the point explicitly.
+    # This change does not affect the explanation, but finds placement a little bit quicker.
+    # Not a matter for the sample, but for more complicated construction this might be useful,
+    # if you want to run the hunter.
+    constructive = False
+    if constructive:
+        circleAB = A.circle_through(B, layer='invisible')
+        circleBA = B.circle_through(A, layer='invisible')
+        V = circleAB.intersection_point(circleBA, label=C.label + '1')
+    else:
+        V = A.scene.free_point(label=C.label + '1')
     A.scene.equilateral_constraint((A, B, V), comment=LazyComment('Given: △ %s %s %s is an equilateral triangle', V, A, B))
     line = A.line_through(B, layer='auxiliary')
     V.opposite_side_constraint(C, line, comment=LazyComment('Given: %s is outward of △ %s %s %s', V, A, B, C))
