@@ -10,7 +10,8 @@ The goal of the project is to create an app that takes a human-readable descript
 **Prerequisites**:
 
 * Python 3 (tested with 3.6 and 3.7)
-* Python libraries: numpy, scipy, sympy, networkx
+* Required libraries: numpy, scipy, sympy, networkx
+* Optional library: matplotlib (used in sketcher only)
 
 **Python library/app prototype(s)**:
 
@@ -18,6 +19,7 @@ The goal of the project is to create an app that takes a human-readable descript
 * Scene placement: a simple app that takes a scene and tries to find a configuration of objects that meets all the constraints ([placement.py](python/sandbox/placement.py))
 * Property hunter: a script that takes a scene placement and collects properties like “two triangles are similar” or “the ratio of two angles is integer” ([hunter.py](python/sandbox/hunter.py))
 * An explainer, a simple app that takes a scene, and applies rules to prove the facts about the scene. The explainer does not add any additional constructions nor make assumptions to analyse separate variants ([explainer.py](python/sandbox/explainer.py))
+* Sketcher: a simple app that takes scene, makes several placements, select "the best one" and plots it using matplotlib
 
 **Tests and samples**:
 
