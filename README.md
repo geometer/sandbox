@@ -11,7 +11,7 @@ The goal of the project is to create an app that takes a human-readable descript
 
 * Python 3 (tested with 3.6 and 3.7)
 * Required libraries: numpy, scipy, sympy, networkx
-* Optional library: matplotlib (used in sketcher only)
+* Optional library: matplotlib (used in the sketcher only)
 
 **Implemented features**:
 
@@ -38,6 +38,12 @@ The goal of the project is to create an app that takes a human-readable descript
 * Meta explainer, that uses existing explainer and supports (brut-force enumerated) additional constructions as well as assumptions (e.g., if the direct explainer fails, it might consider variants “the angle A is acute”, “is obtuse”, and “is right”)
 * Generate an HTML presentation for explanations (a tree with expandable/collapsable nodes and hideable “non-essential” branches)
 
+**Sketcher features**:
+
+* Improve scene creator and the sketcher to make it possible to set element properties like line type (segment, half-line, line), styles, colours, etc.
+* Implement a beautifier for placements, that creates a “good looking” scene
+* Implement an algorithm that takes an incorrect placement (that does not meet the constraints), and creates a correct one that is as close to the given one as possible
+
 **Other features**:
 
 * Write documentation that explains the existing code API
@@ -45,12 +51,6 @@ The goal of the project is to create an app that takes a human-readable descript
 * Make a web-based frontend (based on [JSXGraph](https://jsxgraph.uni-bayreuth.de/wp/index.html) or [GeoGebra](https://github.com/geogebra/geogebra))
 * Create/collect/find a big task set in machine-readable form (using own task format, or python, or some existing format + parser)
 * For each property, introduce a negated property. E.g., for “two triangles are similar”, there should be “two triangles are **not** similar”. This would be useful for detecting contradictions as soon as possible, and also for speeding up the algorithm. There is no need to test for similarity again and again on each iteration if it is already known, but also if its negation is already known. Of course, there is no need to generate all possible negated properties. Only the negations that are found in a natural way (i.e., during looking for “positive” properties) should be stored.
-
-**Sketcher features**:
-
-* Improve scene creator and sketcher to make it possible to set element properties like line type (segment, half-line, line), styles, colours, etc.
-* Implement a beautifier for placements, that creates a “good looking” scene
-* Implement an algorithm that takes an incorrect placement (that does not meet the constraints), and creates a correct one that is as close to the given one as possible
 
 **Ideas, I don't know how to implement**:
 
