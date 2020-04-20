@@ -75,10 +75,8 @@ class CoreScene:
         @property
         def description(self):
             dct = {}
-            for key in self.__dict__:
-                if key in ('label', 'scene') or key.startswith('_'):
-                    continue
-                value = self.__dict__[key]
+            for key in ('layer', 'extra_labels', 'all_points', 'comment'):
+                value = self.__dict__.get(key)
                 if value is None:
                     continue
                 if isinstance(value, Enum):
@@ -90,7 +88,10 @@ class CoreScene:
                         dct[key] = [elt.label if isinstance(elt, CoreScene.Object) else str(elt) for elt in value]
                 else:
                     dct[key] = str(value)
-            return '%s %s %s' % (self.__class__.__name__, self.label, dct)
+            if self.name == self.label:
+                return '%s %s %s' % (self.__class__.__name__, self, dct)
+            else:
+                return '%s %s %s %s' % (self.__class__.__name__, self.label, self.name, dct)
 
     class Point(Object):
         prefix = 'Pt_'
@@ -146,9 +147,12 @@ class CoreScene:
                 point=self, line=line,
                 layer='invisible'
             )
+            if 'comment' not in kwargs:
+                kwargs = dict(kwargs)
+                kwargs['comment'] = LazyComment('Perpendicular from %s to %s', self, line.label)
             new_line = self.line_through(new_point, **kwargs)
             if self not in line:
-                crossing = new_line.intersection_point(line, layer='auxiliary')
+                crossing = new_line.intersection_point(line, layer='auxiliary', comment=LazyComment('Foot of the perpendicular from %s to %s', self, line.label))
             line.perpendicular_constraint(new_line, guaranteed=True)
             return new_line
 
@@ -161,6 +165,9 @@ class CoreScene:
                 if self in existing and point in existing:
                     return existing.with_extra_args(**kwargs)
 
+            if 'comment' not in kwargs:
+                kwargs = dict(kwargs)
+                kwargs['comment'] = LazyComment('Line through %s and %s', self, point)
             line = CoreScene.Line(self.scene, point0=self, point1=point, **kwargs)
             if not self.scene.is_frozen:
                 for cnstr in self.scene.constraints(Constraint.Kind.collinear):
@@ -348,6 +355,9 @@ class CoreScene:
             """
             self.scene.assert_line_or_circle(obj)
             assert self != obj, 'The line does not cross itself'
+            if 'comment' not in kwargs:
+                kwargs = dict(kwargs)
+                kwargs['comment'] = LazyComment('Crossing point of %s and %s', self.label, obj.label)
             if isinstance(obj, CoreScene.Circle):
                 crossing = CoreScene.Point(
                     self.scene,
@@ -778,12 +788,11 @@ class CoreScene:
     def is_frozen(self):
         return self.__frozen
 
-    def dump(self):
+    def dump(self, max_layer='auxiliary'):
         print('Objects:')
-        print('\n'.join(['\t' + obj.description for obj in self.__objects]))
-        count = len(self.__objects)
-        aux = len([o for o in self.__objects if o.layer != 'user'])
-        print('Total: %s objects (+ %s auxiliary)' % (count - aux, aux))
+        print('\n'.join(['\t' + obj.description for obj in self.__objects if obj.layer in CoreScene.layers_by(max_layer)]))
+        counts = [len([o for o in self.__objects if o.layer == layer]) for layer in ('user', 'auxiliary', 'invisible')]
+        print('Total: %s objects (+ %s auxiliary, %s invisible)' % tuple(counts))
         if self.validation_constraints:
             print('\nValidation constraints:')
             print('\n'.join(['\t' + str(cnstr) for cnstr in self.validation_constraints]))
