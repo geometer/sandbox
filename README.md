@@ -13,13 +13,13 @@ The goal of the project is to create an app that takes a human-readable descript
 * Required libraries: numpy, scipy, sympy, networkx
 * Optional library: matplotlib (used in sketcher only)
 
-**Python library/app prototype(s)**:
+**Implemented features**:
 
-* Simple set of python functions for creating scenes ([core.py](python/sandbox/core.py), [scene.py](python/sandbox/scene.py))
-* Scene placement: a simple app that takes a scene and tries to find a configuration of objects that meets all the constraints ([placement.py](python/sandbox/placement.py))
+* Set of python functions for creating scenes ([core.py](python/sandbox/core.py), [scene.py](python/sandbox/scene.py))
+* Scene placement: an app that takes a scene and tries to find a configuration of objects that meets all the constraints ([placement.py](python/sandbox/placement.py))
 * Property hunter: a script that takes a scene placement and collects properties like “two triangles are similar” or “the ratio of two angles is integer” ([hunter.py](python/sandbox/hunter.py))
-* An explainer, a simple app that takes a scene, and applies rules to prove the facts about the scene. The explainer does not add any additional constructions nor make assumptions to analyse separate variants ([explainer.py](python/sandbox/explainer.py))
-* Sketcher: a simple app that takes scene, makes several placements, select "the best one" and plots it using matplotlib
+* An explainer, an app that takes a scene, and applies rules to prove the facts about the scene. The explainer does not add any additional constructions nor make assumptions to analyse separate variants ([explainer.py](python/sandbox/explainer.py))
+* Sketcher: a simple app that takes scene, makes several placements, selects "the best one" and plots it using matplotlib
 
 **Tests and samples**:
 
@@ -45,6 +45,12 @@ The goal of the project is to create an app that takes a human-readable descript
 * Make a web-based frontend (based on [JSXGraph](https://jsxgraph.uni-bayreuth.de/wp/index.html) or [GeoGebra](https://github.com/geogebra/geogebra))
 * Create/collect/find a big task set in machine-readable form (using own task format, or python, or some existing format + parser)
 * For each property, introduce a negated property. E.g., for “two triangles are similar”, there should be “two triangles are **not** similar”. This would be useful for detecting contradictions as soon as possible, and also for speeding up the algorithm. There is no need to test for similarity again and again on each iteration if it is already known, but also if its negation is already known. Of course, there is no need to generate all possible negated properties. Only the negations that are found in a natural way (i.e., during looking for “positive” properties) should be stored.
+
+**Sketcher features**:
+
+* Improve scene creator and sketcher to make it possible to set element properties like line type (segment, half-line, line), styles, colours, etc.
+* Implement a beautifier for placements, that creates a “good looking” scene
+* Implement an algorithm that takes an incorrect placement (that does not meet the constraints), and creates a correct one that is as close to the given one as possible
 
 **Ideas, I don't know how to implement**:
 
