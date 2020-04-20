@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 from .placement import iterative_placement
 
-def sketch(scene, attempts=10):
-    points = scene.points(max_layer='user')
+def sketch(scene, attempts=10, extra_points=()):
+    points = list(scene.points(max_layer='user')) + list(extra_points)
 
     placements = [iterative_placement(scene) for i in range(0, attempts)]
 
@@ -46,7 +46,7 @@ def sketch(scene, attempts=10):
     min_y = min(coo.y for coo in coords.values())
     mid_x = (min_x + max_x) / 2
     mid_y = (min_y + max_y) / 2
-    size = max(max_x - min_x, max_y - min_y) * 1.2
+    size = max(max_x - min_x, max_y - min_y) * 1.1
     ax.set_xlim(mid_x - size / 2, mid_x + size / 2)
     ax.set_ylim(mid_y - size / 2, mid_y + size / 2)
     ax.set_axis_off()
@@ -59,6 +59,6 @@ def sketch(scene, attempts=10):
 
     for pt, coo in coords.items():
         ax.plot(coo.x, coo.y, fillstyle='full', color='#42A5F5', marker='o', markersize=20)
-        ax.text(coo.x, coo.y - size * 0.004, pt.name, horizontalalignment='center', verticalalignment='center', fontsize=13, color='#FFFFFF')
+        ax.text(coo.x, coo.y - size * 0.002, '$%s$' % pt.name, horizontalalignment='center', verticalalignment='center', fontsize=12, color='#FFFFFF')
 
     plt.show()
