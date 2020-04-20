@@ -93,7 +93,7 @@ class CoreScene:
             return '%s %s %s' % (self.__class__.__name__, self.label, dct)
 
     class Point(Object):
-        prefix = '_P'
+        prefix = 'Pt_'
 
         class Origin(Enum):
             free              = auto()
@@ -314,7 +314,7 @@ class CoreScene:
             self.inside_constraint(C.angle(B, A), **kwargs)
 
     class Line(Object):
-        prefix = '_L'
+        prefix = 'Ln_'
 
         def __init__(self, scene, **kwargs):
             CoreScene.Object.__init__(self, scene, **kwargs)
@@ -385,7 +385,7 @@ class CoreScene:
             assert False, 'Operator not defined for %s and Line' % type(obj)
 
     class Circle(Object):
-        prefix = '_C'
+        prefix = 'Circ_'
 
         def __init__(self, scene, **kwargs):
             CoreScene.Object.__init__(self, scene, **kwargs)
