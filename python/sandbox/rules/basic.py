@@ -911,7 +911,7 @@ class SameSideToInsideAngleRule(Rule):
         if centre is None:
             return
         triangle = Scene.Triangle([pt for pt in set0 if pt != centre])
-        comment = LazyComment('Line %s separates %s and %s, line %s separates %s and %s => the intersection %s lies inside △ %s %s %s', op0.segment, *op0.points, op1.segment, *op1.points, centre, *triangle.points)
+        comment = LazyComment('Line %s separates %s and %s, line %s separates %s and %s => the intersection %s lies inside %s', op0.segment, *op0.points, op1.segment, *op1.points, centre, triangle)
         angles = triangle.angles
         for i in range(0, 3):
             yield (

@@ -28,6 +28,6 @@ class LawOfSinesRule(Rule):
         for (sine0, side0), (sine1, side1) in itertools.combinations(zip(sines, sides), 2):
             yield (
                 ProportionalLengthsProperty(side0, side1, sine0 / sine1),
-                LazyComment('Law of sines for △ %s %s %s', *triangle.points),
+                LazyComment('Law of sines for %s', triangle),
                 [av0, av1]
             )

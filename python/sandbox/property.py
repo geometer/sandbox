@@ -507,7 +507,7 @@ class IsoscelesTriangleProperty(Property):
 
     @property
     def description(self):
-        return LazyComment('△ %s %s %s is isosceles (with apex %s)', self.apex, *self.base.points, self.apex)
+        return LazyComment('%s is isosceles (with apex %s)', self.triangle, self.apex)
 
     def __eq__(self, other):
         return isinstance(other, IsoscelesTriangleProperty) and \

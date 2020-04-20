@@ -80,6 +80,6 @@ class Triangle30_30_120SidesRule(SingleSourceRule):
         for pt in prop.base.points:
             yield (
                 LengthRatioProperty(prop.base, prop.apex.segment(pt), sp.sqrt(3)),
-                LazyComment('Ratio of base and leg in isosceles △ %s %s %s with base angle = 30º', prop.apex, *prop.base.points),
+                LazyComment('Ratio of base and leg in isosceles %s with base angle = 30º', prop.triangle),
                 [prop, value]
             )
