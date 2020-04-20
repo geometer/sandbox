@@ -1,5 +1,6 @@
 from runner import run_sample
 from sandbox import Scene
+from sandbox.scene import Triangle
 from sandbox.property import EquilateralTriangleProperty
 from sandbox.util import LazyComment
 
@@ -13,16 +14,20 @@ def napoleonic(A, B, C):
     # Not a matter for the sample, but for more complicated construction this might be useful
     # if you want to run the hunter.
     constructive = False
+
+    label = '%s_1' % C.label
+    comment = LazyComment('Third vertex of equilateral triangle with base %s', A.segment(B))
     if constructive:
         circleAB = A.circle_through(B, layer='invisible')
         circleBA = B.circle_through(A, layer='invisible')
-        V = circleAB.intersection_point(circleBA, label=C.label + '1')
+        V = circleAB.intersection_point(circleBA, label=label, comment=comment)
     else:
-        V = A.scene.free_point(label=C.label + '1')
-    A.scene.equilateral_constraint((A, B, V), comment=LazyComment('Given: △ %s %s %s is an equilateral triangle', V, A, B))
+        V = A.scene.free_point(label=label, comment=comment)
+    triangle = Triangle((A, B, V))
+    A.scene.equilateral_constraint((A, B, V), comment=LazyComment('Given: %s is equilateral', triangle))
     line = A.line_through(B, layer='auxiliary')
-    V.opposite_side_constraint(C, line, comment=LazyComment('Given: %s is outward of △ %s %s %s', V, A, B, C))
-    D = scene.incentre_point((A, B, V), label=C.label + '2')
+    V.opposite_side_constraint(C, line, comment=LazyComment('Given: %s is outward of %s', V, Triangle((A, B, C))))
+    D = scene.incentre_point((A, B, V), label=C.label + '2', comment=LazyComment('Centre of %s', triangle))
 
 napoleonic(A, B, C)
 napoleonic(C, A, B)

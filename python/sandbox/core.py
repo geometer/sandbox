@@ -549,6 +549,9 @@ class CoreScene:
             """
             middle = self.middle_point(layer='auxiliary')
             line = self.line_through(layer='auxiliary')
+            if kwargs.get('comment') is None:
+                kwargs = dict(kwargs)
+                kwargs['comment'] = LazyComment('Perpendicular bisector of %s', self)
             bisector = middle.perpendicular_line(line, **kwargs)
             comment=LazyComment('%s is a perpendicular bisector of %s', bisector, self)
             bisector.perpendicular_constraint(line, comment=comment)
@@ -646,6 +649,9 @@ class CoreScene:
             self.vertex.same_direction_constraint(X, self.vector1.end)
             Y = X.translated_point(self.vector0, layer='invisible')
             self.point_on_bisector_constraint(Y, guaranteed=True)
+            if kwargs.get('comment') is None:
+                kwargs = dict(kwargs)
+                kwargs['comment'] = LazyComment('Bisector of %s', self)
             return self.vertex.line_through(Y, **kwargs)
 
         def point_on_bisector_constraint(self, point, **kwargs):
