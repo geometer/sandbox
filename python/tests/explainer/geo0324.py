@@ -8,12 +8,10 @@ class GEO0324(ExplainerTest):
     def createScene(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
-        A1 = B.segment(C).middle_point(label='A1')
-        B1 = A.segment(C).middle_point(label='B1')
-        C1 = A.segment(B).middle_point(label='C1')
-        D = scene.circumcentre_point((A, B, C), label='D')
-        E = scene.orthocentre_point((A1, B1, C1), label='E')
+        triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
+        triangle2 = Scene.Triangle([side.middle_point() for side in triangle.sides])
+        D = scene.circumcentre_point(triangle, label='D')
+        E = scene.orthocentre_point(triangle2, label='E')
 
         return scene
 

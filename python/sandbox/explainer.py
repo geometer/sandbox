@@ -12,7 +12,7 @@ from .rules.basic import *
 from .rules.triangle_elements import *
 from .rules.triangles import *
 from .rules.trigonometric import *
-from .scene import Scene, Triangle
+from .scene import Scene
 from .stats import Stats
 from .util import LazyComment, divide
 

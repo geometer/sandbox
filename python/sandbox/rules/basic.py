@@ -1,7 +1,7 @@
 import itertools
 
 from sandbox.property import *
-from sandbox.scene import Triangle
+from sandbox.scene import Scene
 from sandbox.util import LazyComment, divide
 
 from .abstract import Rule, SingleSourceRule
@@ -101,7 +101,7 @@ class TwoPointsBelongsToTwoLinesRule(SingleSourceRule):
         return prop.collinear
 
     def apply(self, cl0):
-        triangle = Triangle(cl0.points)
+        triangle = Scene.Triangle(cl0.points)
         sides = triangle.sides
         for side, pt0 in [(sides[i], triangle.points[i]) for i in range(0, 3)]:
             third_points = [pt0]
@@ -910,7 +910,7 @@ class SameSideToInsideAngleRule(Rule):
         centre = next((pt for pt in op0.segment.points if pt in op1.segment.points), None)
         if centre is None:
             return
-        triangle = Triangle([pt for pt in set0 if pt != centre])
+        triangle = Scene.Triangle([pt for pt in set0 if pt != centre])
         comment = LazyComment('Line %s separates %s and %s, line %s separates %s and %s => the intersection %s lies inside △ %s %s %s', op0.segment, *op0.points, op1.segment, *op1.points, centre, *triangle.points)
         angles = triangle.angles
         for i in range(0, 3):

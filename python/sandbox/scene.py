@@ -7,49 +7,6 @@ import itertools
 from .core import CoreScene
 from .util import LazyComment
 
-class Triangle:
-    def __init__(self, points):
-        self.points = tuple(points)
-        self.__sides = None
-        self.__angles = None
-        self.__permutations = None
-
-    @property
-    def sides(self):
-        if self.__sides is None:
-            self.__sides = (
-                self.points[1].segment(self.points[2]),
-                self.points[0].segment(self.points[2]),
-                self.points[0].segment(self.points[1])
-            )
-        return self.__sides
-
-    @property
-    def angles(self):
-        if self.__angles is None:
-            self.__angles = (
-                self.points[0].angle(self.points[1], self.points[2]),
-                self.points[1].angle(self.points[0], self.points[2]),
-                self.points[2].angle(self.points[0], self.points[1])
-            )
-        return self.__angles
-
-    @property
-    def permutations(self):
-        if self.__permutations is None:
-            self.__permutations = (
-                (self.points[0], self.points[1], self.points[2]),
-                (self.points[0], self.points[2], self.points[1]),
-                (self.points[1], self.points[0], self.points[2]),
-                (self.points[1], self.points[2], self.points[0]),
-                (self.points[2], self.points[0], self.points[1]),
-                (self.points[2], self.points[1], self.points[0])
-            )
-        return self.__permutations
-
-    def __str__(self):
-        return '△ %s %s %s' % self.points
-
 class Scene(CoreScene):
     """
     The main class Scene.
@@ -73,8 +30,6 @@ class Scene(CoreScene):
         """
         Orthocentre of the triangle (intersection of the altitudes)
         """
-        if not isinstance(triangle, Triangle):
-            triangle = Triangle(triangle)
         self.nondegenerate_triangle_constraint(triangle)
         altitude0 = self.altitude(triangle, triangle.points[0], layer='auxiliary')
         altitude1 = self.altitude(triangle, triangle.points[1], layer='auxiliary')
@@ -90,8 +45,6 @@ class Scene(CoreScene):
         """
         Centroid of the triangle (intersection of the medians)
         """
-        if not isinstance(triangle, Triangle):
-            triangle = Triangle(triangle)
         self.nondegenerate_triangle_constraint(triangle)
         medians = [triangle.points[i].line_through(triangle.sides[i].middle_point(layer='auxiliary'), layer='auxiliary') for i in range(0, 3)]
         if 'comment' not in kwargs:
@@ -105,8 +58,6 @@ class Scene(CoreScene):
         """
         Circumcentre of the triangle (i.e., centre of the circumcircle)
         """
-        if not isinstance(triangle, Triangle):
-            triangle = Triangle(triangle)
         self.nondegenerate_triangle_constraint(triangle)
         bisectors = [side.perpendicular_bisector_line(layer='auxiliary') for side in triangle.sides]
         if 'comment' not in kwargs:
@@ -134,8 +85,6 @@ class Scene(CoreScene):
         """
         Centre of the inscribed circle of the triangle
         """
-        if not isinstance(triangle, Triangle):
-            triangle = Triangle(triangle)
         self.nondegenerate_triangle_constraint(triangle)
         angles = triangle.angles
         bisector0 = angles[0].bisector_line(layer='auxiliary')
@@ -149,7 +98,7 @@ class Scene(CoreScene):
         angles[0].point_on_bisector_constraint(centre)
         angles[1].point_on_bisector_constraint(centre)
         angles[2].point_on_bisector_constraint(centre)
-        centre.inside_triangle_constraint(*triangle.points, comment=LazyComment('%s is incentre of %s', centre, triangle))
+        centre.inside_triangle_constraint(triangle, comment=LazyComment('%s is incentre of %s', centre, triangle))
         return centre
 
     def incircle(self, triangle, **kwargs):
@@ -157,7 +106,7 @@ class Scene(CoreScene):
         Inscribed circle of the triangle
         """
         centre = self.incentre_point(triangle, layer='auxiliary')
-        side = triangle[0].line_through(triangle[1], layer='auxiliary')
+        side = triangle.points[0].line_through(triangle.points[1], layer='auxiliary')
         foot = self.perpendicular_foot_point(centre, side, layer='auxiliary')
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
@@ -172,9 +121,9 @@ class Scene(CoreScene):
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
             kwargs['comment'] = LazyComment('Cicrumcircle of %s', triangle)
-        return centre.circle_through(triangle[0], **kwargs)
+        return centre.circle_through(triangle.points[0], **kwargs)
 
-    def triangle(self, labels=None):
+    def nondegenerate_triangle(self, labels=None):
         """
         Free triangle
         Pass array of three strings as 'labels' to use as point labels
@@ -187,9 +136,9 @@ class Scene(CoreScene):
                 args['label'] = labels[index]
             return self.free_point(**args)
 
-        points = (point(0), point(1), point(2))
-        self.nondegenerate_triangle_constraint(Triangle(points))
-        return points
+        triangle = Scene.Triangle((point(0), point(1), point(2)))
+        self.nondegenerate_triangle_constraint(triangle)
+        return triangle
 
     def nondegenerate_triangle_constraint(self, triangle, **kwargs):
         """
@@ -206,8 +155,6 @@ class Scene(CoreScene):
         """
         if isinstance(triangle, CoreScene.Point):
             triangle, vertex = vertex, triangle
-        if not isinstance(triangle, Triangle):
-            triangle = Triangle(triangle)
         self.nondegenerate_triangle_constraint(triangle)
         assert vertex in triangle.points
         points = [pt for pt in triangle.points if pt != vertex]

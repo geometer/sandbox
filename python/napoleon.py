@@ -1,12 +1,11 @@
 from runner import run_sample
 from sandbox import Scene
-from sandbox.scene import Triangle
 from sandbox.property import EquilateralTriangleProperty
 from sandbox.util import LazyComment
 
 scene = Scene()
 
-A, B, C = scene.triangle(labels=['A', 'B', 'C'])
+A, B, C = scene.nondegenerate_triangle(labels=['A', 'B', 'C']).points
 
 def napoleonic(A, B, C):
     # Change to True, if you want to construct the point explicitly.
@@ -23,11 +22,11 @@ def napoleonic(A, B, C):
         V = circleAB.intersection_point(circleBA, label=label, comment=comment)
     else:
         V = A.scene.free_point(label=label, comment=comment)
-    triangle = Triangle((A, B, V))
-    A.scene.equilateral_constraint((A, B, V), comment=LazyComment('Given: %s is equilateral', triangle))
+    equialteral = Scene.Triangle((A, B, V))
+    A.scene.equilateral_constraint((A, B, V), comment=LazyComment('Given: %s is equilateral', equialteral))
     line = A.line_through(B, layer='auxiliary')
-    V.opposite_side_constraint(C, line, comment=LazyComment('Given: %s is outward of %s', V, Triangle((A, B, C))))
-    D = scene.incentre_point(triangle, label=C.label + '2', comment=LazyComment('Centre of %s', triangle))
+    V.opposite_side_constraint(C, line, comment=LazyComment('Given: %s is outward of %s', V, Scene.Triangle((A, B, C))))
+    D = scene.incentre_point(equialteral, label=C.label + '2', comment=LazyComment('Centre of %s', equialteral))
 
 napoleonic(A, B, C)
 napoleonic(C, A, B)

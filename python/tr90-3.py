@@ -3,7 +3,7 @@ from sandbox import Scene
 
 scene = Scene()
 
-A, B, C = scene.triangle(labels=('A', 'B', 'C'))
+A, B, C = scene.nondegenerate_triangle(labels=('A', 'B', 'C')).points
 A.segment(C).perpendicular_constraint(B.segment(C), comment='Given: AC ⟂ BC')
 E = A.translated_point(C.vector(B), label='E')
 D = A.line_through(B).intersection_point(C.line_through(E), label='D')

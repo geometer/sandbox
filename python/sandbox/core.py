@@ -306,19 +306,16 @@ class CoreScene:
             else:
                 assert False, 'Cannot declare point lying inside %s' % obj
 
-        def inside_triangle_constraint(self, A, B, C, **kwargs):
+        def inside_triangle_constraint(self, triangle, **kwargs):
             """
-            The point is inside the △ ABC
+            The point is inside the triangle
             """
-            A.not_collinear_constraint(B, C)
+            triangle.points[0].not_collinear_constraint(*triangle.points[1:])
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment(
-                    'Point %s is inside △ %s %s %s', self, A, B, C
-                )
-            self.inside_constraint(A.angle(B, C), **kwargs)
-            self.inside_constraint(B.angle(A, C), **kwargs)
-            self.inside_constraint(C.angle(B, A), **kwargs)
+                kwargs['comment'] = LazyComment('Point %s is inside %s', self, triangle)
+            for angle in triangle.angles:
+                self.inside_constraint(angle, **kwargs)
 
     class Line(Object):
         prefix = 'Ln_'
@@ -689,6 +686,49 @@ class CoreScene:
                 return str(LazyComment('∠ %s %s %s', self.vector0.end, self.vertex, self.vector1.end))
             return '∠(%s, %s)' % (self.vector0, self.vector1)
 
+    class Triangle:
+        def __init__(self, points):
+            self.points = tuple(points)
+            self.__sides = None
+            self.__angles = None
+            self.__permutations = None
+
+        @property
+        def sides(self):
+            if self.__sides is None:
+                self.__sides = (
+                    self.points[1].segment(self.points[2]),
+                    self.points[0].segment(self.points[2]),
+                    self.points[0].segment(self.points[1])
+                )
+            return self.__sides
+
+        @property
+        def angles(self):
+            if self.__angles is None:
+                self.__angles = (
+                    self.points[0].angle(self.points[1], self.points[2]),
+                    self.points[1].angle(self.points[0], self.points[2]),
+                    self.points[2].angle(self.points[0], self.points[1])
+                )
+            return self.__angles
+
+        @property
+        def permutations(self):
+            if self.__permutations is None:
+                self.__permutations = (
+                    (self.points[0], self.points[1], self.points[2]),
+                    (self.points[0], self.points[2], self.points[1]),
+                    (self.points[1], self.points[0], self.points[2]),
+                    (self.points[1], self.points[2], self.points[0]),
+                    (self.points[2], self.points[0], self.points[1]),
+                    (self.points[2], self.points[1], self.points[0])
+                )
+            return self.__permutations
+
+        def __str__(self):
+            return '△ %s %s %s' % self.points
+
     def __init__(self):
         self.__objects = []
         self.validation_constraints = []
@@ -707,7 +747,7 @@ class CoreScene:
         return cns
 
     def equilateral_constraint(self, triangle, **kwargs):
-        self.constraint(Constraint.Kind.equilateral, *triangle, **kwargs)
+        self.constraint(Constraint.Kind.equilateral, triangle, **kwargs)
 
     def quadrilateral_constraint(self, A, B, C, D, **kwargs):
         """
@@ -823,7 +863,7 @@ class Constraint:
         inside_segment            = ('inside_segment', Stage.validation, CoreScene.Point, CoreScene.Segment)
         inside_angle              = ('inside_angle', Stage.validation, CoreScene.Point, CoreScene.Angle)
         quadrilateral             = ('quadrilateral', Stage.validation, CoreScene.Point, CoreScene.Point, CoreScene.Point, CoreScene.Point)
-        equilateral               = ('equilateral', Stage.adjustment, CoreScene.Point, CoreScene.Point, CoreScene.Point)
+        equilateral               = ('equilateral', Stage.adjustment, CoreScene.Triangle)
         convex_polygon            = ('convex_polygon', Stage.validation, List[CoreScene.Point])
         distance                  = ('distance', Stage.adjustment, CoreScene.Vector, int)
         length_ratio              = ('length_ratio', Stage.adjustment, CoreScene.Segment, CoreScene.Segment, int)

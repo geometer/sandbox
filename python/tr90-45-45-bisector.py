@@ -3,7 +3,7 @@ from sandbox import Scene
 
 scene = Scene()
 
-A, B, C = scene.triangle(labels=('A', 'B', 'C'))
+A, B, C = scene.nondegenerate_triangle(labels=('A', 'B', 'C')).points
 A.segment(C).perpendicular_constraint(B.segment(C), comment='Given: AC ⟂ BC')
 A.segment(C).ratio_constraint(B.segment(C), 1, comment='Given: AC = BC')
 bisector = C.angle(A, B).bisector_line()

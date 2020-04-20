@@ -10,10 +10,11 @@ class TestRoG4580(PlacementTest):
     def createPlacement(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
+        triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
+        A, B, C = triangle.points
         A.segment(B).ratio_constraint(B.segment(C), 2)
         A.segment(B).perpendicular_constraint(B.segment(C))
-        F = scene.incentre_point((A, B, C), label='F')
+        F = scene.incentre_point(triangle, label='F')
         E = scene.perpendicular_foot_point(B, A.line_through(F), label='E')
 
         return iterative_placement(scene)

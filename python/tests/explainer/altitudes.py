@@ -7,9 +7,10 @@ class AltitudesAndSimilarityAcuteTest(ExplainerTest):
     def createScene(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
-        altitudeA = scene.altitude((A, B, C), A)
-        altitudeB = scene.altitude((A, B, C), B)
+        triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
+        A, B, C = triangle.points
+        altitudeA = scene.altitude(triangle, A)
+        altitudeB = scene.altitude(triangle, B)
         A1 = altitudeA.intersection_point(B.line_through(C), label='A1')
         B1 = altitudeB.intersection_point(A.line_through(C), label='B1')
 
@@ -30,9 +31,10 @@ class AltitudesAndSimilarityObtuseTest(ExplainerTest):
     def createScene(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
-        altitudeA = scene.altitude((A, B, C), A)
-        altitudeB = scene.altitude((A, B, C), B)
+        triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
+        A, B, C = triangle.points
+        altitudeA = scene.altitude(triangle, A)
+        altitudeB = scene.altitude(triangle, B)
         A1 = altitudeA.intersection_point(B.line_through(C), label='A1')
         B1 = altitudeB.intersection_point(A.line_through(C), label='B1')
 

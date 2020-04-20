@@ -10,9 +10,10 @@ class RomanticsOfGeometry4578(ExplainerTest):
     def createScene(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
-        D = scene.orthocentre_point((A, B, C), label='D')
-        D.inside_triangle_constraint(A, B, C)
+        triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
+        A, B, C = triangle.points
+        D = scene.orthocentre_point(triangle, label='D')
+        D.inside_triangle_constraint(triangle)
         A.segment(B).congruent_constraint(C.segment(D), comment='Given: |AB| = |CD|')
 
         return scene
@@ -25,9 +26,10 @@ class RomanticsOfGeometry4578Constructions(ExplainerTest):
     def createScene(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
-        D = scene.orthocentre_point((A, B, C), label='D')
-        D.inside_triangle_constraint(A, B, C)
+        triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
+        A, B, C = triangle.points
+        D = scene.orthocentre_point(triangle, label='D')
+        D.inside_triangle_constraint(triangle)
         H = A.line_through(D).intersection_point(B.line_through(C), label='H')
         G = C.line_through(D).intersection_point(A.line_through(B), label='G')
         A.segment(B).congruent_constraint(C.segment(D), comment='Given: |AB| = |CD|')
@@ -42,9 +44,10 @@ class RomanticsOfGeometry4578Auxiliary(ExplainerTest):
     def createScene(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
-        D = scene.orthocentre_point((A, B, C), label='D')
-        D.inside_triangle_constraint(A, B, C)
+        triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
+        A, B, C = triangle.points
+        D = scene.orthocentre_point(triangle, label='D')
+        D.inside_triangle_constraint(triangle)
         A.segment(B).congruent_constraint(C.segment(D), comment='Given: |AB| = |CD|')
 
         return scene
