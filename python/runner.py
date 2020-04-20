@@ -9,14 +9,14 @@ from sandbox.propertyset import PropertySet
 def run_sample(scene, prop=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--max-layer', default='user', choices=CoreScene.layers)
-    parser.add_argument('--dump', nargs='+', choices=('scene', 'stats', 'properties', 'explanation'), default='stats')
+    parser.add_argument('--dump', nargs='+', choices=('scene', 'constraints', 'stats', 'result', 'properties', 'explanation'), default=('stats', 'result'))
     parser.add_argument('--run-hunter', action='store_true')
     parser.add_argument('--extra-rules', nargs='+', choices=('advanced', 'trigonometric'), default=())
     parser.add_argument('--profile', action='store_true')
     args = parser.parse_args()
 
     if 'scene' in args.dump:
-        scene.dump()
+        scene.dump(include_constraints='constraints' in args.dump)
 
     if args.run_hunter:
         placement = iterative_placement(scene)
@@ -41,7 +41,7 @@ def run_sample(scene, prop=None):
     if 'stats' in args.dump:
         explainer.stats(properties).dump()
 
-    if prop:
+    if prop and 'result' in args.dump:
         if explainer.explained(prop):
             print('\tExplained: %s' % prop)
         else:

@@ -794,18 +794,18 @@ class CoreScene:
     def is_frozen(self):
         return self.__frozen
 
-    def dump(self, max_layer='auxiliary'):
+    def dump(self, include_constraints=False, max_layer='auxiliary'):
         print('Objects:')
         print('\n'.join(['\t' + obj.description for obj in self.__objects if obj.layer in CoreScene.layers_by(max_layer)]))
         counts = [len([o for o in self.__objects if o.layer == layer]) for layer in ('user', 'auxiliary', 'invisible')]
         print('Total: %s objects (+ %s auxiliary, %s invisible)' % tuple(counts))
-        if self.validation_constraints:
-            print('\nValidation constraints:')
-            print('\n'.join(['\t' + str(cnstr) for cnstr in self.validation_constraints]))
-        if self.adjustment_constraints:
-            print('\nAdjustment constraints:')
-            print('\n'.join(['\t' + str(cnstr) for cnstr in self.adjustment_constraints]))
-        print('')
+        if include_constraints:
+            if self.validation_constraints:
+                print('\nValidation constraints:')
+                print('\n'.join(['\t' + str(cnstr) for cnstr in self.validation_constraints]))
+            if self.adjustment_constraints:
+                print('\nAdjustment constraints:')
+                print('\n'.join(['\t' + str(cnstr) for cnstr in self.adjustment_constraints]))
 
 class Stage(Enum):
     validation        = auto()
