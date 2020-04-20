@@ -206,6 +206,8 @@ class Scene(CoreScene):
         """
         if isinstance(triangle, CoreScene.Point):
             triangle, vertex = vertex, triangle
+        if not isinstance(triangle, Triangle):
+            triangle = Triangle(triangle)
         self.nondegenerate_triangle_constraint(triangle)
         assert vertex in triangle.points
         points = [pt for pt in triangle.points if pt != vertex]
