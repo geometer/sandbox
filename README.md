@@ -42,10 +42,6 @@ The goal of the project is to create an app that takes a human-readable descript
 * Create/collect/find a big task set in machine-readable form (using own task format, or python, or some existing format + parser)
 * For each property, introduce a negated property. E.g., for “two triangles are similar”, there should be “two triangles are **not** similar”. This would be useful for detecting contradictions as soon as possible, and also for speeding up the algorithm. There is no need to test for similarity again and again on each iteration if it is already known, but also if its negation is already known. Of course, there is no need to generate all possible negated properties. Only the negations that are found in a natural way (i.e., during looking for “positive” properties) should be stored.
 
-**Ideas, I don't know how to implement**:
-
-* Re-write explainer rules from python into some compact language, that describes the source properties, the target property, and the matching rules
-
 **Minor features**:
 
 * If the idea works, re-write most important parts in a low-level language (C++?) for perfomance
