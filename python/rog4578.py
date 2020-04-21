@@ -34,6 +34,4 @@ A.segment(B).congruent_constraint(C.segment(D), comment='Given: |AB| = |CD|')
 # +*16* ∠ A C B = ∠ A C H                          *same angle
 # +*17* ∠ A C B = ∠ A C H = 45º                    *15, *16           transitivity
 
-prop = AngleValueProperty(C.angle(A, B), 45)
-
 run_sample(scene, C.angle(A, B))
