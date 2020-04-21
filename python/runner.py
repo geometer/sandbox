@@ -42,8 +42,9 @@ def run_sample(scene, prop=None):
         explainer.stats(properties).dump()
 
     if prop and 'result' in args.dump:
-        if explainer.explained(prop):
-            print('\tExplained: %s' % prop)
+        explanation = explainer.explanation(prop)
+        if explanation:
+            print('\tExplained: %s' % explanation)
         else:
             print('\tNot explained: %s' % prop)
 
