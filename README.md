@@ -28,10 +28,6 @@ The goal of the project is to create an app that takes a human-readable descript
 
 ## Plans
 
-**Code cleanup tasks**:
-
-* Complete moving rules from explainer's big loop to separate classes in [sandbox/rules](python/sandbox/rules)
-
 **Most important features to code**:
 
 * In the explainer, introduce `ContradictionException`, that raises if the reason generates a contradiction. This is an important part of the meta explainer (see the next item)
