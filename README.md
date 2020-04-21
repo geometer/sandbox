@@ -38,12 +38,6 @@ The goal of the project is to create an app that takes a human-readable descript
 * Meta explainer, that uses existing explainer and supports (brut-force enumerated) additional constructions as well as assumptions (e.g., if the direct explainer fails, it might consider variants “the angle A is acute”, “is obtuse”, and “is right”)
 * Generate an HTML presentation for explanations (a tree with expandable/collapsable nodes and hideable “non-essential” branches)
 
-**Sketcher features**:
-
-* Improve scene creator and the sketcher to make it possible to set element properties like line type (segment, half-line, line), styles, colours, etc.
-* Implement a beautifier for placements, that creates a “good looking” scene
-* Implement an algorithm that takes an incorrect placement (that does not meet the constraints), and creates a correct one that is as close to the given one as possible
-
 **Other features**:
 
 * Write documentation that explains the existing code API
