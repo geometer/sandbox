@@ -1,0 +1,76 @@
+<html>
+<head>
+	<style>
+.gsb-tree {
+	margin: 30px;
+}
+
+.gsb-tree ul {
+  list-style-type: none;
+  padding-left: 20px;
+  display: none;
+}
+
+.gsb-tree li.open > ul {
+  display: block;
+}
+
+.gsb-tree > ul {
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
+.gsb-tree li {
+	pointer-events: none;
+}
+
+.gsb-tree li::before {
+  content: "⊡";
+  color: #888888;
+  display: inline-block;
+	font-size: 16pt;
+	width: 16px;
+	height: 16px;
+  margin-right: 6px;
+	pointer-events: auto;
+}
+
+li.closed, li.open {
+  cursor: pointer;
+}
+
+li {
+  cursor: auto;
+}
+
+.gsb-tree li.closed::before {
+  content: "⊞";
+}
+
+.gsb-tree li.open::before {
+  content: "⊟";
+}
+	</style>
+</head>
+<body>
+<div class='gsb-tree'>
+$$TREE$$
+</div>
+</html>
+<script type='text/javascript'>
+document.querySelectorAll('li').forEach(item => {
+	if (item.querySelector('ul') == null) {
+		return;
+	}
+	console.debug(item);
+	item.classList.add('closed');
+	item.classList.remove('open');
+	item.addEventListener('click', function(e) {
+		this.classList.toggle('open');
+		this.classList.toggle('closed');
+		e.stopPropagation();
+	});
+});
+</script>
+</body>
