@@ -11,11 +11,8 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
     def apply(self, prop):
         sides0 = prop.triangle0.sides
         sides1 = prop.triangle1.sides
-        nes0 = [self.context.not_equal_property(*side.points) for side in sides0]
-        nes1 = [self.context.not_equal_property(*side.points) for side in sides1]
         for i, j in itertools.combinations(range(0, 3), 2):
             segments = (sides0[i], sides0[j], sides1[i], sides1[j])
-            nzs = (nes0[i], nes0[j], nes1[i], nes1[j])
             found_four_ratio_equalities = True
             for inds in [(0, 1, 2, 3), (0, 2, 1, 3), (1, 0, 3, 2), (2, 0, 3, 1)]:
                 if not self.context.length_ratios_are_equal(*[segments[n] for n in inds]):
@@ -23,31 +20,8 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
                     break
             if found_four_ratio_equalities:
                 continue
-            if segments[0] == segments[1] and (nzs[0] or nzs[1]):
-                yield (
-                    ProportionalLengthsProperty(segments[2], segments[3], 1),
-                    '0 Relation of sides in similar triangles',
-                    [prop, nzs[0] if nzs[0] else nzs[1]]
-                )
-            elif segments[0] == segments[2] and (nzs[0] or nzs[2]):
-                yield (
-                    ProportionalLengthsProperty(segments[1], segments[3], 1),
-                    '1 Relation of sides in similar triangles',
-                    [prop, nzs[0] if nzs[0] else nzs[2]]
-                )
-            elif segments[1] == segments[3] and (nzs[1] or nzs[3]):
-                yield (
-                    ProportionalLengthsProperty(segments[0], segments[2], 1),
-                    '2 Relation of sides in similar triangles',
-                    [prop, nzs[1] if nzs[1] else nzs[3]]
-                )
-            elif segments[2] == segments[3] and (nzs[2] or nzs[3]):
-                yield (
-                    ProportionalLengthsProperty(segments[0], segments[1], 1),
-                    '3 Relation of sides in similar triangles',
-                    [prop, nzs[2] if nzs[2] else nzs[3]]
-                )
-            else:
+            if segments[0] != segments[1] and segments[0] != segments[2] and \
+               segments[1] != segments[3] and segments[2] != segments[3]:
                 yield (
                     EqualLengthProductsProperty(*segments),
                     'Relation of sides in similar triangles',
