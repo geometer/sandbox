@@ -550,18 +550,22 @@ class RotatedAngleRule(Rule):
         pts1 = ang1.endpoints
         if next((p for p in pts0 if p in pts1), None) is not None:
             return
-        cycle0 = Cycle(vertex, *pts0)
-        cycle1 = Cycle(vertex, *pts1)
-        co = self.context.same_cyclic_order_property(cycle0, cycle1)
-        if co:
-            ca = self.context.angle_ratio_property(ang0, ang1)
-            if ca.reason.obsolete and co.reason.obsolete:
-                return
-            yield (
-                AngleRatioProperty(vertex.angle(pts0[0], pts1[0]), vertex.angle(pts0[1], pts1[1]), 1),
-                'Rotated', #TODO: better comment
-                [ca, co]
-            )
+        co = self.context.same_cyclic_order_property(Cycle(vertex, *pts0), Cycle(vertex, *pts1))
+        if co is None:
+            pts1 = (pts1[1], pts1[0])
+            co = self.context.same_cyclic_order_property(Cycle(vertex, *pts0), Cycle(vertex, *pts1))
+        if co is None:
+            return
+        ca = self.context.angle_ratio_property(ang0, ang1)
+        if ca.reason.obsolete and co.reason.obsolete:
+            return
+        new_angle0 = vertex.angle(pts0[0], pts1[0])
+        new_angle1 = vertex.angle(pts0[1], pts1[1])
+        yield (
+            AngleRatioProperty(new_angle0, new_angle1, 1),
+            LazyComment('%s is %s rotated by %s = %s', new_angle0, new_angle1, ang0, ang1),
+            [ca, co]
+        )
 
 class PartOfAcuteAngleIsAcuteRule(SingleSourceRule):
     property_type = PointInsideAngleProperty
