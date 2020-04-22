@@ -143,7 +143,7 @@ class Explainer:
                                 prop = SumOfAnglesProperty(ngl0, ngl1, 180)
                             yield (
                                 prop,
-                                LazyComment('%s ↑↑ %s', zero.angle.vector0, zero.angle.vector1),
+                                LazyComment('common ray %s, and %s ↑↑ %s', vec, zero.angle.vector0, zero.angle.vector1),
                                 [zero, ne]
                             )
 
@@ -160,7 +160,7 @@ class Explainer:
                 if pia.reason.obsolete and all(p.reason.obsolete for p in reasons):
                     continue
 
-                comment = LazyComment('%s is intersection of ray [%s %s) and segment [%s %s]', X, A, D, B, C)
+                comment = LazyComment('%s is the intersection of ray [%s %s) and segment [%s %s]', X, A, D, B, C)
                 yield (AngleValueProperty(A.angle(D, X), 0), [comment], [pia] + reasons)
                 yield (AngleValueProperty(B.angle(C, X), 0), [comment], [pia] + reasons)
                 yield (AngleValueProperty(C.angle(B, X), 0), [comment], [pia] + reasons)
