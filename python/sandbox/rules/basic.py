@@ -807,15 +807,6 @@ class SameAngleRule2(Rule):
             LazyComment('%s ↑↑ %s and %s ↑↑ %s', ng0.vector0, ng0.vector1, ng1.vector0, ng1.vector1),
             [av0, av1]
         )
-        yield (
-            AngleRatioProperty(
-                ng0.vertex.angle(ng0.vector0.end, ng1.vector1.end),
-                ng0.vertex.angle(ng0.vector1.end, ng1.vector0.end),
-                1
-            ),
-            'Same angle',
-            [av0, av1]
-        )
 
 class PlanePositionsToLinePositionsRule(SingleSourceRule):
     property_type = SameOrOppositeSideProperty
