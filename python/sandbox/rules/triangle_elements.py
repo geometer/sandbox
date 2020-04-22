@@ -24,7 +24,7 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
                segments[1] != segments[3] and segments[2] != segments[3]:
                 yield (
                     EqualLengthProductsProperty(*segments),
-                    'Relation of sides in similar triangles',
+                    LazyComment('ratios of sides in similar %s and %s', prop.triangle0, prop.triangle1),
                     [prop]
                 )
 
@@ -165,7 +165,7 @@ class EquilateralTriangleAnglesRule(SingleSourceRule):
         for angle in prop.triangle.angles:
             yield (
                 AngleValueProperty(angle, 60),
-                LazyComment('Angle of non-degenerate equilateral %s', prop.triangle),
+                LazyComment('angle of non-degenerate equilateral %s', prop.triangle),
                 [prop]
             )
 

@@ -56,7 +56,7 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
         if not self.context.triangles_are_similar(tuple(tr0), tuple(tr1)):
             yield (
                 SimilarTrianglesProperty(tr0, tr1),
-                LazyComment('Two pairs of congruent angles, and △ %s %s %s is non-degenerate', *(tr0 if first_non_degenerate else tr1)),
+                LazyComment('congruent angles %s and %s, and △ %s %s %s is non-degenerate', ca0, ca1, *(tr0 if first_non_degenerate else tr1)),
                 [ca0, ca1, ncl]
             )
 
@@ -134,7 +134,7 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
                     (ang0.vertex, vec0.end, vec1.end),
                     (ang1.vertex, ang1.vector0.end, ang1.vector1.end)
                 ),
-                'Two pairs of sides with the same ratio, and angle between the sides',
+                LazyComment('%s and %s', elr, ca),
                 [elr, ca]
             )
 
@@ -164,7 +164,7 @@ class SimilarTrianglesWithCongruentSideRule(SingleSourceRule):
                 return
             yield (
                 CongruentTrianglesProperty(prop.triangle0, prop.triangle1),
-                'Similar triangles with congruent corresponding sides',
+                LazyComment('Similar triangles with congruent sides %s and %s', sides0[i], sides1[i]),
                 [prop, cs]
             )
             return
@@ -286,7 +286,7 @@ class EquilateralTriangleByThreeSidesRule(Rule):
         if cs2:
             yield (
                 EquilateralTriangleProperty((common, pt0, pt1)),
-                'Congruent sides',
+                LazyComment('congruent sides %s and %s', prop, cs2),
                 [prop, cs2]
             )
 
