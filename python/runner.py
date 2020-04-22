@@ -92,6 +92,7 @@ def run_sample(scene, prop=None):
         def dump(prop):
             s = '%s: %s' % (prop, ', '.join([str(com) for com in prop.reason.comments]))
             s = re.sub('_(.)', '<sub>\\1</sub>', s)
+            s = re.sub('\|', '│', s)
             print('<li class="%s">%s' % ('essential' if prop.essential else 'normal', s))
             if prop.reason.premises:
                 print('<ul>')
