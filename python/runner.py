@@ -17,7 +17,7 @@ def run_sample(scene, prop=None):
     args = parser.parse_args()
 
     if 'scene' in args.dump:
-        scene.dump(include_constraints='constraints' in args.dump)
+        scene.dump(include_constraints='constraints' in args.dump, max_layer=args.max_layer)
 
     if args.run_hunter:
         placement = iterative_placement(scene)
