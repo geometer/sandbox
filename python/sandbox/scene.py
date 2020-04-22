@@ -163,7 +163,7 @@ class Scene(CoreScene):
             kwargs = dict(kwargs)
             kwargs['comment'] = LazyComment('Altitude of %s from vertex %s', triangle, vertex)
         altitude = vertex.perpendicular_line(base, **kwargs)
-        altitude.perpendicular_constraint(base, comment=LazyComment('Altitude %s is perpendicular to the base %s', altitude, base), guaranteed=True)
+        altitude.perpendicular_constraint(base, comment=LazyComment('altitude %s is perpendicular to the base %s', altitude, base), guaranteed=True)
         return altitude
 
     def parallelogram(self, labels=None):

@@ -56,7 +56,7 @@ class CorrespondingAnglesInSimilarTrianglesRule(SingleSourceRule):
                 continue
             yield (
                 AngleRatioProperty(angles0[i], angles1[i], 1),
-                'Corresponding non-degenerate angles in similar triangles',
+                LazyComment('corresponding non-degenerate angles in similar %s and %s', prop.triangle0, prop.triangle1),
                 [prop] + ne
             )
 
@@ -125,7 +125,7 @@ class CorrespondingSidesInCongruentTrianglesRule(SingleSourceRule):
             if segment0 != segment1:
                 yield (
                     ProportionalLengthsProperty(segment0, segment1, 1),
-                    'Corresponding sides in congruent triangles',
+                    LazyComment('corresponding sides in congruent %s and %s', prop.triangle0, prop.triangle1),
                     [prop]
                 )
 

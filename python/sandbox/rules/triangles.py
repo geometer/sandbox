@@ -164,7 +164,7 @@ class SimilarTrianglesWithCongruentSideRule(SingleSourceRule):
                 return
             yield (
                 CongruentTrianglesProperty(prop.triangle0, prop.triangle1),
-                LazyComment('Similar triangles with congruent sides %s and %s', sides0[i], sides1[i]),
+                LazyComment('similar triangles with congruent non-zero sides %s and %s', sides0[i], sides1[i]),
                 [prop, cs]
             )
             return
