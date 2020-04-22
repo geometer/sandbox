@@ -55,7 +55,7 @@ li {
 	</style>
 </head>
 <body>
-<div class='gsb-tree'>
+<div class='gsb-tree' id='gsb-tree'>
 <div style='margin-bottom:16px;'>
   <input type='checkbox' id='checkbox' onclick='toggleNonEssential()'>
 Show non-essential properties
@@ -64,7 +64,8 @@ $$TREE$$
 </div>
 </html>
 <script type='text/javascript'>
-document.querySelectorAll('li').forEach(item => {
+root = document.getElementById('gsb-tree');
+root.querySelectorAll('li').forEach(item => {
 	if (item.querySelector('ul') == null) {
 		return;
 	}
@@ -77,8 +78,8 @@ document.querySelectorAll('li').forEach(item => {
 	});
 });
 function toggleNonEssential() {
-	props = document.querySelectorAll('.normal');
-	if (document.getElementById('checkbox').checked) {
+	props = root.querySelectorAll('.normal');
+	if (root.querySelector('#checkbox').checked) {
 		props.forEach(item => { item.style.display='block'; });
 	} else {
 		props.forEach(item => { item.style.display='none'; });
