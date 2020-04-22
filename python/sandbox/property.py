@@ -245,6 +245,10 @@ class AngleValueProperty(Property):
         self.angle = angle
         self.degree = normalize_number(degree)
 
+    @property
+    def essential(self):
+        return self.degree not in (0, 180)
+
     def keys(self):
         return [self.angle]
 
