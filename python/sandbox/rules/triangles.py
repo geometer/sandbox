@@ -87,10 +87,10 @@ class CongruentTrianglesByAngleAndTwoSidesRule(Rule):
             if ca.reason.obsolete and (rsn0 == True or rsn0.reason.obsolete) and (rsn1 == True or rsn1.reason.obsolete):
                 continue
             if rsn0 == True:
-                comment = LazyComment('Common side %s, pair of congruent sides, and angle between the sides', vec0)
+                comment = LazyComment('common side %s, %s, and %s', vec0, rsn1, ca)
                 premises = [rsn1, ca]
             elif rsn1 == True:
-                comment = LazyComment('Common side %s, pair of congruent sides, and angle between the sides', vec1)
+                comment = LazyComment('common side %s, %s, and %s', vec1, rsn0, ca)
                 premises = [rsn0, ca]
             else:
                 comment = 'Two pairs of congruent sides, and angle between the sides'
@@ -145,17 +145,29 @@ class SimilarTrianglesWithCongruentSideRule(SingleSourceRule):
         sides0 = prop.triangle0.sides
         sides1 = prop.triangle1.sides
         for i in range(0, 3):
+            if sides0[i] != sides1[i]:
+                continue
+            ne = self.context.not_equal_property(*sides0[i].points)
+            if ne is None or ne.reason.obsolete and prop.reason.obsolete:
+                return
+            yield (
+                CongruentTrianglesProperty(prop.triangle0, prop.triangle1),
+                LazyComment('similar triangles with common non-zero side %s', sides0[i]),
+                [prop, ne]
+            )
+            return
+        for i in range(0, 3):
             cs = self.context.congruent_segments_property(sides0[i], sides1[i], False)
             if cs is None:
                 continue
             if prop.reason.obsolete and cs.reason.obsolete:
-                break
+                return
             yield (
                 CongruentTrianglesProperty(prop.triangle0, prop.triangle1),
                 'Similar triangles with congruent corresponding sides',
                 [prop, cs]
             )
-            break
+            return
 
 class CongruentTrianglesByThreeSidesRule(Rule):
     def sources(self):
