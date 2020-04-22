@@ -5,6 +5,10 @@ from .scene import Scene
 from .util import LazyComment, divide, good_angles, normalize_number, keys_for_triangle
 
 class Property:
+    @property
+    def essential(self):
+        return True
+
     def keys(self):
         return []
 
@@ -22,6 +26,10 @@ class PointsCollinearityProperty(Property):
         self.points = (point0, point1, point2)
         self.point_set = frozenset(self.points)
         self.collinear = collinear
+
+    @property
+    def essential(self):
+        return False
 
     def keys(self, lengths=None):
         return keys_for_triangle(Scene.Triangle(self.points), lengths)
@@ -96,6 +104,10 @@ class PointsCoincidenceProperty(Property):
         self.points = [point0, point1]
         self.point_set = frozenset(self.points)
         self.coincident = coincident
+
+    @property
+    def essential(self):
+        return self.coincident
 
     def keys(self):
         return [self.points[0].segment(self.points[1]), *self.points]
@@ -548,6 +560,10 @@ class SameCyclicOrderProperty(Property):
         self.__key = frozenset([
             frozenset([cycle0, cycle1]), frozenset([cycle0.reversed, cycle1.reversed])
         ])
+
+    @property
+    def essential(self):
+        return False
 
     @property
     def description(self):

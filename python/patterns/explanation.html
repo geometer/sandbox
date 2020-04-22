@@ -1,5 +1,6 @@
 <html>
 <head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<style>
 .gsb-tree {
 	margin: 30px;
@@ -55,6 +56,10 @@ li {
 </head>
 <body>
 <div class='gsb-tree'>
+<div style='margin-bottom:16px;'>
+  <input type='checkbox' id='checkbox' onclick='toggleNonEssential()'>
+Show non-essential properties
+</div>
 $$TREE$$
 </div>
 </html>
@@ -63,7 +68,6 @@ document.querySelectorAll('li').forEach(item => {
 	if (item.querySelector('ul') == null) {
 		return;
 	}
-	console.debug(item);
 	item.classList.add('closed');
 	item.classList.remove('open');
 	item.addEventListener('click', function(e) {
@@ -72,5 +76,14 @@ document.querySelectorAll('li').forEach(item => {
 		e.stopPropagation();
 	});
 });
+function toggleNonEssential() {
+	props = document.querySelectorAll('.normal');
+	if (document.getElementById('checkbox').checked) {
+		props.forEach(item => { item.style.display='block'; });
+	} else {
+		props.forEach(item => { item.style.display='none'; });
+	}
+};
+toggleNonEssential();
 </script>
 </body>
