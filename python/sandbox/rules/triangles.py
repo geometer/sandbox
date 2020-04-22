@@ -157,15 +157,18 @@ class SimilarTrianglesWithCongruentSideRule(SingleSourceRule):
             )
             return
         for i in range(0, 3):
-            cs = self.context.congruent_segments_property(sides0[i], sides1[i], False)
+            cs = self.context.congruent_segments_property(sides0[i], sides1[i], True)
             if cs is None:
                 continue
-            if prop.reason.obsolete and cs.reason.obsolete:
+            ne = self.context.not_equal_property(*sides0[i].points)
+            if ne is None:
+                ne = self.context.not_equal_property(*sides1[i].points)
+            if ne is None or ne.reason.obsolete and prop.reason.obsolete and cs.reason.obsolete:
                 return
             yield (
                 CongruentTrianglesProperty(prop.triangle0, prop.triangle1),
                 LazyComment('similar triangles with congruent non-zero sides %s and %s', sides0[i], sides1[i]),
-                [prop, cs]
+                [prop, cs, ne]
             )
             return
 
@@ -308,7 +311,7 @@ class IsoscelesTriangleByConrguentLegsRule(Rule):
         if ne and not (prop.reason.obsolete and ne.reason.obsolete):
             yield (
                 IsoscelesTriangleProperty(apex, base0.segment(base1)),
-                'Congruent legs',
+                LazyComment('congruent legs %s and %s', prop.segment0, prop.segment1),
                 [prop, ne]
             )
 

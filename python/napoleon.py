@@ -24,9 +24,9 @@ def napoleonic(A, B, C):
     else:
         V = A.scene.free_point(label=label, comment=comment)
     equialteral = Scene.Triangle((A, B, V))
-    A.scene.equilateral_constraint(equialteral, comment=LazyComment('Given: %s is equilateral', equialteral))
+    A.scene.equilateral_constraint(equialteral, comment=LazyComment('given: %s is equilateral', equialteral))
     line = A.line_through(B, layer='auxiliary')
-    V.opposite_side_constraint(C, line, comment=LazyComment('Given: %s is outward of %s', V, triangle))
+    V.opposite_side_constraint(C, line, comment=LazyComment('given: %s is outward of %s', V, triangle))
     D = scene.incentre_point(equialteral, label='%s_2' % C.label, comment=LazyComment('Centre of %s', equialteral))
 
 napoleonic(A, B, C)
