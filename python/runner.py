@@ -1,4 +1,5 @@
 import argparse
+import re
 
 from sandbox import iterative_placement
 from sandbox.core import CoreScene
@@ -89,7 +90,9 @@ def run_sample(scene, prop=None):
 
     if 'explanation-html' in args.dump:
         def dump(prop):
-            print('<li>%s: %s' % (prop, ', '.join([str(com) for com in prop.reason.comments])))
+            s = '%s: %s' % (prop, ', '.join([str(com) for com in prop.reason.comments]))
+            s = re.sub('_(.)', '<sub>\\1</sub>', s)
+            print('<li>' + s)
             if prop.reason.premises:
                 print('<ul>')
                 for premise in prop.reason.premises:

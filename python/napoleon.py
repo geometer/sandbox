@@ -27,12 +27,12 @@ def napoleonic(A, B, C):
     A.scene.equilateral_constraint(equialteral, comment=LazyComment('Given: %s is equilateral', equialteral))
     line = A.line_through(B, layer='auxiliary')
     V.opposite_side_constraint(C, line, comment=LazyComment('Given: %s is outward of %s', V, triangle))
-    D = scene.incentre_point(equialteral, label=C.label + '2', comment=LazyComment('Centre of %s', equialteral))
+    D = scene.incentre_point(equialteral, label='%s_2' % C.label, comment=LazyComment('Centre of %s', equialteral))
 
 napoleonic(A, B, C)
 napoleonic(C, A, B)
 napoleonic(B, C, A)
 
-prop = EquilateralTriangleProperty((scene.get('A2'), scene.get('B2'), scene.get('C2')))
+prop = EquilateralTriangleProperty((scene.get('A_2'), scene.get('B_2'), scene.get('C_2')))
 
 run_sample(scene, prop)
