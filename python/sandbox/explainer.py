@@ -284,9 +284,22 @@ class Explainer:
                 #a0 + a1 = 180 - a2
                 a1_value = divide(180 - a2_reason.degree, 1 + ar.value)
                 a0_value = 180 - a2_reason.degree - a1_value
-                comment = LazyComment('%s + %s + %s = 180º', a0, a1, a2)
-                yield (AngleValueProperty(a0, a0_value), comment, [ar, a2_reason])
-                yield (AngleValueProperty(a1, a1_value), comment, [ar, a2_reason])
+                yield (
+                    AngleValueProperty(a0, a0_value),
+                    LazyComment(
+                        '180º = %s + %s + %s = %s %s + %s',
+                        a0, a1, a2, 1 + divide(1, ar.value), a0, a2_reason.degree
+                    ),
+                    [ar, a2_reason]
+                )
+                yield (
+                    AngleValueProperty(a1, a1_value),
+                    LazyComment(
+                        '180º = %s + %s + %s = %s %s + %s',
+                        a0, a1, a2, 1 + ar.value, a1, a2_reason.degree
+                    ),
+                    [ar, a2_reason]
+                )
 
             for aa in [p for p in self.context.list(AngleKindProperty) if p.kind == AngleKindProperty.Kind.acute]:
                 base = aa.angle
