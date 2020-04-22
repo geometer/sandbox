@@ -37,11 +37,15 @@
 	pointer-events: auto;
 }
 
-li.closed, li.open {
+.gsb-tree li.closed.empty, .gsb-tree li.open.empty {
+  cursor: auto;
+}
+
+.gsb-tree li.closed, .gsb-tree li.open {
   cursor: pointer;
 }
 
-li {
+.gsb-tree li {
   cursor: auto;
 }
 
@@ -51,6 +55,10 @@ li {
 
 .gsb-tree li.open::before {
   content: "⊟";
+}
+
+.gsb-tree li.empty.closed::before, .gsb-tree li.empty.open::before {
+  content: "⊡";
 }
 	</style>
 </head>
@@ -84,6 +92,27 @@ function toggleNonEssential() {
 	} else {
 		props.forEach(item => { item.style.display='none'; });
 	}
+	root.querySelectorAll('li').forEach(item => {
+		list = item.querySelector('ul');
+		if (list == null) {
+			return;
+		}
+		console.debug(list);
+		console.debug(list.children.length);
+		hasVisibleChildren = false;
+		for (i = 0; i < list.children.length; i++) {
+			console.debug(list.children[i].style);
+			if (list.children[i].style.display != 'none') {
+				hasVisibleChildren = true;
+				break;
+			}
+		}
+		if (!hasVisibleChildren) {
+			item.classList.add('empty');
+		} else {
+			item.classList.remove('empty');
+		}
+	});
 };
 toggleNonEssential();
 </script>
