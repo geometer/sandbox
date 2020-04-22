@@ -122,6 +122,9 @@ class CoreScene:
             for pt in self.scene.points():
                 if pt.origin == CoreScene.Point.Origin.translated and pt.base == self and pt.delta == vector and pt.coef == coef:
                     return pt
+            if 'comment' not in kwargs:
+                kwargs = dict(kwargs)
+                kwargs['comment'] = LazyComment('Translation of %s by vector %s %s', self, coef, vector)
             new_point = CoreScene.Point(
                 self.scene,
                 CoreScene.Point.Origin.translated,
@@ -179,11 +182,17 @@ class CoreScene:
             return line
 
         def circle_through(self, point, **kwargs):
+            if 'comment' not in kwargs:
+                kwargs = dict(kwargs)
+                kwargs['comment'] = LazyComment('Circle with centre %s through %s', self, point)
             return self.circle_with_radius(self.segment(point), **kwargs)
 
         def circle_with_radius(self, radius, **kwargs):
             self.scene.assert_segment(radius)
             assert radius.points[0] != radius.points[1], 'Cannot create a circle of zero radius'
+            if 'comment' not in kwargs:
+                kwargs = dict(kwargs)
+                kwargs['comment'] = LazyComment('Circle with centre %s with radius %s', self, radius)
             return CoreScene.Circle(
                 self.scene, centre=self, radius=radius, **kwargs
             )
@@ -415,6 +424,9 @@ class CoreScene:
             """
             self.scene.assert_line_or_circle(obj)
             assert self != obj, 'The circle does not cross itself'
+            if 'comment' not in kwargs:
+                kwargs = dict(kwargs)
+                kwargs['comment'] = LazyComment('Crossing point of %s and %s', self.label, obj.label)
             if isinstance(obj, CoreScene.Circle):
                 crossing = CoreScene.Point(
                     self.scene,
