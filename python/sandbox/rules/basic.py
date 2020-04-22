@@ -262,7 +262,7 @@ class ParallelVectorsRule(SingleSourceRule):
         for prop in AngleValueProperty.generate(vec0, vec1, 0):
             yield (
                 prop,
-                LazyComment('Non-zero parallel vectors %s and %s', vec0, vec1),
+                LazyComment('non-zero parallel vectors %s and %s', vec0, vec1),
                 [para, ne0, ne1]
             )
 
@@ -283,7 +283,7 @@ class PerpendicularSegmentsRule(SingleSourceRule):
         for prop in AngleValueProperty.generate(vec0, vec1, 90):
             yield (
                 prop,
-                LazyComment('Non-zero perpendicular segments %s and %s', seg0, seg1),
+                LazyComment('non-zero perpendicular segments %s and %s', seg0, seg1),
                 [pv, ne0, ne1]
             )
 
@@ -762,25 +762,27 @@ class SameAngleRule(SingleSourceRule):
     property_type = AngleValueProperty
 
     def accepts(self, prop):
-        return prop.angle.vertex and prop.degree == 0
+        return prop.degree == 0
 
     def apply(self, prop):
         ang = prop.angle
-        for ne in self.context.list(PointsCoincidenceProperty, [ang.vertex]):
-            if ne.coincident or prop and ne.reason.obsolete:
+        for ne in self.context.list(PointsCoincidenceProperty):
+            if ne.coincident or prop.reason.obsolete and ne.reason.obsolete:
                 continue
-            pt = ne.points[0] if ang.vertex == ne.points[1] else ne.points[1]
-            if pt in ang.point_set:
+            vec = ne.points[0].vector(ne.points[1])
+            if vec.as_segment in (ang.vector0.as_segment, ang.vector1.as_segment):
                 continue
-            yield (
-                AngleRatioProperty(
-                    ang.vertex.angle(pt, ang.vector0.end),
-                    ang.vertex.angle(pt, ang.vector1.end),
-                    1
-                ),
-                'Same angle',
-                [prop, ne]
-            )
+            for ngl0, cmpl0 in good_angles(vec, ang.vector0):
+                for ngl1, cmpl1 in good_angles(vec, ang.vector1):
+                    if cmpl0 == cmpl1:
+                        new_prop = AngleRatioProperty(ngl0, ngl1, 1)
+                    else:
+                        new_prop = SumOfAnglesProperty(ngl0, ngl1, 180)
+                    yield (
+                        new_prop,
+                        LazyComment('common ray %s, and %s ↑↑ %s', vec, ang.vector0, ang.vector1),
+                        [prop, ne]
+                    )
 
 class SameAngleRule2(Rule):
     def sources(self):
@@ -802,7 +804,7 @@ class SameAngleRule2(Rule):
                 ng0.vertex.angle(ng0.vector1.end, ng1.vector1.end),
                 1
             ),
-            'Same angle',
+            LazyComment('%s ↑↑ %s and %s ↑↑ %s', ng0.vector0, ng0.vector1, ng1.vector0, ng1.vector1),
             [av0, av1]
         )
         yield (

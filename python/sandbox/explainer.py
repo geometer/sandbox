@@ -127,26 +127,6 @@ class Explainer:
                     prop.rule = rule
                     yield (prop, comment, premises)
 
-            for zero in [av for av in self.context.list(AngleValueProperty) if av.degree == 0]:
-                zero_is_too_old = zero.reason.obsolete
-                for ne in self.context.list(PointsCoincidenceProperty):
-                    if ne.coincident or zero_is_too_old and ne.reason.obsolete:
-                        continue
-                    vec = ne.points[0].vector(ne.points[1])
-                    if vec.as_segment in [zero.angle.vector0.as_segment, zero.angle.vector1.as_segment]:
-                        continue
-                    for ngl0, cmpl0 in good_angles(vec, zero.angle.vector0):
-                        for ngl1, cmpl1 in good_angles(vec, zero.angle.vector1):
-                            if cmpl0 == cmpl1:
-                                prop = AngleRatioProperty(ngl0, ngl1, 1)
-                            else:
-                                prop = SumOfAnglesProperty(ngl0, ngl1, 180)
-                            yield (
-                                prop,
-                                LazyComment('common ray %s, and %s ↑↑ %s', vec, zero.angle.vector0, zero.angle.vector1),
-                                [zero, ne]
-                            )
-
             for pia in self.context.list(PointInsideAngleProperty):
                 A = pia.angle.vertex
                 B = pia.angle.vector0.end

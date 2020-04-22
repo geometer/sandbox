@@ -72,7 +72,7 @@ class BaseAnglesOfIsoscelesRule(SingleSourceRule):
                 prop.base.points[1].angle(prop.apex, prop.base.points[0]),
                 1
             ),
-            LazyComment('Base angles of isosceles %s', prop.triangle),
+            LazyComment('base angles of isosceles %s', prop.triangle),
             [prop]
         )
 
