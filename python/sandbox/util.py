@@ -59,6 +59,14 @@ class LazyComment:
     def __eq__(self, other):
         return isinstance(other, ParametrizedString) and self.format_string == other.format_string and self.params == other.params
 
+    def html(self):
+        from .core import CoreScene
+        def html(obj):
+            while hasattr(obj, 'html'):
+                obj = obj.html()
+            return obj
+        return self.format_string % tuple(html(p) for p in self.params)
+
     def __str__(self):
         from .core import CoreScene
         return self.format_string % tuple(p.name if isinstance(p, CoreScene.Object) else p for p in self.params)

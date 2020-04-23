@@ -12,6 +12,9 @@ class Property:
     def keys(self):
         return []
 
+    def html(self):
+        return self.description
+
     def __str__(self):
         return str(self.description)
 
@@ -544,6 +547,9 @@ class Cycle:
             self.__reversed = Cycle(*reversed(self.points))
             self.__reversed.__reversed = self
         return self.__reversed
+
+    def html(self):
+        return LazyComment('↻&nbsp;%s&nbsp;%s&nbsp;%s', *self.points)
 
     def __str__(self):
         return '↻ %s %s %s' % self.points

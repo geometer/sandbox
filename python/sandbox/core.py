@@ -5,6 +5,7 @@ Normally, do not add new construction methods here, do this in scene.py instead.
 
 from enum import Enum, auto, unique
 import itertools
+import re
 import sympy as sp
 from typing import List
 
@@ -68,6 +69,9 @@ class CoreScene:
         @property
         def name(self):
             return self.label
+
+        def html(self):
+            return re.sub(' ', '&nbsp;', re.sub('_([0-9]+)', '<sub>\\1</sub>', self.name))
 
         def __str__(self):
             return self.name
@@ -451,7 +455,10 @@ class CoreScene:
                 return obj in self.all_points
             assert False, 'Operator not defined for %s and Circle' % type(obj)
 
-    class Vector:
+    class Figure:
+        pass
+
+    class Vector(Figure):
         def __init__(self, start, end):
             assert isinstance(start, CoreScene.Point)
             assert isinstance(end, CoreScene.Point)
@@ -491,6 +498,9 @@ class CoreScene:
             assert self.scene == vector.scene
             return self.scene.constraint(Constraint.Kind.parallel_vectors, self, vector, **kwargs)
 
+        def html(self):
+            return LazyComment('%s&nbsp;%s', self.start, self.end)
+
         def __str__(self):
             return str(LazyComment('%s %s', self.start, self.end))
 
@@ -507,7 +517,7 @@ class CoreScene:
             self.__segments[key] = segment
         return segment
 
-    class Segment:
+    class Segment(Figure):
         def __init__(self, pt0, pt1):
             self.points = (pt0, pt1)
             self.point_set = frozenset(self.points)
@@ -615,6 +625,9 @@ class CoreScene:
             #TODO: equal_constraint otherwise?
             self.scene.constraint(Constraint.Kind.distance, self, length, **kwargs)
 
+        def html(self):
+            return LazyComment('%s&nbsp;%s', *self.points)
+
         def __str__(self):
             return str(LazyComment('%s %s', *self.points))
 
@@ -634,7 +647,7 @@ class CoreScene:
                 self.__angles[frozenset([vector0.reversed, vector1.reversed])] = angle
         return angle
 
-    class Angle:
+    class Angle(Figure):
         def __init__(self, vector0, vector1):
             self.vector0 = vector0
             self.vector1 = vector1
@@ -693,12 +706,17 @@ class CoreScene:
                 **kwargs
             )
 
+        def html(self):
+            if self.vertex:
+                return LazyComment('∠&nbsp;%s&nbsp;%s&nbsp;%s', self.vector0.end, self.vertex, self.vector1.end)
+            return LazyComment('∠(%s,&nbsp;%s)', self.vector0, self.vector1)
+
         def __str__(self):
             if self.vertex:
                 return str(LazyComment('∠ %s %s %s', self.vector0.end, self.vertex, self.vector1.end))
             return '∠(%s, %s)' % (self.vector0, self.vector1)
 
-    class Triangle:
+    class Triangle(Figure):
         def __init__(self, points):
             self.points = tuple(points)
             self.__sides = None
@@ -737,6 +755,9 @@ class CoreScene:
                     (self.points[2], self.points[1], self.points[0])
                 )
             return self.__permutations
+
+        def html(self):
+            return LazyComment('△&nbsp;%s&nbsp;%s&nbsp;%s', *self.points)
 
         def __str__(self):
             return '△ %s %s %s' % self.points

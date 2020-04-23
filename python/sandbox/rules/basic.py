@@ -664,7 +664,7 @@ class VerticalAnglesRule(Rule):
                 ng0.vertex.angle(ng0.vector1.end, ng1.vector1.end),
                 1
             ),
-            'Vertical angles',
+            LazyComment('vertical angles'),
             [av0, av1]
         )
         yield (
@@ -673,7 +673,7 @@ class VerticalAnglesRule(Rule):
                 ng0.vertex.angle(ng0.vector1.end, ng1.vector0.end),
                 1
             ),
-            'Vertical angles',
+            LazyComment('vertical angles'),
             [av0, av1]
         )
 
@@ -758,7 +758,7 @@ class SupplementaryAnglesRule(SingleSourceRule):
                     ang.vertex.angle(pt, ang.vector1.end),
                     180
                 ),
-                'Supplementary angles',
+                LazyComment('supplementary angles'),
                 [prop, ne]
             )
 

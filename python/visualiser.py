@@ -70,8 +70,11 @@ def drawTree(scene, prop, args):
         print('\tNot explained: %s' % prop)
 
     def dump(prop):
-        s = '%s: %s' % (prop, ', '.join([str(com) for com in prop.reason.comments]))
-        s = re.sub('_(.)', '<sub>\\1</sub>', s)
+        def html(comment):
+            while hasattr(comment, 'html'):
+                comment = comment.html()
+            return str(comment)
+        s = '%s: %s' % (html(prop), ', '.join([html(com) for com in prop.reason.comments]))
         s = re.sub('\|', '<span style="font-size:130%;vertical-align:-2px;">|</span>', s)
         print('<li class="%s">%s' % ('essential' if prop.essential else 'normal', s))
         if prop.reason.premises:

@@ -209,7 +209,7 @@ class CongruentTrianglesByThreeSidesRule(Rule):
             if third0.as_segment == third1.as_segment:
                 yield (
                     prop,
-                    LazyComment('Common side %s, two pairs of congruent sides', third0),
+                    LazyComment('common side %s, %s, %s', third0, cs0, cs1),
                     [cs0, cs1]
                 )
             else:
@@ -217,7 +217,7 @@ class CongruentTrianglesByThreeSidesRule(Rule):
                 if cs2:
                     yield (
                         prop,
-                        'Three pairs of congruent sides',
+                        LazyComment('three pairs of congruent sides'),
                         [cs0, cs1, cs2]
                     )
 
@@ -333,6 +333,6 @@ class IsoscelesTriangleByConrguentBaseAnglesRule(Rule):
         apex = next(pt for pt in ang0.point_set if pt not in base.point_set)
         yield (
             IsoscelesTriangleProperty(apex, base),
-            'Congruent base angles',
+            LazyComment('congruent base angles'),
             [ca, nc]
         )

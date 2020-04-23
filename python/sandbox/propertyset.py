@@ -1,5 +1,6 @@
 import itertools
 import networkx as nx
+import re
 
 from .core import CoreScene
 from .property import AngleKindProperty, AngleValueProperty, AngleRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, SimilarTrianglesProperty, CongruentTrianglesProperty
@@ -78,6 +79,24 @@ class AngleRatioPropertySet:
             self.path = path
             self.multiplier = multiplier
             self.angle_to_ratio = dict(angle_to_ratio)
+
+        def html(self):
+            pattern = []
+            params = []
+            for vertex in self.path:
+                if isinstance(vertex, CoreScene.Angle):
+                    coef = divide(self.multiplier, self.angle_to_ratio[vertex])
+                    if coef == 1:
+                        pattern.append('%s')
+                        params.append(vertex)
+                    else:
+                        pattern.append('%s %s')
+                        params.append(coef)
+                        params.append(vertex)
+                else:
+                    pattern.append('%sº')
+                    params.append(self.multiplier * vertex)
+            return LazyComment(' = '.join(pattern), *params).html()
 
         def __str__(self):
             pattern = []
