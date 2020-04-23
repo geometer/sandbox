@@ -2,7 +2,7 @@ from itertools import combinations
 import numpy as np
 import matplotlib.pyplot as plt
 
-from .placement import iterative_placement
+from sandbox.placement import iterative_placement
 
 def sketch(scene, attempts=10, extra_points=()):
     points = list(scene.points(max_layer='user')) + list(extra_points)
