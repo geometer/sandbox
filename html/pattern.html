@@ -1,0 +1,82 @@
+<html>
+<head>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <script type='text/javascript' charset='utf-8' src='../html/third-party/jsxgraphcore.js'></script>
+    <link rel='stylesheet' type='text/css' href='../html/third-party/jsxgraph.css'/>
+    <link rel='stylesheet' type='text/css' href='../html/gsb-tree.css'/>
+    <style>
+    .JXGText { font-size: 16px !important; }
+    </style>
+</head>
+<body>
+<div id="main" style="width:14in;">
+<div id="jxgbox" class="jxgbox" style="width:5in;height:5in;display:inline-block;vertical-align:top;"></div>
+<div class='gsb-tree' id='gsb-tree' div style='margin-left:36px;width:50%;display:inline-block;vertical-align:top;'>
+<div style='margin-bottom:16px;'>
+  <input type='checkbox' id='checkbox' onclick='toggleNonEssential()'>
+Show auxiliary properties
+</div>
+$$TREE$$
+</div>
+<script type="text/javascript">
+var idToPoint = {};
+$$SCENE$$
+</script>
+</div>
+</body>
+<script>
+function hilite(id) {
+    idToPoint[id].highlight();
+}
+function unhilite(id) {
+    idToPoint[id].noHighlight();
+}
+Object.keys(idToPoint).forEach(id => {
+    label = document.querySelector('#jxgbox_' + id + 'Label');
+    label.style.left = (parseFloat(label.style.left) - label.offsetWidth / 2.0) + 'px';
+    label.style.top = (parseFloat(label.style.top) + label.offsetHeight / 2.0) + 'px';
+});
+</script>
+<script type='text/javascript'>
+root = document.getElementById('gsb-tree');
+root.querySelectorAll('li').forEach(item => {
+	if (item.querySelector('ul') == null) {
+		return;
+	}
+	item.classList.add('closed');
+	item.classList.remove('open');
+	item.addEventListener('click', function(e) {
+		this.classList.toggle('open');
+		this.classList.toggle('closed');
+		e.stopPropagation();
+	});
+});
+function toggleNonEssential() {
+	props = root.querySelectorAll('.normal');
+	if (root.querySelector('#checkbox').checked) {
+		props.forEach(item => { item.style.display='block'; });
+	} else {
+		props.forEach(item => { item.style.display='none'; });
+	}
+	root.querySelectorAll('li').forEach(item => {
+		list = item.querySelector('ul');
+		if (list == null) {
+			return;
+		}
+		hasVisibleChildren = false;
+		for (i = 0; i < list.children.length; i++) {
+			if (list.children[i].style.display != 'none') {
+				hasVisibleChildren = true;
+				break;
+			}
+		}
+		if (!hasVisibleChildren) {
+			item.classList.add('empty');
+		} else {
+			item.classList.remove('empty');
+		}
+	});
+};
+toggleNonEssential();
+</script>
+</html>
