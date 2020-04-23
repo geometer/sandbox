@@ -152,7 +152,10 @@ class Explainer:
                 for endpoint in pia.angle.endpoints:
                     yield (
                         PointsCollinearityProperty(pia.point, pia.angle.vertex, endpoint, False),
-                        '', #TODO: write comment
+                        LazyComment(
+                            '%s is the vertex of %s, %s lies on a side, and %s lies inside',
+                            pia.angle.vertex, pia.angle, endpoint, pia.point
+                        ),
                         [pia]
                     )
                 yield (

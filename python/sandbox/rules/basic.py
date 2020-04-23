@@ -191,7 +191,7 @@ class NonCollinearPointsAreDifferentRule(SingleSourceRule):
         for pt0, pt1 in itertools.combinations(prop.points, 2):
             yield (
                 PointsCoincidenceProperty(pt0, pt1, False),
-                'Two of three non-collinear points',
+                LazyComment('two of three non-collinear points %s, %s, and %s', *prop.points),
                 [prop]
             )
 
