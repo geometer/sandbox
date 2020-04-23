@@ -1,6 +1,6 @@
 from sandbox import Scene
-from sandbox.sketcher import sketch
 from sandbox.util import LazyComment
+from sketcher import sketch
 
 scene = Scene()
 

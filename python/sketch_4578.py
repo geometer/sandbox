@@ -2,7 +2,7 @@
 # https://www.facebook.com/groups/parmenides52/permalink/2779763428804012/
 
 from sandbox import Scene
-from sandbox.sketcher import sketch
+from sketcher import sketch
 
 scene = Scene()
 

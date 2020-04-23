@@ -1,7 +1,6 @@
-from sandbox.sketcher import sketch
-
 from sandbox import Scene
 from sandbox.property import EquilateralTriangleProperty
+from sketcher import sketch
 
 scene = Scene()
 
