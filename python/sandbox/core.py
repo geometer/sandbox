@@ -124,7 +124,7 @@ class CoreScene:
                     return pt
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment('Translation of %s by vector %s %s', self, coef, vector)
+                kwargs['comment'] = LazyComment('translation of %s by vector %s %s', self, coef, vector)
             new_point = CoreScene.Point(
                 self.scene,
                 CoreScene.Point.Origin.translated,
@@ -152,10 +152,10 @@ class CoreScene:
             )
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment('Perpendicular from %s to %s', self, line.label)
+                kwargs['comment'] = LazyComment('perpendicular from %s to %s', self, line.label)
             new_line = self.line_through(new_point, **kwargs)
             if self not in line:
-                crossing = new_line.intersection_point(line, layer='auxiliary', comment=LazyComment('Foot of the perpendicular from %s to %s', self, line.label))
+                crossing = new_line.intersection_point(line, layer='auxiliary', comment=LazyComment('foot of the perpendicular from %s to %s', self, line.label))
             line.perpendicular_constraint(new_line, guaranteed=True)
             return new_line
 
@@ -170,7 +170,7 @@ class CoreScene:
 
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment('Line through %s and %s', self, point)
+                kwargs['comment'] = LazyComment('line through %s and %s', self, point)
             line = CoreScene.Line(self.scene, point0=self, point1=point, **kwargs)
             if not self.scene.is_frozen:
                 for cnstr in self.scene.constraints(Constraint.Kind.collinear):
@@ -184,7 +184,7 @@ class CoreScene:
         def circle_through(self, point, **kwargs):
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment('Circle with centre %s through %s', self, point)
+                kwargs['comment'] = LazyComment('circle with centre %s through %s', self, point)
             return self.circle_with_radius(self.segment(point), **kwargs)
 
         def circle_with_radius(self, radius, **kwargs):
@@ -192,7 +192,7 @@ class CoreScene:
             assert radius.points[0] != radius.points[1], 'Cannot create a circle of zero radius'
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment('Circle with centre %s with radius %s', self, radius)
+                kwargs['comment'] = LazyComment('circle with centre %s with radius %s', self, radius)
             return CoreScene.Circle(
                 self.scene, centre=self, radius=radius, **kwargs
             )
@@ -322,7 +322,7 @@ class CoreScene:
             triangle.points[0].not_collinear_constraint(*triangle.points[1:])
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment('Point %s is inside %s', self, triangle)
+                kwargs['comment'] = LazyComment('point %s is inside %s', self, triangle)
             for angle in triangle.angles:
                 self.inside_constraint(angle, **kwargs)
 
@@ -363,7 +363,7 @@ class CoreScene:
             assert self != obj, 'The line does not cross itself'
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment('Crossing point of %s and %s', self.label, obj.label)
+                kwargs['comment'] = LazyComment('crossing point of %s and %s', self.label, obj.label)
             if isinstance(obj, CoreScene.Circle):
                 crossing = CoreScene.Point(
                     self.scene,
@@ -426,7 +426,7 @@ class CoreScene:
             assert self != obj, 'The circle does not cross itself'
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment('Crossing point of %s and %s', self.label, obj.label)
+                kwargs['comment'] = LazyComment('crossing point of %s and %s', self.label, obj.label)
             if isinstance(obj, CoreScene.Circle):
                 crossing = CoreScene.Point(
                     self.scene,
@@ -560,7 +560,7 @@ class CoreScene:
             line = self.line_through(layer='auxiliary')
             if kwargs.get('comment') is None:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment('Perpendicular bisector of %s', self)
+                kwargs['comment'] = LazyComment('perpendicular bisector of %s', self)
             bisector = middle.perpendicular_line(line, **kwargs)
             comment=LazyComment('%s is a perpendicular bisector of %s', bisector, self)
             bisector.perpendicular_constraint(line, comment=comment)
@@ -588,9 +588,9 @@ class CoreScene:
             comment = args.get('comment')
             if not comment:
                 if coef == 1:
-                    comment = LazyComment('Given: |%s| == |%s|', self, segment)
+                    comment = LazyComment('given: |%s| == |%s|', self, segment)
                 else:
-                    comment = LazyComment('Given: |%s| == %s |%s|', self, coef, segment)
+                    comment = LazyComment('given: |%s| == %s |%s|', self, coef, segment)
                 args['comment'] = comment
             return self.scene.constraint(Constraint.Kind.length_ratio, self, segment, coef, **args)
 
@@ -660,7 +660,7 @@ class CoreScene:
             self.point_on_bisector_constraint(Y, guaranteed=True)
             if kwargs.get('comment') is None:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment('Bisector of %s', self)
+                kwargs['comment'] = LazyComment('bisector of %s', self)
             return self.vertex.line_through(Y, **kwargs)
 
         def point_on_bisector_constraint(self, point, **kwargs):
