@@ -97,11 +97,8 @@ function toggleNonEssential() {
 		if (list == null) {
 			return;
 		}
-		console.debug(list);
-		console.debug(list.children.length);
 		hasVisibleChildren = false;
 		for (i = 0; i < list.children.length; i++) {
-			console.debug(list.children[i].style);
 			if (list.children[i].style.display != 'none') {
 				hasVisibleChildren = true;
 				break;
