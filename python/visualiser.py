@@ -7,8 +7,9 @@ from sandbox.core import CoreScene
 from sandbox.explainer import Explainer
 from sandbox.placement import iterative_placement
 
-def drawScene(scene, attempts=10, extra_points=()):
-    points = list(scene.points(max_layer='user')) + list(extra_points)
+def drawScene(scene, args, attempts=10, extra_points=()):
+    points = scene.points(max_layer=args.max_layer) + list(extra_points)
+    lines = scene.lines(max_layer=args.max_layer)
 
     placements = [iterative_placement(scene) for i in range(0, attempts)]
 
@@ -17,7 +18,7 @@ def drawScene(scene, attempts=10, extra_points=()):
         for pt0, pt1 in combinations(points, 2):
             values.append(placement.length2(pt0.vector(pt1)))
         connected = set()
-        for line in scene.lines():
+        for line in lines:
             for pts in combinations(line.all_points, 2):
                 connected.add(frozenset(pts))
         for pt0, pt1, pt2 in combinations(points, 3):
@@ -51,7 +52,7 @@ def drawScene(scene, attempts=10, extra_points=()):
     print('var board = JXG.JSXGraph.initBoard("jxgbox", {boundingbox: [%.3f, %.3f, %.3f, %.3f], keepaspectratio: true, showNavigation: false, showCopyright: false, registerEvents: false});' % (mid_x - size / 2, mid_y - size / 2, mid_x + size / 2, mid_y + size / 2))
     for pt, coo in coords.items():
         print('idToPoint["%s"] = board.create("point", [%.3f, %.3f], {name:"%s", id:"%s", color:"#42A5F5", highlightFillColor:"#00E6E3", highlightStrokeColor:"#00E6E3", size:16, label:{"color": "white", "offset": [0, 0]}});' % (pt.name, coo.x, coo.y, pt.name, pt.name))
-    for line in scene.lines():
+    for line in lines:
         pts = [pt for pt in line.all_points if pt in coords]
         if len(pts) < 2:
             continue
@@ -98,7 +99,7 @@ def visualise(scene, prop):
         for line in f.readlines():
             line = line.strip()
             if line == '$$SCENE$$':
-                drawScene(scene)
+                drawScene(scene, args)
             elif line == '$$TREE$$':
                 drawTree(scene, prop, args)
             else:

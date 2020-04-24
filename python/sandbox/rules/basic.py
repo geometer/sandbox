@@ -889,7 +889,7 @@ class TwoAnglesWithCommonSideRule(SingleSourceRule):
         angle1 = prop.angle.vertex.angle(prop.angle.vector1.end, prop.point)
         yield (
             SumOfAnglesProperty(angle0, angle1, av.degree),
-            'Two angles with common side',
+            LazyComment('%s + %s = %s = %sº', angle0, angle1, prop.angle, av.degree),
             [prop, av]
         )
 

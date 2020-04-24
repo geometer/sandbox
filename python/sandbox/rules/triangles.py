@@ -38,10 +38,8 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
         ca0, ca1 = src
 
         ncl = self.context.not_collinear_property(*ca0.angle0.point_set)
-        first_non_degenerate = True
         if ncl is None:
             ncl = self.context.not_collinear_property(*ca1.angle1.point_set)
-            first_non_degenerate = False
         if ncl is None or ca0.reason.obsolete and ca1.reason.obsolete and ncl.reason.obsolete:
             return
 
@@ -57,7 +55,7 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
         if not self.context.triangles_are_similar(tuple(tr0), tuple(tr1)):
             yield (
                 SimilarTrianglesProperty(tr0, tr1),
-                LazyComment('congruent angles %s and %s, and %s is non-degenerate', ca0, ca1, Scene.Triangle(*(tr0 if first_non_degenerate else tr1))),
+                LazyComment('congruent angles %s and %s', ca0, ca1),
                 [ca0, ca1, ncl]
             )
 
