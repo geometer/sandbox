@@ -11,7 +11,7 @@
 </head>
 <body>
 <div id="main" style="width:14in;">
-<div id="jxgbox" class="jxgbox" style="width:5in;height:5in;display:inline-block;vertical-align:top;"></div>
+<div id="scene" class="jxgbox" style="width:5in;height:5in;display:inline-block;vertical-align:top;"></div>
 <div class='gsb-tree' id='gsb-tree' div style='margin-left:36px;width:50%;display:inline-block;vertical-align:top;'>
 <div style='margin-bottom:16px;'>
 	<input type='checkbox' id='checkbox' onclick='toggleNonEssential()'>
@@ -19,46 +19,12 @@ Show auxiliary properties
 </div>
 $$TREE$$
 </div>
-<script type="text/javascript">
-var idToPoint = {};
-var selectedSegments = [];
-$$SCENE$$
-</script>
 </div>
 </body>
 <script type='text/javascript'>
-Object.keys(idToPoint).forEach(id => {
-	label = document.querySelector('#jxgbox_' + id + 'Label');
-	label.style.left = (parseFloat(label.style.left) - label.offsetWidth / 2.0) + 'px';
-	label.style.top = (parseFloat(label.style.top) + label.offsetHeight / 2.0) + 'px';
-});
+$$SCENE$$
+adjustSceneLabels();
 setupTree();
-function toggleNonEssential() {
-	props = root.querySelectorAll('.normal');
-	if (root.querySelector('#checkbox').checked) {
-		props.forEach(item => { item.style.display='block'; });
-	} else {
-		props.forEach(item => { item.style.display='none'; });
-	}
-	root.querySelectorAll('li').forEach(item => {
-		list = item.querySelector('ul');
-		if (list == null) {
-			return;
-		}
-		hasVisibleChildren = false;
-		for (i = 0; i < list.children.length; i++) {
-			if (list.children[i].style.display != 'none') {
-				hasVisibleChildren = true;
-				break;
-			}
-		}
-		if (!hasVisibleChildren) {
-			item.classList.add('empty');
-		} else {
-			item.classList.remove('empty');
-		}
-	});
-};
 toggleNonEssential();
 </script>
 </html>

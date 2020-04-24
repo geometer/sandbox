@@ -1,5 +1,39 @@
+var idToPoint = {};
+var selectedSegments = [];
+var board = null;
+
+function initScene(l, t, r, b) {
+	board = JXG.JSXGraph.initBoard('scene', {
+		boundingbox: [l, t, r, b],
+		keepaspectratio: true,
+		showNavigation: false,
+		showCopyright: false,
+		registerEvents: false
+	});
+}
+
+function addPoint(name, x, y) {
+	idToPoint[name] = board.create('point', [x, y], {
+		name: name,
+		id: name,
+		color: '#42A5F5',
+		highlightFillColor: '#00E6E3',
+		highlightStrokeColor: '#00E6E3',
+		size: 16,
+		label: {'color': 'white', 'offset': [0, 0]}
+	});
+}
+
+function addLine(pt0, pt1) {
+	board.create('line', [idToPoint[pt0], idToPoint[pt1]], {
+		straightFirst: false,
+		straightLast: false,
+		color: '#42A5F5'
+	});
+}
+
 function setupTree() {
-	root = document.getElementById('gsb-tree');
+	var root = document.getElementById('gsb-tree');
 	root.querySelectorAll('span').forEach(item => {
 		if (item.parentElement.nodeName.toLowerCase() == 'span') {
 			return;
@@ -59,5 +93,41 @@ function setupTree() {
 			this.classList.toggle('closed');
 			e.stopPropagation();
 		});
+	});
+}
+
+function toggleNonEssential() {
+	var root = document.getElementById('gsb-tree');
+	var props = root.querySelectorAll('.normal');
+	if (root.querySelector('#checkbox').checked) {
+		props.forEach(item => { item.style.display='block'; });
+	} else {
+		props.forEach(item => { item.style.display='none'; });
+	}
+	root.querySelectorAll('li').forEach(item => {
+		var list = item.querySelector('ul');
+		if (list == null) {
+			return;
+		}
+		var hasVisibleChildren = false;
+		for (i = 0; i < list.children.length; i++) {
+			if (list.children[i].style.display != 'none') {
+				hasVisibleChildren = true;
+				break;
+			}
+		}
+		if (!hasVisibleChildren) {
+			item.classList.add('empty');
+		} else {
+			item.classList.remove('empty');
+		}
+	});
+};
+
+function adjustSceneLabels() {
+	Object.keys(idToPoint).forEach(id => {
+		var label = document.querySelector('#scene_' + id + 'Label');
+		label.style.left = (parseFloat(label.style.left) - label.offsetWidth / 2.0) + 'px';
+		label.style.top = (parseFloat(label.style.top) + label.offsetHeight / 2.0) + 'px';
 	});
 }

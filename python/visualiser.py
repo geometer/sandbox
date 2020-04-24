@@ -49,16 +49,16 @@ def drawScene(scene, args, attempts=10, extra_points=()):
     mid_x = (min_x + max_x) / 2
     mid_y = (min_y + max_y) / 2
     size = max(max_x - min_x, max_y - min_y) * 1.2
-    print('var board = JXG.JSXGraph.initBoard("jxgbox", {boundingbox: [%.3f, %.3f, %.3f, %.3f], keepaspectratio: true, showNavigation: false, showCopyright: false, registerEvents: false});' % (mid_x - size / 2, mid_y - size / 2, mid_x + size / 2, mid_y + size / 2))
+    print('initScene(%.3f, %.3f, %.3f, %.3f);' % (mid_x - size / 2, mid_y - size / 2, mid_x + size / 2, mid_y + size / 2))
     for pt, coo in coords.items():
-        print('idToPoint["%s"] = board.create("point", [%.3f, %.3f], {name:"%s", id:"%s", color:"#42A5F5", highlightFillColor:"#00E6E3", highlightStrokeColor:"#00E6E3", size:16, label:{"color": "white", "offset": [0, 0]}});' % (pt.name, coo.x, coo.y, pt.name, pt.name))
+        print('addPoint("%s", %.3f, %.3f);' % (pt.name, coo.x, coo.y))
     for line in lines:
         pts = [pt for pt in line.all_points if pt in coords]
         if len(pts) < 2:
             continue
         pts.sort(key=lambda pt: coords[pt].x)
         pts.sort(key=lambda pt: coords[pt].y)
-        print('var line = board.create("line", [idToPoint["%s"], idToPoint["%s"]], {straightFirst:false, straightLast:false, color:"#42A5F5"});' % (pts[0].name, pts[-1].name))
+        print('addLine("%s", "%s");' % (pts[0].name, pts[-1].name))
 
 def drawTree(scene, prop, args):
     options = { 'max_layer': args.max_layer }
