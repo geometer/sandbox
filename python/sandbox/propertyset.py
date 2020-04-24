@@ -136,7 +136,7 @@ class AngleRatioPropertySet:
             comment, premises = self.explanation_from_path(path, ratio)
             prop = AngleValueProperty(angle, self.degree * ratio)
             prop.synthetic = True
-            prop.reason = Reason(-2, -2, comment, premises)
+            prop.reason = Reason(-2, max(p.reason.generation for p in premises), comment, premises)
             prop.reason.obsolete = all(p.reason.obsolete for p in premises)
             return prop
 
@@ -150,7 +150,7 @@ class AngleRatioPropertySet:
                 comment, premises = self.explanation_from_path(path, ratio)
                 prop = AngleValueProperty(angle, self.degree * ratio)
                 prop.synthetic = True
-                prop.reason = Reason(-2, -2, comment, premises)
+                prop.reason = Reason(-2, max(p.reason.generation for p in premises), comment, premises)
                 prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                 properties.append(prop)
             return properties
@@ -189,7 +189,7 @@ class AngleRatioPropertySet:
                         comment, premises = self.explanation_from_path(path, ratio0)
                         prop = AngleRatioProperty(angle0, angle1, divide(ratio0, ratio1))
                         prop.synthetic = True
-                        prop.reason = Reason(-2, -2, comment, premises)
+                        prop.reason = Reason(-2, max(p.reason.generation for p in premises), comment, premises)
                         prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                         yield prop
 
@@ -264,7 +264,7 @@ class AngleRatioPropertySet:
         value = divide(coef, fam.angle_to_ratio[angle1])
         prop = AngleRatioProperty(angle0, angle1, value)
         prop.synthetic = True
-        prop.reason = Reason(-2, -2, comment, premises)
+        prop.reason = Reason(-2, max(p.reason.generation for p in premises), comment, premises)
         prop.reason.obsolete = all(p.reason.obsolete for p in premises)
         return prop
 
@@ -524,7 +524,7 @@ class LengthRatioPropertySet:
                 else:
                     prop = LengthRatioProperty(*ratio, fam.ratio_value)
                     prop.synthetic = True
-                    prop.reason = Reason(-2, -2, comment, premises)
+                    prop.reason = Reason(-2, max(p.reason.generation for p in premises), comment, premises)
                     prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                     yield prop
 
@@ -546,7 +546,7 @@ class LengthRatioPropertySet:
         comment, premises = fam.value_explanation(ratio)
         prop = LengthRatioProperty(*ratio, fam.ratio_value)
         prop.synthetic = True
-        prop.reason = Reason(-2, -2, comment, premises)
+        prop.reason = Reason(-2, max(p.reason.generation for p in premises), comment, premises)
         prop.reason.obsolete = all(p.reason.obsolete for p in premises)
         pair = (prop, value)
         self.__cache[key] = pair
@@ -760,7 +760,7 @@ class PropertySet:
             return premises[0]
         prop = EqualLengthRatiosProperty(segment0, segment1, segment2, segment3)
         prop.synthetic = True
-        prop.reason = Reason(-2, -2, comment, premises)
+        prop.reason = Reason(-2, max(p.reason.generation for p in premises), comment, premises)
         prop.reason.obsolete = all(p.reason.obsolete for p in premises)
         return prop
 
@@ -772,7 +772,7 @@ class PropertySet:
         comment, premises = self.__cyclic_orders.explanation(cycle0, cycle1)
         if comment:
             prop.synthetic = True
-            prop.reason = Reason(-2, -2, comment, premises)
+            prop.reason = Reason(-2, max(p.reason.generation for p in premises), comment, premises)
             prop.reason.obsolete = all(p.reason.obsolete for p in premises)
             return prop
         return None
