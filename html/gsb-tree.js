@@ -2,6 +2,13 @@ var idToPoint = {};
 var selectedSegments = [];
 var board = null;
 
+let options = {
+	//color: '#42A5F5',
+	//hl_color: '#00E6E3',
+	color: '#222222',
+	hl_color: '#F44336',
+};
+
 function initScene(l, t, r, b) {
 	board = JXG.JSXGraph.initBoard('scene', {
 		boundingbox: [l, t, r, b],
@@ -16,11 +23,11 @@ function addPoint(name, x, y) {
 	idToPoint[name] = board.create('point', [x, y], {
 		name: name,
 		id: name,
-		color: '#42A5F5',
-		highlightFillColor: '#00E6E3',
-		highlightStrokeColor: '#00E6E3',
-		size: 16,
-		label: {'color': 'white', 'offset': [0, 0]}
+		color: options.color,
+		highlightFillColor: options.hl_color,
+		highlightStrokeColor: options.hl_color,
+		size: 3,
+		label: {color: options.color, offset: [20, 6]}
 	});
 }
 
@@ -28,7 +35,8 @@ function addLine(pt0, pt1) {
 	board.create('line', [idToPoint[pt0], idToPoint[pt1]], {
 		straightFirst: false,
 		straightLast: false,
-		color: '#42A5F5'
+		strokeWidth: 0.7,
+		color: options.color
 	});
 }
 
@@ -70,9 +78,16 @@ function setupTree() {
 				item.addEventListener('mouseover', function() {
 					points.forEach(id => { idToPoint[id].highlight(); });
 					lines.forEach(ln => {
-						selectedSegments.push(board.create("line", [idToPoint[ln['s']], idToPoint[ln['e']]], {straightFirst:false, straightLast:ln['type'] == 'ray', color:"#00E6E3", strokeWidth:1.5}));
+						selectedSegments.push(board.create(
+							'line', [idToPoint[ln['s']], idToPoint[ln['e']]], {
+								straightFirst: false,
+								straightLast: ln['type'] == 'ray',
+								color:options.hl_color,
+								strokeWidth:1.0
+							})
+						);
 					});
-					root.querySelectorAll('.' + cls).forEach(elt => {elt.style.background = "#00E6E3";});
+					root.querySelectorAll('.' + cls).forEach(elt => {elt.style.background = options.hl_color;});
 				});
 				item.addEventListener('mouseleave', function() {
 					points.forEach(id => { idToPoint[id].noHighlight(); });
