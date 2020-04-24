@@ -35,7 +35,7 @@ class PointsCollinearityProperty(Property):
         return False
 
     def keys(self, lengths=None):
-        return keys_for_triangle(Scene.Triangle(self.points), lengths)
+        return keys_for_triangle(Scene.Triangle(*self.points), lengths)
 
     @property
     def description(self):
@@ -187,7 +187,7 @@ class EquilateralTriangleProperty(Property):
     Equilateral triangle
     """
     def __init__(self, points):
-        self.triangle = points if isinstance(points, Scene.Triangle) else Scene.Triangle(points)
+        self.triangle = points if isinstance(points, Scene.Triangle) else Scene.Triangle(*points)
         self.__point_set = frozenset(self.triangle.points)
 
     def keys(self, lengths=None):
@@ -469,8 +469,8 @@ class SimilarTrianglesProperty(Property):
     Two triangles are similar
     """
     def __init__(self, points0, points1):
-        self.triangle0 = points0 if isinstance(points0, Scene.Triangle) else Scene.Triangle(points0)
-        self.triangle1 = points1 if isinstance(points1, Scene.Triangle) else Scene.Triangle(points1)
+        self.triangle0 = points0 if isinstance(points0, Scene.Triangle) else Scene.Triangle(*points0)
+        self.triangle1 = points1 if isinstance(points1, Scene.Triangle) else Scene.Triangle(*points1)
         pairs = [frozenset(perms) for perms in zip(self.triangle0.permutations, self.triangle1.permutations)]
         self.__triangle_set = frozenset(pairs)
 
@@ -493,8 +493,8 @@ class CongruentTrianglesProperty(Property):
     Two triangles are congruent
     """
     def __init__(self, points0, points1):
-        self.triangle0 = points0 if isinstance(points0, Scene.Triangle) else Scene.Triangle(points0)
-        self.triangle1 = points1 if isinstance(points1, Scene.Triangle) else Scene.Triangle(points1)
+        self.triangle0 = points0 if isinstance(points0, Scene.Triangle) else Scene.Triangle(*points0)
+        self.triangle1 = points1 if isinstance(points1, Scene.Triangle) else Scene.Triangle(*points1)
         pairs = [frozenset(perms) for perms in zip(self.triangle0.permutations, self.triangle1.permutations)]
         self.__triangle_set = frozenset(pairs)
 
@@ -519,7 +519,7 @@ class IsoscelesTriangleProperty(Property):
     def __init__(self, apex, base):
         self.apex = apex
         self.base = base
-        self.triangle = Scene.Triangle((apex, *base.points))
+        self.triangle = Scene.Triangle(apex, *base.points)
 
     def keys(self, lengths=None):
         return keys_for_triangle(self.triangle, lengths)

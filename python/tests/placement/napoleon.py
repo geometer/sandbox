@@ -16,7 +16,7 @@ class TestNapoleon(PlacementTest):
             c1 = B.circle_through(A)
             line = A.line_through(B, layer='auxiliary')
             V = c0.intersection_point(c1, label=C.label + '1')
-            equilateral = Scene.Triangle((A, B, V))
+            equilateral = Scene.Triangle(A, B, V)
             V.opposite_side_constraint(C, line)
             scene.centroid_point(equilateral, label=C.label + '2')
 

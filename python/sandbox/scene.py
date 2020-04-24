@@ -136,7 +136,7 @@ class Scene(CoreScene):
                 args['label'] = labels[index]
             return self.free_point(**args)
 
-        triangle = Scene.Triangle((point(0), point(1), point(2)))
+        triangle = Scene.Triangle(point(0), point(1), point(2))
         self.nondegenerate_triangle_constraint(triangle)
         return triangle
 

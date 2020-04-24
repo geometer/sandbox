@@ -21,7 +21,7 @@ class AngleWrapper:
 
 class TriangleWrapper:
     def __init__(self, pts):
-        self.triangle = pts if isinstance(pts, Scene.Triangle) else Scene.Triangle(pts)
+        self.triangle = pts if isinstance(pts, Scene.Triangle) else Scene.Triangle(*pts)
         self.__variations = None
         self.ratios = None
 
@@ -153,7 +153,7 @@ class Hunter:
     def __triangles(self):
         points = self.placement.scene.points(max_layer=self.max_layer)
         for triple in itertools.combinations(points, 3):
-            triangle = Scene.Triangle(triple)
+            triangle = Scene.Triangle(*triple)
             sides = triangle.sides
             if all(self.__segment_length[side] > ERROR for side in sides):
                 yield TriangleWrapper(triangle)

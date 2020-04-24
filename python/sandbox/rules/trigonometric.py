@@ -15,7 +15,7 @@ class LawOfSinesRule(Rule):
         return [p for p in self.context.nondegenerate_angle_value_properties() if p.angle.vertex]
 
     def apply(self, av0):
-        triangle = Scene.Triangle([av0.angle.vertex, *av0.angle.endpoints])
+        triangle = Scene.Triangle(av0.angle.vertex, *av0.angle.endpoints)
         av1 = self.context.angle_value_property(triangle.angles[1])
         if av1 is None or av0.reason.obsolete and av1.reason.obsolete:
             return

@@ -101,7 +101,7 @@ class TwoPointsBelongsToTwoLinesRule(SingleSourceRule):
         return prop.collinear
 
     def apply(self, cl0):
-        triangle = Scene.Triangle(cl0.points)
+        triangle = Scene.Triangle(*cl0.points)
         sides = triangle.sides
         for side, pt0 in [(sides[i], triangle.points[i]) for i in range(0, 3)]:
             third_points = [pt0]
@@ -635,12 +635,12 @@ class AngleTypesInObtuseangledTriangleRule(SingleSourceRule):
         ang = prop.angle
         yield (
             AngleKindProperty(ang.vector0.end.angle(ang.vertex, ang.vector1.end), AngleKindProperty.Kind.acute),
-            LazyComment('An angle of %s, another angle is %s', Scene.Triangle(ang.point_set), prop.kind),
+            LazyComment('An angle of %s, another angle is %s', Scene.Triangle(*ang.point_set), prop.kind),
             [prop]
         )
         yield (
             AngleKindProperty(ang.vector1.end.angle(ang.vertex, ang.vector0.end), AngleKindProperty.Kind.acute),
-            LazyComment('An angle of %s, another angle is %s', Scene.Triangle(ang.point_set), prop.kind),
+            LazyComment('An angle of %s, another angle is %s', Scene.Triangle(*ang.point_set), prop.kind),
             [prop]
         )
 
@@ -861,7 +861,7 @@ class CeviansIntersectionRule(Rule):
             return
         if av0.reason.obsolete and av1.reason.obsolete and ncl.reason.obsolete and all(r.reason.obsolete for r in reasons):
             return
-        comment = LazyComment('%s is the intersection of cevians %s and %s with %s and %s inside the sides of %s', crossing, segment0, segment1, av1.angle.vertex, av0.angle.vertex, Scene.Triangle((vertex, pt0, pt1)))
+        comment = LazyComment('%s is the intersection of cevians %s and %s with %s and %s inside the sides of %s', crossing, segment0, segment1, av1.angle.vertex, av0.angle.vertex, Scene.Triangle(vertex, pt0, pt1))
         yield (
             PointInsideAngleProperty(crossing, vertex.angle(pt0, pt1)),
             comment,
@@ -907,7 +907,7 @@ class SameSideToInsideAngleRule(Rule):
         centre = next((pt for pt in op0.segment.points if pt in op1.segment.points), None)
         if centre is None:
             return
-        triangle = Scene.Triangle([pt for pt in set0 if pt != centre])
+        triangle = Scene.Triangle(*[pt for pt in set0 if pt != centre])
         comment = LazyComment('Line %s separates %s and %s, line %s separates %s and %s => the intersection %s lies inside %s', op0.segment, *op0.points, op1.segment, *op1.points, centre, triangle)
         angles = triangle.angles
         for i in range(0, 3):

@@ -730,8 +730,8 @@ class CoreScene:
             return '∠(%s, %s)' % (self.vector0, self.vector1)
 
     class Triangle(Figure):
-        def __init__(self, points):
-            self.points = tuple(points)
+        def __init__(self, pt0, pt1, pt2):
+            self.points = (pt0, pt1, pt2)
             self.__sides = None
             self.__angles = None
             self.__permutations = None

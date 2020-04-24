@@ -9,7 +9,7 @@ class GEO0324(ExplainerTest):
         scene = Scene()
 
         triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
-        triangle2 = Scene.Triangle([side.middle_point() for side in triangle.sides])
+        triangle2 = Scene.Triangle(*[side.middle_point() for side in triangle.sides])
         D = scene.circumcentre_point(triangle, label='D')
         E = scene.orthocentre_point(triangle2, label='E')
 

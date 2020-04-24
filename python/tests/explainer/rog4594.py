@@ -14,7 +14,7 @@ class RomanticsOfGeometry4594(ExplainerTest):
         A, B, C = triangle.points
         A.segment(B).perpendicular_constraint(A.segment(C), comment='Given: AB ⟂ AC')
         I = scene.incentre_point(triangle, label='I')
-        J = scene.orthocentre_point(Scene.Triangle((A, B, I)), label='J')
+        J = scene.orthocentre_point(Scene.Triangle(A, B, I), label='J')
 
         return scene
 
@@ -34,7 +34,7 @@ class RomanticsOfGeometry4594Constructions(ExplainerTest):
         A, B, C = triangle.points
         A.segment(B).perpendicular_constraint(A.segment(C), comment='Given: AB ⟂ AC')
         I = scene.incentre_point(triangle, label='I')
-        J = scene.orthocentre_point(Scene.Triangle((A, B, I)), label='J')
+        J = scene.orthocentre_point(Scene.Triangle(A, B, I), label='J')
 
         # Additional constructions
         D = A.line_through(B).intersection_point(I.line_through(J), label='D')
@@ -58,7 +58,7 @@ class RomanticsOfGeometry4594Auxiliary(ExplainerTest):
         A, B, C = triangle.points
         A.segment(B).perpendicular_constraint(A.segment(C), comment='Given: AB ⟂ AC')
         I = scene.incentre_point(triangle, label='I')
-        J = scene.orthocentre_point(Scene.Triangle((A, B, I)), label='J')
+        J = scene.orthocentre_point(Scene.Triangle(A, B, I), label='J')
 
         return scene
 

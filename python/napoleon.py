@@ -23,7 +23,7 @@ def napoleonic(A, B, C):
         V = circleAB.intersection_point(circleBA, label=label, comment=comment)
     else:
         V = A.scene.free_point(label=label, comment=comment)
-    equialteral = Scene.Triangle((A, B, V))
+    equialteral = Scene.Triangle(A, B, V)
     A.scene.equilateral_constraint(equialteral, comment=LazyComment('given: %s is equilateral', equialteral))
     line = A.line_through(B, layer='auxiliary')
     V.opposite_side_constraint(C, line, comment=LazyComment('given: %s is outward of %s', V, triangle))
