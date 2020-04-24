@@ -128,9 +128,9 @@ function toggleNonEssential() {
 	var root = document.getElementById('gsb-tree');
 	var props = root.querySelectorAll('.normal');
 	if (root.querySelector('#checkbox').checked) {
-		props.forEach(item => { item.style.display='block'; });
-	} else {
 		props.forEach(item => { item.style.display='none'; });
+	} else {
+		props.forEach(item => { item.style.display='block'; });
 	}
 	root.querySelectorAll('li').forEach(item => {
 		var list = item.querySelector('ul');
