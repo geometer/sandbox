@@ -109,6 +109,8 @@ class Explainer:
         elif len(reason.all_premises) < len(existing.reason.all_premises):
             reason.obsolete = existing.reason.obsolete
             existing.reason = reason
+            #TODO: if the rule reference changed from 'synthetic',
+            # add the property to a transitivity set
             if hasattr(prop, 'rule'):
                 existing.rule = prop.rule
             elif hasattr(existing, 'rule'):
