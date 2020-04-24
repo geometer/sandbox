@@ -91,7 +91,7 @@ class Explainer:
             ]
 
     def __reason(self, prop, comments, premises=None):
-        reason = Reason(len(self.context), self.__iteration_step_count, comments, premises)
+        reason = Reason(self.__iteration_step_count, comments, premises)
         if prop in reason.all_premises:
             return
         existing = self.context[prop]
@@ -668,12 +668,21 @@ class Explainer:
                 break
 
     def dump(self, properties_to_explain=[]):
+        def to_string(reason):
+            if reason.premises:
+                return '%s (%s)' % (
+                    ', '.join([str(com) for com in reason.comments]),
+                    ', '.join(['*%d' % self.context.index_of(prop) for prop in reason.premises])
+                )
+            else:
+                return ', '.join([str(com) for com in reason.comments])
+
         if len(self.context) > 0:
             print('Explained:')
             explained = self.context.all
-            explained.sort(key=lambda p: p.reason.index)
+            explained.sort(key=lambda p: self.context.index_of(p))
             for prop in explained:
-                print('\t%2d (%d): %s [%s]' % (prop.reason.index, prop.reason.generation, prop, prop.reason))
+                print('\t%2d (%d): %s [%s]' % (self.context.index_of(prop), prop.reason.generation, prop, to_string(prop.reason)))
         if properties_to_explain:
             unexplained = [prop for prop in properties_to_explain if prop not in self.context]
             if len(unexplained) > 0:

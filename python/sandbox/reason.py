@@ -1,6 +1,5 @@
 class Reason:
-    def __init__(self, index, generation, comments, premises):
-        self.index = index
+    def __init__(self, generation, comments, premises):
         self.generation = generation
         if not isinstance(comments, (list, tuple)):
             self.comments = [comments]
@@ -19,12 +18,3 @@ class Reason:
                         self.__all_premises.add(p)
                         self.__all_premises.update(p.reason.all_premises)
         return self.__all_premises
-
-    def __str__(self):
-        if self.premises:
-            return '%s (%s)' % (
-                ', '.join([str(com) for com in self.comments]),
-                ', '.join(['*%d' % prop.reason.index for prop in self.premises])
-            )
-        else:
-            return ', '.join([str(com) for com in self.comments])
