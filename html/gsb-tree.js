@@ -1,12 +1,12 @@
-var idToPoint = {};
 var selectedSegments = [];
 var board = null;
 
 let options = {
 	//color: '#42A5F5',
 	//hl_color: '#00E6E3',
-	color: '#222222',
+	color: '#212121',
 	hl_color: '#F44336',
+	hl_text_color: '#FFCDD2',
 };
 
 function initScene(l, t, r, b) {
@@ -20,19 +20,19 @@ function initScene(l, t, r, b) {
 }
 
 function addPoint(name, x, y) {
-	idToPoint[name] = board.create('point', [x, y], {
+	board.create('point', [x, y], {
 		name: name,
 		id: name,
 		color: options.color,
 		highlightFillColor: options.hl_color,
 		highlightStrokeColor: options.hl_color,
 		size: 3,
-		label: {color: options.color, offset: [20, 6]}
+		label: {color: options.color, autoPosition: true}
 	});
 }
 
 function addLine(pt0, pt1) {
-	board.create('line', [idToPoint[pt0], idToPoint[pt1]], {
+	board.create('line', [board.elementsByName[pt0], board.elementsByName[pt1]], {
 		straightFirst: false,
 		straightLast: false,
 		strokeWidth: 0.7,
@@ -76,10 +76,10 @@ function setupTree() {
 			}
 			if (points) {
 				item.addEventListener('mouseover', function() {
-					points.forEach(id => { idToPoint[id].highlight(); });
+					points.forEach(id => { board.elementsByName[id].highlight(); });
 					lines.forEach(ln => {
 						selectedSegments.push(board.create(
-							'line', [idToPoint[ln['s']], idToPoint[ln['e']]], {
+							'line', [board.elementsByName[ln['s']], board.elementsByName[ln['e']]], {
 								straightFirst: false,
 								straightLast: ln['type'] == 'ray',
 								color:options.hl_color,
@@ -87,11 +87,12 @@ function setupTree() {
 							})
 						);
 					});
-					root.querySelectorAll('.' + cls).forEach(elt => {elt.style.background = options.hl_color;});
+					root.querySelectorAll('.' + cls).forEach(elt => {elt.style.background = options.hl_text_color;});
 				});
 				item.addEventListener('mouseleave', function() {
-					points.forEach(id => { idToPoint[id].noHighlight(); });
+					points.forEach(id => { board.elementsByName[id].noHighlight(); });
 					selectedSegments.forEach(obj => {board.removeObject(obj);});
+					selectedSegments = [];
 					root.querySelectorAll('.' + cls).forEach(elt => {elt.style.background = null;});
 				});
 			}
@@ -125,7 +126,7 @@ function toggleNonEssential() {
 			return;
 		}
 		var hasVisibleChildren = false;
-		for (i = 0; i < list.children.length; i++) {
+		for (var i = 0; i < list.children.length; i++) {
 			if (list.children[i].style.display != 'none') {
 				hasVisibleChildren = true;
 				break;
@@ -138,11 +139,3 @@ function toggleNonEssential() {
 		}
 	});
 };
-
-function adjustSceneLabels() {
-	Object.keys(idToPoint).forEach(id => {
-		var label = document.querySelector('#scene_' + id + 'Label');
-		label.style.left = (parseFloat(label.style.left) - label.offsetWidth / 2.0) + 'px';
-		label.style.top = (parseFloat(label.style.top) + label.offsetHeight / 2.0) + 'px';
-	});
-}

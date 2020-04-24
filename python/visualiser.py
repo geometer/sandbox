@@ -48,7 +48,7 @@ def drawScene(scene, args, attempts=10, extra_points=()):
     min_y = min(coo.y for coo in coords.values())
     mid_x = (min_x + max_x) / 2
     mid_y = (min_y + max_y) / 2
-    size = max(max_x - min_x, max_y - min_y) * 1.2
+    size = max(max_x - min_x, max_y - min_y) * 1.3
     print('initScene(%.3f, %.3f, %.3f, %.3f);' % (mid_x - size / 2, mid_y - size / 2, mid_x + size / 2, mid_y + size / 2))
     for pt, coo in coords.items():
         print('addPoint("%s", %.3f, %.3f);' % (pt.name, coo.x, coo.y))
