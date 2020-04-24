@@ -39,6 +39,9 @@ Object.keys(idToPoint).forEach(id => {
 });
 root = document.getElementById('gsb-tree');
 root.querySelectorAll('span').forEach(item => {
+	if (item.parentElement.nodeName.toLowerCase() == 'span') {
+		return;
+	}
 	item.classList.forEach(cls => {
 		var points = null;
 		var segments = [];

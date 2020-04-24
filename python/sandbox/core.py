@@ -71,8 +71,7 @@ class CoreScene:
             return self.label
 
         def html(self):
-            return re.sub(' ', '&nbsp;', re.sub('_([0-9]+)', '<sub>\\1</sub>', self.name))
-            #return '<span class="pt__%s">%s</span>' % (self.name, re.sub(' ', '&nbsp;', re.sub('_([0-9]+)', '<sub>\\1</sub>', self.name)))
+            return '<span class="pt__%s">%s</span>' % (self.name, re.sub(' ', '&nbsp;', re.sub('_([0-9]+)', '<sub>\\1</sub>', self.name)))
 
         def __str__(self):
             return self.name
