@@ -77,7 +77,7 @@ def run_sample(scene, prop=None):
             for prop in explanation.reason.all_premises:
                 if prop.reason.generation == -1:
                     key = 'Given'
-                elif hasattr(prop, 'synthetic'):
+                elif hasattr(prop, 'rule') and prop.rule == 'synthetic':
                     key = 'Synthetic (transitivity)'
                 else:
                     key = type(prop.rule).__name__ if hasattr(prop, 'rule') else 'Unknown'

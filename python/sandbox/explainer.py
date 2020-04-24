@@ -94,19 +94,25 @@ class Explainer:
         reason = Reason(self.__iteration_step_count, comments, premises)
         if prop in reason.all_premises:
             return
+        def insert(pro):
+            for pre in pro.reason.premises:
+                if self.context.index_of(pre) == -1:
+                    self.context.add(pre)
+            self.context.add(pro)
+
         existing = self.context[prop]
         #TODO: report contradiction between prop and existing
         if existing is None:
             prop.reason = reason
             prop.reason.obsolete = False
-            self.context.add(prop)
+            insert(prop)
         elif len(reason.all_premises) < len(existing.reason.all_premises):
             reason.obsolete = existing.reason.obsolete
-            if hasattr(existing, 'synthetic'):
-                prop.reason = reason
-                self.context.add(prop)
-            else:
-                existing.reason = reason
+            existing.reason = reason
+            if hasattr(prop, 'rule'):
+                existing.rule = prop.rule
+            elif hasattr(existing, 'rule'):
+                delattr(existing, 'rule')
 
     def explain(self):
         start = time.time()
