@@ -140,7 +140,7 @@ class Explainer:
                 if pia.reason.obsolete and all(p.reason.obsolete for p in reasons):
                     continue
 
-                comment = LazyComment('%s is the intersection of ray [%s %s) and segment [%s %s]', X, A, D, B, C)
+                comment = LazyComment('%s is the intersection of ray [%s) and segment [%s]', X, A.vector(D).as_ray, B.segment(C))
                 yield (AngleValueProperty(A.angle(D, X), 0), [comment], [pia] + reasons)
                 yield (AngleValueProperty(B.angle(C, X), 0), [comment], [pia] + reasons)
                 yield (AngleValueProperty(C.angle(B, X), 0), [comment], [pia] + reasons)

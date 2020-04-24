@@ -455,10 +455,7 @@ class CoreScene:
                 return obj in self.all_points
             assert False, 'Operator not defined for %s and Circle' % type(obj)
 
-    class Figure:
-        pass
-
-    class Vector(Figure):
+    class Vector:
         def __init__(self, start, end):
             assert isinstance(start, CoreScene.Point)
             assert isinstance(end, CoreScene.Point)
@@ -473,6 +470,10 @@ class CoreScene:
             if self.__segment is None:
                 self.__segment = self.start.segment(self.end)
             return self.__segment
+
+        @property
+        def as_ray(self):
+            return CoreScene.Ray(self.start, self.end)
 
         def angle(self, other):
             angle = self.scene._get_angle(self, other)
@@ -520,7 +521,7 @@ class CoreScene:
             self.__segments[key] = segment
         return segment
 
-    class Segment(Figure):
+    class Segment:
         def __init__(self, pt0, pt1):
             self.points = (pt0, pt1)
             self.point_set = frozenset(self.points)
@@ -653,7 +654,7 @@ class CoreScene:
                 self.__angles[frozenset([vector0.reversed, vector1.reversed])] = angle
         return angle
 
-    class Angle(Figure):
+    class Angle:
         def __init__(self, vector0, vector1):
             self.vector0 = vector0
             self.vector1 = vector1
@@ -728,7 +729,21 @@ class CoreScene:
                 return str(LazyComment('∠ %s %s %s', self.vector0.end, self.vertex, self.vector1.end))
             return '∠(%s, %s)' % (self.vector0, self.vector1)
 
-    class Triangle(Figure):
+    class Ray:
+        def __init__(self, start, point):
+            self.start = start
+            self.point = point
+
+        def html(self):
+            return LazyComment(
+                '<span class="ray__%s__%s">%s&nbsp;%s</span>',
+                LazyString(self.start), LazyString(self.point), self.start, self.point
+            )
+
+        def __str__(self):
+            return str(LazyComment('%s %s', self.start, self.point))
+
+    class Triangle:
         def __init__(self, pt0, pt1, pt2):
             self.points = (pt0, pt1, pt2)
             self.__sides = None
