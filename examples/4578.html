@@ -1,0 +1,508 @@
+<html>
+<head>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<script type='text/javascript' charset='utf-8' src='../html/third-party/jsxgraphcore.js'></script>
+<link rel='stylesheet' type='text/css' href='../html/third-party/jsxgraph.css'/>
+<link rel='stylesheet' type='text/css' href='../html/gsb-tree.css'/>
+<style>
+.JXGText { font-size: 16px !important; }
+</style>
+</head>
+<body>
+<div id="main" style="width:14in;">
+<div id="jxgbox" class="jxgbox" style="width:5in;height:5in;display:inline-block;vertical-align:top;"></div>
+<div class='gsb-tree' id='gsb-tree' div style='margin-left:36px;width:50%;display:inline-block;vertical-align:top;'>
+<div style='margin-bottom:16px;'>
+<input type='checkbox' id='checkbox' onclick='toggleNonEssential()'>
+Show auxiliary properties
+</div>
+<ul>
+<li class="essential"><span class="ang__A__C__B">∠&nbsp;A&nbsp;C&nbsp;B</span> = 45º: <span class="ang__A__C__B">∠&nbsp;A&nbsp;C&nbsp;B</span> = <span class="ang__A__C__H">∠&nbsp;A&nbsp;C&nbsp;H</span> = 45º
+<ul>
+<li class="essential"><span class="ang__A__C__B">∠&nbsp;A&nbsp;C&nbsp;B</span> = <span class="ang__A__C__H">∠&nbsp;A&nbsp;C&nbsp;H</span>: common ray <span class="vec__A__C">A&nbsp;C</span>, and <span class="vec__C__B">C&nbsp;B</span> ↑↑ <span class="vec__C__H">C&nbsp;H</span>
+<ul>
+<li class="normal">B, H in the same direction from C: H is the intersection of ray [A D) and segment [B C]
+<ul>
+<li class="essential">D lies inside <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>: point D is inside <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span>
+</li>
+<li class="normal">Points A, H, and D are collinear: three points on the line (A&nbsp;H)
+</li>
+<li class="normal">Points B, C, and H are collinear: three points on the line (B&nbsp;C)
+</li>
+</ul>
+</li>
+<li class="normal">Points A and C are not coincident: <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span> is non-degenerate
+</li>
+</ul>
+</li>
+<li class="essential"><span class="ang__A__C__H">∠&nbsp;A&nbsp;C&nbsp;H</span> = 45º: 180º = <span class="ang__H__A__C">∠&nbsp;H&nbsp;A&nbsp;C</span> + <span class="ang__A__C__H">∠&nbsp;A&nbsp;C&nbsp;H</span> + <span class="ang__A__H__C">∠&nbsp;A&nbsp;H&nbsp;C</span> = 2 <span class="ang__A__C__H">∠&nbsp;A&nbsp;C&nbsp;H</span> + 90
+<ul>
+<li class="essential"><span class="ang__H__A__C">∠&nbsp;H&nbsp;A&nbsp;C</span> = <span class="ang__A__C__H">∠&nbsp;A&nbsp;C&nbsp;H</span>: base angles of isosceles <span class="tr__H__A__C">△&nbsp;H&nbsp;A&nbsp;C</span>
+<ul>
+<li class="essential"><span class="tr__H__A__C">△&nbsp;H&nbsp;A&nbsp;C</span> is isosceles (with apex H): congruent legs <span class="seg__A__H">A&nbsp;H</span> and <span class="seg__C__H">C&nbsp;H</span>
+<ul>
+<li class="essential"><span style="font-size:130%;vertical-align:-2px;">|</span><span class="seg__A__H">A&nbsp;H</span><span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span><span class="seg__C__H">C&nbsp;H</span><span style="font-size:130%;vertical-align:-2px;">|</span>: corresponding sides in congruent <span class="tr__B__H__A">△&nbsp;B&nbsp;H&nbsp;A</span> and <span class="tr__D__H__C">△&nbsp;D&nbsp;H&nbsp;C</span>
+<ul>
+<li class="essential"><span class="tr__B__H__A">△&nbsp;B&nbsp;H&nbsp;A</span> = <span class="tr__D__H__C">△&nbsp;D&nbsp;H&nbsp;C</span>: similar triangles with congruent non-zero sides <span class="seg__A__B">A&nbsp;B</span> and <span class="seg__C__D">C&nbsp;D</span>
+<ul>
+<li class="essential"><span class="tr__B__H__A">△&nbsp;B&nbsp;H&nbsp;A</span> ~ <span class="tr__D__H__C">△&nbsp;D&nbsp;H&nbsp;C</span>: congruent angles <span class="ang__A__B__H">∠&nbsp;A&nbsp;B&nbsp;H</span> = <span class="ang__C__D__H">∠&nbsp;C&nbsp;D&nbsp;H</span> and <span class="ang__A__H__B">∠&nbsp;A&nbsp;H&nbsp;B</span> = <span class="ang__C__H__D">∠&nbsp;C&nbsp;H&nbsp;D</span>, and <span class="tr__B__H__A">△&nbsp;B&nbsp;H&nbsp;A</span> is non-degenerate
+<ul>
+<li class="essential"><span class="ang__A__B__H">∠&nbsp;A&nbsp;B&nbsp;H</span> = <span class="ang__C__D__H">∠&nbsp;C&nbsp;D&nbsp;H</span>: <span class="ang__A__B__H">∠&nbsp;A&nbsp;B&nbsp;H</span> = <span class="ang__G__D__A">∠&nbsp;G&nbsp;D&nbsp;A</span> = <span class="ang__C__D__H">∠&nbsp;C&nbsp;D&nbsp;H</span>
+<ul>
+<li class="essential"><span class="ang__A__B__H">∠&nbsp;A&nbsp;B&nbsp;H</span> = <span class="ang__G__D__A">∠&nbsp;G&nbsp;D&nbsp;A</span>: corresponding non-degenerate angles in similar <span class="tr__H__A__B">△&nbsp;H&nbsp;A&nbsp;B</span> and <span class="tr__G__A__D">△&nbsp;G&nbsp;A&nbsp;D</span>
+<ul>
+<li class="essential"><span class="tr__H__A__B">△&nbsp;H&nbsp;A&nbsp;B</span> ~ <span class="tr__G__A__D">△&nbsp;G&nbsp;A&nbsp;D</span>: congruent angles <span class="ang__A__H__B">∠&nbsp;A&nbsp;H&nbsp;B</span> = <span class="ang__D__G__A">∠&nbsp;D&nbsp;G&nbsp;A</span> and <span class="ang__H__A__B">∠&nbsp;H&nbsp;A&nbsp;B</span> = <span class="ang__D__A__G">∠&nbsp;D&nbsp;A&nbsp;G</span>, and <span class="tr__H__A__B">△&nbsp;H&nbsp;A&nbsp;B</span> is non-degenerate
+<ul>
+<li class="essential"><span class="ang__A__H__B">∠&nbsp;A&nbsp;H&nbsp;B</span> = <span class="ang__D__G__A">∠&nbsp;D&nbsp;G&nbsp;A</span>: <span class="ang__A__H__B">∠&nbsp;A&nbsp;H&nbsp;B</span> = 90º = <span class="ang__D__G__A">∠&nbsp;D&nbsp;G&nbsp;A</span>
+<ul>
+<li class="essential"><span class="ang__A__H__B">∠&nbsp;A&nbsp;H&nbsp;B</span> = 90º: non-zero perpendicular segments <span class="seg__B__H">B&nbsp;H</span> and <span class="seg__A__H">A&nbsp;H</span>
+<ul>
+<li class="essential"><span class="seg__B__H">B&nbsp;H</span> ⟂ <span class="seg__A__H">A&nbsp;H</span>: altitude (A&nbsp;H) is perpendicular to the base (B&nbsp;C)
+</li>
+<li class="normal">Points H and B are not coincident: H lies on the line D A, B does not
+<ul>
+<li class="normal">Points D, A, and B are not collinear: A is the vertex of <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>, B lies on a side, and D lies inside
+<ul>
+<li class="essential">D lies inside <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>: point D is inside <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span>
+</li>
+</ul>
+</li>
+<li class="normal">Points A, H, and D are collinear: three points on the line (A&nbsp;H)
+</li>
+</ul>
+</li>
+<li class="normal">Points H and A are not coincident: H lies on the line B C, A does not
+<ul>
+<li class="normal">Points A, B, and C are not collinear: <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span> is non-degenerate
+</li>
+<li class="normal">Points B, C, and H are collinear: three points on the line (B&nbsp;C)
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="essential"><span class="ang__D__G__A">∠&nbsp;D&nbsp;G&nbsp;A</span> = 90º: non-zero perpendicular segments <span class="seg__A__G">A&nbsp;G</span> and <span class="seg__G__D">G&nbsp;D</span>
+<ul>
+<li class="essential"><span class="seg__A__G">A&nbsp;G</span> ⟂ <span class="seg__G__D">G&nbsp;D</span>: altitude (C&nbsp;G) is perpendicular to the base (A&nbsp;B)
+</li>
+<li class="normal">Points G and A are not coincident: G lies on the line D C, A does not
+<ul>
+<li class="normal">Points D, A, and C are not collinear: A is the vertex of <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>, C lies on a side, and D lies inside
+<ul>
+<li class="essential">D lies inside <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>: point D is inside <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span>
+</li>
+</ul>
+</li>
+<li class="normal">Points C, G, and D are collinear: three points on the line (C&nbsp;G)
+</li>
+</ul>
+</li>
+<li class="normal">Points G and D are not coincident: G lies on the line A B, D does not
+<ul>
+<li class="normal">Points D, A, and B are not collinear: A is the vertex of <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>, B lies on a side, and D lies inside
+<ul>
+<li class="essential">D lies inside <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>: point D is inside <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span>
+</li>
+</ul>
+</li>
+<li class="normal">Points A, B, and G are collinear: three points on the line (A&nbsp;B)
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="essential"><span class="ang__H__A__B">∠&nbsp;H&nbsp;A&nbsp;B</span> = <span class="ang__D__A__G">∠&nbsp;D&nbsp;A&nbsp;G</span>: <span class="ang__H__A__B">∠&nbsp;H&nbsp;A&nbsp;B</span> = <span class="ang__D__A__B">∠&nbsp;D&nbsp;A&nbsp;B</span> = <span class="ang__D__A__G">∠&nbsp;D&nbsp;A&nbsp;G</span>
+<ul>
+<li class="essential"><span class="ang__H__A__B">∠&nbsp;H&nbsp;A&nbsp;B</span> = <span class="ang__D__A__B">∠&nbsp;D&nbsp;A&nbsp;B</span>: common ray <span class="vec__A__B">A&nbsp;B</span>, and <span class="vec__A__H">A&nbsp;H</span> ↑↑ <span class="vec__A__D">A&nbsp;D</span>
+<ul>
+<li class="normal">H, D in the same direction from A: H is the intersection of ray [A D) and segment [B C]
+<ul>
+<li class="essential">D lies inside <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>: point D is inside <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span>
+</li>
+<li class="normal">Points A, H, and D are collinear: three points on the line (A&nbsp;H)
+</li>
+<li class="normal">Points B, C, and H are collinear: three points on the line (B&nbsp;C)
+</li>
+</ul>
+</li>
+<li class="normal">Points A and B are not coincident: <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span> is non-degenerate
+</li>
+</ul>
+</li>
+<li class="essential"><span class="ang__D__A__B">∠&nbsp;D&nbsp;A&nbsp;B</span> = <span class="ang__D__A__G">∠&nbsp;D&nbsp;A&nbsp;G</span>: common ray <span class="vec__A__D">A&nbsp;D</span>, and <span class="vec__A__B">A&nbsp;B</span> ↑↑ <span class="vec__A__G">A&nbsp;G</span>
+<ul>
+<li class="normal">B, G in the same direction from A: G is the intersection of ray [C D) and segment [A B]
+<ul>
+<li class="essential">D lies inside <span class="ang__A__C__B">∠&nbsp;A&nbsp;C&nbsp;B</span>: point D is inside <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span>
+</li>
+<li class="normal">Points C, G, and D are collinear: three points on the line (C&nbsp;G)
+</li>
+<li class="normal">Points A, B, and G are collinear: three points on the line (A&nbsp;B)
+</li>
+</ul>
+</li>
+<li class="normal">Points A and D are not coincident: 
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="normal">Points A, H, and B are not collinear: A and H lie on the line D A, B does not
+<ul>
+<li class="normal">Points D, A, and B are not collinear: A is the vertex of <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>, B lies on a side, and D lies inside
+<ul>
+<li class="essential">D lies inside <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>: point D is inside <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span>
+</li>
+</ul>
+</li>
+<li class="normal">Points A, H, and D are collinear: three points on the line (A&nbsp;H)
+</li>
+<li class="normal">Points H and A are not coincident: H lies on the line B C, A does not
+<ul>
+<li class="normal">Points A, B, and C are not collinear: <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span> is non-degenerate
+</li>
+<li class="normal">Points B, C, and H are collinear: three points on the line (B&nbsp;C)
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="normal">Points A and B are not coincident: <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span> is non-degenerate
+</li>
+<li class="normal">Points A and D are not coincident: 
+</li>
+<li class="normal">Points H and B are not coincident: H lies on the line D A, B does not
+<ul>
+<li class="normal">Points D, A, and B are not collinear: A is the vertex of <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>, B lies on a side, and D lies inside
+<ul>
+<li class="essential">D lies inside <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>: point D is inside <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span>
+</li>
+</ul>
+</li>
+<li class="normal">Points A, H, and D are collinear: three points on the line (A&nbsp;H)
+</li>
+</ul>
+</li>
+<li class="normal">Points G and D are not coincident: G lies on the line A B, D does not
+<ul>
+<li class="normal">Points D, A, and B are not collinear: A is the vertex of <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>, B lies on a side, and D lies inside
+<ul>
+<li class="essential">D lies inside <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>: point D is inside <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span>
+</li>
+</ul>
+</li>
+<li class="normal">Points A, B, and G are collinear: three points on the line (A&nbsp;B)
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="essential"><span class="ang__G__D__A">∠&nbsp;G&nbsp;D&nbsp;A</span> = <span class="ang__C__D__H">∠&nbsp;C&nbsp;D&nbsp;H</span>: vertical angles
+<ul>
+<li class="normal">D lies inside segment <span class="seg__A__H">A&nbsp;H</span>: <span class="ang__A__D__H">∠&nbsp;A&nbsp;D&nbsp;H</span> + <span class="ang__H__A__D">∠&nbsp;H&nbsp;A&nbsp;D</span> + <span class="ang__A__H__D">∠&nbsp;A&nbsp;H&nbsp;D</span> = 180º
+<ul>
+<li class="normal">H, D in the same direction from A: H is the intersection of ray [A D) and segment [B C]
+<ul>
+<li class="essential">D lies inside <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>: point D is inside <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span>
+</li>
+<li class="normal">Points A, H, and D are collinear: three points on the line (A&nbsp;H)
+</li>
+<li class="normal">Points B, C, and H are collinear: three points on the line (B&nbsp;C)
+</li>
+</ul>
+</li>
+<li class="normal">A, D in the same direction from H: H is the intersection point of lines <span class="seg__A__D">A&nbsp;D</span> and <span class="seg__B__C">B&nbsp;C</span>
+<ul>
+<li class="essential">D, A located on the same side of line <span class="seg__B__C">B&nbsp;C</span>: 
+<ul>
+<li class="essential">D lies inside <span class="ang__A__B__C">∠&nbsp;A&nbsp;B&nbsp;C</span>: point D is inside <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span>
+</li>
+</ul>
+</li>
+<li class="normal">Points A, H, and D are collinear: three points on the line (A&nbsp;H)
+</li>
+<li class="normal">Points B, C, and H are collinear: three points on the line (B&nbsp;C)
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="normal">D lies inside segment <span class="seg__C__G">C&nbsp;G</span>: <span class="ang__C__D__G">∠&nbsp;C&nbsp;D&nbsp;G</span> + <span class="ang__G__C__D">∠&nbsp;G&nbsp;C&nbsp;D</span> + <span class="ang__C__G__D">∠&nbsp;C&nbsp;G&nbsp;D</span> = 180º
+<ul>
+<li class="normal">G, D in the same direction from C: G is the intersection of ray [C D) and segment [A B]
+<ul>
+<li class="essential">D lies inside <span class="ang__A__C__B">∠&nbsp;A&nbsp;C&nbsp;B</span>: point D is inside <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span>
+</li>
+<li class="normal">Points C, G, and D are collinear: three points on the line (C&nbsp;G)
+</li>
+<li class="normal">Points A, B, and G are collinear: three points on the line (A&nbsp;B)
+</li>
+</ul>
+</li>
+<li class="normal">C, D in the same direction from G: G is the intersection point of lines <span class="seg__C__D">C&nbsp;D</span> and <span class="seg__A__B">A&nbsp;B</span>
+<ul>
+<li class="essential">D, C located on the same side of line <span class="seg__A__B">A&nbsp;B</span>: 
+<ul>
+<li class="essential">D lies inside <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>: point D is inside <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span>
+</li>
+</ul>
+</li>
+<li class="normal">Points C, G, and D are collinear: three points on the line (C&nbsp;G)
+</li>
+<li class="normal">Points A, B, and G are collinear: three points on the line (A&nbsp;B)
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="essential"><span class="ang__A__H__B">∠&nbsp;A&nbsp;H&nbsp;B</span> = <span class="ang__C__H__D">∠&nbsp;C&nbsp;H&nbsp;D</span>: <span class="ang__A__H__B">∠&nbsp;A&nbsp;H&nbsp;B</span> = 90º = <span class="ang__C__H__D">∠&nbsp;C&nbsp;H&nbsp;D</span>
+<ul>
+<li class="essential"><span class="ang__A__H__B">∠&nbsp;A&nbsp;H&nbsp;B</span> = 90º: non-zero perpendicular segments <span class="seg__B__H">B&nbsp;H</span> and <span class="seg__A__H">A&nbsp;H</span>
+<ul>
+<li class="essential"><span class="seg__B__H">B&nbsp;H</span> ⟂ <span class="seg__A__H">A&nbsp;H</span>: altitude (A&nbsp;H) is perpendicular to the base (B&nbsp;C)
+</li>
+<li class="normal">Points H and B are not coincident: H lies on the line D A, B does not
+<ul>
+<li class="normal">Points D, A, and B are not collinear: A is the vertex of <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>, B lies on a side, and D lies inside
+<ul>
+<li class="essential">D lies inside <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>: point D is inside <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span>
+</li>
+</ul>
+</li>
+<li class="normal">Points A, H, and D are collinear: three points on the line (A&nbsp;H)
+</li>
+</ul>
+</li>
+<li class="normal">Points H and A are not coincident: H lies on the line B C, A does not
+<ul>
+<li class="normal">Points A, B, and C are not collinear: <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span> is non-degenerate
+</li>
+<li class="normal">Points B, C, and H are collinear: three points on the line (B&nbsp;C)
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="essential"><span class="ang__C__H__D">∠&nbsp;C&nbsp;H&nbsp;D</span> = 90º: non-zero perpendicular segments <span class="seg__C__H">C&nbsp;H</span> and <span class="seg__H__D">H&nbsp;D</span>
+<ul>
+<li class="essential"><span class="seg__C__H">C&nbsp;H</span> ⟂ <span class="seg__H__D">H&nbsp;D</span>: altitude (A&nbsp;H) is perpendicular to the base (B&nbsp;C)
+</li>
+<li class="normal">Points H and C are not coincident: H lies on the line D A, C does not
+<ul>
+<li class="normal">Points D, A, and C are not collinear: A is the vertex of <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>, C lies on a side, and D lies inside
+<ul>
+<li class="essential">D lies inside <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>: point D is inside <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span>
+</li>
+</ul>
+</li>
+<li class="normal">Points A, H, and D are collinear: three points on the line (A&nbsp;H)
+</li>
+</ul>
+</li>
+<li class="normal">Points H and D are not coincident: H lies on the line B C, D does not
+<ul>
+<li class="normal">Points D, B, and C are not collinear: B is the vertex of <span class="ang__A__B__C">∠&nbsp;A&nbsp;B&nbsp;C</span>, C lies on a side, and D lies inside
+<ul>
+<li class="essential">D lies inside <span class="ang__A__B__C">∠&nbsp;A&nbsp;B&nbsp;C</span>: point D is inside <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span>
+</li>
+</ul>
+</li>
+<li class="normal">Points B, C, and H are collinear: three points on the line (B&nbsp;C)
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="normal">Points A, H, and B are not collinear: A and H lie on the line D A, B does not
+<ul>
+<li class="normal">Points D, A, and B are not collinear: A is the vertex of <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>, B lies on a side, and D lies inside
+<ul>
+<li class="essential">D lies inside <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>: point D is inside <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span>
+</li>
+</ul>
+</li>
+<li class="normal">Points A, H, and D are collinear: three points on the line (A&nbsp;H)
+</li>
+<li class="normal">Points H and A are not coincident: H lies on the line B C, A does not
+<ul>
+<li class="normal">Points A, B, and C are not collinear: <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span> is non-degenerate
+</li>
+<li class="normal">Points B, C, and H are collinear: three points on the line (B&nbsp;C)
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="essential"><span style="font-size:130%;vertical-align:-2px;">|</span><span class="seg__A__B">A&nbsp;B</span><span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span><span class="seg__C__D">C&nbsp;D</span><span style="font-size:130%;vertical-align:-2px;">|</span>: given: <span style="font-size:130%;vertical-align:-2px;">|</span>AB<span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span>CD<span style="font-size:130%;vertical-align:-2px;">|</span>
+</li>
+<li class="normal">Points A and B are not coincident: <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span> is non-degenerate
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="normal">Points A and C are not coincident: <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span> is non-degenerate
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="essential"><span class="ang__A__H__C">∠&nbsp;A&nbsp;H&nbsp;C</span> = 90º: non-zero perpendicular segments <span class="seg__C__H">C&nbsp;H</span> and <span class="seg__A__H">A&nbsp;H</span>
+<ul>
+<li class="essential"><span class="seg__C__H">C&nbsp;H</span> ⟂ <span class="seg__A__H">A&nbsp;H</span>: altitude (A&nbsp;H) is perpendicular to the base (B&nbsp;C)
+</li>
+<li class="normal">Points H and C are not coincident: H lies on the line D A, C does not
+<ul>
+<li class="normal">Points D, A, and C are not collinear: A is the vertex of <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>, C lies on a side, and D lies inside
+<ul>
+<li class="essential">D lies inside <span class="ang__B__A__C">∠&nbsp;B&nbsp;A&nbsp;C</span>: point D is inside <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span>
+</li>
+</ul>
+</li>
+<li class="normal">Points A, H, and D are collinear: three points on the line (A&nbsp;H)
+</li>
+</ul>
+</li>
+<li class="normal">Points H and A are not coincident: H lies on the line B C, A does not
+<ul>
+<li class="normal">Points A, B, and C are not collinear: <span class="tr__A__B__C">△&nbsp;A&nbsp;B&nbsp;C</span> is non-degenerate
+</li>
+<li class="normal">Points B, C, and H are collinear: three points on the line (B&nbsp;C)
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<script type="text/javascript">
+var idToPoint = {};
+var selectedSegments = [];
+var board = JXG.JSXGraph.initBoard("jxgbox", {boundingbox: [-12.775, -5.051, 0.180, 7.903], keepaspectratio: true, showNavigation: false, showCopyright: false, registerEvents: false});
+idToPoint["A"] = board.create("point", [-1.140, 5.848], {name:"A", id:"A", color:"#42A5F5", highlightFillColor:"#00E6E3", highlightStrokeColor:"#00E6E3", size:16, label:{"color": "white", "offset": [0, 0]}});
+idToPoint["B"] = board.create("point", [-0.900, -2.995], {name:"B", id:"B", color:"#42A5F5", highlightFillColor:"#00E6E3", highlightStrokeColor:"#00E6E3", size:16, label:{"color": "white", "offset": [0, 0]}});
+idToPoint["C"] = board.create("point", [-11.695, 1.176], {name:"C", id:"C", color:"#42A5F5", highlightFillColor:"#00E6E3", highlightStrokeColor:"#00E6E3", size:16, label:{"color": "white", "offset": [0, 0]}});
+idToPoint["H"] = board.create("point", [-4.082, -1.766], {name:"H", id:"H", color:"#42A5F5", highlightFillColor:"#00E6E3", highlightStrokeColor:"#00E6E3", size:16, label:{"color": "white", "offset": [0, 0]}});
+idToPoint["G"] = board.create("point", [-1.021, 1.466], {name:"G", id:"G", color:"#42A5F5", highlightFillColor:"#00E6E3", highlightStrokeColor:"#00E6E3", size:16, label:{"color": "white", "offset": [0, 0]}});
+idToPoint["D"] = board.create("point", [-2.852, 1.416], {name:"D", id:"D", color:"#42A5F5", highlightFillColor:"#00E6E3", highlightStrokeColor:"#00E6E3", size:16, label:{"color": "white", "offset": [0, 0]}});
+var line = board.create("line", [idToPoint["B"], idToPoint["C"]], {straightFirst:false, straightLast:false, color:"#42A5F5"});
+var line = board.create("line", [idToPoint["H"], idToPoint["A"]], {straightFirst:false, straightLast:false, color:"#42A5F5"});
+var line = board.create("line", [idToPoint["C"], idToPoint["A"]], {straightFirst:false, straightLast:false, color:"#42A5F5"});
+var line = board.create("line", [idToPoint["B"], idToPoint["D"]], {straightFirst:false, straightLast:false, color:"#42A5F5"});
+var line = board.create("line", [idToPoint["B"], idToPoint["A"]], {straightFirst:false, straightLast:false, color:"#42A5F5"});
+var line = board.create("line", [idToPoint["C"], idToPoint["G"]], {straightFirst:false, straightLast:false, color:"#42A5F5"});
+</script>
+</div>
+</body>
+<script type='text/javascript'>
+function hilite(id) {
+idToPoint[id].highlight();
+}
+function unhilite(id) {
+idToPoint[id].noHighlight();
+}
+Object.keys(idToPoint).forEach(id => {
+label = document.querySelector('#jxgbox_' + id + 'Label');
+label.style.left = (parseFloat(label.style.left) - label.offsetWidth / 2.0) + 'px';
+label.style.top = (parseFloat(label.style.top) + label.offsetHeight / 2.0) + 'px';
+});
+root = document.getElementById('gsb-tree');
+root.querySelectorAll('span').forEach(item => {
+item.classList.forEach(cls => {
+var points = null;
+var segments = [];
+if (cls.startsWith('tr__')) {
+points = cls.split('__').slice(1, 4);
+segments = [
+[points[0], points[1], false],
+[points[0], points[2], false],
+[points[1], points[2], false]
+];
+} else if (cls.startsWith('ang__')) {
+points = cls.split('__').slice(1, 4);
+segments = [
+[points[1], points[0], true],
+[points[1], points[2], true]
+];
+} else if (cls.startsWith('vec__')) {
+points = cls.split('__').slice(1, 3);
+segments = [[points[0], points[1], false]];
+} else if (cls.startsWith('seg__')) {
+points = cls.split('__').slice(1, 3);
+segments = [[points[0], points[1], false]];
+} else if (cls.startsWith('pt__')) {
+points = cls.split('__').slice(1, 2);
+}
+if (points) {
+item.addEventListener('mouseover', function() {
+points.forEach(hilite);
+segments.forEach(seg => {
+selectedSegments.push(board.create("line", [idToPoint[seg[0]], idToPoint[seg[1]]], {straightFirst:false, straightLast:seg[2], color:"#00E6E3", strokeWidth:1.5}));
+});
+root.querySelectorAll('.' + cls).forEach(elt => {elt.style.background = "#00E6E3";});
+});
+item.addEventListener('mouseleave', function() {
+points.forEach(unhilite);
+selectedSegments.forEach(obj => {board.removeObject(obj);});
+root.querySelectorAll('.' + cls).forEach(elt => {elt.style.background = null;});
+});
+}
+});
+});
+root.querySelectorAll('li').forEach(item => {
+if (item.querySelector('ul') == null) {
+return;
+}
+item.classList.add('closed');
+item.classList.remove('open');
+item.addEventListener('click', function(e) {
+this.classList.toggle('open');
+this.classList.toggle('closed');
+e.stopPropagation();
+});
+});
+function toggleNonEssential() {
+props = root.querySelectorAll('.normal');
+if (root.querySelector('#checkbox').checked) {
+props.forEach(item => { item.style.display='block'; });
+} else {
+props.forEach(item => { item.style.display='none'; });
+}
+root.querySelectorAll('li').forEach(item => {
+list = item.querySelector('ul');
+if (list == null) {
+return;
+}
+hasVisibleChildren = false;
+for (i = 0; i < list.children.length; i++) {
+if (list.children[i].style.display != 'none') {
+hasVisibleChildren = true;
+break;
+}
+}
+if (!hasVisibleChildren) {
+item.classList.add('empty');
+} else {
+item.classList.remove('empty');
+}
+});
+};
+toggleNonEssential();
+</script>
+</html>
