@@ -1,4 +1,5 @@
-var selectedSegments = [];
+var selectedPoints = {};
+var selectedSegments = {};
 var board = null;
 
 let options = {
@@ -6,7 +7,6 @@ let options = {
 	//hl_color: '#00E6E3',
 	color: '#212121',
 	hl_color: '#F44336',
-	hl_text_color: '#FFCDD2',
 };
 
 function initScene(l, t, r, b) {
@@ -75,25 +75,37 @@ function setupTree() {
 				points = cls.split('__').slice(1, 2);
 			}
 			if (points) {
-				item.addEventListener('mouseover', function() {
-					points.forEach(id => { board.elementsByName[id].highlight(); });
-					lines.forEach(ln => {
-						selectedSegments.push(board.create(
-							'line', [board.elementsByName[ln['s']], board.elementsByName[ln['e']]], {
-								straightFirst: false,
-								straightLast: ln['type'] == 'ray',
-								color:options.hl_color,
-								strokeWidth:1.0
-							})
+				item.addEventListener('click', function() {
+					if (item.classList.contains('selected')) {
+						points.forEach(id => {
+							var count = selectedPoints[id] - 1;
+							if (count == 0) {
+								board.elementsByName[id].noHighlight();
+							}
+							selectedPoints[id] = count;
+						});
+						selectedSegments[cls].forEach(obj => {board.removeObject(obj);});
+						delete selectedSegments[cls];
+						root.querySelectorAll('.' + cls).forEach(elt => {elt.classList.remove('selected');});
+					} else {
+						points.forEach(id => {
+							selectedPoints[id] = (selectedPoints[id] || 0) + 1;
+							board.elementsByName[id].highlight(); }
 						);
-					});
-					root.querySelectorAll('.' + cls).forEach(elt => {elt.style.background = options.hl_text_color;});
-				});
-				item.addEventListener('mouseleave', function() {
-					points.forEach(id => { board.elementsByName[id].noHighlight(); });
-					selectedSegments.forEach(obj => {board.removeObject(obj);});
-					selectedSegments = [];
-					root.querySelectorAll('.' + cls).forEach(elt => {elt.style.background = null;});
+						var selected = [];
+						lines.forEach(ln => {
+							selected.push(board.create(
+								'line', [board.elementsByName[ln['s']], board.elementsByName[ln['e']]], {
+									straightFirst: false,
+									straightLast: ln['type'] == 'ray',
+									color:options.hl_color,
+									strokeWidth:1.0
+								})
+							);
+						});
+						selectedSegments[cls] = selected;
+						root.querySelectorAll('.' + cls).forEach(elt => {elt.classList.add('selected');});
+					}
 				});
 			}
 		});
@@ -104,9 +116,9 @@ function setupTree() {
 		}
 		item.classList.add('closed');
 		item.classList.remove('open');
-		item.addEventListener('click', function(e) {
-			this.classList.toggle('open');
-			this.classList.toggle('closed');
+		item.querySelector('span.handler').addEventListener('click', function(e) {
+			item.classList.toggle('open');
+			item.classList.toggle('closed');
 			e.stopPropagation();
 		});
 	});

@@ -71,7 +71,7 @@ class CoreScene:
             return self.label
 
         def html(self):
-            return '<span class="pt__%s">%s</span>' % (self.name, re.sub(' ', '&nbsp;', re.sub('_([0-9]+)', '<sub>\\1</sub>', self.name)))
+            return '<span class="figure pt__%s">%s</span>' % (self.name, re.sub(' ', '&nbsp;', re.sub('_([0-9]+)', '<sub>\\1</sub>', self.name)))
 
         def __str__(self):
             return self.name
@@ -501,7 +501,7 @@ class CoreScene:
 
         def html(self):
             return LazyComment(
-                '<span class="vec__%s__%s">%s&nbsp;%s</span>',
+                '<span class="figure vec__%s__%s">%s&nbsp;%s</span>',
                 LazyString(self.start), LazyString(self.end), self.start, self.end
             )
 
@@ -631,7 +631,7 @@ class CoreScene:
 
         def html(self):
             return LazyComment(
-                '<span class="seg__%s__%s">%s&nbsp;%s</span>',
+                '<span class="figure seg__%s__%s">%s&nbsp;%s</span>',
                 LazyString(self.points[0]), LazyString(self.points[1]), *self.points
             )
 
@@ -716,7 +716,7 @@ class CoreScene:
         def html(self):
             if self.vertex:
                 return LazyComment(
-                    '<span class="ang__%s__%s__%s">∠&nbsp;%s&nbsp;%s&nbsp;%s</span>',
+                    '<span class="figure ang__%s__%s__%s">∠&nbsp;%s&nbsp;%s&nbsp;%s</span>',
                     LazyString(self.vector0.end),
                     LazyString(self.vertex),
                     LazyString(self.vector1.end),
@@ -736,7 +736,7 @@ class CoreScene:
 
         def html(self):
             return LazyComment(
-                '<span class="ray__%s__%s">%s&nbsp;%s</span>',
+                '<span class="figure ray__%s__%s">%s&nbsp;%s</span>',
                 LazyString(self.start), LazyString(self.point), self.start, self.point
             )
 
@@ -785,7 +785,7 @@ class CoreScene:
 
         def html(self):
             return LazyComment(
-                '<span class="tr__%s__%s__%s">△&nbsp;%s&nbsp;%s&nbsp;%s</span>',
+                '<span class="figure tr__%s__%s__%s">△&nbsp;%s&nbsp;%s&nbsp;%s</span>',
                 *[LazyString(p) for p in self.points], *self.points
             )
 

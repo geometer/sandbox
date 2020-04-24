@@ -18,11 +18,7 @@
   display: block;
 }
 
-.gsb-tree li {
-	/*pointer-events: none;*/
-}
-
-.gsb-tree li::before {
+.gsb-tree li > span.handler::before {
   content: "⊡";
   color: #888888;
   display: inline-block;
@@ -33,26 +29,36 @@
 	pointer-events: auto;
 }
 
-.gsb-tree li.closed.empty, .gsb-tree li.open.empty {
-  cursor: auto;
-}
-
-.gsb-tree li.closed, .gsb-tree li.open {
+.gsb-tree li.closed > span.handler, .gsb-tree li.open > span.handler {
   cursor: pointer;
 }
 
-.gsb-tree li {
-  cursor: auto;
-}
-
-.gsb-tree li.closed::before {
+.gsb-tree li.closed > span.handler::before {
   content: "⊞";
 }
 
-.gsb-tree li.open::before {
+.gsb-tree li.open > span.handler::before {
   content: "⊟";
 }
 
-.gsb-tree li.empty.closed::before, .gsb-tree li.empty.open::before {
+.gsb-tree li.empty.closed > span.handler::before, .gsb-tree li.empty.open > span.handler::before {
   content: "⊡";
+}
+
+.figure {
+	cursor: pointer;
+	border-style: solid;
+	border-width: 0.3px;
+	border-color: #4FC3F7;
+	background-color: #E1F5FE;
+}
+
+.figure.selected {
+	border-color: #EF5350;
+	background-color: #FFCDD2; 
+}
+
+.figure .figure {
+	border-style: none; 
+	background-color: transparent; 
 }
