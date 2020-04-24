@@ -294,7 +294,7 @@ class Explainer:
                 yield (
                     AngleValueProperty(a0, a0_value),
                     LazyComment(
-                        '180º = %s + %s + %s = %s %s + %s',
+                        '180º = %s + %s + %s = %s %s + %sº',
                         a0, a1, a2, 1 + divide(1, ar.value), a0, a2_reason.degree
                     ),
                     [ar, a2_reason]
