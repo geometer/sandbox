@@ -10,7 +10,7 @@ import sympy as sp
 from typing import List
 
 from .reason import Reason
-from .util import LazyComment, divide
+from .util import LazyComment, LazyString, divide
 
 class CoreScene:
     layers = ('user', 'auxiliary', 'invisible')
@@ -72,6 +72,7 @@ class CoreScene:
 
         def html(self):
             return re.sub(' ', '&nbsp;', re.sub('_([0-9]+)', '<sub>\\1</sub>', self.name))
+            #return '<span class="pt__%s">%s</span>' % (self.name, re.sub(' ', '&nbsp;', re.sub('_([0-9]+)', '<sub>\\1</sub>', self.name)))
 
         def __str__(self):
             return self.name
@@ -499,7 +500,10 @@ class CoreScene:
             return self.scene.constraint(Constraint.Kind.parallel_vectors, self, vector, **kwargs)
 
         def html(self):
-            return LazyComment('%s&nbsp;%s', self.start, self.end)
+            return LazyComment(
+                '<span class="vec__%s__%s">%s&nbsp;%s</span>',
+                LazyString(self.start), LazyString(self.end), self.start, self.end
+            )
 
         def __str__(self):
             return str(LazyComment('%s %s', self.start, self.end))
@@ -626,7 +630,10 @@ class CoreScene:
             self.scene.constraint(Constraint.Kind.distance, self, length, **kwargs)
 
         def html(self):
-            return LazyComment('%s&nbsp;%s', *self.points)
+            return LazyComment(
+                '<span class="seg__%s__%s">%s&nbsp;%s</span>',
+                LazyString(self.points[0]), LazyString(self.points[1]), *self.points
+            )
 
         def __str__(self):
             return str(LazyComment('%s %s', *self.points))
@@ -708,7 +715,13 @@ class CoreScene:
 
         def html(self):
             if self.vertex:
-                return LazyComment('∠&nbsp;%s&nbsp;%s&nbsp;%s', self.vector0.end, self.vertex, self.vector1.end)
+                return LazyComment(
+                    '<span class="ang__%s__%s__%s">∠&nbsp;%s&nbsp;%s&nbsp;%s</span>',
+                    LazyString(self.vector0.end),
+                    LazyString(self.vertex),
+                    LazyString(self.vector1.end),
+                    self.vector0.end, self.vertex, self.vector1.end
+                )
             return LazyComment('∠(%s,&nbsp;%s)', self.vector0, self.vector1)
 
         def __str__(self):
@@ -757,7 +770,10 @@ class CoreScene:
             return self.__permutations
 
         def html(self):
-            return LazyComment('△&nbsp;%s&nbsp;%s&nbsp;%s', *self.points)
+            return LazyComment(
+                '<span class="tr__%s__%s__%s">△&nbsp;%s&nbsp;%s&nbsp;%s</span>',
+                *[LazyString(p) for p in self.points], *self.points
+            )
 
         def __str__(self):
             return '△ %s %s %s' % self.points

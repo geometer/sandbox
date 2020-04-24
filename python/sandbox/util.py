@@ -51,6 +51,16 @@ def good_angles(vector0, vector1, include_four_point=False):
         ]
     return []
 
+class LazyString:
+    def __init__(self, obj):
+        self.obj = obj
+
+    def html(self):
+        return str(self.obj)
+
+    def __str__(self):
+        return str(self.obj)
+
 class LazyComment:
     def __init__(self, format_string, *params):
         self.format_string = format_string

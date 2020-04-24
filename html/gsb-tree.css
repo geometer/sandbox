@@ -19,7 +19,7 @@
 }
 
 .gsb-tree li {
-	pointer-events: none;
+	/*pointer-events: none;*/
 }
 
 .gsb-tree li::before {

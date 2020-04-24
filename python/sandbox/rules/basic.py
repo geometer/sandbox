@@ -635,12 +635,12 @@ class AngleTypesInObtuseangledTriangleRule(SingleSourceRule):
         ang = prop.angle
         yield (
             AngleKindProperty(ang.vector0.end.angle(ang.vertex, ang.vector1.end), AngleKindProperty.Kind.acute),
-            LazyComment('An angle of △ %s %s %s, another angle is %s', *ang.point_set, prop.kind),
+            LazyComment('An angle of %s, another angle is %s', Scene.Triangle(ang.point_set), prop.kind),
             [prop]
         )
         yield (
             AngleKindProperty(ang.vector1.end.angle(ang.vertex, ang.vector0.end), AngleKindProperty.Kind.acute),
-            LazyComment('An angle of △ %s %s %s, another angle is %s', *ang.point_set, prop.kind),
+            LazyComment('An angle of %s, another angle is %s', Scene.Triangle(ang.point_set), prop.kind),
             [prop]
         )
 
@@ -861,7 +861,7 @@ class CeviansIntersectionRule(Rule):
             return
         if av0.reason.obsolete and av1.reason.obsolete and ncl.reason.obsolete and all(r.reason.obsolete for r in reasons):
             return
-        comment = LazyComment('%s is the intersection of cevians %s and %s with %s and %s inside the sides of △ %s %s %s', crossing, segment0, segment1, av1.angle.vertex, av0.angle.vertex, vertex, pt0, pt1)
+        comment = LazyComment('%s is the intersection of cevians %s and %s with %s and %s inside the sides of %s', crossing, segment0, segment1, av1.angle.vertex, av0.angle.vertex, Scene.Triangle((vertex, pt0, pt1)))
         yield (
             PointInsideAngleProperty(crossing, vertex.angle(pt0, pt1)),
             comment,
