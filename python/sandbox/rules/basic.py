@@ -455,7 +455,7 @@ class PointsSeparatedByLineAreNotCoincidentRule(SingleSourceRule):
         if not prop.reason.obsolete:
             yield (
                 PointsCoincidenceProperty(prop.points[0], prop.points[1], False),
-                LazyComment('%s and %s are separated by line %s', prop.points[0], prop.points[1], prop.segment),
+                LazyComment('the points are separated by line %s', prop.segment),
                 [prop]
             )
 

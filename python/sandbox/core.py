@@ -687,7 +687,7 @@ class CoreScene:
             if kwargs.get('comment') is None:
                 kwargs = dict(kwargs)
                 kwargs['comment'] = LazyComment(
-                    '[%s %s) is the bisector of %s', self.vertex, point, self
+                    '%s is the bisector of %s', self.vertex.vector(point).as_ray, self
                 )
             angle0 = self.vertex.angle(self.vector0.end, point)
             angle1 = self.vertex.angle(self.vector1.end, point)
