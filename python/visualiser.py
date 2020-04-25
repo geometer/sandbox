@@ -75,7 +75,7 @@ def drawTree(scene, prop, args):
             while hasattr(comment, 'html'):
                 comment = comment.html()
             return str(comment)
-        s = '%s: %s' % (html(prop), ', '.join([html(com) for com in prop.reason.comments]))
+        s = '%s<span class="implication">⇐</span>%s' % (html(prop), ', '.join([html(com) for com in prop.reason.comments]))
         s = re.sub('\|', '<span style="font-size:130%;vertical-align:-2px;">|</span>', s)
         print('<li class="%s"><span class="handler"></span>%s' % ('essential' if prop.essential else 'normal', s))
         if prop.reason.premises:
