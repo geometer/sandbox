@@ -152,4 +152,4 @@ toggleNonEssential: function() {
 	});
 }
 
-}
+};
