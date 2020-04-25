@@ -105,6 +105,8 @@ setupTree: function() {
 						});
 						sandbox$.selectedSegments[cls] = selected;
 						root.querySelectorAll('.' + cls).forEach(elt => {elt.classList.add('selected');});
+						sandbox$.board.update();
+						sandbox$.board.update();
 					}
 				});
 			}
@@ -150,6 +152,13 @@ toggleNonEssential: function() {
 			item.classList.remove('empty');
 		}
 	});
+},
+
+updateLabels: function() {
+	setTimeout(function() {
+		console.debug('labels layout hack');
+		sandbox$.board.update();
+	}, 0);
 }
 
 };
