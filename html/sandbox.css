@@ -1,13 +1,13 @@
 .sandbox-selections {
-	padding-top:20px;
-	padding-right:12px;
-	padding-left:12px;
+	padding-top: 20px;
+	padding-right: 12px;
+	padding-left: 12px;
+	line-break: anywhere;
+	line-height: 2em;
 }
 
 .sandbox-selections > span {
-	margin-right:0.6em;
-	margin-bottom:0.5em;
-	display: inline-block;
+	margin-right: 0.6em;
 }
 
 .sandbox-tree ul {
