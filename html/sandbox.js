@@ -81,7 +81,8 @@ setupTree: function() {
 
 		if (points) {
 			$(this).click(function() {
-				if ($(this).hasClass('selected')) {
+				var deselect = function() {
+					$('#sandbox-selections').find('.' + clazz).remove();
 					points.forEach(id => {
 						var count = sandbox$.selectedPoints[id] - 1;
 						if (count == 0) {
@@ -92,7 +93,14 @@ setupTree: function() {
 					sandbox$.selectedSegments[clazz].forEach(obj => {sandbox$.board.removeObject(obj);});
 					delete sandbox$.selectedSegments[clazz];
 					root.find('.' + clazz).each(function() { $(this).removeClass('selected'); });
+				};
+				if ($(this).hasClass('selected')) {
+					deselect();
 				} else {
+					var clone = $(this).clone();
+					clone.addClass('selected');
+					clone.click(deselect);
+					clone.appendTo($('#sandbox-selections'));
 					points.forEach(id => {
 						sandbox$.selectedPoints[id] = (sandbox$.selectedPoints[id] || 0) + 1;
 						sandbox$.board.elementsByName[id].highlight(); }

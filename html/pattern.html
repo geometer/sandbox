@@ -8,9 +8,12 @@
 	<link rel='stylesheet' type='text/css' href='../html/sandbox.css'/>
 </head>
 <body>
-<div id="main" style="width:14in;">
-<div id="sandbox-scene" class="jxgbox" style="width:5in;height:5in;display:inline-block;vertical-align:top;"></div>
-<div class='sandbox-tree' id='sandbox-tree' div style='margin-left:36px;width:50%;display:inline-block;vertical-align:top;'>
+<div id='main' style='width:14in;'>
+<div style='display:inline-block;vertical-align:top;width:5in;'>
+<div id='sandbox-scene' class='jxgbox' style='width:5in;height:5in;'></div>
+<div id='sandbox-selections' class='sandbox-text sandbox-selections'></div>
+</div>
+<div id='sandbox-tree' class='sandbox-text sandbox-tree' style='margin-left:36px;width:50%;display:inline-block;vertical-align:top;'>
 <div style='margin-bottom:16px;'>
 	<input type='checkbox' id='checkbox' checked='1' onclick='sandbox$.toggleNonEssential()'>
 Show essential steps only

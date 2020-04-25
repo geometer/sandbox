@@ -8,9 +8,12 @@
 <link rel='stylesheet' type='text/css' href='../html/sandbox.css'/>
 </head>
 <body>
-<div id="main" style="width:14in;">
-<div id="sandbox-scene" class="jxgbox" style="width:5in;height:5in;display:inline-block;vertical-align:top;"></div>
-<div class='sandbox-tree' id='sandbox-tree' div style='margin-left:36px;width:50%;display:inline-block;vertical-align:top;'>
+<div id='main' style='width:14in;'>
+<div style='display:inline-block;vertical-align:top;width:5in;'>
+<div id='sandbox-scene' class='jxgbox' style='width:5in;height:5in;'></div>
+<div id='sandbox-selections' class='sandbox-text sandbox-selections'></div>
+</div>
+<div id='sandbox-tree' class='sandbox-text sandbox-tree' style='margin-left:36px;width:50%;display:inline-block;vertical-align:top;'>
 <div style='margin-bottom:16px;'>
 <input type='checkbox' id='checkbox' checked='1' onclick='sandbox$.toggleNonEssential()'>
 Show essential steps only
@@ -42,10 +45,70 @@ Show essential steps only
 <ul>
 <li class="essential"><span class="handler"></span><span class="figure tr__H__B__D">△<span class="figure point pt__H">H</span><span class="figure point pt__B">B</span><span class="figure point pt__D">D</span></span> ~ <span class="figure tr__H__A__C">△<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span><span class="implication">⇐</span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__B__H"><span class="figure point pt__B">B</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__H"><span class="figure point pt__A">A</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__H__D"><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__H"><span class="figure point pt__C">C</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> and <span class="figure ang__A__H__C">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__C">C</span></span> = <span class="figure ang__B__H__D">∠<span class="figure point pt__B">B</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span>
 <ul>
-<li class="essential"><span class="handler"></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__B__H"><span class="figure point pt__B">B</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__H"><span class="figure point pt__A">A</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__H__D"><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__H"><span class="figure point pt__C">C</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="implication">⇐</span>ratios of sides in similar <span class="figure tr__A__H__B">△<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> and <span class="figure tr__C__H__D">△<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span>
+<li class="essential"><span class="handler"></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__B__H"><span class="figure point pt__B">B</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__H"><span class="figure point pt__A">A</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__H__D"><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__H"><span class="figure point pt__C">C</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="implication">⇐</span>ratios of sides in similar <span class="figure tr__H__A__B">△<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> and <span class="figure tr__H__C__D">△<span class="figure point pt__H">H</span><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span>
 <ul>
-<li class="essential"><span class="handler"></span><span class="figure tr__A__H__B">△<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> ~ <span class="figure tr__C__H__D">△<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span><span class="implication">⇐</span>congruent angles <span class="figure ang__H__A__B">∠<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__H__C__D">∠<span class="figure point pt__H">H</span><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span> and <span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__C__H__D">∠<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span>
+<li class="essential"><span class="handler"></span><span class="figure tr__H__A__B">△<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> ~ <span class="figure tr__H__C__D">△<span class="figure point pt__H">H</span><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span><span class="implication">⇐</span>congruent angles <span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__C__H__D">∠<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span> and <span class="figure ang__H__A__B">∠<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__H__C__D">∠<span class="figure point pt__H">H</span><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span>
 <ul>
+<li class="essential"><span class="handler"></span><span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__C__H__D">∠<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span><span class="implication">⇐</span><span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = 90º = <span class="figure ang__C__H__D">∠<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span>
+<ul>
+<li class="essential"><span class="handler"></span><span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = 90º<span class="implication">⇐</span>non-zero perpendicular segments <span class="figure seg__B__H"><span class="figure point pt__B">B</span><span class="figure point pt__H">H</span></span> and <span class="figure seg__A__H"><span class="figure point pt__A">A</span><span class="figure point pt__H">H</span></span>
+<ul>
+<li class="essential"><span class="handler"></span><span class="figure seg__B__H"><span class="figure point pt__B">B</span><span class="figure point pt__H">H</span></span> ⟂ <span class="figure seg__A__H"><span class="figure point pt__A">A</span><span class="figure point pt__H">H</span></span><span class="implication">⇐</span>altitude <span class="figure point pt__(A H)">(A&nbsp;H)</span> is perpendicular to the base <span class="figure point pt__(B C)">(B&nbsp;C)</span>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__H">H</span> and <span class="figure point pt__B">B</span> are not coincident<span class="implication">⇐</span><span class="figure point pt__H">H</span> lies on the line <span class="figure point pt__D">D</span> <span class="figure point pt__A">A</span>, <span class="figure point pt__B">B</span> does not
+<ul>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__D">D</span>, <span class="figure point pt__A">A</span>, and <span class="figure point pt__B">B</span> are not collinear<span class="implication">⇐</span><span class="figure point pt__A">A</span> is the vertex of <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span>, <span class="figure point pt__B">B</span> lies on a side, and <span class="figure point pt__D">D</span> lies inside
+<ul>
+<li class="essential"><span class="handler"></span><span class="figure point pt__D">D</span> lies inside <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span><span class="implication">⇐</span>point <span class="figure point pt__D">D</span> is inside <span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>
+</li>
+</ul>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__H">H</span>, and <span class="figure point pt__D">D</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(A H)">(A&nbsp;H)</span>
+</li>
+</ul>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__H">H</span> and <span class="figure point pt__A">A</span> are not coincident<span class="implication">⇐</span><span class="figure point pt__H">H</span> lies on the line <span class="figure point pt__B">B</span> <span class="figure point pt__C">C</span>, <span class="figure point pt__A">A</span> does not
+<ul>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__B">B</span>, and <span class="figure point pt__C">C</span> are not collinear<span class="implication">⇐</span><span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span> is non-degenerate
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__B">B</span>, <span class="figure point pt__C">C</span>, and <span class="figure point pt__H">H</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(B C)">(B&nbsp;C)</span>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="essential"><span class="handler"></span><span class="figure ang__C__H__D">∠<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span> = 90º<span class="implication">⇐</span>non-zero perpendicular segments <span class="figure seg__C__H"><span class="figure point pt__C">C</span><span class="figure point pt__H">H</span></span> and <span class="figure seg__H__D"><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span>
+<ul>
+<li class="essential"><span class="handler"></span><span class="figure seg__C__H"><span class="figure point pt__C">C</span><span class="figure point pt__H">H</span></span> ⟂ <span class="figure seg__H__D"><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span><span class="implication">⇐</span>altitude <span class="figure point pt__(A H)">(A&nbsp;H)</span> is perpendicular to the base <span class="figure point pt__(B C)">(B&nbsp;C)</span>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__H">H</span> and <span class="figure point pt__C">C</span> are not coincident<span class="implication">⇐</span><span class="figure point pt__H">H</span> lies on the line <span class="figure point pt__D">D</span> <span class="figure point pt__A">A</span>, <span class="figure point pt__C">C</span> does not
+<ul>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__D">D</span>, <span class="figure point pt__A">A</span>, and <span class="figure point pt__C">C</span> are not collinear<span class="implication">⇐</span><span class="figure point pt__A">A</span> is the vertex of <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span>, <span class="figure point pt__C">C</span> lies on a side, and <span class="figure point pt__D">D</span> lies inside
+<ul>
+<li class="essential"><span class="handler"></span><span class="figure point pt__D">D</span> lies inside <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span><span class="implication">⇐</span>point <span class="figure point pt__D">D</span> is inside <span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>
+</li>
+</ul>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__H">H</span>, and <span class="figure point pt__D">D</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(A H)">(A&nbsp;H)</span>
+</li>
+</ul>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__H">H</span> and <span class="figure point pt__D">D</span> are not coincident<span class="implication">⇐</span><span class="figure point pt__H">H</span> lies on the line <span class="figure point pt__B">B</span> <span class="figure point pt__C">C</span>, <span class="figure point pt__D">D</span> does not
+<ul>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__D">D</span>, <span class="figure point pt__B">B</span>, and <span class="figure point pt__C">C</span> are not collinear<span class="implication">⇐</span><span class="figure point pt__B">B</span> is the vertex of <span class="figure ang__A__B__C">∠<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>, <span class="figure point pt__C">C</span> lies on a side, and <span class="figure point pt__D">D</span> lies inside
+<ul>
+<li class="essential"><span class="handler"></span><span class="figure point pt__D">D</span> lies inside <span class="figure ang__A__B__C">∠<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span><span class="implication">⇐</span>point <span class="figure point pt__D">D</span> is inside <span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>
+</li>
+</ul>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__B">B</span>, <span class="figure point pt__C">C</span>, and <span class="figure point pt__H">H</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(B C)">(B&nbsp;C)</span>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="essential"><span class="handler"></span><span class="figure ang__H__A__B">∠<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__H__C__D">∠<span class="figure point pt__H">H</span><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span><span class="implication">⇐</span><span class="figure ang__H__A__B">∠<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__G__C__B">∠<span class="figure point pt__G">G</span><span class="figure point pt__C">C</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__H__C__D">∠<span class="figure point pt__H">H</span><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span>
 <ul>
 <li class="essential"><span class="handler"></span><span class="figure ang__H__A__B">∠<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__G__C__B">∠<span class="figure point pt__G">G</span><span class="figure point pt__C">C</span><span class="figure point pt__B">B</span></span><span class="implication">⇐</span>corresponding non-degenerate angles in similar <span class="figure tr__H__B__A">△<span class="figure point pt__H">H</span><span class="figure point pt__B">B</span><span class="figure point pt__A">A</span></span> and <span class="figure tr__G__B__C">△<span class="figure point pt__G">G</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>
@@ -207,66 +270,6 @@ Show essential steps only
 <li class="normal"><span class="handler"></span>Points <span class="figure point pt__C">C</span>, <span class="figure point pt__G">G</span>, and <span class="figure point pt__D">D</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(C G)">(C&nbsp;G)</span>
 </li>
 <li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__B">B</span>, and <span class="figure point pt__G">G</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(A B)">(A&nbsp;B)</span>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="essential"><span class="handler"></span><span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__C__H__D">∠<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span><span class="implication">⇐</span><span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = 90º = <span class="figure ang__C__H__D">∠<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span>
-<ul>
-<li class="essential"><span class="handler"></span><span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = 90º<span class="implication">⇐</span>non-zero perpendicular segments <span class="figure seg__B__H"><span class="figure point pt__B">B</span><span class="figure point pt__H">H</span></span> and <span class="figure seg__A__H"><span class="figure point pt__A">A</span><span class="figure point pt__H">H</span></span>
-<ul>
-<li class="essential"><span class="handler"></span><span class="figure seg__B__H"><span class="figure point pt__B">B</span><span class="figure point pt__H">H</span></span> ⟂ <span class="figure seg__A__H"><span class="figure point pt__A">A</span><span class="figure point pt__H">H</span></span><span class="implication">⇐</span>altitude <span class="figure point pt__(A H)">(A&nbsp;H)</span> is perpendicular to the base <span class="figure point pt__(B C)">(B&nbsp;C)</span>
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__H">H</span> and <span class="figure point pt__B">B</span> are not coincident<span class="implication">⇐</span><span class="figure point pt__H">H</span> lies on the line <span class="figure point pt__D">D</span> <span class="figure point pt__A">A</span>, <span class="figure point pt__B">B</span> does not
-<ul>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__D">D</span>, <span class="figure point pt__A">A</span>, and <span class="figure point pt__B">B</span> are not collinear<span class="implication">⇐</span><span class="figure point pt__A">A</span> is the vertex of <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span>, <span class="figure point pt__B">B</span> lies on a side, and <span class="figure point pt__D">D</span> lies inside
-<ul>
-<li class="essential"><span class="handler"></span><span class="figure point pt__D">D</span> lies inside <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span><span class="implication">⇐</span>point <span class="figure point pt__D">D</span> is inside <span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>
-</li>
-</ul>
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__H">H</span>, and <span class="figure point pt__D">D</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(A H)">(A&nbsp;H)</span>
-</li>
-</ul>
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__H">H</span> and <span class="figure point pt__A">A</span> are not coincident<span class="implication">⇐</span><span class="figure point pt__H">H</span> lies on the line <span class="figure point pt__B">B</span> <span class="figure point pt__C">C</span>, <span class="figure point pt__A">A</span> does not
-<ul>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__B">B</span>, and <span class="figure point pt__C">C</span> are not collinear<span class="implication">⇐</span><span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span> is non-degenerate
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__B">B</span>, <span class="figure point pt__C">C</span>, and <span class="figure point pt__H">H</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(B C)">(B&nbsp;C)</span>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="essential"><span class="handler"></span><span class="figure ang__C__H__D">∠<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span> = 90º<span class="implication">⇐</span>non-zero perpendicular segments <span class="figure seg__C__H"><span class="figure point pt__C">C</span><span class="figure point pt__H">H</span></span> and <span class="figure seg__H__D"><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span>
-<ul>
-<li class="essential"><span class="handler"></span><span class="figure seg__C__H"><span class="figure point pt__C">C</span><span class="figure point pt__H">H</span></span> ⟂ <span class="figure seg__H__D"><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span><span class="implication">⇐</span>altitude <span class="figure point pt__(A H)">(A&nbsp;H)</span> is perpendicular to the base <span class="figure point pt__(B C)">(B&nbsp;C)</span>
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__H">H</span> and <span class="figure point pt__C">C</span> are not coincident<span class="implication">⇐</span><span class="figure point pt__H">H</span> lies on the line <span class="figure point pt__D">D</span> <span class="figure point pt__A">A</span>, <span class="figure point pt__C">C</span> does not
-<ul>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__D">D</span>, <span class="figure point pt__A">A</span>, and <span class="figure point pt__C">C</span> are not collinear<span class="implication">⇐</span><span class="figure point pt__A">A</span> is the vertex of <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span>, <span class="figure point pt__C">C</span> lies on a side, and <span class="figure point pt__D">D</span> lies inside
-<ul>
-<li class="essential"><span class="handler"></span><span class="figure point pt__D">D</span> lies inside <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span><span class="implication">⇐</span>point <span class="figure point pt__D">D</span> is inside <span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>
-</li>
-</ul>
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__H">H</span>, and <span class="figure point pt__D">D</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(A H)">(A&nbsp;H)</span>
-</li>
-</ul>
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__H">H</span> and <span class="figure point pt__D">D</span> are not coincident<span class="implication">⇐</span><span class="figure point pt__H">H</span> lies on the line <span class="figure point pt__B">B</span> <span class="figure point pt__C">C</span>, <span class="figure point pt__D">D</span> does not
-<ul>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__D">D</span>, <span class="figure point pt__B">B</span>, and <span class="figure point pt__C">C</span> are not collinear<span class="implication">⇐</span><span class="figure point pt__B">B</span> is the vertex of <span class="figure ang__A__B__C">∠<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>, <span class="figure point pt__C">C</span> lies on a side, and <span class="figure point pt__D">D</span> lies inside
-<ul>
-<li class="essential"><span class="handler"></span><span class="figure point pt__D">D</span> lies inside <span class="figure ang__A__B__C">∠<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span><span class="implication">⇐</span>point <span class="figure point pt__D">D</span> is inside <span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>
-</li>
-</ul>
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__B">B</span>, <span class="figure point pt__C">C</span>, and <span class="figure point pt__H">H</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(B C)">(B&nbsp;C)</span>
 </li>
 </ul>
 </li>
@@ -424,10 +427,70 @@ Show essential steps only
 <ul>
 <li class="essential"><span class="handler"></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__H__D"><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__B__H"><span class="figure point pt__B">B</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__H"><span class="figure point pt__A">A</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__H"><span class="figure point pt__C">C</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="implication">⇐</span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__H__D"><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__B__H"><span class="figure point pt__B">B</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__D"><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__B"><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> = 1 = <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__B"><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__D"><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__H"><span class="figure point pt__A">A</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__H"><span class="figure point pt__C">C</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span>
 <ul>
-<li class="essential"><span class="handler"></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__D"><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__B"><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__H__D"><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__B__H"><span class="figure point pt__B">B</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="implication">⇐</span>ratios of sides in similar <span class="figure tr__A__H__B">△<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> and <span class="figure tr__C__H__D">△<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span>
+<li class="essential"><span class="handler"></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__H__D"><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__B__H"><span class="figure point pt__B">B</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__D"><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__B"><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="implication">⇐</span>ratios of sides in similar <span class="figure tr__H__A__B">△<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> and <span class="figure tr__H__C__D">△<span class="figure point pt__H">H</span><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span>
 <ul>
-<li class="essential"><span class="handler"></span><span class="figure tr__A__H__B">△<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> ~ <span class="figure tr__C__H__D">△<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span><span class="implication">⇐</span>congruent angles <span class="figure ang__H__A__B">∠<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__H__C__D">∠<span class="figure point pt__H">H</span><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span> and <span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__C__H__D">∠<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span>
+<li class="essential"><span class="handler"></span><span class="figure tr__H__A__B">△<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> ~ <span class="figure tr__H__C__D">△<span class="figure point pt__H">H</span><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span><span class="implication">⇐</span>congruent angles <span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__C__H__D">∠<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span> and <span class="figure ang__H__A__B">∠<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__H__C__D">∠<span class="figure point pt__H">H</span><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span>
 <ul>
+<li class="essential"><span class="handler"></span><span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__C__H__D">∠<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span><span class="implication">⇐</span><span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = 90º = <span class="figure ang__C__H__D">∠<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span>
+<ul>
+<li class="essential"><span class="handler"></span><span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = 90º<span class="implication">⇐</span>non-zero perpendicular segments <span class="figure seg__B__H"><span class="figure point pt__B">B</span><span class="figure point pt__H">H</span></span> and <span class="figure seg__A__H"><span class="figure point pt__A">A</span><span class="figure point pt__H">H</span></span>
+<ul>
+<li class="essential"><span class="handler"></span><span class="figure seg__B__H"><span class="figure point pt__B">B</span><span class="figure point pt__H">H</span></span> ⟂ <span class="figure seg__A__H"><span class="figure point pt__A">A</span><span class="figure point pt__H">H</span></span><span class="implication">⇐</span>altitude <span class="figure point pt__(A H)">(A&nbsp;H)</span> is perpendicular to the base <span class="figure point pt__(B C)">(B&nbsp;C)</span>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__H">H</span> and <span class="figure point pt__B">B</span> are not coincident<span class="implication">⇐</span><span class="figure point pt__H">H</span> lies on the line <span class="figure point pt__D">D</span> <span class="figure point pt__A">A</span>, <span class="figure point pt__B">B</span> does not
+<ul>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__D">D</span>, <span class="figure point pt__A">A</span>, and <span class="figure point pt__B">B</span> are not collinear<span class="implication">⇐</span><span class="figure point pt__A">A</span> is the vertex of <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span>, <span class="figure point pt__B">B</span> lies on a side, and <span class="figure point pt__D">D</span> lies inside
+<ul>
+<li class="essential"><span class="handler"></span><span class="figure point pt__D">D</span> lies inside <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span><span class="implication">⇐</span>point <span class="figure point pt__D">D</span> is inside <span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>
+</li>
+</ul>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__H">H</span>, and <span class="figure point pt__D">D</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(A H)">(A&nbsp;H)</span>
+</li>
+</ul>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__H">H</span> and <span class="figure point pt__A">A</span> are not coincident<span class="implication">⇐</span><span class="figure point pt__H">H</span> lies on the line <span class="figure point pt__B">B</span> <span class="figure point pt__C">C</span>, <span class="figure point pt__A">A</span> does not
+<ul>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__B">B</span>, and <span class="figure point pt__C">C</span> are not collinear<span class="implication">⇐</span><span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span> is non-degenerate
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__B">B</span>, <span class="figure point pt__C">C</span>, and <span class="figure point pt__H">H</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(B C)">(B&nbsp;C)</span>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="essential"><span class="handler"></span><span class="figure ang__C__H__D">∠<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span> = 90º<span class="implication">⇐</span>non-zero perpendicular segments <span class="figure seg__C__H"><span class="figure point pt__C">C</span><span class="figure point pt__H">H</span></span> and <span class="figure seg__H__D"><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span>
+<ul>
+<li class="essential"><span class="handler"></span><span class="figure seg__C__H"><span class="figure point pt__C">C</span><span class="figure point pt__H">H</span></span> ⟂ <span class="figure seg__H__D"><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span><span class="implication">⇐</span>altitude <span class="figure point pt__(A H)">(A&nbsp;H)</span> is perpendicular to the base <span class="figure point pt__(B C)">(B&nbsp;C)</span>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__H">H</span> and <span class="figure point pt__C">C</span> are not coincident<span class="implication">⇐</span><span class="figure point pt__H">H</span> lies on the line <span class="figure point pt__D">D</span> <span class="figure point pt__A">A</span>, <span class="figure point pt__C">C</span> does not
+<ul>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__D">D</span>, <span class="figure point pt__A">A</span>, and <span class="figure point pt__C">C</span> are not collinear<span class="implication">⇐</span><span class="figure point pt__A">A</span> is the vertex of <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span>, <span class="figure point pt__C">C</span> lies on a side, and <span class="figure point pt__D">D</span> lies inside
+<ul>
+<li class="essential"><span class="handler"></span><span class="figure point pt__D">D</span> lies inside <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span><span class="implication">⇐</span>point <span class="figure point pt__D">D</span> is inside <span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>
+</li>
+</ul>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__H">H</span>, and <span class="figure point pt__D">D</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(A H)">(A&nbsp;H)</span>
+</li>
+</ul>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__H">H</span> and <span class="figure point pt__D">D</span> are not coincident<span class="implication">⇐</span><span class="figure point pt__H">H</span> lies on the line <span class="figure point pt__B">B</span> <span class="figure point pt__C">C</span>, <span class="figure point pt__D">D</span> does not
+<ul>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__D">D</span>, <span class="figure point pt__B">B</span>, and <span class="figure point pt__C">C</span> are not collinear<span class="implication">⇐</span><span class="figure point pt__B">B</span> is the vertex of <span class="figure ang__A__B__C">∠<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>, <span class="figure point pt__C">C</span> lies on a side, and <span class="figure point pt__D">D</span> lies inside
+<ul>
+<li class="essential"><span class="handler"></span><span class="figure point pt__D">D</span> lies inside <span class="figure ang__A__B__C">∠<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span><span class="implication">⇐</span>point <span class="figure point pt__D">D</span> is inside <span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>
+</li>
+</ul>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__B">B</span>, <span class="figure point pt__C">C</span>, and <span class="figure point pt__H">H</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(B C)">(B&nbsp;C)</span>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="essential"><span class="handler"></span><span class="figure ang__H__A__B">∠<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__H__C__D">∠<span class="figure point pt__H">H</span><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span><span class="implication">⇐</span><span class="figure ang__H__A__B">∠<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__G__C__B">∠<span class="figure point pt__G">G</span><span class="figure point pt__C">C</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__H__C__D">∠<span class="figure point pt__H">H</span><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span>
 <ul>
 <li class="essential"><span class="handler"></span><span class="figure ang__H__A__B">∠<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__G__C__B">∠<span class="figure point pt__G">G</span><span class="figure point pt__C">C</span><span class="figure point pt__B">B</span></span><span class="implication">⇐</span>corresponding non-degenerate angles in similar <span class="figure tr__H__B__A">△<span class="figure point pt__H">H</span><span class="figure point pt__B">B</span><span class="figure point pt__A">A</span></span> and <span class="figure tr__G__B__C">△<span class="figure point pt__G">G</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>
@@ -596,6 +659,64 @@ Show essential steps only
 </li>
 </ul>
 </li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__H">H</span>, and <span class="figure point pt__B">B</span> are not collinear<span class="implication">⇐</span><span class="figure point pt__A">A</span> and <span class="figure point pt__H">H</span> lie on the line <span class="figure point pt__D">D</span> <span class="figure point pt__A">A</span>, <span class="figure point pt__B">B</span> does not
+<ul>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__D">D</span>, <span class="figure point pt__A">A</span>, and <span class="figure point pt__B">B</span> are not collinear<span class="implication">⇐</span><span class="figure point pt__A">A</span> is the vertex of <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span>, <span class="figure point pt__B">B</span> lies on a side, and <span class="figure point pt__D">D</span> lies inside
+<ul>
+<li class="essential"><span class="handler"></span><span class="figure point pt__D">D</span> lies inside <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span><span class="implication">⇐</span>point <span class="figure point pt__D">D</span> is inside <span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>
+</li>
+</ul>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__H">H</span>, and <span class="figure point pt__D">D</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(A H)">(A&nbsp;H)</span>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__H">H</span> and <span class="figure point pt__A">A</span> are not coincident<span class="implication">⇐</span><span class="figure point pt__H">H</span> lies on the line <span class="figure point pt__B">B</span> <span class="figure point pt__C">C</span>, <span class="figure point pt__A">A</span> does not
+<ul>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__B">B</span>, and <span class="figure point pt__C">C</span> are not collinear<span class="implication">⇐</span><span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span> is non-degenerate
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__B">B</span>, <span class="figure point pt__C">C</span>, and <span class="figure point pt__H">H</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(B C)">(B&nbsp;C)</span>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__H">H</span> and <span class="figure point pt__B">B</span> are not coincident<span class="implication">⇐</span><span class="figure point pt__H">H</span> lies on the line <span class="figure point pt__D">D</span> <span class="figure point pt__A">A</span>, <span class="figure point pt__B">B</span> does not
+<ul>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__D">D</span>, <span class="figure point pt__A">A</span>, and <span class="figure point pt__B">B</span> are not collinear<span class="implication">⇐</span><span class="figure point pt__A">A</span> is the vertex of <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span>, <span class="figure point pt__B">B</span> lies on a side, and <span class="figure point pt__D">D</span> lies inside
+<ul>
+<li class="essential"><span class="handler"></span><span class="figure point pt__D">D</span> lies inside <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span><span class="implication">⇐</span>point <span class="figure point pt__D">D</span> is inside <span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>
+</li>
+</ul>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__H">H</span>, and <span class="figure point pt__D">D</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(A H)">(A&nbsp;H)</span>
+</li>
+</ul>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span> and <span class="figure point pt__B">B</span> are not coincident<span class="implication">⇐</span><span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span> is non-degenerate
+</li>
+</ul>
+</li>
+<li class="essential"><span class="handler"></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__B"><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__D"><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> = 1<span class="implication">⇐</span>given: <span style="font-size:130%;vertical-align:-2px;">|</span>AB<span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span>CD<span style="font-size:130%;vertical-align:-2px;">|</span>
+<ul>
+<li class="essential"><span class="handler"></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__B"><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__D"><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="implication">⇐</span>given: <span style="font-size:130%;vertical-align:-2px;">|</span>AB<span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span>CD<span style="font-size:130%;vertical-align:-2px;">|</span>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span> and <span class="figure point pt__B">B</span> are not coincident<span class="implication">⇐</span><span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span> is non-degenerate
+</li>
+</ul>
+</li>
+<li class="essential"><span class="handler"></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__B"><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__D"><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> = 1<span class="implication">⇐</span>given: <span style="font-size:130%;vertical-align:-2px;">|</span>AB<span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span>CD<span style="font-size:130%;vertical-align:-2px;">|</span>
+<ul>
+<li class="essential"><span class="handler"></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__B"><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__D"><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="implication">⇐</span>given: <span style="font-size:130%;vertical-align:-2px;">|</span>AB<span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span>CD<span style="font-size:130%;vertical-align:-2px;">|</span>
+</li>
+<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span> and <span class="figure point pt__B">B</span> are not coincident<span class="implication">⇐</span><span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span> is non-degenerate
+</li>
+</ul>
+</li>
+<li class="essential"><span class="handler"></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__B"><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__D"><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__H"><span class="figure point pt__A">A</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__H"><span class="figure point pt__C">C</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="implication">⇐</span>ratios of sides in similar <span class="figure tr__H__A__B">△<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> and <span class="figure tr__H__C__D">△<span class="figure point pt__H">H</span><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span>
+<ul>
+<li class="essential"><span class="handler"></span><span class="figure tr__H__A__B">△<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> ~ <span class="figure tr__H__C__D">△<span class="figure point pt__H">H</span><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span><span class="implication">⇐</span>congruent angles <span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__C__H__D">∠<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span> and <span class="figure ang__H__A__B">∠<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__H__C__D">∠<span class="figure point pt__H">H</span><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span>
+<ul>
 <li class="essential"><span class="handler"></span><span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__C__H__D">∠<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span><span class="implication">⇐</span><span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = 90º = <span class="figure ang__C__H__D">∠<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span>
 <ul>
 <li class="essential"><span class="handler"></span><span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = 90º<span class="implication">⇐</span>non-zero perpendicular segments <span class="figure seg__B__H"><span class="figure point pt__B">B</span><span class="figure point pt__H">H</span></span> and <span class="figure seg__A__H"><span class="figure point pt__A">A</span><span class="figure point pt__H">H</span></span>
@@ -656,64 +777,6 @@ Show essential steps only
 </li>
 </ul>
 </li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__H">H</span>, and <span class="figure point pt__B">B</span> are not collinear<span class="implication">⇐</span><span class="figure point pt__A">A</span> and <span class="figure point pt__H">H</span> lie on the line <span class="figure point pt__D">D</span> <span class="figure point pt__A">A</span>, <span class="figure point pt__B">B</span> does not
-<ul>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__D">D</span>, <span class="figure point pt__A">A</span>, and <span class="figure point pt__B">B</span> are not collinear<span class="implication">⇐</span><span class="figure point pt__A">A</span> is the vertex of <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span>, <span class="figure point pt__B">B</span> lies on a side, and <span class="figure point pt__D">D</span> lies inside
-<ul>
-<li class="essential"><span class="handler"></span><span class="figure point pt__D">D</span> lies inside <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span><span class="implication">⇐</span>point <span class="figure point pt__D">D</span> is inside <span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>
-</li>
-</ul>
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__H">H</span>, and <span class="figure point pt__D">D</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(A H)">(A&nbsp;H)</span>
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__H">H</span> and <span class="figure point pt__A">A</span> are not coincident<span class="implication">⇐</span><span class="figure point pt__H">H</span> lies on the line <span class="figure point pt__B">B</span> <span class="figure point pt__C">C</span>, <span class="figure point pt__A">A</span> does not
-<ul>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__B">B</span>, and <span class="figure point pt__C">C</span> are not collinear<span class="implication">⇐</span><span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span> is non-degenerate
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__B">B</span>, <span class="figure point pt__C">C</span>, and <span class="figure point pt__H">H</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(B C)">(B&nbsp;C)</span>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span> and <span class="figure point pt__B">B</span> are not coincident<span class="implication">⇐</span><span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span> is non-degenerate
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__H">H</span> and <span class="figure point pt__B">B</span> are not coincident<span class="implication">⇐</span><span class="figure point pt__H">H</span> lies on the line <span class="figure point pt__D">D</span> <span class="figure point pt__A">A</span>, <span class="figure point pt__B">B</span> does not
-<ul>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__D">D</span>, <span class="figure point pt__A">A</span>, and <span class="figure point pt__B">B</span> are not collinear<span class="implication">⇐</span><span class="figure point pt__A">A</span> is the vertex of <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span>, <span class="figure point pt__B">B</span> lies on a side, and <span class="figure point pt__D">D</span> lies inside
-<ul>
-<li class="essential"><span class="handler"></span><span class="figure point pt__D">D</span> lies inside <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span><span class="implication">⇐</span>point <span class="figure point pt__D">D</span> is inside <span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>
-</li>
-</ul>
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__H">H</span>, and <span class="figure point pt__D">D</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(A H)">(A&nbsp;H)</span>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="essential"><span class="handler"></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__B"><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__D"><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> = 1<span class="implication">⇐</span>given: <span style="font-size:130%;vertical-align:-2px;">|</span>AB<span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span>CD<span style="font-size:130%;vertical-align:-2px;">|</span>
-<ul>
-<li class="essential"><span class="handler"></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__B"><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__D"><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="implication">⇐</span>given: <span style="font-size:130%;vertical-align:-2px;">|</span>AB<span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span>CD<span style="font-size:130%;vertical-align:-2px;">|</span>
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span> and <span class="figure point pt__B">B</span> are not coincident<span class="implication">⇐</span><span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span> is non-degenerate
-</li>
-</ul>
-</li>
-<li class="essential"><span class="handler"></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__B"><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__D"><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> = 1<span class="implication">⇐</span>given: <span style="font-size:130%;vertical-align:-2px;">|</span>AB<span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span>CD<span style="font-size:130%;vertical-align:-2px;">|</span>
-<ul>
-<li class="essential"><span class="handler"></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__B"><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__D"><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="implication">⇐</span>given: <span style="font-size:130%;vertical-align:-2px;">|</span>AB<span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span>CD<span style="font-size:130%;vertical-align:-2px;">|</span>
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span> and <span class="figure point pt__B">B</span> are not coincident<span class="implication">⇐</span><span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span> is non-degenerate
-</li>
-</ul>
-</li>
-<li class="essential"><span class="handler"></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__B"><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__D"><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> = <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__A__H"><span class="figure point pt__A">A</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span> / <span style="font-size:130%;vertical-align:-2px;">|</span><span class="figure seg__C__H"><span class="figure point pt__C">C</span><span class="figure point pt__H">H</span></span><span style="font-size:130%;vertical-align:-2px;">|</span><span class="implication">⇐</span>ratios of sides in similar <span class="figure tr__A__H__B">△<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> and <span class="figure tr__C__H__D">△<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span>
-<ul>
-<li class="essential"><span class="handler"></span><span class="figure tr__A__H__B">△<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> ~ <span class="figure tr__C__H__D">△<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span><span class="implication">⇐</span>congruent angles <span class="figure ang__H__A__B">∠<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__H__C__D">∠<span class="figure point pt__H">H</span><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span> and <span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__C__H__D">∠<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span>
-<ul>
 <li class="essential"><span class="handler"></span><span class="figure ang__H__A__B">∠<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__H__C__D">∠<span class="figure point pt__H">H</span><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span><span class="implication">⇐</span><span class="figure ang__H__A__B">∠<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__G__C__B">∠<span class="figure point pt__G">G</span><span class="figure point pt__C">C</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__H__C__D">∠<span class="figure point pt__H">H</span><span class="figure point pt__C">C</span><span class="figure point pt__D">D</span></span>
 <ul>
 <li class="essential"><span class="handler"></span><span class="figure ang__H__A__B">∠<span class="figure point pt__H">H</span><span class="figure point pt__A">A</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__G__C__B">∠<span class="figure point pt__G">G</span><span class="figure point pt__C">C</span><span class="figure point pt__B">B</span></span><span class="implication">⇐</span>corresponding non-degenerate angles in similar <span class="figure tr__H__B__A">△<span class="figure point pt__H">H</span><span class="figure point pt__B">B</span><span class="figure point pt__A">A</span></span> and <span class="figure tr__G__B__C">△<span class="figure point pt__G">G</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>
@@ -875,66 +938,6 @@ Show essential steps only
 <li class="normal"><span class="handler"></span>Points <span class="figure point pt__C">C</span>, <span class="figure point pt__G">G</span>, and <span class="figure point pt__D">D</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(C G)">(C&nbsp;G)</span>
 </li>
 <li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__B">B</span>, and <span class="figure point pt__G">G</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(A B)">(A&nbsp;B)</span>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="essential"><span class="handler"></span><span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = <span class="figure ang__C__H__D">∠<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span><span class="implication">⇐</span><span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = 90º = <span class="figure ang__C__H__D">∠<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span>
-<ul>
-<li class="essential"><span class="handler"></span><span class="figure ang__A__H__B">∠<span class="figure point pt__A">A</span><span class="figure point pt__H">H</span><span class="figure point pt__B">B</span></span> = 90º<span class="implication">⇐</span>non-zero perpendicular segments <span class="figure seg__B__H"><span class="figure point pt__B">B</span><span class="figure point pt__H">H</span></span> and <span class="figure seg__A__H"><span class="figure point pt__A">A</span><span class="figure point pt__H">H</span></span>
-<ul>
-<li class="essential"><span class="handler"></span><span class="figure seg__B__H"><span class="figure point pt__B">B</span><span class="figure point pt__H">H</span></span> ⟂ <span class="figure seg__A__H"><span class="figure point pt__A">A</span><span class="figure point pt__H">H</span></span><span class="implication">⇐</span>altitude <span class="figure point pt__(A H)">(A&nbsp;H)</span> is perpendicular to the base <span class="figure point pt__(B C)">(B&nbsp;C)</span>
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__H">H</span> and <span class="figure point pt__B">B</span> are not coincident<span class="implication">⇐</span><span class="figure point pt__H">H</span> lies on the line <span class="figure point pt__D">D</span> <span class="figure point pt__A">A</span>, <span class="figure point pt__B">B</span> does not
-<ul>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__D">D</span>, <span class="figure point pt__A">A</span>, and <span class="figure point pt__B">B</span> are not collinear<span class="implication">⇐</span><span class="figure point pt__A">A</span> is the vertex of <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span>, <span class="figure point pt__B">B</span> lies on a side, and <span class="figure point pt__D">D</span> lies inside
-<ul>
-<li class="essential"><span class="handler"></span><span class="figure point pt__D">D</span> lies inside <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span><span class="implication">⇐</span>point <span class="figure point pt__D">D</span> is inside <span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>
-</li>
-</ul>
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__H">H</span>, and <span class="figure point pt__D">D</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(A H)">(A&nbsp;H)</span>
-</li>
-</ul>
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__H">H</span> and <span class="figure point pt__A">A</span> are not coincident<span class="implication">⇐</span><span class="figure point pt__H">H</span> lies on the line <span class="figure point pt__B">B</span> <span class="figure point pt__C">C</span>, <span class="figure point pt__A">A</span> does not
-<ul>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__B">B</span>, and <span class="figure point pt__C">C</span> are not collinear<span class="implication">⇐</span><span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span> is non-degenerate
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__B">B</span>, <span class="figure point pt__C">C</span>, and <span class="figure point pt__H">H</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(B C)">(B&nbsp;C)</span>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="essential"><span class="handler"></span><span class="figure ang__C__H__D">∠<span class="figure point pt__C">C</span><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span> = 90º<span class="implication">⇐</span>non-zero perpendicular segments <span class="figure seg__C__H"><span class="figure point pt__C">C</span><span class="figure point pt__H">H</span></span> and <span class="figure seg__H__D"><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span>
-<ul>
-<li class="essential"><span class="handler"></span><span class="figure seg__C__H"><span class="figure point pt__C">C</span><span class="figure point pt__H">H</span></span> ⟂ <span class="figure seg__H__D"><span class="figure point pt__H">H</span><span class="figure point pt__D">D</span></span><span class="implication">⇐</span>altitude <span class="figure point pt__(A H)">(A&nbsp;H)</span> is perpendicular to the base <span class="figure point pt__(B C)">(B&nbsp;C)</span>
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__H">H</span> and <span class="figure point pt__C">C</span> are not coincident<span class="implication">⇐</span><span class="figure point pt__H">H</span> lies on the line <span class="figure point pt__D">D</span> <span class="figure point pt__A">A</span>, <span class="figure point pt__C">C</span> does not
-<ul>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__D">D</span>, <span class="figure point pt__A">A</span>, and <span class="figure point pt__C">C</span> are not collinear<span class="implication">⇐</span><span class="figure point pt__A">A</span> is the vertex of <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span>, <span class="figure point pt__C">C</span> lies on a side, and <span class="figure point pt__D">D</span> lies inside
-<ul>
-<li class="essential"><span class="handler"></span><span class="figure point pt__D">D</span> lies inside <span class="figure ang__B__A__C">∠<span class="figure point pt__B">B</span><span class="figure point pt__A">A</span><span class="figure point pt__C">C</span></span><span class="implication">⇐</span>point <span class="figure point pt__D">D</span> is inside <span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>
-</li>
-</ul>
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__A">A</span>, <span class="figure point pt__H">H</span>, and <span class="figure point pt__D">D</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(A H)">(A&nbsp;H)</span>
-</li>
-</ul>
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__H">H</span> and <span class="figure point pt__D">D</span> are not coincident<span class="implication">⇐</span><span class="figure point pt__H">H</span> lies on the line <span class="figure point pt__B">B</span> <span class="figure point pt__C">C</span>, <span class="figure point pt__D">D</span> does not
-<ul>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__D">D</span>, <span class="figure point pt__B">B</span>, and <span class="figure point pt__C">C</span> are not collinear<span class="implication">⇐</span><span class="figure point pt__B">B</span> is the vertex of <span class="figure ang__A__B__C">∠<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>, <span class="figure point pt__C">C</span> lies on a side, and <span class="figure point pt__D">D</span> lies inside
-<ul>
-<li class="essential"><span class="handler"></span><span class="figure point pt__D">D</span> lies inside <span class="figure ang__A__B__C">∠<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span><span class="implication">⇐</span>point <span class="figure point pt__D">D</span> is inside <span class="figure tr__A__B__C">△<span class="figure point pt__A">A</span><span class="figure point pt__B">B</span><span class="figure point pt__C">C</span></span>
-</li>
-</ul>
-</li>
-<li class="normal"><span class="handler"></span>Points <span class="figure point pt__B">B</span>, <span class="figure point pt__C">C</span>, and <span class="figure point pt__H">H</span> are collinear<span class="implication">⇐</span>three points on the line <span class="figure point pt__(B C)">(B&nbsp;C)</span>
 </li>
 </ul>
 </li>
@@ -1115,16 +1118,16 @@ Show essential steps only
 </div>
 </body>
 <script type='text/javascript'>
-sandbox$.initScene(-1.237, -4.009, 5.334, 2.561);
-sandbox$.addPoint("A", -0.478, 0.824);
-sandbox$.addPoint("B", 1.260, -2.651);
-sandbox$.addPoint("C", 4.576, 1.202);
-sandbox$.addPoint("H", 2.238, -1.514);
-sandbox$.addPoint("G", 0.382, -0.896);
-sandbox$.addPoint("D", 1.101, -0.536);
+sandbox$.initScene(-2.560, -6.717, 7.515, 3.358);
+sandbox$.addPoint("A", -1.398, 1.272);
+sandbox$.addPoint("B", -0.144, -4.630);
+sandbox$.addPoint("C", 6.353, -0.158);
+sandbox$.addPoint("H", 1.763, -3.318);
+sandbox$.addPoint("G", -0.772, -1.672);
+sandbox$.addPoint("D", 0.450, -1.412);
 sandbox$.addLine("B", "C");
 sandbox$.addLine("H", "A");
-sandbox$.addLine("A", "C");
+sandbox$.addLine("C", "A");
 sandbox$.addLine("B", "A");
 sandbox$.addLine("G", "C");
 sandbox$.setupTree();
