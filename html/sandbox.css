@@ -1,24 +1,24 @@
-.gsb-tree {
+.sandbox-tree {
 	margin: 30px;
 }
 
-.gsb-tree ul {
+.sandbox-tree ul {
   list-style-type: none;
   padding-left: 20px;
   display: none;
 }
 
-.gsb-tree li.open > ul {
+.sandbox-tree li.open > ul {
   display: block;
 }
 
-.gsb-tree > ul {
+.sandbox-tree > ul {
   margin: 0;
   padding: 0;
   display: block;
 }
 
-.gsb-tree li > span.handler::before {
+.sandbox-tree li > span.handler::before {
   content: "⊡";
   color: #888888;
   display: inline-block;
@@ -29,19 +29,19 @@
 	pointer-events: auto;
 }
 
-.gsb-tree li.closed > span.handler, .gsb-tree li.open > span.handler {
+.sandbox-tree li.closed > span.handler, .sandbox-tree li.open > span.handler {
   cursor: pointer;
 }
 
-.gsb-tree li.closed > span.handler::before {
+.sandbox-tree li.closed > span.handler::before {
   content: "⊞";
 }
 
-.gsb-tree li.open > span.handler::before {
+.sandbox-tree li.open > span.handler::before {
   content: "⊟";
 }
 
-.gsb-tree li.empty.closed > span.handler::before, .gsb-tree li.empty.open > span.handler::before {
+.sandbox-tree li.empty.closed > span.handler::before, .sandbox-tree li.empty.open > span.handler::before {
   content: "⊡";
 }
 

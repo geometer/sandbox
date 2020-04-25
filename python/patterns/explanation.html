@@ -2,31 +2,31 @@
 <head>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<style>
-.gsb-tree {
+.sandbox-tree {
 	margin: 30px;
 }
 
-.gsb-tree ul {
+.sandbox-tree ul {
   list-style-type: none;
   padding-left: 20px;
   display: none;
 }
 
-.gsb-tree li.open > ul {
+.sandbox-tree li.open > ul {
   display: block;
 }
 
-.gsb-tree > ul {
+.sandbox-tree > ul {
   margin: 0;
   padding: 0;
   display: block;
 }
 
-.gsb-tree li {
+.sandbox-tree li {
 	pointer-events: none;
 }
 
-.gsb-tree li::before {
+.sandbox-tree li::before {
   content: "⊡";
   color: #888888;
   display: inline-block;
@@ -37,33 +37,33 @@
 	pointer-events: auto;
 }
 
-.gsb-tree li.closed.empty, .gsb-tree li.open.empty {
+.sandbox-tree li.closed.empty, .sandbox-tree li.open.empty {
   cursor: auto;
 }
 
-.gsb-tree li.closed, .gsb-tree li.open {
+.sandbox-tree li.closed, .sandbox-tree li.open {
   cursor: pointer;
 }
 
-.gsb-tree li {
+.sandbox-tree li {
   cursor: auto;
 }
 
-.gsb-tree li.closed::before {
+.sandbox-tree li.closed::before {
   content: "⊞";
 }
 
-.gsb-tree li.open::before {
+.sandbox-tree li.open::before {
   content: "⊟";
 }
 
-.gsb-tree li.empty.closed::before, .gsb-tree li.empty.open::before {
+.sandbox-tree li.empty.closed::before, .sandbox-tree li.empty.open::before {
   content: "⊡";
 }
 	</style>
 </head>
 <body>
-<div class='gsb-tree' id='gsb-tree'>
+<div class='sandbox-tree' id='sandbox-tree'>
 <div style='margin-bottom:16px;'>
   <input type='checkbox' id='checkbox' onclick='toggleNonEssential()'>
 Show auxiliary properties
@@ -72,7 +72,7 @@ $$TREE$$
 </div>
 </html>
 <script type='text/javascript'>
-root = document.getElementById('gsb-tree');
+root = document.getElementById('sandbox-tree');
 root.querySelectorAll('li').forEach(item => {
 	if (item.querySelector('ul') == null) {
 		return;

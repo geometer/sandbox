@@ -41,7 +41,7 @@ addLine: function(pt0, pt1) {
 },
 
 setupTree: function() {
-	var root = document.getElementById('gsb-tree');
+	var root = document.getElementById('sandbox-tree');
 	root.querySelectorAll('span').forEach(item => {
 		if (item.parentElement.nodeName.toLowerCase() == 'span') {
 			return;
@@ -125,7 +125,7 @@ setupTree: function() {
 },
 
 toggleNonEssential: function() {
-	var root = document.getElementById('gsb-tree');
+	var root = document.getElementById('sandbox-tree');
 	var props = root.querySelectorAll('.normal');
 	if (root.querySelector('#checkbox').checked) {
 		props.forEach(item => { item.style.display='none'; });
