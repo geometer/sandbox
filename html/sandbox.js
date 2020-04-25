@@ -41,14 +41,17 @@ addLine: function(pt0, pt1) {
 },
 
 setupTree: function() {
-	var root = document.getElementById('sandbox-tree');
-	root.querySelectorAll('span').forEach(item => {
-		if (item.parentElement.nodeName.toLowerCase() == 'span') {
+	var root = $('#sandbox-tree');
+	root.find('span').each(function() {
+		if ($(this).parent().prop('tagName').toLowerCase() == 'span') {
 			return;
 		}
-		item.classList.forEach(cls => {
-			var points = null;
-			var lines = [];
+
+		var clazz = null;
+		var points = null;
+		var lines = [];
+		$(this)[0].classList.forEach(cls => {
+			clazz = cls;
 			if (cls.startsWith('tr__')) {
 				points = cls.split('__').slice(1, 4);
 				lines = [
@@ -74,82 +77,81 @@ setupTree: function() {
 			} else if (cls.startsWith('pt__')) {
 				points = cls.split('__').slice(1, 2);
 			}
-			if (points) {
-				item.addEventListener('click', function() {
-					if (item.classList.contains('selected')) {
-						points.forEach(id => {
-							var count = sandbox$.selectedPoints[id] - 1;
-							if (count == 0) {
-								sandbox$.board.elementsByName[id].noHighlight();
-							}
-							sandbox$.selectedPoints[id] = count;
-						});
-						sandbox$.selectedSegments[cls].forEach(obj => {sandbox$.board.removeObject(obj);});
-						delete sandbox$.selectedSegments[cls];
-						root.querySelectorAll('.' + cls).forEach(elt => {elt.classList.remove('selected');});
-					} else {
-						points.forEach(id => {
-							sandbox$.selectedPoints[id] = (sandbox$.selectedPoints[id] || 0) + 1;
-							sandbox$.board.elementsByName[id].highlight(); }
+		});
+
+		if (points) {
+			$(this).click(function() {
+				if ($(this).hasClass('selected')) {
+					points.forEach(id => {
+						var count = sandbox$.selectedPoints[id] - 1;
+						if (count == 0) {
+							sandbox$.board.elementsByName[id].noHighlight();
+						}
+						sandbox$.selectedPoints[id] = count;
+					});
+					sandbox$.selectedSegments[clazz].forEach(obj => {sandbox$.board.removeObject(obj);});
+					delete sandbox$.selectedSegments[clazz];
+					root.find('.' + clazz).each(function() { $(this).removeClass('selected'); });
+				} else {
+					points.forEach(id => {
+						sandbox$.selectedPoints[id] = (sandbox$.selectedPoints[id] || 0) + 1;
+						sandbox$.board.elementsByName[id].highlight(); }
+					);
+					var selected = [];
+					lines.forEach(ln => {
+						selected.push(sandbox$.board.create(
+							'line', [sandbox$.board.elementsByName[ln['s']], sandbox$.board.elementsByName[ln['e']]], {
+								straightFirst: false,
+								straightLast: ln['type'] == 'ray',
+								color: sandbox$.options.hl_color,
+								strokeWidth: 1.0
+							})
 						);
-						var selected = [];
-						lines.forEach(ln => {
-							selected.push(sandbox$.board.create(
-								'line', [sandbox$.board.elementsByName[ln['s']], sandbox$.board.elementsByName[ln['e']]], {
-									straightFirst: false,
-									straightLast: ln['type'] == 'ray',
-									color: sandbox$.options.hl_color,
-									strokeWidth: 1.0
-								})
-							);
-						});
-						sandbox$.selectedSegments[cls] = selected;
-						root.querySelectorAll('.' + cls).forEach(elt => {elt.classList.add('selected');});
-						sandbox$.board.update();
-						sandbox$.board.update();
-					}
-				});
-			}
-		});
-	});
-	root.querySelectorAll('li').forEach(item => {
-		if (item.querySelector('ul') == null) {
-			return;
+					});
+					sandbox$.selectedSegments[clazz] = selected;
+					root.find('.' + clazz).each(function() { $(this).addClass('selected'); });
+					sandbox$.board.update();
+					sandbox$.board.update();
+				}
+			});
 		}
-		item.classList.add('closed');
-		item.classList.remove('open');
-		item.querySelector('span.handler').addEventListener('click', function(e) {
-			item.classList.toggle('open');
-			item.classList.toggle('closed');
-			e.stopPropagation();
-		});
+	});
+	root.find('li').each(function() {
+		var element = $(this);
+		if (element.find('ul')) {
+			element.addClass('closed');
+			element.removeClass('open');
+			element.find('span.handler').first().click(function() {
+				element.toggleClass('open');
+				element.toggleClass('closed');
+			});
+		}
 	});
 },
 
 toggleNonEssential: function() {
-	var root = document.getElementById('sandbox-tree');
-	var props = root.querySelectorAll('.normal');
-	if (root.querySelector('#checkbox').checked) {
-		props.forEach(item => { item.style.display='none'; });
-	} else {
-		props.forEach(item => { item.style.display='block'; });
-	}
-	root.querySelectorAll('li').forEach(item => {
-		var list = item.querySelector('ul');
-		if (list == null) {
+	var root = $('#sandbox-tree');
+	var hideNonEssential = root.find('#checkbox').is(':checked');
+	root.find('.normal').each(function() {
+		$(this).css('display', hideNonEssential ? 'none' : 'block');
+	});
+	root.find('li').each(function() {
+		var list = $(this).find('ul').first();
+		if (!list) {
 			return;
 		}
 		var hasVisibleChildren = false;
-		for (var i = 0; i < list.children.length; i++) {
-			if (list.children[i].style.display != 'none') {
+		list.children().each(function() {
+			if ($(this).css('display') != 'none') {
 				hasVisibleChildren = true;
-				break;
+				return false;
 			}
-		}
-		if (!hasVisibleChildren) {
-			item.classList.add('empty');
+			return true;
+		});
+		if (hasVisibleChildren) {
+			$(this).removeClass('empty');
 		} else {
-			item.classList.remove('empty');
+			$(this).addClass('empty');
 		}
 	});
 },
