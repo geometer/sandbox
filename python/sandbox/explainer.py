@@ -96,7 +96,7 @@ class Explainer:
             return
         def insert(pro):
             for pre in pro.reason.premises:
-                if self.context.index_of(pre) == -1:
+                if self.context.index_of(pre) is None:
                     self.context.add(pre)
             self.context.add(pro)
 
@@ -109,12 +109,14 @@ class Explainer:
         elif len(reason.all_premises) < len(existing.reason.all_premises):
             reason.obsolete = existing.reason.obsolete
             existing.reason = reason
-            #TODO: if the rule reference changed from 'synthetic',
-            # add the property to a transitivity set
             if hasattr(prop, 'rule'):
                 existing.rule = prop.rule
             elif hasattr(existing, 'rule'):
                 delattr(existing, 'rule')
+            #TODO: if the rule reference changed from 'synthetic',
+            # add the property to a transitivity set
+            if self.context.index_of(existing) is None:
+                insert(existing)
 
     def explain(self):
         start = time.time()

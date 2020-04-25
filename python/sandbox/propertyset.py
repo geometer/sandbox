@@ -663,7 +663,7 @@ class PropertySet:
         return False
 
     def index_of(self, prop):
-        return self.__indexes.get(prop, -1)
+        return self.__indexes.get(prop)
 
     def __getitem__(self, prop):
         existing = self.__full_set.get(prop)
