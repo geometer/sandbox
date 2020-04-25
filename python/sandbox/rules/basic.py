@@ -438,7 +438,7 @@ class EquidistantToPerpendicularRule(Rule):
             return
         yield (
             SameOrOppositeSideProperty(segment0, *pts0, False),
-            LazyComment('Perpendicular bisector %s separates endpoints of the segment %s', segment0, segment1),
+            LazyComment('Perpendicular bisector %s separates endpoints of the segment %s', segment0.as_line, segment1),
             [cs0, cs1, ne0, ne1]
         )
 
@@ -455,7 +455,7 @@ class PointsSeparatedByLineAreNotCoincidentRule(SingleSourceRule):
         if not prop.reason.obsolete:
             yield (
                 PointsCoincidenceProperty(prop.points[0], prop.points[1], False),
-                LazyComment('the points are separated by line %s', prop.segment),
+                LazyComment('the points are separated by line %s', prop.segment.as_line),
                 [prop]
             )
 
@@ -908,7 +908,7 @@ class SameSideToInsideAngleRule(Rule):
         if centre is None:
             return
         triangle = Scene.Triangle(*[pt for pt in set0 if pt != centre])
-        comment = LazyComment('Line %s separates %s and %s, line %s separates %s and %s => the intersection %s lies inside %s', op0.segment, *op0.points, op1.segment, *op1.points, centre, triangle)
+        comment = LazyComment('Line %s separates %s and %s, line %s separates %s and %s => the intersection %s lies inside %s', op0.segment.as_line, *op0.points, op1.segment.as_line, *op1.points, centre, triangle)
         angles = triangle.angles
         for i in range(0, 3):
             yield (

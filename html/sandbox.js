@@ -71,6 +71,9 @@ setupTree: function() {
 			} else if (cls.startsWith('ray__')) {
 				points = cls.split('__').slice(1, 3);
 				lines = [{s: points[0], e: points[1], type: 'ray'}];
+			} else if (cls.startsWith('ln__')) {
+				points = cls.split('__').slice(1, 3);
+				lines = [{s: points[0], e: points[1], type: 'line'}];
 			} else if (cls.startsWith('seg__')) {
 				points = cls.split('__').slice(1, 3);
 				lines = [{s: points[0], e: points[1]}];
@@ -113,8 +116,8 @@ setupTree: function() {
 					lines.forEach(ln => {
 						selected.push(sandbox$.board.create(
 							'line', [sandbox$.board.elementsByName[ln['s']], sandbox$.board.elementsByName[ln['e']]], {
-								straightFirst: false,
-								straightLast: ln['type'] == 'ray',
+								straightFirst: ln['type'] == 'line',
+								straightLast: ln['type'] == 'ray' || ln['type'] == 'line',
 								color: sandbox$.options.hl_color,
 								strokeWidth: 1.0
 							})

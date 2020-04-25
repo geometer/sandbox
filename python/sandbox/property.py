@@ -147,9 +147,9 @@ class SameOrOppositeSideProperty(Property):
     @property
     def description(self):
         if self.same:
-            return LazyComment('%s, %s located on the same side of line %s', *self.points, self.segment)
+            return LazyComment('%s, %s located on the same side of line %s', *self.points, self.segment.as_line)
         else:
-            return LazyComment('%s, %s located on opposite sides of line %s', *self.points, self.segment)
+            return LazyComment('%s, %s located on opposite sides of line %s', *self.points, self.segment.as_line)
 
     def compare_values(self, other):
         return self.same == other.same

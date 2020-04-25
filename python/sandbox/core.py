@@ -475,6 +475,10 @@ class CoreScene:
         def as_ray(self):
             return CoreScene.Ray(self.start, self.end)
 
+        @property
+        def as_line(self):
+            return CoreScene.StraightLine(self.start, self.end)
+
         def angle(self, other):
             angle = self.scene._get_angle(self, other)
             if not self.scene.is_frozen:
@@ -525,6 +529,10 @@ class CoreScene:
         def __init__(self, pt0, pt1):
             self.points = (pt0, pt1)
             self.point_set = frozenset(self.points)
+
+        @property
+        def as_line(self):
+            return CoreScene.StraightLine(*self.points)
 
         @property
         def scene(self):
@@ -742,6 +750,20 @@ class CoreScene:
 
         def __str__(self):
             return str(LazyComment('%s %s', self.start, self.point))
+
+    class StraightLine:
+        def __init__(self, point0, point1):
+            self.point0 = point0
+            self.point1 = point1
+
+        def html(self):
+            return LazyComment(
+                '<span class="figure ln__%s__%s">%s%s</span>',
+                LazyString(self.point0), LazyString(self.point1), self.point0, self.point1
+            )
+
+        def __str__(self):
+            return str(LazyComment('%s %s', self.point0, self.point1))
 
     class Triangle:
         def __init__(self, pt0, pt1, pt2):
