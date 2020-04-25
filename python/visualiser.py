@@ -1,5 +1,6 @@
 import argparse
 from itertools import combinations
+import json
 import numpy as np
 import re
 
@@ -42,23 +43,18 @@ def drawScene(scene, args, attempts=10, extra_points=()):
     for pt in points:
         coords[pt] = placement.location(pt)
 
-    max_x = max(coo.x for coo in coords.values())
-    min_x = min(coo.x for coo in coords.values())
-    max_y = max(coo.y for coo in coords.values())
-    min_y = min(coo.y for coo in coords.values())
-    mid_x = (min_x + max_x) / 2
-    mid_y = (min_y + max_y) / 2
-    size = max(max_x - min_x, max_y - min_y) * 1.3
-    print('sandbox$.initScene(%.3f, %.3f, %.3f, %.3f);' % (mid_x - size / 2, mid_y - size / 2, mid_x + size / 2, mid_y + size / 2))
+    scene_points = []
     for pt, coo in coords.items():
-        print('sandbox$.addPoint("%s", %.3f, %.3f);' % (pt.name, coo.x, coo.y))
+        scene_points.append({'name': pt.name, 'x': float(coo.x), 'y': float(coo.y)})
+    scene_lines = []
     for line in lines:
         pts = [pt for pt in line.all_points if pt in coords]
         if len(pts) < 2:
             continue
         pts.sort(key=lambda pt: coords[pt].x)
         pts.sort(key=lambda pt: coords[pt].y)
-        print('sandbox$.addLine("%s", "%s");' % (pts[0].name, pts[-1].name))
+        scene_lines.append({'pt0': pts[0].name, 'pt1': pts[-1].name})
+    print('sandbox$.createScene(\'%s\');' % json.dumps({'points': scene_points, 'lines': scene_lines}));
 
 def drawTree(scene, prop, args):
     options = { 'max_layer': args.max_layer }

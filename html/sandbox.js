@@ -9,35 +9,55 @@ options: {
 	hl_color: '#F44336',
 },
 
-initScene: function(l, t, r, b) {
+createScene: function(json) {
+	var scene = JSON.parse(json);
+	var xs = [];
+	var ys = [];
+	console.debug(scene);
+	scene.points.forEach(pt => {
+		xs.push(pt.x);
+		ys.push(pt.y);
+	});
+	var max_x = Math.max(... xs);
+	var min_x = Math.min(... xs);
+	var max_y = Math.max(... ys);
+	var min_y = Math.min(... ys);
+  var mid_x = (min_x + max_x) / 2;
+  var mid_y = (min_y + max_y) / 2;
+	var size = Math.max(max_x - min_x, max_y - min_y) * 1.3;
 	this.board = JXG.JSXGraph.initBoard('sandbox-scene', {
-		boundingbox: [l, t, r, b],
+		boundingbox: [mid_x - size / 2, mid_y - size / 2, mid_x + size / 2, mid_y + size / 2],
 		keepaspectratio: true,
 		showNavigation: false,
 		showCopyright: false,
 		registerEvents: false
 	});
-},
 
-addPoint: function(name, x, y) {
-	this.board.create('point', [x, y], {
-		name: name,
-		id: name,
-		color: this.options.color,
-		highlightFillColor: this.options.hl_color,
-		highlightStrokeColor: this.options.hl_color,
-		size: 3,
-		label: {color: this.options.color, autoPosition: true}
+	scene.points.forEach(pt => {
+		this.board.create('point', [pt.x, pt.y], {
+			name: pt.name,
+			id: pt.name,
+			color: this.options.color,
+			highlightFillColor: this.options.hl_color,
+			highlightStrokeColor: this.options.hl_color,
+			size: 3,
+			label: {color: this.options.color, autoPosition: true}
+		});
 	});
-},
 
-addLine: function(pt0, pt1) {
-	this.board.create('line', [this.board.elementsByName[pt0], this.board.elementsByName[pt1]], {
-		straightFirst: false,
-		straightLast: false,
-		strokeWidth: 0.7,
-		color: this.options.color
+	scene.lines.forEach(line => {
+		this.board.create('line', [this.board.elementsByName[line.pt0], this.board.elementsByName[line.pt1]], {
+			straightFirst: false,
+			straightLast: false,
+			strokeWidth: 0.7,
+			color: this.options.color
+		});
 	});
+
+	setTimeout(function() {
+		console.debug('labels layout hack');
+		sandbox$.board.update();
+	}, 0);
 },
 
 setupTree: function() {
@@ -169,13 +189,6 @@ toggleNonEssential: function() {
 			$(this).addClass('empty');
 		}
 	});
-},
-
-updateLabels: function() {
-	setTimeout(function() {
-		console.debug('labels layout hack');
-		sandbox$.board.update();
-	}, 0);
 }
 
 };
