@@ -1,46 +1,46 @@
-var selectedPoints = {};
-var selectedSegments = {};
-var board = null;
+sandbox$ = {
 
-let options = {
-	//color: '#42A5F5',
-	//hl_color: '#00E6E3',
+selectedPoints: {},
+selectedSegments: {},
+board: null,
+
+options: {
 	color: '#212121',
 	hl_color: '#F44336',
-};
+},
 
-function initScene(l, t, r, b) {
-	board = JXG.JSXGraph.initBoard('scene', {
+initScene: function(l, t, r, b) {
+	this.board = JXG.JSXGraph.initBoard('scene', {
 		boundingbox: [l, t, r, b],
 		keepaspectratio: true,
 		showNavigation: false,
 		showCopyright: false,
 		registerEvents: false
 	});
-}
+},
 
-function addPoint(name, x, y) {
-	board.create('point', [x, y], {
+addPoint: function(name, x, y) {
+	this.board.create('point', [x, y], {
 		name: name,
 		id: name,
-		color: options.color,
-		highlightFillColor: options.hl_color,
-		highlightStrokeColor: options.hl_color,
+		color: this.options.color,
+		highlightFillColor: this.options.hl_color,
+		highlightStrokeColor: this.options.hl_color,
 		size: 3,
-		label: {color: options.color, autoPosition: true}
+		label: {color: this.options.color, autoPosition: true}
 	});
-}
+},
 
-function addLine(pt0, pt1) {
-	board.create('line', [board.elementsByName[pt0], board.elementsByName[pt1]], {
+addLine: function(pt0, pt1) {
+	this.board.create('line', [this.board.elementsByName[pt0], this.board.elementsByName[pt1]], {
 		straightFirst: false,
 		straightLast: false,
 		strokeWidth: 0.7,
-		color: options.color
+		color: this.options.color
 	});
-}
+},
 
-function setupTree() {
+setupTree: function() {
 	var root = document.getElementById('gsb-tree');
 	root.querySelectorAll('span').forEach(item => {
 		if (item.parentElement.nodeName.toLowerCase() == 'span') {
@@ -78,32 +78,32 @@ function setupTree() {
 				item.addEventListener('click', function() {
 					if (item.classList.contains('selected')) {
 						points.forEach(id => {
-							var count = selectedPoints[id] - 1;
+							var count = sandbox$.selectedPoints[id] - 1;
 							if (count == 0) {
-								board.elementsByName[id].noHighlight();
+								sandbox$.board.elementsByName[id].noHighlight();
 							}
-							selectedPoints[id] = count;
+							sandbox$.selectedPoints[id] = count;
 						});
-						selectedSegments[cls].forEach(obj => {board.removeObject(obj);});
-						delete selectedSegments[cls];
+						sandbox$.selectedSegments[cls].forEach(obj => {sandbox$.board.removeObject(obj);});
+						delete sandbox$.selectedSegments[cls];
 						root.querySelectorAll('.' + cls).forEach(elt => {elt.classList.remove('selected');});
 					} else {
 						points.forEach(id => {
-							selectedPoints[id] = (selectedPoints[id] || 0) + 1;
-							board.elementsByName[id].highlight(); }
+							sandbox$.selectedPoints[id] = (sandbox$.selectedPoints[id] || 0) + 1;
+							sandbox$.board.elementsByName[id].highlight(); }
 						);
 						var selected = [];
 						lines.forEach(ln => {
-							selected.push(board.create(
-								'line', [board.elementsByName[ln['s']], board.elementsByName[ln['e']]], {
+							selected.push(sandbox$.board.create(
+								'line', [sandbox$.board.elementsByName[ln['s']], sandbox$.board.elementsByName[ln['e']]], {
 									straightFirst: false,
 									straightLast: ln['type'] == 'ray',
-									color:options.hl_color,
-									strokeWidth:1.0
+									color: sandbox$.options.hl_color,
+									strokeWidth: 1.0
 								})
 							);
 						});
-						selectedSegments[cls] = selected;
+						sandbox$.selectedSegments[cls] = selected;
 						root.querySelectorAll('.' + cls).forEach(elt => {elt.classList.add('selected');});
 					}
 				});
@@ -122,9 +122,9 @@ function setupTree() {
 			e.stopPropagation();
 		});
 	});
-}
+},
 
-function toggleNonEssential() {
+toggleNonEssential: function() {
 	var root = document.getElementById('gsb-tree');
 	var props = root.querySelectorAll('.normal');
 	if (root.querySelector('#checkbox').checked) {
@@ -150,4 +150,6 @@ function toggleNonEssential() {
 			item.classList.remove('empty');
 		}
 	});
-};
+}
+
+}

@@ -14,7 +14,7 @@
 <div id="scene" class="jxgbox" style="width:5in;height:5in;display:inline-block;vertical-align:top;"></div>
 <div class='gsb-tree' id='gsb-tree' div style='margin-left:36px;width:50%;display:inline-block;vertical-align:top;'>
 <div style='margin-bottom:16px;'>
-	<input type='checkbox' id='checkbox' checked='1' onclick='toggleNonEssential()'>
+	<input type='checkbox' id='checkbox' checked='1' onclick='sandbox$.toggleNonEssential()'>
 Show essential steps only
 </div>
 $$TREE$$
@@ -23,7 +23,7 @@ $$TREE$$
 </body>
 <script type='text/javascript'>
 $$SCENE$$
-setupTree();
-toggleNonEssential();
+sandbox$.setupTree();
+sandbox$.toggleNonEssential();
 </script>
 </html>
