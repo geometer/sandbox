@@ -82,7 +82,9 @@ setupTree: function() {
 		if (points) {
 			$(this).click(function() {
 				var deselect = function() {
-					$('#sandbox-selections').find('.' + clazz).remove();
+					var tag = $('#sandbox-selections').find('.' + clazz);
+					tag.next().remove();
+					tag.remove();
 					points.forEach(id => {
 						var count = sandbox$.selectedPoints[id] - 1;
 						if (count == 0) {
@@ -100,7 +102,9 @@ setupTree: function() {
 					var clone = $(this).clone();
 					clone.addClass('selected');
 					clone.click(deselect);
-					clone.appendTo($('#sandbox-selections'));
+					var area = $('#sandbox-selections');
+					area.append(clone);
+					area.append('<span class="space"></span>');
 					points.forEach(id => {
 						sandbox$.selectedPoints[id] = (sandbox$.selectedPoints[id] || 0) + 1;
 						sandbox$.board.elementsByName[id].highlight(); }

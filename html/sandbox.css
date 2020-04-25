@@ -2,12 +2,15 @@
 	padding-top: 20px;
 	padding-right: 12px;
 	padding-left: 12px;
-	line-break: anywhere;
 	line-height: 2em;
 }
 
-.sandbox-selections > span {
+.sandbox-selections > span.figure {
 	margin-right: 0.6em;
+}
+
+.sandbox-selections > span.space {
+	display: inline-block;
 }
 
 .sandbox-tree ul {
