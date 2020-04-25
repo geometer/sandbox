@@ -1,17 +1,15 @@
 <html>
 <head>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
+<script type='text/javascript' charset='utf-8' src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
 <script type='text/javascript' charset='utf-8' src='../html/third-party/jsxgraphcore.js'></script>
 <script type='text/javascript' charset='utf-8' src='../html/sandbox.js'></script>
 <link rel='stylesheet' type='text/css' href='../html/third-party/jsxgraph.css'/>
 <link rel='stylesheet' type='text/css' href='../html/sandbox.css'/>
-<style>
-.JXGText { font-size: 16px !important;}
-</style>
 </head>
 <body>
 <div id="main" style="width:14in;">
-<div id="scene" class="jxgbox" style="width:5in;height:5in;display:inline-block;vertical-align:top;"></div>
+<div id="sandbox-scene" class="jxgbox" style="width:5in;height:5in;display:inline-block;vertical-align:top;"></div>
 <div class='sandbox-tree' id='sandbox-tree' div style='margin-left:36px;width:50%;display:inline-block;vertical-align:top;'>
 <div style='margin-bottom:16px;'>
 <input type='checkbox' id='checkbox' checked='1' onclick='sandbox$.toggleNonEssential()'>
@@ -1117,16 +1115,16 @@ Show essential steps only
 </div>
 </body>
 <script type='text/javascript'>
-sandbox$.initScene(-0.297, -1.616, 4.740, 3.422);
-sandbox$.addPoint("A", 0.284, 2.402);
-sandbox$.addPoint("B", 0.800, -0.595);
-sandbox$.addPoint("C", 4.159, 1.531);
-sandbox$.addPoint("H", 1.786, 0.029);
-sandbox$.addPoint("G", 0.541, 0.908);
-sandbox$.addPoint("D", 1.162, 1.015);
+sandbox$.initScene(-1.237, -4.009, 5.334, 2.561);
+sandbox$.addPoint("A", -0.478, 0.824);
+sandbox$.addPoint("B", 1.260, -2.651);
+sandbox$.addPoint("C", 4.576, 1.202);
+sandbox$.addPoint("H", 2.238, -1.514);
+sandbox$.addPoint("G", 0.382, -0.896);
+sandbox$.addPoint("D", 1.101, -0.536);
 sandbox$.addLine("B", "C");
 sandbox$.addLine("H", "A");
-sandbox$.addLine("C", "A");
+sandbox$.addLine("A", "C");
 sandbox$.addLine("B", "A");
 sandbox$.addLine("G", "C");
 sandbox$.setupTree();

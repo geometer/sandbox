@@ -1,17 +1,15 @@
 <html>
 <head>
 	<meta name='viewport' content='width=device-width, initial-scale=1'>
+	<script type='text/javascript' charset='utf-8' src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
 	<script type='text/javascript' charset='utf-8' src='../html/third-party/jsxgraphcore.js'></script>
 	<script type='text/javascript' charset='utf-8' src='../html/sandbox.js'></script>
 	<link rel='stylesheet' type='text/css' href='../html/third-party/jsxgraph.css'/>
 	<link rel='stylesheet' type='text/css' href='../html/sandbox.css'/>
-	<style>
-	.JXGText { font-size: 16px !important;}
-	</style>
 </head>
 <body>
 <div id="main" style="width:14in;">
-<div id="scene" class="jxgbox" style="width:5in;height:5in;display:inline-block;vertical-align:top;"></div>
+<div id="sandbox-scene" class="jxgbox" style="width:5in;height:5in;display:inline-block;vertical-align:top;"></div>
 <div class='sandbox-tree' id='sandbox-tree' div style='margin-left:36px;width:50%;display:inline-block;vertical-align:top;'>
 <div style='margin-bottom:16px;'>
 	<input type='checkbox' id='checkbox' checked='1' onclick='sandbox$.toggleNonEssential()'>

@@ -10,7 +10,7 @@ options: {
 },
 
 initScene: function(l, t, r, b) {
-	this.board = JXG.JSXGraph.initBoard('scene', {
+	this.board = JXG.JSXGraph.initBoard('sandbox-scene', {
 		boundingbox: [l, t, r, b],
 		keepaspectratio: true,
 		showNavigation: false,
