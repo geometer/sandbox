@@ -74,8 +74,7 @@ def drawTree(scene, prop, args):
     def htmlize(obj):
         while hasattr(obj, 'html'):
             obj = obj.html()
-        string = str(obj)
-        return re.sub('\|', '<span style="font-size:130%;vertical-align:-2px;">|</span>', string)
+        return str(obj)
 
     data = [{
         'property': htmlize(p),
