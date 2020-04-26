@@ -83,7 +83,7 @@ createTree: function(json) {
 	root.append(tree);
 
 	root.find('span').each(function() {
-		if ($(this).parent().prop('tagName').toLowerCase() == 'span') {
+		if ($(this).parent('.figure').length > 0) {
 			return;
 		}
 
@@ -125,9 +125,12 @@ createTree: function(json) {
 		if (points) {
 			$(this).click(function() {
 				var deselect = function() {
-					var tag = $('#sandbox-selections').find('.' + clazz);
-					tag.next().remove();
-					tag.remove();
+					$('#sandbox-selections').find('.' + clazz).each(function() {
+						if ($(this).parent('.figure').length == 0) {
+							$(this).next().remove();
+							$(this).remove();
+						}
+					});
 					points.forEach(id => {
 						var count = sandbox$.selectedPoints[id] - 1;
 						if (count == 0) {
