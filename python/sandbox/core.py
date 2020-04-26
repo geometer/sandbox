@@ -70,9 +70,6 @@ class CoreScene:
         def name(self):
             return self.label
 
-        def html(self):
-            return '<span class="figure point pt__%s">%s</span>' % (self.name, re.sub(' ', '&nbsp;', re.sub('_([0-9]+)', '<sub>\\1</sub>', self.name)))
-
         def __str__(self):
             return self.name
 
@@ -114,6 +111,9 @@ class CoreScene:
             assert isinstance(origin, CoreScene.Point.Origin), 'origin must be a Point.Origin, not %s' % type(origin)
             CoreScene.Object.__init__(self, scene, origin=origin, **kwargs)
             self.__vectors = {}
+
+        def html(self):
+            return '<span class="figure point pt__%s">%s</span>' % (self.name, re.sub(' ', '&nbsp;', re.sub('_([0-9]+)', '<sub>\\1</sub>', self.name)))
 
         def translated_point(self, vector, coef=1, **kwargs):
             self.scene.assert_vector(vector)
