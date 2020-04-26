@@ -13,7 +13,6 @@ createScene: function(json) {
 	var scene = JSON.parse(json);
 	var xs = [];
 	var ys = [];
-	console.debug(scene);
 	scene.points.forEach(pt => {
 		xs.push(pt.x);
 		ys.push(pt.y);
@@ -60,8 +59,29 @@ createScene: function(json) {
 	}, 0);
 },
 
-setupTree: function() {
+createTree: function(json) {
 	var root = $('#sandbox-tree');
+
+	var data = JSON.parse(json);
+	var buildTree = function(root, index) {
+		var obj = data[index];
+		var item = $('<li/>');
+		item.addClass(obj.priority);
+		item.append('<span class="handler"/>');
+		item.append(obj.property);
+		item.append('<span class="implication">⇐</span>');
+		item.append(obj.comment);
+		if (obj.premises.length > 0) {
+			var list = $('<ul/>');
+			obj.premises.forEach(ind => { buildTree(list, ind); });
+			item.append(list);
+		}
+		root.append(item);
+	};
+	var tree = $('<ul/>');
+	buildTree(tree, 0);
+	root.append(tree);
+
 	root.find('span').each(function() {
 		if ($(this).parent().prop('tagName').toLowerCase() == 'span') {
 			return;
@@ -127,7 +147,7 @@ setupTree: function() {
 					clone.click(deselect);
 					var area = $('#sandbox-selections');
 					area.append(clone);
-					area.append('<span class="space"></span>');
+					area.append('<span class="space"/>');
 					points.forEach(id => {
 						sandbox$.selectedPoints[id] = (sandbox$.selectedPoints[id] || 0) + 1;
 						sandbox$.board.elementsByName[id].highlight(); }

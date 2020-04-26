@@ -64,26 +64,27 @@ def drawTree(scene, prop, args):
     explainer.explain()
     explanation = explainer.explanation(prop)
     if not explanation:
-        print('\tNot explained: %s' % prop)
+        return
 
-    def dump(prop):
-        def html(comment):
-            while hasattr(comment, 'html'):
-                comment = comment.html()
-            return str(comment)
-        s = '%s<span class="implication">⇐</span>%s' % (html(prop), ', '.join([html(com) for com in prop.reason.comments]))
-        s = re.sub('\|', '<span style="font-size:130%;vertical-align:-2px;">|</span>', s)
-        print('<li class="%s"><span class="handler"></span>%s' % ('essential' if prop.essential else 'normal', s))
-        if prop.reason.premises:
-            print('<ul>')
-            for premise in prop.reason.premises:
-                dump(premise)
-            print('</ul>')
-        print('</li>')
+    all_props = [explanation] + list(explanation.reason.all_premises)
+    indexes = {}
+    for index, p in enumerate(all_props):
+        indexes[p] = index
 
-    print('<ul>')
-    dump(explanation)
-    print('</ul>')
+    def htmlize(obj):
+        while hasattr(obj, 'html'):
+            obj = obj.html()
+        string = str(obj)
+        return re.sub('\|', '<span style="font-size:130%;vertical-align:-2px;">|</span>', string)
+
+    data = [{
+        'property': htmlize(p),
+        'comment': ', '.join([htmlize(com) for com in p.reason.comments]),
+        'premises': [indexes[r] for r in p.reason.premises],
+        'priority': 'essential' if p.essential else 'normal'
+    } for p in all_props]
+    
+    print('sandbox$.createTree(\'%s\');' % re.sub('\\\\"', '\\\\\\\\"', json.dumps(data)))
 
 def visualise(scene, prop):
     parser = argparse.ArgumentParser()
