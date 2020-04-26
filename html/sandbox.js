@@ -179,7 +179,14 @@ createTree: function(json) {
 		if (element.find('ul')) {
 			element.addClass('closed');
 			element.removeClass('open');
-			element.find('span.handler').first().click(function() {
+			element.find('span.handler').first().click(function(e) {
+				if (e.shiftKey) {
+					if (element.hasClass('closed')) {
+						element.find('.closed').removeClass('closed').addClass('open');
+					} else if (element.hasClass('open')) {
+						element.find('.open').removeClass('open').addClass('closed');
+					}
+				}
 				element.toggleClass('open');
 				element.toggleClass('closed');
 			});
