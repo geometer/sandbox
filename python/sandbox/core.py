@@ -336,7 +336,6 @@ class CoreScene:
         def __init__(self, scene, **kwargs):
             CoreScene.Object.__init__(self, scene, **kwargs)
             self.all_points = [self.point0, self.point1]
-            self.__key = frozenset(self.all_points)
 
         @property
         def name(self):
@@ -346,12 +345,6 @@ class CoreScene:
                         return '(%s %s)' % (points[0].name, points[1].name)
 
             return super().name
-
-        def __eq__(self, other):
-            return isinstance(other, CoreScene.Line) and self.__key == other.__key
-
-        def __hash__(self):
-            return hash(self.__key)
 
         def free_point(self, **kwargs):
             point = CoreScene.Point(self.scene, CoreScene.Point.Origin.line, line=self, **kwargs)
