@@ -85,7 +85,7 @@ class ParallelSegmentsProperty(Property):
         self.__segment_set = frozenset(self.segments)
 
     def keys(self):
-        return list(self.segments)
+        return self.segments
 
     @property
     def description(self):
@@ -107,7 +107,7 @@ class PerpendicularSegmentsProperty(Property):
         self.__segment_set = frozenset(self.segments)
 
     def keys(self):
-        return list(self.segments)
+        return self.segments
 
     @property
     def description(self):

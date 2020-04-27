@@ -365,7 +365,7 @@ class Explainer:
                     continue
                 for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
                     for perp in self.context.list(PerpendicularSegmentsProperty, [vec0.as_segment]):
-                        other = perp.segment0 if vec0.as_segment == perp.segment1 else perp.segment1
+                        other = perp.segments[0] if vec0.as_segment == perp.segments[1] else perp.segments[1]
                         if vec1.end not in other.points:
                             continue
                         foot = next(pt for pt in other.points if pt != vec1.end)
@@ -545,8 +545,11 @@ class Explainer:
                     continue
                 pt0 = next(pt for pt in ar.angle0.endpoints if pt not in ar.angle1.endpoints)
                 pt1 = next(pt for pt in ar.angle1.endpoints if pt not in ar.angle0.endpoints)
-                oppo = self.context[SameOrOppositeSideProperty(ar.angle0.vertex.segment(common), pt0, pt1, False)]
-                if not oppo or oppo.same or ar.reason.obsolete and oppo.reason.obsolete:
+                try:
+                    oppo = self.context[SameOrOppositeSideProperty(ar.angle0.vertex.segment(common), pt0, pt1, False)]
+                except: # TODO: we process here case of oppo.same == True; do the same with no try/except
+                    continue
+                if not oppo or ar.reason.obsolete and oppo.reason.obsolete:
                     continue
                 yield (
                     AngleValueProperty(ar.angle0.vertex.angle(pt0, pt1), 180),

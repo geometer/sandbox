@@ -325,7 +325,7 @@ class CommonPerpendicularRule(SingleSourceRule):
             for perp in self.context.list(PerpendicularSegmentsProperty, [seg0]):
                 if prop.reason.obsolete and perp.reason.obsolete:
                     continue
-                other = next(seg for seg in perp.segments if seg != seg0)
+                other = perp.segments[1] if seg0 == perp.segments[0] else perp.segments[0]
                 yield (
                     PerpendicularSegmentsProperty(seg1, other),
                     LazyComment('Any line perpendicular to %s is also perpendicular to %s', seg0, seg1),
@@ -719,7 +719,10 @@ class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
             angle0 = lp0.angle(pt0, lp1)
             angle1 = lp1.angle(pt1, lp0)
             if prop.same:
-                sum_reason = self.context[SumOfAnglesProperty(angle0, angle1, 180)]
+                try:
+                    sum_reason = self.context[SumOfAnglesProperty(angle0, angle1, 180)]
+                except: #TODO: check contradiction with no try/except
+                    continue
                 ratio_reason = None
                 if sum_reason is None:
                     for cnd in [p for p in self.context.list(SumOfAnglesProperty, [angle0]) if p.degree == 180]:
