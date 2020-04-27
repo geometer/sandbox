@@ -107,7 +107,7 @@ class CorrespondingAnglesInCongruentTrianglesRule(SingleSourceRule):
             if angles0[i] != angles1[i]:
                 yield (
                     AngleRatioProperty(angles0[i], angles1[i], 1),
-                    'Corresponding angles in congruent non-degenerate triangles',
+                    LazyComment('corresponding angles in congruent %s and %s', prop.triangle0, prop.triangle1),
                     [prop, ncl]
                 )
 
