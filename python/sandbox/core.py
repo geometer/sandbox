@@ -651,6 +651,8 @@ class CoreScene:
         assert vector0.scene == self
         assert vector1.scene == self
 
+        if vector0.end == vector1.end:
+            vector0, vector1 = vector0.reversed, vector1.reversed
         key = frozenset([vector0, vector1])
         angle = self.__angles.get(key)
         if angle is None:
@@ -663,6 +665,7 @@ class CoreScene:
 
     class Angle:
         def __init__(self, vector0, vector1):
+            assert vector0 != vector1 and vector0 != vector1.reversed
             self.vector0 = vector0
             self.vector1 = vector1
             self.vertex = self.vector0.start if self.vector0.start == self.vector1.start else None
