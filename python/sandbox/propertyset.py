@@ -677,9 +677,10 @@ class PropertySet:
         if isinstance(prop, AngleValueProperty) and prop.degree not in (0, 180):
             #TODO: check degree for contradiction
             return self.angle_value_property(prop.angle)
+        if isinstance(prop, SameCyclicOrderProperty):
+            return self.same_cyclic_order_property(prop.cycle0, prop.cycle1)
         #TODO: LengthRatioProperty
         #TODO: EqualLengthRatiosProperty
-        #TODO: SameCyclicOrderProperty
         return None
 
     def collinearity_property(self, pt0, pt1, pt2):
@@ -777,7 +778,7 @@ class PropertySet:
 
     def same_cyclic_order_property(self, cycle0, cycle1):
         prop = SameCyclicOrderProperty(cycle0, cycle1)
-        existing = self[prop]
+        existing = self.__full_set.get(prop)
         if existing:
             return existing
         comment, premises = self.__cyclic_orders.explanation(cycle0, cycle1)
