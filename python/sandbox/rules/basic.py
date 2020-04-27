@@ -284,8 +284,8 @@ class PerpendicularSegmentsRule(SingleSourceRule):
     property_type = PerpendicularSegmentsProperty
 
     def apply(self, pv):
-        seg0 = pv.segment0
-        seg1 = pv.segment1
+        seg0 = pv.segments[0]
+        seg1 = pv.segments[1]
         ne0 = self.context.not_equal_property(*seg0.points)
         ne1 = self.context.not_equal_property(*seg1.points)
         if ne0 is None or ne1 is None:
@@ -325,7 +325,7 @@ class CommonPerpendicularRule(SingleSourceRule):
             for perp in self.context.list(PerpendicularSegmentsProperty, [seg0]):
                 if prop.reason.obsolete and perp.reason.obsolete:
                     continue
-                other = perp.segment1 if seg0 == perp.segment0 else perp.segment0
+                other = perp.segments[1] if seg0 == perp.segments[0] else perp.segments[0]
                 yield (
                     PerpendicularSegmentsProperty(seg1, other),
                     LazyComment('Any line perpendicular to %s is also perpendicular to %s', seg0, seg1),
@@ -338,13 +338,11 @@ class TwoPointsBelongsToTwoPerpendicularsRule(Rule):
 
     def apply(self, src):
         perp0, perp1 = src
-        segments0 = (perp0.segment0, perp0.segment1)
-        segments1 = (perp1.segment0, perp1.segment1)
-        common = next((seg for seg in segments0 if seg in segments1), None)
+        common = next((seg for seg in perp0.segments if seg in perp1.segments), None)
         if common is None:
             return
-        seg0 = next(seg for seg in segments0 if seg != common)
-        seg1 = next(seg for seg in segments1 if seg != common)
+        seg0 = next(seg for seg in perp0.segments if seg != common)
+        seg1 = next(seg for seg in perp1.segments if seg != common)
         points = set(seg0.points + seg1.points)
         if len(points) != 3:
             return
@@ -363,13 +361,11 @@ class PerpendicularTransitivityRule(Rule):
 
     def apply(self, src):
         perp0, perp1 = src
-        segments0 = (perp0.segment0, perp0.segment1)
-        segments1 = (perp1.segment0, perp1.segment1)
-        common = next((seg for seg in segments0 if seg in segments1), None)
+        common = next((seg for seg in perp0.segments if seg in perp1.segments), None)
         if common is None:
             return
-        seg0 = next(seg for seg in segments0 if seg != common)
-        seg1 = next(seg for seg in segments1 if seg != common)
+        seg0 = next(seg for seg in perp0.segments if seg != common)
+        seg1 = next(seg for seg in perp1.segments if seg != common)
         common_point = next((pt for pt in seg0.points if pt in seg1.points), None)
         if common_point is None:
             return
@@ -393,10 +389,9 @@ class PerpendicularToEquidistantRule(SingleSourceRule):
     property_type = PerpendicularSegmentsProperty
 
     def apply(self, prop):
-        if len({*prop.segment0.points, *prop.segment1.points}) != 4:
+        if len({*prop.segments[0].points, *prop.segments[1].points}) != 4:
             return
-        segments = (prop.segment0, prop.segment1)
-        for seg0, seg1 in (segments, reversed(segments)):
+        for seg0, seg1 in (prop.segments, reversed(prop.segments)):
             segments = (
                 [seg0.points[0].segment(pt) for pt in seg1.points],
                 [seg0.points[1].segment(pt) for pt in seg1.points]

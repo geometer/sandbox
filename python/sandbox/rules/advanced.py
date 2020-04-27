@@ -13,11 +13,11 @@ class RightAngledTriangleMedianRule(SingleSourceRule):
     property_type = PerpendicularSegmentsProperty
 
     def apply(self, prop):
-        vertex = next((pt for pt in prop.segment0.points if pt in prop.segment1.points), None)
+        vertex = next((pt for pt in prop.segments[0].points if pt in prop.segments[1].points), None)
         if vertex is None:
             return
-        pt0 = next(pt for pt in prop.segment0.points if pt != vertex)
-        pt1 = next(pt for pt in prop.segment1.points if pt != vertex)
+        pt0 = next(pt for pt in prop.segments[0].points if pt != vertex)
+        pt1 = next(pt for pt in prop.segments[1].points if pt != vertex)
         hypot = pt0.segment(pt1)
         for col in [p for p in self.context.list(PointsCollinearityProperty, [hypot]) if p.collinear]:
             med = next(pt for pt in col.points if pt not in hypot.points)

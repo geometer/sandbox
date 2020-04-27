@@ -791,7 +791,7 @@ class PropertySet:
     def foot_of_perpendicular(self, point, segment):
         #TODO: cache not-None values (?)
         for prop in self.list(PerpendicularSegmentsProperty, [segment]):
-            other = prop.segment1 if segment == prop.segment0 else prop.segment0
+            other = prop.segments[1] if segment == prop.segments[0] else prop.segments[0]
             if not point in other.points:
                 continue
             candidate = next(pt for pt in other.points if pt != point)

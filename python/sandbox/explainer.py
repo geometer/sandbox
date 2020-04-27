@@ -340,7 +340,7 @@ class Explainer:
                     continue
                 for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
                     for perp in self.context.list(PerpendicularSegmentsProperty, [vec0.as_segment]):
-                        other = perp.segment0 if vec0.as_segment == perp.segment1 else perp.segment1
+                        other = perp.segments[0] if vec0.as_segment == perp.segments[1] else perp.segments[1]
                         if vec1.end not in other.points:
                             continue
                         foot = next(pt for pt in other.points if pt != vec1.end)
@@ -364,7 +364,7 @@ class Explainer:
                     continue
                 for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
                     for perp in self.context.list(PerpendicularSegmentsProperty, [vec0.as_segment]):
-                        other = perp.segment0 if vec0.as_segment == perp.segment1 else perp.segment1
+                        other = perp.segments[0] if vec0.as_segment == perp.segments[1] else perp.segments[1]
                         if vec1.end not in other.points:
                             continue
                         foot = next(pt for pt in other.points if pt != vec1.end)
@@ -388,7 +388,7 @@ class Explainer:
                     continue
                 for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
                     for perp in self.context.list(PerpendicularSegmentsProperty, [vec0.as_segment]):
-                        other = perp.segment0 if vec0.as_segment == perp.segment1 else perp.segment1
+                        other = perp.segments[0] if vec0.as_segment == perp.segments[1] else perp.segments[1]
                         if vec1.end not in other.points:
                             continue
                         foot = next(pt for pt in other.points if pt != vec1.end)

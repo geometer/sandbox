@@ -81,16 +81,15 @@ class PerpendicularSegmentsProperty(Property):
     Two segments are perpendicular (or at least one of them has zero length)
     """
     def __init__(self, segment0, segment1):
-        self.segment0 = segment0
-        self.segment1 = segment1
-        self.__segment_set = frozenset([segment0, segment1])
+        self.segments = (segment0, segment1)
+        self.__segment_set = frozenset(self.segments)
 
     def keys(self):
-        return [self.segment0, self.segment1]
+        return self.segments
 
     @property
     def description(self):
-        return LazyComment('%s ⟂ %s', self.segment0, self.segment1)
+        return LazyComment('%s ⟂ %s', *self.segments)
 
     def __eq__(self, other):
         return isinstance(other, PerpendicularSegmentsProperty) and \
