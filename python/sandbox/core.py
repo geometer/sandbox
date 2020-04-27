@@ -347,6 +347,9 @@ class CoreScene:
             return super().name
 
         def free_point(self, **kwargs):
+            if 'comment' not in kwargs:
+                kwargs = dict(kwargs)
+                kwargs['comment'] = LazyComment('point on line %s', self.label)
             point = CoreScene.Point(self.scene, CoreScene.Point.Origin.line, line=self, **kwargs)
             point.belongs_to(self)
             return point
@@ -410,6 +413,9 @@ class CoreScene:
                     self.all_points.append(self.radius.points[0])
 
         def free_point(self, **kwargs):
+            if 'comment' not in kwargs:
+                kwargs = dict(kwargs)
+                kwargs['comment'] = LazyComment('point on circle %s', self.label)
             point = CoreScene.Point(self.scene, CoreScene.Point.Origin.circle, circle=self, **kwargs)
             point.belongs_to(self)
             return point
