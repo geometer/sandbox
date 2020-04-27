@@ -85,18 +85,22 @@ def drawTree(scene, prop, args):
     
     print('sandbox$.createTree(\'%s\');' % re.sub('\\\\"', '\\\\\\\\"', json.dumps(data)))
 
-def visualise(scene, prop):
+def load_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--max-layer', default='user', choices=CoreScene.layers)
     parser.add_argument('--extra-rules', nargs='+', choices=('advanced', 'trigonometric'), default=())
-    args = parser.parse_args()
+    return parser.parse_args()
 
+#def visualise(scene, prop=None, arguments=load_args()):
+def visualise(scene, prop=None, arguments=None):
+    args = arguments if arguments else load_args()
     with open('../html/pattern.html') as f:
         for line in f.readlines():
             line = line.strip()
             if line == '$$SCENE$$':
                 drawScene(scene, args)
             elif line == '$$TREE$$':
-                drawTree(scene, prop, args)
+                if prop:
+                    drawTree(scene, prop, args)
             else:
                 print(line)
