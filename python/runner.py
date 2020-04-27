@@ -36,7 +36,11 @@ def run_sample(scene, prop=None):
         import cProfile
         cProfile.runctx('explainer.explain()', {'explainer': explainer}, {})
     else:
-        explainer.explain()
+        try:
+            explainer.explain()
+        except Exception as e:
+            explainer.dump()
+            raise e
     if 'properties' in args.dump:
         explainer.dump(properties)
     if 'stats' in args.dump:

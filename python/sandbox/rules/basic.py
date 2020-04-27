@@ -641,6 +641,8 @@ class AngleTypeByDegreeRule(Rule):
     def apply(self, prop):
         if prop.reason.obsolete:
             return
+        if prop.degree in (0, 180):
+            return
         if prop.degree < 90:
             yield (
                 AngleKindProperty(prop.angle, AngleKindProperty.Kind.acute),
