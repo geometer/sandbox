@@ -671,6 +671,19 @@ class AngleTypeByDegreeRule(Rule):
                 prop.reason.premises
             )
 
+class PointsCollinearityByAngleDegreeRule(Rule):
+    def sources(self):
+        return self.context.angle_value_properties()
+
+    def apply(self, prop):
+        if prop.angle.vertex is None or prop.reason.obsolete:
+            return
+        yield (
+            PointsCollinearityProperty(*prop.angle.point_set, prop.degree in (0, 180)),
+            LazyComment('%s', prop),
+            [prop]
+        )
+
 class RightAngleDegreeRule(SingleSourceRule):
     property_type = AngleKindProperty
 
