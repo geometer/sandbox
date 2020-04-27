@@ -56,6 +56,7 @@ class Explainer:
             LegsOfIsoscelesRule(self.context),
             RotatedAngleRule(self.context),
             AngleTypeByDegreeRule(self.context),
+            PointsCollinearityByAngleDegreeRule(self.context),
             RightAngleDegreeRule(self.context),
             AngleTypesInObtuseangledTriangleRule(self.context),
             PartOfAcuteAngleIsAcuteRule(self.context),
@@ -554,15 +555,6 @@ class Explainer:
                     AngleValueProperty(ar.angle0.vertex.angle(pt0, pt1), 180),
                     LazyComment('%s + %s', ar.angle0, ar.angle1),
                     [ar, oppo]
-                )
-
-            for av in self.context.list(AngleValueProperty):
-                if av.reason.obsolete or av.angle.vertex is None:
-                    continue
-                yield (
-                    PointsCollinearityProperty(*av.angle.point_set, av.degree in (0, 180)),
-                    '',#TODO: write comment
-                    [av]
                 )
 
             for ang0, ang1 in self.context.congruent_angles_with_vertex():
