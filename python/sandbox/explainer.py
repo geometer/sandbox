@@ -682,7 +682,7 @@ class Explainer:
             if reason.premises:
                 return '%s (%s)' % (
                     ', '.join([str(com) for com in reason.comments]),
-                    ', '.join(['*%d' % self.context.index_of(prop) for prop in reason.premises])
+                    ', '.join(['*%s' % self.context.index_of(prop) for prop in reason.premises])
                 )
             else:
                 return ', '.join([str(com) for com in reason.comments])
