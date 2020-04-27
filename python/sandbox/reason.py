@@ -10,6 +10,7 @@ class Reason:
 
     @property
     def all_premises(self):
+        self.__all_premises = None
         if self.__all_premises is None:
             self.__all_premises = set()
             if self.premises is not None:
