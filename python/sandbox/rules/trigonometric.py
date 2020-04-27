@@ -12,7 +12,7 @@ class LawOfSinesRule(Rule):
     The law of sines
     """
     def sources(self):
-        return [p for p in self.context.nondegenerate_angle_value_properties() if p.angle.vertex]
+        return [p for p in self.context.nondegenerate_angle_value_properties() if p.angle.vertex and p.degree not in (0, 180)]
 
     def apply(self, av0):
         triangle = Scene.Triangle(av0.angle.vertex, *av0.angle.endpoints)
