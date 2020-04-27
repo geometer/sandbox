@@ -63,6 +63,7 @@ createTree: function(json) {
 	var root = $('#sandbox-tree');
 
 	var data = JSON.parse(json);
+	console.debug(data);
 	var buildTree = function(root, index) {
 		var obj = data[index];
 		var item = $('<li/>');
@@ -198,7 +199,8 @@ toggleNonEssential: function() {
 	var root = $('#sandbox-tree');
 	var hideNonEssential = root.find('#checkbox').is(':checked');
 	root.find('.normal').each(function() {
-		$(this).css('display', hideNonEssential ? 'none' : 'block');
+		var hide = !$(this).find('.essential').exists() && hideNonEssential;
+		$(this).css('display', hide ? 'none' : 'block');
 	});
 	root.find('li').each(function() {
 		var list = $(this).find('ul').first();
