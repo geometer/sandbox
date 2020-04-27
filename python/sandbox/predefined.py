@@ -127,7 +127,7 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
         for rad0, rad1 in itertools.combinations(radiuses, 2):
             yield (
                 ProportionalLengthsProperty(rad0, rad1, 1),
-                [LazyComment('two radiuses of the same circle with centre %s', circle.centre)]
+                [LazyComment('two radiuses of the circle with centre %s', circle.centre)]
             )
 
     for cnstr in scene.constraints(Constraint.Kind.opposite_side):
