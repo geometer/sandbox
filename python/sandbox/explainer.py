@@ -44,6 +44,7 @@ class Explainer:
             SameSidePointInsideSegmentRule(self.context),
             TwoPerpendicularsRule(self.context),
             TwoPerpendicularsRule2(self.context),
+            ParallelSameSideRule(self.context),
             CommonPerpendicularRule(self.context),
             SideProductsInSimilarTrianglesRule(self.context),
             CorrespondingAnglesInCongruentTrianglesRule(self.context),

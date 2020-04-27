@@ -92,7 +92,7 @@ class ParallelSegmentsProperty(Property):
         return LazyComment('%s ∥ %s', *self.segments)
 
     def __eq__(self, other):
-        return isinstance(other, PerpendicularSegmentsProperty) and \
+        return isinstance(other, ParallelSegmentsProperty) and \
             self.__segment_set == other.__segment_set
 
     def __hash__(self):

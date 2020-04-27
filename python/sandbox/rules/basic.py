@@ -529,7 +529,7 @@ class TwoPerpendicularsRule2(Rule):
         if common is None:
             return
         ne = self.context.not_equal_property(*common.points)
-        if ne is None:
+        if ne is None or perp0.reason.obsolete and perp1.reason.obsolete and ne.reason.obsolete:
             return
         other0 = next(seg for seg in perp0.segments if seg != common)
         other1 = next(seg for seg in perp1.segments if seg != common)
@@ -538,6 +538,24 @@ class TwoPerpendicularsRule2(Rule):
             LazyComment('%s ⟂ %s ⟂ %s', other0, common, other1),
             [perp0, perp1, ne]
         )
+
+class ParallelSameSideRule(SingleSourceRule):
+    property_type = ParallelSegmentsProperty
+
+    def apply(self, prop):
+        for seg0, seg1 in (prop.segments, reversed(prop.segments)):
+            ncl = self.context.collinearity_property(*seg0.points, seg1.points[0])
+            if ncl is None:
+                ncl = self.context.collinearity_property(*seg0.points, seg1.points[1])
+            if ncl is None or prop.reason.obsolete and ncl.reason.obsolete:
+                continue
+            if ncl.collinear:
+                return
+            yield (
+                SameOrOppositeSideProperty(seg0, *seg1.points, True),
+                '', #TODO: write comment
+                []
+            )
 
 class LengthProductEqualityToRatioRule(SingleSourceRule):
     property_type = EqualLengthProductsProperty
