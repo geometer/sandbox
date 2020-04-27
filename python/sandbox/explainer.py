@@ -544,8 +544,11 @@ class Explainer:
                     continue
                 pt0 = next(pt for pt in ar.angle0.endpoints if pt not in ar.angle1.endpoints)
                 pt1 = next(pt for pt in ar.angle1.endpoints if pt not in ar.angle0.endpoints)
-                oppo = self.context[SameOrOppositeSideProperty(ar.angle0.vertex.segment(common), pt0, pt1, False)]
-                if not oppo or oppo.same or ar.reason.obsolete and oppo.reason.obsolete:
+                try:
+                    oppo = self.context[SameOrOppositeSideProperty(ar.angle0.vertex.segment(common), pt0, pt1, False)]
+                except: # TODO: we process here case of oppo.same == True; do the same with no try/except
+                    continue
+                if not oppo or ar.reason.obsolete and oppo.reason.obsolete:
                     continue
                 yield (
                     AngleValueProperty(ar.angle0.vertex.angle(pt0, pt1), 180),

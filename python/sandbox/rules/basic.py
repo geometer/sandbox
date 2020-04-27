@@ -701,7 +701,10 @@ class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
             angle0 = lp0.angle(pt0, lp1)
             angle1 = lp1.angle(pt1, lp0)
             if prop.same:
-                sum_reason = self.context[SumOfAnglesProperty(angle0, angle1, 180)]
+                try:
+                    sum_reason = self.context[SumOfAnglesProperty(angle0, angle1, 180)]
+                except: #TODO: check contradiction with no try/except
+                    continue
                 ratio_reason = None
                 if sum_reason is None:
                     for cnd in [p for p in self.context.list(SumOfAnglesProperty, [angle0]) if p.degree == 180]:
