@@ -63,7 +63,6 @@ createTree: function(json) {
 	var root = $('#sandbox-tree');
 
 	var data = JSON.parse(json);
-	console.debug(data);
 	var buildTree = function(root, index) {
 		var obj = data[index];
 		var item = $('<li/>');
