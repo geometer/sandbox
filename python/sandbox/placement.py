@@ -502,6 +502,9 @@ class Placement(BasePlacement):
 
 def iterative_placement(scene, max_attempts=10000, max_iterations=400, print_progress=False):
     for attempt in range(0, max_attempts):
+        frozen = scene.is_frozen
+        if not frozen:
+            scene.freeze()
         try:
             placement = Placement(scene)
             if placement.deviation() < 1e-14:
@@ -521,4 +524,8 @@ def iterative_placement(scene, max_attempts=10000, max_iterations=400, print_pro
         except PlacementFailedError as e:
             if print_progress:
                 print('Attempt %d failed: %s\r' % (attempt, e))
+        finally:
+            if not frozen:
+                scene.unfreeze()
+
     return None
