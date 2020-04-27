@@ -799,7 +799,11 @@ class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
                     continue
                 if ratio_reason.value == 1:
                     for p in AngleValueProperty.generate(lp0.vector(pt0), pt1.vector(lp1), 0):
-                        yield (p, 'Equal corresponding angles', [prop, ratio_reason])
+                        yield (
+                            p,
+                            LazyComment('corresponding angles %s and %s are equal', angle0, angle1),
+                            [prop, ratio_reason]
+                        )
 
 class CyclicOrderRule(SingleSourceRule):
     property_type = SameOrOppositeSideProperty
