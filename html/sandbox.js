@@ -198,7 +198,8 @@ toggleNonEssential: function() {
 	var root = $('#sandbox-tree');
 	var hideNonEssential = root.find('#checkbox').is(':checked');
 	root.find('.normal').each(function() {
-		$(this).css('display', hideNonEssential ? 'none' : 'block');
+		var hide = !$(this).find('.essential').exists() && hideNonEssential;
+		$(this).css('display', hide ? 'none' : 'block');
 	});
 	root.find('li').each(function() {
 		var list = $(this).find('ul').first();
