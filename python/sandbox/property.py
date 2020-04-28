@@ -76,6 +76,28 @@ class ParallelVectorsProperty(Property):
     def __hash__(self):
         return hash(ParallelVectorsProperty) + hash(self.__vector_set)
 
+class ParallelSegmentsProperty(Property):
+    """
+    Two segments are parallel (or at least one of them has zero length)
+    """
+    def __init__(self, segment0, segment1):
+        self.segments = (segment0, segment1)
+        self.__segment_set = frozenset(self.segments)
+
+    def keys(self):
+        return self.segments
+
+    @property
+    def description(self):
+        return LazyComment('%s ∥ %s', *self.segments)
+
+    def __eq__(self, other):
+        return isinstance(other, ParallelSegmentsProperty) and \
+            self.__segment_set == other.__segment_set
+
+    def __hash__(self):
+        return hash(ParallelSegmentsProperty) + hash(self.__segment_set)
+
 class PerpendicularSegmentsProperty(Property):
     """
     Two segments are perpendicular (or at least one of them has zero length)
