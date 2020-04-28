@@ -1,6 +1,7 @@
 from enum import Enum, auto
 import itertools
 
+from .figure import Figure
 from .scene import Scene
 from .util import LazyComment, divide, good_angles, normalize_number, keys_for_triangle
 
@@ -161,6 +162,10 @@ class SameOrOppositeSideProperty(Property):
         self.points = (point0, point1)
         self.same = same
         self.__object_set = frozenset([segment, point0, point1])
+
+    @property
+    def essential(self):
+        return False
 
     def keys(self):
         return [self.segment]
@@ -560,7 +565,7 @@ class IsoscelesTriangleProperty(Property):
     def __hash__(self):
         return hash(IsoscelesTriangleProperty) + hash(self.apex) + hash(self.base)
 
-class Cycle:
+class Cycle(Figure):
     def __init__(self, pt0, pt1, pt2):
         self.points = (pt0, pt1, pt2)
         self.__key = frozenset([(pt0, pt1, pt2), (pt1, pt2, pt0), (pt2, pt0, pt1)])
@@ -573,8 +578,8 @@ class Cycle:
             self.__reversed.__reversed = self
         return self.__reversed
 
-    def html(self):
-        return LazyComment('↻&nbsp;%s&nbsp;%s&nbsp;%s', *self.points)
+    def css_class(self):
+        return LazyComment('cyc__%s__%s__%s', *self.points)
 
     def __str__(self):
         return '↻ %s %s %s' % self.points

@@ -61,6 +61,9 @@ createScene: function(json) {
 
 createTree: function(json) {
 	var root = $('#sandbox-tree');
+	beautified = function(text) {
+		return text.replaceAll('|', '<span style=\'font-size:130%;vertical-align:-2px;\'>|</span>');
+	}
 
 	var data = JSON.parse(json);
 	var buildTree = function(root, index) {
@@ -68,9 +71,9 @@ createTree: function(json) {
 		var item = $('<li/>');
 		item.addClass(obj.priority);
 		item.append('<span class="handler"/>');
-		item.append(obj.property);
+		item.append(beautified(obj.property));
 		item.append('<span class="implication">⇐</span>');
-		item.append(obj.comment);
+		item.append(beautified(obj.comment));
 		if (obj.premises.length > 0) {
 			var list = $('<ul/>');
 			obj.premises.forEach(ind => { buildTree(list, ind); });
@@ -82,18 +85,14 @@ createTree: function(json) {
 	buildTree(tree, 0);
 	root.append(tree);
 
-	root.find('span').each(function() {
-		if ($(this).parent('.figure').length > 0) {
-			return;
-		}
-
+	root.find('.figure').each(function() {
 		var clazz = null;
 		var points = null;
 		var lines = [];
 		$(this)[0].classList.forEach(cls => {
 			clazz = cls;
 			if (cls.startsWith('tr__')) {
-				points = cls.split('__').slice(1, 4);
+				points = cls.split('__').slice(1);
 				lines = [
 					{s: points[0], e: points[1]},
 					{s: points[0], e: points[2]},
@@ -105,25 +104,34 @@ createTree: function(json) {
 					lines.push({s: points[i], e: points[(i + 1) % points.length]});
 				}
 			} else if (cls.startsWith('ang__')) {
-				points = cls.split('__').slice(1, 4);
+				points = cls.split('__').slice(1);
 				lines = [
 					{s: points[1], e: points[0], type: 'ray'},
 					{s: points[1], e: points[2], type: 'ray'}
 				];
+			} else if (cls.startsWith('ang4__')) {
+				points = cls.split('__').slice(1);
+				lines = [
+					{s: points[0], e: points[1], type: 'ray'},
+					{s: points[2], e: points[3], type: 'ray'}
+				];
 			} else if (cls.startsWith('vec__')) {
-				points = cls.split('__').slice(1, 3);
+				points = cls.split('__').slice(1);
 				lines = [{s: points[0], e: points[1]}];
 			} else if (cls.startsWith('ray__')) {
-				points = cls.split('__').slice(1, 3);
+				points = cls.split('__').slice(1);
 				lines = [{s: points[0], e: points[1], type: 'ray'}];
 			} else if (cls.startsWith('ln__')) {
-				points = cls.split('__').slice(1, 3);
+				points = cls.split('__').slice(1);
 				lines = [{s: points[0], e: points[1], type: 'line'}];
 			} else if (cls.startsWith('seg__')) {
-				points = cls.split('__').slice(1, 3);
+				points = cls.split('__').slice(1);
 				lines = [{s: points[0], e: points[1]}];
+			} else if (cls.startsWith('cyc__')) {
+				points = cls.split('__').slice(1);
+				// TODO: add lines
 			} else if (cls.startsWith('pt__')) {
-				points = cls.split('__').slice(1, 2);
+				points = cls.split('__').slice(1);
 			}
 		});
 
@@ -131,10 +139,8 @@ createTree: function(json) {
 			$(this).click(function() {
 				var deselect = function() {
 					$('#sandbox-selections').find('.' + clazz).each(function() {
-						if ($(this).parent('.figure').length == 0) {
-							$(this).next().remove();
-							$(this).remove();
-						}
+						$(this).next().remove();
+						$(this).remove();
 					});
 					points.forEach(id => {
 						var count = sandbox$.selectedPoints[id] - 1;
@@ -196,6 +202,51 @@ createTree: function(json) {
 				element.toggleClass('closed');
 			});
 		}
+	});
+
+	root.find('.figure').each(function() {
+		var element = $(this);
+		beautified = function(point) {
+			return '<span class=\'point\'>' + point.replace(/_(\d*)/, '<sub>$1</sub>') + '</span>';
+		};
+		append_point_list = function(cls) {
+			cls.split('__').slice(1).forEach(point => {
+				element.append(beautified(point));
+			});
+		}
+		element[0].classList.forEach(cls => {
+			element.empty();
+			if (cls.startsWith('tr__')) {
+				element.append('△');
+				append_point_list(cls);
+			} else if (cls.startsWith('plg__')) {
+				append_point_list(cls);
+			} else if (cls.startsWith('ang__')) {
+				element.append('∠');
+				append_point_list(cls);
+			} else if (cls.startsWith('ang4__')) {
+				element.append('∠');
+				points = cls.split('__').slice(1);
+				element.append(beautified(point[0]));
+				element.append(beautified(point[1]));
+				element.append(',');
+				element.append(beautified(point[2]));
+				element.append(beautified(point[3]));
+			} else if (cls.startsWith('vec__')) {
+				append_point_list(cls);
+			} else if (cls.startsWith('ray__')) {
+				append_point_list(cls);
+			} else if (cls.startsWith('ln__')) {
+				append_point_list(cls);
+			} else if (cls.startsWith('seg__')) {
+				append_point_list(cls);
+			} else if (cls.startsWith('cyc__')) {
+				element.append('↻');
+				append_point_list(cls);
+			} else if (cls.startsWith('pt__')) {
+				append_point_list(cls);
+			}
+		});
 	});
 },
 
