@@ -1,6 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<meta name='viewport' content='width=device-width, initial-scale=1'>
@@ -9,17 +8,51 @@
 	<script type='text/javascript' charset='utf-8' src='../html/sandbox.js'></script>
 	<link rel='stylesheet' type='text/css' href='../html/third-party/jsxgraph.css'/>
 	<link rel='stylesheet' type='text/css' href='../html/sandbox.css'/>
+<style>
+body {
+	background-color: #dddddd;
+  margin: 5px;
+}
+.main {
+  background-color: #ffffff;
+  display: flex;
+}
+.box {
+  background-color: #ffffff;
+  color: #000000;
+  border-radius: 5px;
+  padding: 20px;
+
+  /* Use box-sizing so that element's outerwidth will match width property */
+  box-sizing: border-box;
+
+  /* Allow box to grow and shrink, and ensure they are all equally sized */
+  flex: 1 1 auto;
+}
+.divider {
+  width: 5px;
+  padding: 0;
+  cursor: ew-resize;
+  flex: 0 0 auto;
+  background: #dddddd;
+}
+</style>
 </head>
 <body>
-<div id='main' style='width:14in;'>
-<div style='display:inline-block;vertical-align:top;width:5in;'>
+<div class='main'>
+<div class='box' id='boxA'>
+<div style='display:inline-block;vertical-align:top;'>
 <div id='sandbox-scene' class='jxgbox' style='width:5in;height:5in;'></div>
 <div id='sandbox-selections' class='sandbox-text sandbox-selections'></div>
 </div>
-<div id='sandbox-tree' class='sandbox-text sandbox-tree' style='margin-left:36px;width:50%;display:inline-block;vertical-align:top;'>
+</div>
+<div class="divider"></div>
+<div class='box'>
+<div id='sandbox-tree' class='sandbox-text sandbox-tree' style='margin-left:36px;display:inline-block;vertical-align:top;'>
 <div style='margin-bottom:16px;'>
 	<input type='checkbox' id='checkbox' checked='1' onclick='sandbox$.toggleNonEssential()'>
 Show essential steps only
+</div>
 </div>
 </div>
 </div>
@@ -28,5 +61,46 @@ Show essential steps only
 $$SCENE$$
 $$TREE$$
 sandbox$.toggleNonEssential();
+</script>
+<script type='text/javascript'>
+var handler = document.querySelector('.divider');
+var wrapper = handler.closest('.main');
+var boxA = wrapper.querySelector('.box');
+var resizeInProgress = false;
+
+$('.divider').mousedown(function(e) {
+	e.preventDefault();
+	resizeInProgress = true;
+});
+$(window.document).mouseup(function() {
+	resizeInProgress = false;
+});
+
+$(window.document).mousemove(function(e) {
+  // Don't do anything if dragging flag is false
+  if (!resizeInProgress) {
+    return false;
+  }
+
+  // Get offset
+  var containerOffsetLeft = wrapper.offsetLeft;
+
+	console.debug($('#boxA').width(), $('.divider').position(), e.clientX);
+  // Get x-coordinate of pointer relative to container
+  var pointerRelativeXpos = e.clientX - containerOffsetLeft;
+
+  // Arbitrary minimum width set on box A, otherwise its inner content will collapse to width of 0
+  var boxAminWidth = 60;
+
+  // Resize box A
+  // * 8px is the left/right spacing between .handler and its inner pseudo-element
+  // * Set flex-grow to 0 to prevent it from growing
+  //boxA.style.width = (Math.max(boxAminWidth, pointerRelativeXpos)) + 'px';
+  //boxA.style.flexGrow = 0;
+	console.debug('BEFORE: ', $('#boxA').width());
+	//$('#boxA')[0].style.width = (Math.round($('.divider').position().left) - 5) + 'px';
+	$('#boxA').width((e.clientX - 5) + 'px');
+	console.debug('AFTER: ', $('#boxA').width());
+});
 </script>
 </html>
