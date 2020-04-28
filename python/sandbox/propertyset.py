@@ -98,7 +98,7 @@ class AngleRatioPropertySet:
                 else:
                     pattern.append('%sº')
                     params.append(self.multiplier * vertex)
-            return LazyComment(' = '.join(pattern), *params).html()
+            return LazyComment(' = '.join(pattern), *params)
 
         def __str__(self):
             pattern = []

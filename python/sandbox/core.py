@@ -9,6 +9,7 @@ import re
 import sympy as sp
 from typing import List
 
+from .figure import Figure
 from .reason import Reason
 from .util import LazyComment, LazyString, divide
 
@@ -94,7 +95,7 @@ class CoreScene:
             else:
                 return '%s %s %s %s' % (self.__class__.__name__, self.label, self.name, dct)
 
-    class Point(Object):
+    class Point(Object, Figure):
         prefix = 'Pt_'
 
         class Origin(Enum):
@@ -112,8 +113,8 @@ class CoreScene:
             CoreScene.Object.__init__(self, scene, origin=origin, **kwargs)
             self.__vectors = {}
 
-        def html(self):
-            return '<span class="figure point pt__%s">%s</span>' % (self.name, re.sub(' ', '&nbsp;', re.sub('_([0-9]+)', '<sub>\\1</sub>', self.name)))
+        def css_class(self):
+            return LazyComment('pt__%s', LazyString(self))
 
         def translated_point(self, vector, coef=1, **kwargs):
             self.scene.assert_vector(vector)
@@ -454,7 +455,7 @@ class CoreScene:
                 return obj in self.all_points
             assert False, 'Operator not defined for %s and Circle' % type(obj)
 
-    class Vector:
+    class Vector(Figure):
         def __init__(self, start, end):
             assert isinstance(start, CoreScene.Point)
             assert isinstance(end, CoreScene.Point)
@@ -502,10 +503,9 @@ class CoreScene:
             assert self.scene == vector.scene
             return self.scene.constraint(Constraint.Kind.parallel_vectors, self, vector, **kwargs)
 
-        def html(self):
+        def css_class(self):
             return LazyComment(
-                '<span class="figure vec__%s__%s">%s%s</span>',
-                LazyString(self.start), LazyString(self.end), self.start, self.end
+                'vec__%s__%s', LazyString(self.start), LazyString(self.end)
             )
 
         def __str__(self):
@@ -524,7 +524,7 @@ class CoreScene:
             self.__segments[key] = segment
         return segment
 
-    class Segment:
+    class Segment(Figure):
         def __init__(self, pt0, pt1):
             self.points = (pt0, pt1)
             self.point_set = frozenset(self.points)
@@ -636,10 +636,9 @@ class CoreScene:
             #TODO: equal_constraint otherwise?
             self.scene.constraint(Constraint.Kind.distance, self, length, **kwargs)
 
-        def html(self):
+        def css_class(self):
             return LazyComment(
-                '<span class="figure seg__%s__%s">%s%s</span>',
-                LazyString(self.points[0]), LazyString(self.points[1]), *self.points
+                'seg__%s__%s', LazyString(self.points[0]), LazyString(self.points[1])
             )
 
         def __str__(self):
@@ -663,7 +662,7 @@ class CoreScene:
                 self.__angles[frozenset([vector0.reversed, vector1.reversed])] = angle
         return angle
 
-    class Angle:
+    class Angle(Figure):
         def __init__(self, vector0, vector1):
             assert vector0 != vector1 and vector0 != vector1.reversed
             self.vector0 = vector0
@@ -723,51 +722,54 @@ class CoreScene:
                 **kwargs
             )
 
-        def html(self):
+        def css_class(self):
             if self.vertex:
                 return LazyComment(
-                    '<span class="figure ang__%s__%s__%s">∠%s%s%s</span>',
+                    'ang__%s__%s__%s',
                     LazyString(self.vector0.end),
                     LazyString(self.vertex),
-                    LazyString(self.vector1.end),
-                    self.vector0.end, self.vertex, self.vector1.end
+                    LazyString(self.vector1.end)
                 )
-            return LazyComment('∠(%s,&nbsp;%s)', self.vector0, self.vector1)
+            return LazyComment(
+                'ang4__%s__%s__%s__%s',
+                LazyString(self.vector0.start),
+                LazyString(self.vector0.end),
+                LazyString(self.vector1.start),
+                LazyString(self.vector1.end)
+            )
 
         def __str__(self):
             if self.vertex:
                 return str(LazyComment('∠ %s %s %s', self.vector0.end, self.vertex, self.vector1.end))
             return '∠(%s, %s)' % (self.vector0, self.vector1)
 
-    class Ray:
+    class Ray(Figure):
         def __init__(self, start, point):
             self.start = start
             self.point = point
 
-        def html(self):
+        def css_class(self):
             return LazyComment(
-                '<span class="figure ray__%s__%s">%s%s</span>',
-                LazyString(self.start), LazyString(self.point), self.start, self.point
+                'ray__%s__%s', LazyString(self.start), LazyString(self.point)
             )
 
         def __str__(self):
             return str(LazyComment('%s %s', self.start, self.point))
 
-    class StraightLine:
+    class StraightLine(Figure):
         def __init__(self, point0, point1):
             self.point0 = point0
             self.point1 = point1
 
-        def html(self):
+        def css_class(self):
             return LazyComment(
-                '<span class="figure ln__%s__%s">%s%s</span>',
-                LazyString(self.point0), LazyString(self.point1), self.point0, self.point1
+                'ln__%s__%s', LazyString(self.point0), LazyString(self.point1)
             )
 
         def __str__(self):
             return str(LazyComment('%s %s', self.point0, self.point1))
 
-    class Triangle:
+    class Triangle(Figure):
         def __init__(self, pt0, pt1, pt2):
             self.points = (pt0, pt1, pt2)
             self.__sides = None
@@ -807,24 +809,22 @@ class CoreScene:
                 )
             return self.__permutations
 
-        def html(self):
+        def css_class(self):
             return LazyComment(
-                '<span class="figure tr__%s__%s__%s">△%s%s%s</span>',
-                *[LazyString(p) for p in self.points], *self.points
+                'tr__%s__%s__%s', *[LazyString(p) for p in self.points]
             )
 
         def __str__(self):
             return '△ %s %s %s' % self.points
 
-    class Polygon:
+    class Polygon(Figure):
         def __init__(self, *points):
             self.points = tuple(points)
 
-        def html(self):
+        def css_class(self):
             length = len(self.points)
             return LazyComment(
-                '<span class="figure plg%s">%s</span>' % ('__%s' * length, '%s' * length),
-                *[LazyString(p) for p in self.points], *self.points
+                'plg' + ('__%s' * length), *[LazyString(p) for p in self.points]
             )
 
         def __str__(self):
