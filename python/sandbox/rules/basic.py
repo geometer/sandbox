@@ -195,20 +195,6 @@ class NonCollinearPointsAreDifferentRule(SingleSourceRule):
                 [prop]
             )
 
-class SumOfTwoAnglesRule(Rule):
-    def sources(self):
-        return itertools.combinations(self.context.nondegenerate_angle_value_properties(), 2)
-
-    def apply(self, src):
-        av0, av1 = src
-        if av0.degree + av1.degree > 180 or av0.reason.obsolete and av1.reason.obsolete:
-            return
-        yield (
-            SumOfAnglesProperty(av0.angle, av1.angle, av0.degree + av1.degree),
-            LazyComment('%s + %s = %s + %s = %s', av0.angle, av1.angle, av0.degree, av1.degree, av0.degree + av1.degree),
-            [av0, av1]
-        )
-
 class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
     """
     If the sum and the ratio of two angles are known, we can find the values
