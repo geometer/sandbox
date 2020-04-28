@@ -588,14 +588,19 @@ class RotatedAngleRule(Rule):
         key = frozenset(src)
         if key in self.__processed_pairs:
             return
-        pts0 = (ang0.vertex, ang0.vector0.end, ang0.vector1.end)
-        pts1 = (ang1.vertex, ang1.vector0.end, ang1.vector1.end)
+        vec00 = ang0.vector0
+        vec01 = ang0.vector1
+        vec10 = ang1.vector0
+        vec11 = ang1.vector1
+        pts0 = (ang0.vertex, vec00.end, vec01.end)
+        pts1 = (ang1.vertex, vec10.end, vec11.end)
         if set(pts0) == set(pts1):
             self.__processed_pairs.add(key)
             return
         co = self.context.same_cyclic_order_property(Cycle(*pts0), Cycle(*pts1))
         if co is None:
-            pts1 = (ang1.vertex, ang1.vector1.end, ang1.vector0.end)
+            vec10, vec11 = vec11, vec10
+            pts1 = (ang1.vertex, vec10.end, vec11.end)
             co = self.context.same_cyclic_order_property(Cycle(*pts0), Cycle(*pts1))
         if co is None:
             return
@@ -604,13 +609,13 @@ class RotatedAngleRule(Rule):
             return
         self.__processed_pairs.add(key)
         try:
-            new_angle0 = pts0[0].vector(pts0[1]).angle(pts1[0].vector(pts1[1]))
-            new_angle1 = pts0[0].vector(pts0[2]).angle(pts1[0].vector(pts1[2]))
+            new_angle0 = vec00.angle(vec10)
+            new_angle1 = vec01.angle(vec11)
         except:
             return
         yield (
             AngleRatioProperty(new_angle0, new_angle1, 1),
-            LazyComment('%s is %s rotated by %s = %s', new_angle0, new_angle1, ang0, ang1),
+            LazyComment('%s is %s rotated by %s, %s is %s rotated by %s, %s = %s', vec00.as_ray, vec01.as_ray, ang0, vec10.as_ray, vec11.as_ray, ang1, ang0, ang1),
             [ca, co]
         )
 
