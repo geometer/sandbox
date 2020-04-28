@@ -166,6 +166,52 @@ class Scene(CoreScene):
         altitude.perpendicular_constraint(base, comment=LazyComment('altitude %s is perpendicular to the base %s', altitude, base), guaranteed=True)
         return altitude
 
+    def square(self, *points_or_labels):
+        assert len(points_or_labels) == 4
+        #TODO: check argument types
+        def kwargs(index):
+            return {'label': points_or_labels[index]}
+
+        pt0 = points_or_labels[0] if isinstance(points_or_labels[0], Scene.Point) \
+            else self.free_point(**kwargs(0))
+        pt1 = points_or_labels[1] if isinstance(points_or_labels[1], Scene.Point) \
+            else self.free_point(**kwargs(1))
+        side = pt0.line_through(pt1, layer='auxiliary')
+        perp = pt1.perpendicular_line(side, layer='auxiliary')
+        circ = pt1.circle_through(pt0, layer='invisible')
+        pt2 = points_or_labels[2] if isinstance(points_or_labels[2], Scene.Point) \
+            else perp.intersection_point(circ, **kwargs(2))
+        pt3 = points_or_labels[3] if isinstance(points_or_labels[3], Scene.Point) \
+            else pt2.translated_point(pt1.vector(pt0), 1, **kwargs(3))
+
+        pts = (pt0, pt1, pt2, pt3)
+        self.square_constraint(*pts)
+        return pts
+
+    def square_constraint(self, *pts, **kwargs):
+        assert len(pts) == 4
+        if 'comment' not in kwargs:
+            kwargs = dict(kwargs)
+            kwargs['comment'] = LazyComment('%s %s %s %s is a square', *pts)
+
+        pts[0].vector(pts[1]).parallel_constraint(pts[3].vector(pts[2]), **kwargs)
+        pts[0].vector(pts[3]).parallel_constraint(pts[1].vector(pts[2]), **kwargs)
+        sides = [pts[i].segment(pts[j]) for i, j in ((0, 1), (0, 3), (1, 2), (2, 3))]
+        for side0, side1 in itertools.combinations(sides, 2):
+            side0.congruent_constraint(side1, **kwargs)
+        for pt0, pt1, pt2 in itertools.combinations(pts, 3):
+            pt0.not_collinear_constraint(pt1, pt2, **kwargs)
+        pts[0].segment(pts[1]).perpendicular_constraint(pts[0].segment(pts[3]), **kwargs)
+        pts[0].segment(pts[1]).perpendicular_constraint(pts[1].segment(pts[2]), **kwargs)
+        pts[2].segment(pts[3]).perpendicular_constraint(pts[0].segment(pts[3]), **kwargs)
+        pts[2].segment(pts[3]).perpendicular_constraint(pts[1].segment(pts[2]), **kwargs)
+
+        #TODO: this is a hack for sketches
+        pts[0].line_through(pts[1])
+        pts[1].line_through(pts[2])
+        pts[2].line_through(pts[3])
+        pts[3].line_through(pts[0])
+
     def parallelogram(self, labels=None):
         """
         Free parallelogram
