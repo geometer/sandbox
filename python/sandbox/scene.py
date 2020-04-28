@@ -166,6 +166,28 @@ class Scene(CoreScene):
         altitude.perpendicular_constraint(base, comment=LazyComment('altitude %s is perpendicular to the base %s', altitude, base), guaranteed=True)
         return altitude
 
+    def equilateral_triangle(self, *points_or_labels, **kwargs):
+        assert len(points_or_labels) == 3
+        #TODO: check argument types
+        def ptargs(index):
+            return {'label': points_or_labels[index]}
+        pt0 = points_or_labels[0] if isinstance(points_or_labels[0], Scene.Point) \
+            else self.free_point(**ptargs(0))
+        pt1 = points_or_labels[1] if isinstance(points_or_labels[1], Scene.Point) \
+            else self.free_point(**ptargs(1))
+        if isinstance(points_or_labels[2], Scene.Point):
+            pt2 = points_or_labels[2]
+        else:
+            circle0 = pt0.circle_through(pt1, layer='invisible')
+            circle1 = pt1.circle_through(pt0, layer='invisible')
+            pt2 = circle0.intersection_point(circle1, **ptargs(2))
+        tri = Scene.Triangle(pt0, pt1, pt2)
+        if 'comment' not in kwargs:
+            kwargs = dict(kwargs)
+            kwargs['comment'] = LazyComment('%s is equilateral', tri)
+        self.equilateral_constraint(tri, **kwargs)
+        return tri
+
     def square(self, *points_or_labels):
         assert len(points_or_labels) == 4
         #TODO: check argument types
