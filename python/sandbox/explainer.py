@@ -24,6 +24,7 @@ class Explainer:
         self.__explanation_time = None
         self.__iteration_step_count = -1
         self.__rules = [
+            CircularArcRule(self.context),
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),
             SumAndRatioOfTwoAnglesRule(self.context),

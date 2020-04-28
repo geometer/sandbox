@@ -121,7 +121,10 @@ class Scene(CoreScene):
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
             kwargs['comment'] = LazyComment('Cicrumcircle of %s', triangle)
-        return centre.circle_through(triangle.points[0], **kwargs)
+        circle = centre.circle_through(triangle.points[0], **kwargs)
+        triangle.points[1].belongs_to(circle)
+        triangle.points[2].belongs_to(circle)
+        return circle
 
     def nondegenerate_triangle(self, labels=None):
         """
