@@ -99,6 +99,11 @@ createTree: function(json) {
 					{s: points[0], e: points[2]},
 					{s: points[1], e: points[2]}
 				];
+			} else if (cls.startsWith('plg__')) {
+				points = cls.split('__').slice(1);
+				for (var i = 0; i < points.length; ++i) {
+					lines.push({s: points[i], e: points[(i + 1) % points.length]});
+				}
 			} else if (cls.startsWith('ang__')) {
 				points = cls.split('__').slice(1, 4);
 				lines = [

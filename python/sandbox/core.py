@@ -816,6 +816,20 @@ class CoreScene:
         def __str__(self):
             return '△ %s %s %s' % self.points
 
+    class Polygon:
+        def __init__(self, *points):
+            self.points = tuple(points)
+
+        def html(self):
+            length = len(self.points)
+            return LazyComment(
+                '<span class="figure plg%s">%s</span>' % ('__%s' * length, '%s' * length),
+                *[LazyString(p) for p in self.points], *self.points
+            )
+
+        def __str__(self):
+            return ' '.join(['%s'] * len(self.points)) % self.points
+
     def __init__(self):
         self.__objects = []
         self.validation_constraints = []
