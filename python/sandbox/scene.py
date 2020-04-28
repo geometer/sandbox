@@ -192,7 +192,7 @@ class Scene(CoreScene):
         assert len(pts) == 4
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
-            kwargs['comment'] = LazyComment('%s %s %s %s is a square', *pts)
+            kwargs['comment'] = LazyComment('%s is a square', Scene.Polygon(*pts))
 
         pts[0].vector(pts[1]).parallel_constraint(pts[3].vector(pts[2]), **kwargs)
         pts[0].vector(pts[3]).parallel_constraint(pts[1].vector(pts[2]), **kwargs)
