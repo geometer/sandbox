@@ -191,6 +191,10 @@ class PointInsideAngleProperty(Property):
         self.__key = (point, angle)
 
     @property
+    def essential(self):
+        return False
+
+    @property
     def description(self):
         return LazyComment('%s lies inside %s', self.point, self.angle)
 
