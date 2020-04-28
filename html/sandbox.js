@@ -227,11 +227,11 @@ createTree: function(json) {
 			} else if (cls.startsWith('ang4__')) {
 				element.append('∠');
 				points = cls.split('__').slice(1);
-				element.append(beautified(point[0]));
-				element.append(beautified(point[1]));
+				element.append(beautified(points[0]));
+				element.append(beautified(points[1]));
 				element.append(',');
-				element.append(beautified(point[2]));
-				element.append(beautified(point[3]));
+				element.append(beautified(points[2]));
+				element.append(beautified(points[3]));
 			} else if (cls.startsWith('vec__')) {
 				append_point_list(cls);
 			} else if (cls.startsWith('ray__')) {
