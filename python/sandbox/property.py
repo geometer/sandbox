@@ -367,18 +367,16 @@ class SumOfAnglesProperty(Property):
     Sum of two angles is equal to degree
     """
     def __init__(self, angle0, angle1, degree):
-        self.angle0 = angle0
-        self.angle1 = angle1
         self.angles = (angle0, angle1)
         self.degree = degree
         self.angle_set = frozenset([angle0, angle1])
 
     def keys(self):
-        return [self.angle0, self.angle1]
+        return self.angles
 
     @property
     def description(self):
-        return LazyComment('%s + %s = %sº', self.angle0, self.angle1, self.degree)
+        return LazyComment('%s + %s = %sº', *self.angles, self.degree)
 
     def compare_values(self, other):
         return self.degree == other.degree
