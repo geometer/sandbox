@@ -491,15 +491,15 @@ class Explainer:
                         )
 
             for sa in self.context.list(SumOfAnglesProperty):
-                av0 = self.context.angle_value_property(sa.angle0)
-                av1 = self.context.angle_value_property(sa.angle1)
+                av0 = self.context.angle_value_property(sa.angles[0])
+                av1 = self.context.angle_value_property(sa.angles[1])
                 if av0 and av1:
                     continue
                 elif av0:
                     if sa.reason.obsolete and av0.reason.obsolete:
                         continue
                     yield (
-                        AngleValueProperty(sa.angle1, sa.degree - av0.degree),
+                        AngleValueProperty(sa.angles[1], sa.degree - av0.degree),
                         LazyComment('%sº - %sº', sa.degree, av0.degree),
                         [sa, av0]
                     )
@@ -507,26 +507,26 @@ class Explainer:
                     if sa.reason.obsolete and av1.reason.obsolete:
                         continue
                     yield (
-                        AngleValueProperty(sa.angle0, sa.degree - av1.degree),
+                        AngleValueProperty(sa.angles[0], sa.degree - av1.degree),
                         LazyComment('%sº - %sº', sa.degree, av1.degree),
                         [sa, av1]
                     )
 
-            for ar in [p for p in self.context.list(SumOfAnglesProperty) if p.angle0.vertex is not None and p.angle0.vertex == p.angle1.vertex and p.degree == 180]:
-                common = next((pt for pt in ar.angle0.endpoints if pt in ar.angle1.endpoints), None)
+            for ar in [p for p in self.context.list(SumOfAnglesProperty) if p.angles[0].vertex is not None and p.angles[0].vertex == p.angles[1].vertex and p.degree == 180]:
+                common = next((pt for pt in ar.angles[0].endpoints if pt in ar.angles[1].endpoints), None)
                 if common is None:
                     continue
-                pt0 = next(pt for pt in ar.angle0.endpoints if pt not in ar.angle1.endpoints)
-                pt1 = next(pt for pt in ar.angle1.endpoints if pt not in ar.angle0.endpoints)
+                pt0 = next(pt for pt in ar.angles[0].endpoints if pt != common)
+                pt1 = next(pt for pt in ar.angles[1].endpoints if pt != common)
                 try:
-                    oppo = self.context[SameOrOppositeSideProperty(ar.angle0.vertex.segment(common), pt0, pt1, False)]
+                    oppo = self.context[SameOrOppositeSideProperty(ar.angles[0].vertex.segment(common), pt0, pt1, False)]
                 except: # TODO: we process here case of oppo.same == True; do the same with no try/except
                     continue
                 if not oppo or ar.reason.obsolete and oppo.reason.obsolete:
                     continue
                 yield (
-                    AngleValueProperty(ar.angle0.vertex.angle(pt0, pt1), 180),
-                    LazyComment('%s + %s', ar.angle0, ar.angle1),
+                    AngleValueProperty(ar.angles[0].vertex.angle(pt0, pt1), 180),
+                    LazyComment('%s + %s', ar.angles[0], ar.angles[1]),
                     [ar, oppo]
                 )
 

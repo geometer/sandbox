@@ -736,7 +736,7 @@ class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
                 ratio_reason = None
                 if sum_reason is None:
                     for cnd in [p for p in self.context.list(SumOfAnglesProperty, [angle0]) if p.degree == 180]:
-                        other = cnd.angle0 if cnd.angle1 == angle0 else cnd.angle1
+                        other = cnd.angles[0] if cnd.angles[1] == angle0 else cnd.angles[1]
                         ratio_reason = self.context.angle_ratio_property(other, angle1)
                         if ratio_reason:
                             if ratio_reason.value == 1:
@@ -744,7 +744,7 @@ class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
                             break
                 if sum_reason is None:
                     for cnd in [p for p in self.context.list(SumOfAnglesProperty, [angle1]) if p.degree == 180]:
-                        other = cnd.angle0 if cnd.angle1 == angle1 else cnd.angle1
+                        other = cnd.angles[0] if cnd.angles[1] == angle1 else cnd.angles[1]
                         ratio_reason = self.context.angle_ratio_property(other, angle0)
                         if ratio_reason:
                             if ratio_reason.value == 1:
