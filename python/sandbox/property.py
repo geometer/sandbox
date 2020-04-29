@@ -369,6 +369,7 @@ class SumOfAnglesProperty(Property):
     def __init__(self, angle0, angle1, degree):
         self.angle0 = angle0
         self.angle1 = angle1
+        self.angles = (angle0, angle1)
         self.degree = degree
         self.angle_set = frozenset([angle0, angle1])
 
