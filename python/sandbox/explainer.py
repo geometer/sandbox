@@ -26,6 +26,7 @@ class Explainer:
         self.__rules = [
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),
+            SumAndTwoAnglesInTriangle(self.context),
             SumAndRatioOfTwoAnglesRule(self.context),
             NonCollinearPointsAreDifferentRule(self.context),
             CoincidenceTransitivityRule(self.context),
@@ -282,37 +283,6 @@ class Explainer:
                     SameOrOppositeSideProperty(sos0.segment, other0, other1, sos0.same == sos1.same),
                     'Transitivity', #TODO: better comment
                     [sos0, sos1]
-                )
-
-            for ar in self.context.same_triple_angle_ratio_properties():
-                a0 = ar.angle0
-                a1 = ar.angle1
-                third_vertex = next(pt for pt in a0.point_set if pt not in (a0.vertex, a1.vertex))
-                a2 = third_vertex.angle(a0.vertex, a1.vertex)
-                a2_reason = self.context.angle_value_property(a2)
-                if a2_reason is None:
-                    continue
-                if ar.reason.obsolete and a2_reason.reason.obsolete:
-                    continue
-                #a0 + a1 + a2 = 180
-                #a0 + a1 = 180 - a2
-                a1_value = divide(180 - a2_reason.degree, 1 + ar.value)
-                a0_value = 180 - a2_reason.degree - a1_value
-                yield (
-                    AngleValueProperty(a0, a0_value),
-                    LazyComment(
-                        '180º = %s + %s + %s = %s %s + %sº',
-                        a0, a1, a2, 1 + divide(1, ar.value), a0, a2_reason.degree
-                    ),
-                    [ar, a2_reason]
-                )
-                yield (
-                    AngleValueProperty(a1, a1_value),
-                    LazyComment(
-                        '180º = %s + %s + %s = %s %s + %s',
-                        a0, a1, a2, 1 + ar.value, a1, a2_reason.degree
-                    ),
-                    [ar, a2_reason]
                 )
 
             for aa in [p for p in self.context.list(AngleKindProperty) if p.kind == AngleKindProperty.Kind.acute]:
