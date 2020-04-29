@@ -27,3 +27,42 @@ class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
             comment1 = LazyComment('%s + %s %s = %s + %s = %sº', ar.angle1, ar.value, ar.angle1, ar.angle1, ar.angle0, prop.degree)
         yield (AngleValueProperty(ar.angle0, value0), comment0, [prop, ar])
         yield (AngleValueProperty(ar.angle1, value1), comment1, [prop, ar])
+
+class EqualSumsOfAnglesRule(Rule):
+    def sources(self):
+        return itertools.combinations(self.context.list(SumOfAnglesProperty), 2)
+
+    def apply(self, src):
+        sum0, sum1 = src
+        if sum0.degree != sum1.degree:
+            return
+
+        for eq0, eq1 in itertools.product(sum0.angles, sum1.angles):
+            other0 = next(ang for ang in sum0.angles if ang != eq0)
+            other1 = next(ang for ang in sum1.angles if ang != eq1)
+            if other0 == other1:
+                continue
+            if eq0 == eq1:
+                if sum0.reason.obsolete and sum1.reason.obsolete:
+                    continue
+                yield (
+                    AngleRatioProperty(other0, other1, 1),
+                    LazyComment('%s + %s = %sº = %s + %s', other0, eq0, sum0.degree, other1, eq1),
+                    [sum0, sum1]
+                )
+            else:
+                ca = self.context.angle_ratio_property(eq0, eq1)
+                if ca is None:
+                    continue
+                if ca.value != 1:
+                    return
+                if sum0.reason.obsolete and sum1.reason.obsolete and ca.reason.obsolete:
+                    continue
+                yield (
+                    AngleRatioProperty(other0, other1, 1),
+                    LazyComment(
+                        '%s + %s = %sº = %s + %s and %s = %s',
+                        other0, eq0, sum0.degree, other1, eq1, eq0, eq1
+                    ),
+                    [sum0, sum1, ca]
+                )

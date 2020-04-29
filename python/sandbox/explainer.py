@@ -29,6 +29,7 @@ class Explainer:
             ProportionalLengthsToLengthsRatioRule(self.context),
             SumOfTwoAnglesInTriangle(self.context),
             SumAndRatioOfTwoAnglesRule(self.context),
+            EqualSumsOfAnglesRule(self.context),
             NonCollinearPointsAreDifferentRule(self.context),
             CoincidenceTransitivityRule(self.context),
             CollinearityCollisionRule(self.context),
