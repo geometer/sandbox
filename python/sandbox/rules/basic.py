@@ -222,6 +222,22 @@ class NonCollinearPointsAreDifferentRule(SingleSourceRule):
                 [prop]
             )
 
+class SumAndTwoAnglesInTriangle(Rule):
+    def sources(self):
+        return [av for av in self.context.nondegenerate_angle_value_properties() if av.angle.vertex and av.degree not in (0, 180)]
+
+    def apply(self, prop):
+        if prop.reason.obsolete:
+            return
+        angle0 = prop.angle
+        angle1 = angle0.endpoints[0].angle(angle0.vertex, angle0.endpoints[1])
+        angle2 = angle0.endpoints[1].angle(angle0.vertex, angle0.endpoints[0])
+        yield (
+            SumOfAnglesProperty(angle1, angle2, 180 - prop.degree),
+            LazyComment('180º = %s + %s + %s = %s + %s + %sº', angle1, angle2, angle0, angle1, angle2, prop.degree),
+            [prop]
+        )
+
 class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
     """
     If the sum and the ratio of two angles are known, we can find the values
