@@ -9,6 +9,7 @@ from .propertyset import PropertySet
 from .reason import Reason
 from .rules.advanced import *
 from .rules.basic import *
+from .rules.linear import *
 from .rules.triangle_elements import *
 from .rules.triangles import *
 from .rules.trigonometric import *
