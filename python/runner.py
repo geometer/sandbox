@@ -10,7 +10,7 @@ from sandbox.propertyset import PropertySet
 def run_sample(scene, prop=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--max-layer', default='user', choices=CoreScene.layers)
-    parser.add_argument('--dump', nargs='+', choices=('scene', 'constraints', 'stats', 'result', 'properties', 'explanation', 'explanation-html'), default=('stats', 'result'))
+    parser.add_argument('--dump', nargs='+', choices=('scene', 'constraints', 'stats', 'result', 'properties', 'explanation'), default=('stats', 'result'))
     parser.add_argument('--run-hunter', action='store_true')
     parser.add_argument('--extra-rules', nargs='+', choices=('advanced', 'trigonometric'), default=())
     parser.add_argument('--profile', action='store_true')
@@ -91,28 +91,3 @@ def run_sample(scene, prop=None):
             print('Rules:')
             for pair in items:
                 print('\t%s: %s' % pair)
-
-    if 'explanation-html' in args.dump:
-        def dump(prop):
-            s = '%s: %s' % (prop, ', '.join([str(com) for com in prop.reason.comments]))
-            s = re.sub('_(.)', '<sub>\\1</sub>', s)
-            s = re.sub('\|', '│', s)
-            print('<li class="%s">%s' % ('essential' if prop.essential else 'normal', s))
-            if prop.reason.premises:
-                print('<ul>')
-                for premise in prop.reason.premises:
-                    dump(premise)
-                print('</ul>')
-            print('</li>')
-
-        explanation = explainer.explanation(prop)
-        if explanation:
-            with open('patterns/explanation.html') as f:
-                for line in f.readlines():
-                    line = line.strip()
-                    if line == '$$TREE$$':
-                        print('<ul>')
-                        dump(explanation)
-                        print('</ul>')
-                    else:
-                        print(line)
