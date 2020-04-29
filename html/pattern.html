@@ -23,11 +23,9 @@ body {
   border-radius: 5px;
   padding: 20px;
 
-  /* Use box-sizing so that element's outerwidth will match width property */
   box-sizing: border-box;
 
-  /* Allow box to grow and shrink, and ensure they are all equally sized */
-  flex: 1 1 auto;
+  flex: 0 0 auto;
 }
 .divider {
   width: 5px;
@@ -47,7 +45,7 @@ body {
 </div>
 </div>
 <div class="divider"></div>
-<div class='box'>
+<div class='box' id='boxB'>
 <div id='sandbox-tree' class='sandbox-text sandbox-tree' style='margin-left:36px;display:inline-block;vertical-align:top;'>
 <div style='margin-bottom:16px;'>
 	<input type='checkbox' id='checkbox' checked='1' onclick='sandbox$.toggleNonEssential()'>
@@ -63,44 +61,27 @@ $$TREE$$
 sandbox$.toggleNonEssential();
 </script>
 <script type='text/javascript'>
-var handler = document.querySelector('.divider');
-var wrapper = handler.closest('.main');
-var boxA = wrapper.querySelector('.box');
 var resizeInProgress = false;
 
 $('.divider').mousedown(function(e) {
 	e.preventDefault();
 	resizeInProgress = true;
 });
-$(window.document).mouseup(function() {
+$(document).mouseup(function() {
 	resizeInProgress = false;
 });
 
-$(window.document).mousemove(function(e) {
-  // Don't do anything if dragging flag is false
-  if (!resizeInProgress) {
-    return false;
+$(document).mousemove(function(e) {
+  if (resizeInProgress) {
+		var decorWidthA = $('#boxA').outerWidth() - $('#boxA').width();
+		var decorWidthB = $('#boxB').outerWidth() - $('#boxB').width();
+		var dividerWidth = $('.divider').width();
+		var minWidthA = 200;
+		var maxWidthA = $(window).width() - dividerWidth - 200 - decorWidthB;
+		var newWidth = Math.max(minWidthA, Math.min(maxWidthA, e.clientX - decorWidthA - dividerWidth / 2));
+
+		$('#boxA').width(newWidth);
   }
-
-  // Get offset
-  var containerOffsetLeft = wrapper.offsetLeft;
-
-	console.debug($('#boxA').width(), $('.divider').position(), e.clientX);
-  // Get x-coordinate of pointer relative to container
-  var pointerRelativeXpos = e.clientX - containerOffsetLeft;
-
-  // Arbitrary minimum width set on box A, otherwise its inner content will collapse to width of 0
-  var boxAminWidth = 60;
-
-  // Resize box A
-  // * 8px is the left/right spacing between .handler and its inner pseudo-element
-  // * Set flex-grow to 0 to prevent it from growing
-  //boxA.style.width = (Math.max(boxAminWidth, pointerRelativeXpos)) + 'px';
-  //boxA.style.flexGrow = 0;
-	console.debug('BEFORE: ', $('#boxA').width());
-	//$('#boxA')[0].style.width = (Math.round($('.divider').position().left) - 5) + 'px';
-	$('#boxA').width((e.clientX - 5) + 'px');
-	console.debug('AFTER: ', $('#boxA').width());
 });
 </script>
 </html>
