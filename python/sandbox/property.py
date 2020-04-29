@@ -22,6 +22,24 @@ class Property:
     def compare_values(self, other):
         return True
 
+class ConcyclicPointsProperty(Property):
+    """
+    Concyclic points
+    """
+    def __init__(self, point0, point1, point2, point3):
+        self.points = (point0, point1, point2, point3)
+        self.point_set = frozenset(self.points)
+
+    @property
+    def description(self):
+        return LazyComment('Points %s, %s, %s, and %s are concyclic', *self.points)
+
+    def __eq__(self, other):
+        return isinstance(other, ConcyclicPointsProperty) and self.point_set == other.point_set
+
+    def __hash__(self):
+        return hash(ConcyclicPointsProperty) + hash(self.point_set)
+
 class PointsCollinearityProperty(Property):
     """
     [Not] collinear points
