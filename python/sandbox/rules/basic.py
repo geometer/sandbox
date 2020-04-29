@@ -222,7 +222,7 @@ class NonCollinearPointsAreDifferentRule(SingleSourceRule):
                 [prop]
             )
 
-class SumAndTwoAnglesInTriangle(Rule):
+class SumOfTwoAnglesInTriangle(Rule):
     def sources(self):
         return [av for av in self.context.nondegenerate_angle_value_properties() if av.angle.vertex and av.degree not in (0, 180)]
 

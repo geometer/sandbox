@@ -27,7 +27,7 @@ class Explainer:
             CircularArcRule(self.context),
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),
-            SumAndTwoAnglesInTriangle(self.context),
+            SumOfTwoAnglesInTriangle(self.context),
             SumAndRatioOfTwoAnglesRule(self.context),
             NonCollinearPointsAreDifferentRule(self.context),
             CoincidenceTransitivityRule(self.context),
