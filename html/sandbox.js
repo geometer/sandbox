@@ -62,7 +62,7 @@ createScene: function(json) {
 createTree: function(json) {
 	var root = $('#sandbox-tree');
 	beautified = function(text) {
-		return text.replaceAll('|', '<span style=\'font-size:130%;vertical-align:-2px;\'>|</span>');
+		return text.replace(/\|/g, '<span style=\'font-size:130%;vertical-align:-2px;\'>|</span>');
 	}
 
 	var data = JSON.parse(json);
