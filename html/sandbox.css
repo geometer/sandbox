@@ -72,6 +72,7 @@
 	cursor: pointer;
 	border-style: solid;
 	border-width: 0.3px;
+	padding-bottom: 0.1em;
 	border-color: #4FC3F7;
 	background-color: #E1F5FE;
 }
