@@ -103,8 +103,9 @@ class Explainer:
             return
         def insert(pro):
             for pre in pro.reason.premises:
+                pre.implications.add(pro)
                 if self.context.index_of(pre) is None:
-                    self.context.add(pre)
+                    insert(pre)
             self.context.add(pro)
 
         existing = self.context[prop]
@@ -115,7 +116,13 @@ class Explainer:
             insert(prop)
         elif len(reason.all_premises) < len(existing.reason.all_premises):
             reason.obsolete = existing.reason.obsolete
+            if self.context.index_of(existing) is not None:
+                for pre in existing.reason.premises:
+                    pre.implications.remove(existing)
             existing.reason = reason
+            for pre in existing.reason.premises:
+                pre.implications.add(existing)
+            existing.fire_premises_change()
             if hasattr(prop, 'rule'):
                 existing.rule = prop.rule
             elif hasattr(existing, 'rule'):

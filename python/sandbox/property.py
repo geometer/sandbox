@@ -10,6 +10,17 @@ class Property:
     def essential(self):
         return True
 
+    @property
+    def implications(self):
+        if not hasattr(self, 'stored_implications'):
+            self.stored_implications = set()
+        return self.stored_implications
+
+    def fire_premises_change(self):
+        self.reason.reset_premises()
+        for impl in self.implications:
+            impl.fire_premises_change()
+
     def keys(self):
         return []
 
