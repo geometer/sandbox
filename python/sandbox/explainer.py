@@ -454,42 +454,6 @@ class Explainer:
                     ratio_prop.reason.premises
                 )
 
-            for av in self.context.angle_value_properties():
-                if av.angle.vertex is None:
-                    continue
-                av_is_too_old = av.reason.obsolete
-
-                second = av.angle.vector0.end.angle(av.angle.vertex, av.angle.vector1.end)
-                third = av.angle.vector1.end.angle(av.angle.vertex, av.angle.vector0.end)
-                if av.degree == 180:
-                    if av_is_too_old:
-                        continue
-                    for ang in second, third:
-                        yield (
-                            AngleValueProperty(ang, 0),
-                            LazyComment('%s = 180º', av.angle),
-                            [av]
-                        )
-                else:
-                    second_reason = self.context.angle_value_property(second)
-                    if second_reason:
-                        if av_is_too_old and second_reason.reason.obsolete:
-                            continue
-                        yield (
-                            AngleValueProperty(third, 180 - av.degree - second_reason.degree),
-                            LazyComment('%s + %s + %s = 180º', third, av.angle, second),
-                            [av, second_reason]
-                        )
-                    else:
-                        third_reason = self.context.angle_value_property(third)
-                        if third_reason is None or av_is_too_old and third_reason.reason.obsolete:
-                            continue
-                        yield (
-                            AngleValueProperty(second, 180 - av.degree - third_reason.degree),
-                            LazyComment('%s + %s + %s = 180º', second, av.angle, third),
-                            [av, third_reason]
-                        )
-
             for sa in self.context.list(SumOfAnglesProperty):
                 av0 = self.context.angle_value_property(sa.angles[0])
                 av1 = self.context.angle_value_property(sa.angles[1])
