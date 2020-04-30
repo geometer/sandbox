@@ -327,7 +327,7 @@ class AngleRatioProperty(Property):
     """
     Two angle values ratio
     """
-    def __init__(self, angle0, angle1, ratio):
+    def __init__(self, angle0, angle1, ratio, same=False):
         # angle0 / angle1 = ratio
         if ratio >= 1:
             self.angle0 = angle0
@@ -337,6 +337,7 @@ class AngleRatioProperty(Property):
             self.angle0 = angle1
             self.angle1 = angle0
             self.value = divide(1, ratio)
+        self.same = same
 
         self.angle_set = frozenset([angle0, angle1])
         self.__hash = None
@@ -345,8 +346,14 @@ class AngleRatioProperty(Property):
         return [self.angle0, self.angle1]
 
     @property
+    def essential(self):
+        return not self.same
+
+    @property
     def description(self):
-        if self.value == 1:
+        if self.same:
+            return LazyComment('%s ≡ %s', self.angle0, self.angle1)
+        elif self.value == 1:
             return LazyComment('%s = %s', self.angle0, self.angle1)
         else:
             return LazyComment('%s = %s %s', self.angle0, self.value, self.angle1)

@@ -828,7 +828,8 @@ class SameAngleRule(SingleSourceRule):
             for ngl0, cmpl0 in good_angles(vec, ang.vector0):
                 for ngl1, cmpl1 in good_angles(vec, ang.vector1):
                     if cmpl0 == cmpl1:
-                        new_prop = AngleRatioProperty(ngl0, ngl1, 1)
+                        same = ngl0.vertex and ngl0.vertex == ngl1.vertex
+                        new_prop = AngleRatioProperty(ngl0, ngl1, 1, same=same)
                     else:
                         new_prop = SumOfAnglesProperty(ngl0, ngl1, 180)
                     yield (
@@ -855,7 +856,8 @@ class SameAngleRule2(Rule):
             AngleRatioProperty(
                 ng0.vertex.angle(ng0.vector0.end, ng1.vector0.end),
                 ng0.vertex.angle(ng0.vector1.end, ng1.vector1.end),
-                1
+                1,
+                same=True
             ),
             LazyComment('%s ↑↑ %s and %s ↑↑ %s', ng0.vector0, ng0.vector1, ng1.vector0, ng1.vector1),
             [av0, av1]
