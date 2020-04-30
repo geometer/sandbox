@@ -8,6 +8,9 @@ class Reason:
         self.premises = premises
         self.__all_premises = None
 
+    def reset_premises(self):
+        self.__all_premises = None
+        
     @property
     def all_premises(self):
         if self.__all_premises is None:

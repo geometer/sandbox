@@ -6,9 +6,17 @@ from .scene import Scene
 from .util import LazyComment, divide, good_angles, normalize_number, keys_for_triangle
 
 class Property:
+    def __init__(self):
+        self.implications = set()
+
     @property
     def essential(self):
         return True
+
+    def fire_premises_change(self):
+        self.reason.reset_premises()
+        for impl in self.implications:
+            impl.fire_premises_change()
 
     def keys(self):
         return []
@@ -27,6 +35,7 @@ class ConcyclicPointsProperty(Property):
     Concyclic points
     """
     def __init__(self, point0, point1, point2, point3):
+        super().__init__()
         self.points = (point0, point1, point2, point3)
         self.point_set = frozenset(self.points)
 
@@ -45,6 +54,7 @@ class PointsCollinearityProperty(Property):
     [Not] collinear points
     """
     def __init__(self, point0, point1, point2, collinear):
+        super().__init__()
         self.points = (point0, point1, point2)
         self.point_set = frozenset(self.points)
         self.collinear = collinear
@@ -77,6 +87,7 @@ class ParallelVectorsProperty(Property):
     Two vectors are parallel (or at least one of them has zero length)
     """
     def __init__(self, vector0, vector1):
+        super().__init__()
         self.vector0 = vector0
         self.vector1 = vector1
         self.__vector_set = frozenset([vector0, vector1])
@@ -100,6 +111,7 @@ class ParallelSegmentsProperty(Property):
     Two segments are parallel (or at least one of them has zero length)
     """
     def __init__(self, segment0, segment1):
+        super().__init__()
         self.segments = (segment0, segment1)
         self.__segment_set = frozenset(self.segments)
 
@@ -122,6 +134,7 @@ class PerpendicularSegmentsProperty(Property):
     Two segments are perpendicular (or at least one of them has zero length)
     """
     def __init__(self, segment0, segment1):
+        super().__init__()
         self.segments = (segment0, segment1)
         self.__segment_set = frozenset(self.segments)
 
@@ -144,6 +157,7 @@ class PointsCoincidenceProperty(Property):
     [Not] coincident points
     """
     def __init__(self, point0, point1, coincident):
+        super().__init__()
         self.points = [point0, point1]
         self.point_set = frozenset(self.points)
         self.coincident = coincident
@@ -176,6 +190,7 @@ class SameOrOppositeSideProperty(Property):
     Two points on opposite/same sides of a line
     """
     def __init__(self, segment, point0, point1, same):
+        super().__init__()
         self.segment = segment
         self.points = (point0, point1)
         self.same = same
@@ -209,6 +224,7 @@ class PointInsideAngleProperty(Property):
     Point is inside an angle
     """
     def __init__(self, point, angle):
+        super().__init__()
         self.point = point
         self.angle = angle
         self.__key = (point, angle)
@@ -235,6 +251,7 @@ class EquilateralTriangleProperty(Property):
     Equilateral triangle
     """
     def __init__(self, points):
+        super().__init__()
         self.triangle = points if isinstance(points, Scene.Triangle) else Scene.Triangle(*points)
         self.__point_set = frozenset(self.triangle.points)
 
@@ -264,6 +281,7 @@ class AngleKindProperty(Property):
             return self.name
 
     def __init__(self, angle, kind):
+        super().__init__()
         self.angle = angle
         self.kind = kind
 
@@ -293,6 +311,7 @@ class AngleValueProperty(Property):
             yield AngleValueProperty(ngl, 180 - value if complementary else value)
 
     def __init__(self, angle, degree):
+        super().__init__()
         self.angle = angle
         self.degree = normalize_number(degree)
 
@@ -328,6 +347,7 @@ class AngleRatioProperty(Property):
     Two angle values ratio
     """
     def __init__(self, angle0, angle1, ratio, same=False):
+        super().__init__()
         # angle0 / angle1 = ratio
         if ratio >= 1:
             self.angle0 = angle0
@@ -374,6 +394,7 @@ class SumOfAnglesProperty(Property):
     Sum of two angles is equal to degree
     """
     def __init__(self, angle0, angle1, degree):
+        super().__init__()
         self.angles = (angle0, angle1)
         self.degree = degree
         self.angle_set = frozenset([angle0, angle1])
@@ -399,6 +420,7 @@ class LengthRatioProperty(Property):
     Two non-zero segment lengths ratio
     """
     def __init__(self, segment0, segment1, ratio):
+        super().__init__()
         if ratio >= 1:
             self.segment0 = segment0
             self.segment1 = segment1
@@ -430,6 +452,7 @@ class ProportionalLengthsProperty(Property):
     Two segment lengths ratio
     """
     def __init__(self, segment0, segment1, ratio):
+        super().__init__()
         if ratio >= 1:
             self.segment0 = segment0
             self.segment1 = segment1
@@ -471,6 +494,7 @@ class EqualLengthProductsProperty(Property):
         ])
 
     def __init__(self, segment0, segment1, segment2, segment3):
+        super().__init__()
         """
         |segment0| * |segment3| == |segment1| * |segment2|
         """
@@ -501,6 +525,7 @@ class EqualLengthRatiosProperty(Property):
         ])
 
     def __init__(self, segment0, segment1, segment2, segment3):
+        super().__init__()
         """
         |segment0| / |segment1| == |segment2| / |segment3|
         """
@@ -523,6 +548,7 @@ class SimilarTrianglesProperty(Property):
     Two triangles are similar
     """
     def __init__(self, points0, points1):
+        super().__init__()
         self.triangle0 = points0 if isinstance(points0, Scene.Triangle) else Scene.Triangle(*points0)
         self.triangle1 = points1 if isinstance(points1, Scene.Triangle) else Scene.Triangle(*points1)
         pairs = [frozenset(perms) for perms in zip(self.triangle0.permutations, self.triangle1.permutations)]
@@ -547,6 +573,7 @@ class CongruentTrianglesProperty(Property):
     Two triangles are congruent
     """
     def __init__(self, points0, points1):
+        super().__init__()
         self.triangle0 = points0 if isinstance(points0, Scene.Triangle) else Scene.Triangle(*points0)
         self.triangle1 = points1 if isinstance(points1, Scene.Triangle) else Scene.Triangle(*points1)
         pairs = [frozenset(perms) for perms in zip(self.triangle0.permutations, self.triangle1.permutations)]
@@ -571,6 +598,7 @@ class IsoscelesTriangleProperty(Property):
     Isosceles triangle
     """
     def __init__(self, apex, base):
+        super().__init__()
         self.apex = apex
         self.base = base
         self.triangle = Scene.Triangle(apex, *base.points)
@@ -619,6 +647,7 @@ class SameCyclicOrderProperty(Property):
     Two triples of points have the same cyclic order
     """
     def __init__(self, cycle0, cycle1):
+        super().__init__()
         self.cycle0 = cycle0
         self.cycle1 = cycle1
         self.__key = frozenset([
