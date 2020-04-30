@@ -8,6 +8,95 @@ from .reason import Reason
 from .stats import Stats
 from .util import LazyComment, divide
 
+class LineSet:
+    class Line:
+        def __init__(self, segment):
+            # each vertex is a segment with non-coincident endpoints
+            # each edge is a set of properties that explains why two segments are collinear
+            self.premises_graph = nx.Graph()
+            self.premises_graph.add_node(segment)
+            # all the points on the line
+            self.points = set(segment.points)
+
+        def dump(self):
+            print(', '.join([str(vertex) for vertex in self.premises_graph.nodes]))
+            print(', '.join([str(point) for point in self.points]))
+
+    def __init__(self):
+        self.__lines = {} # segment => Line
+        self.__coincidence_properties = {} # segment => property
+        self.__not_fully_used_properties = set() # collinearity properties not fully used yet
+
+    def dump(self):
+        for line in set(self.__lines.values()):
+            print('+++ LINE +++')
+            line.dump()
+            print('--- LINE ---')
+
+    def __merge2(self, segment0, segment1, line0, line1, collinearity):
+        # merges two lines
+        if line0 != line1:
+            line0.points.update(line1.points)
+            line0.premises_graph.add_edges_from(line1.premises_graph.edges(data=True))
+            for key in [key for key in self.__lines.keys() if self.__lines[key] == line1]:
+                self.__lines[key] = line0
+
+        line0.premises_graph.add_edge(segment0, segment1, premises={
+            collinearity,
+            self.__coincidence_properties[segment0],
+            self.__coincidence_properties[segment1]
+        })
+
+    def __merge3(self, segments, lines, collinearity):
+        # merges three lines
+        for second_line in lines[1:]:
+            if lines[0] != second_line:
+                lines[0].points.update(second_line.points)
+                lines[0].premises_graph.add_edges_from(second_line.premises_graph.edges(data=True))
+                for key in [key for key in self.__lines.keys() if self.__lines[key] == second_line]:
+                    self.__lines[key] = lines[0]
+
+        for seg0, seg1 in itertools.combinations(segments, 2):
+            lines[0].premises_graph.add_edge(seg0, seg1, premises={
+                collinearity,
+                self.__coincidence_properties[seg0],
+                self.__coincidence_properties[seg1]
+            })
+
+    def add(self, prop):
+        if isinstance(prop, PointsCoincidenceProperty):
+            if prop.coincident:
+                # TODO: implement
+                pass
+            else:
+                key = prop.points[0].segment(prop.points[1])
+                assert key not in self.__lines, 'Property `%s` is already known' % prop
+                self.__lines[key] = LineSet.Line(key)
+                self.__coincidence_properties[key] = prop
+                for collinearity in list(self.__not_fully_used_properties):
+                    if prop.points[0] in collinearity.points and prop.points[1] in collinearity.points:
+                        self.add(collinearity)
+        elif isinstance(prop, PointsCollinearityProperty):
+            if prop.collinear:
+                segments = CoreScene.Triangle(*prop.points).sides
+                lines = [self.__lines.get(key) for key in segments]
+                count = sum(1 if line is not None else 0 for line in lines)
+                inds = [i for i in range(0, 3) if lines[i] is not None]
+                if len(inds) == 3:
+                    self.__merge3(segments, lines, prop)
+                    self.__not_fully_used_properties.discard(prop)
+                elif len(inds) == 2:
+                    line = self.__merge2(*[segments[i] for i in inds], *[lines[i] for i in inds], prop)
+                    self.__not_fully_used_properties.add(prop)
+                elif len(inds) == 1:
+                    lines[inds[0]].points.update(prop.points)
+                    self.__not_fully_used_properties.add(prop)
+                else:
+                    self.__not_fully_used_properties.add(prop)
+            else:
+                # TODO: implement
+                pass
+
 class CyclicOrderPropertySet:
     class Family:
         def __init__(self):
@@ -571,6 +660,7 @@ class PropertySet:
         self.__collinearity = {} # {point, point, point} => prop
         self.__intersections = {} # {segment, segment} => point, [reasons]
         self.__similar_triangles = {} # (three points) => {(three points)}
+        self.__lines = LineSet()
 
     def add(self, prop):
         def put(key):
@@ -597,8 +687,10 @@ class PropertySet:
         elif type_key == LengthRatioProperty:
             self.__length_ratios.add(prop)
         elif type_key == PointsCoincidenceProperty:
+            self.__lines.add(prop)
             self.__coincidence[prop.point_set] = prop
         elif type_key == PointsCollinearityProperty:
+            self.__lines.add(prop)
             self.__collinearity[prop.point_set] = prop
         elif type_key == EqualLengthRatiosProperty:
             self.__length_ratios.add(prop)
@@ -833,6 +925,7 @@ class PropertySet:
         return (None, [])
 
     def stats(self):
+        self.__lines.dump()
         def type_presentation(kind):
             return kind.__doc__.strip() if kind.__doc__ else kind.__name__
 
