@@ -45,11 +45,19 @@ createScene: function(json) {
 	});
 
 	scene.lines.forEach(line => {
-		this.board.create('line', [this.board.elementsByName[line.pt0], this.board.elementsByName[line.pt1]], {
+		this.board.create('line', [line.pt0, line.pt1], {
 			straightFirst: false,
 			straightLast: false,
 			strokeWidth: 0.7,
 			color: this.options.color
+		});
+	});
+
+	scene.circles.forEach(circle => {
+		this.board.create('circle', [circle.centre, circle.pt], {
+			strokeWidth: 0.7,
+			color: this.options.color,
+			fillOpacity: 0
 		});
 	});
 
@@ -169,7 +177,7 @@ createTree: function(json) {
 					var selected = [];
 					lines.forEach(ln => {
 						selected.push(sandbox$.board.create(
-							'line', [sandbox$.board.elementsByName[ln['s']], sandbox$.board.elementsByName[ln['e']]], {
+							'line', [ln['s'], ln['e']], {
 								straightFirst: ln['type'] == 'line',
 								straightLast: ln['type'] == 'ray' || ln['type'] == 'line',
 								color: sandbox$.options.hl_color,

@@ -11,6 +11,7 @@ from sandbox.placement import iterative_placement
 def drawScene(scene, args, attempts=10, extra_points=()):
     points = scene.points(max_layer=args.max_layer) + list(extra_points)
     lines = scene.lines(max_layer=args.max_layer)
+    circles = scene.circles(max_layer=args.max_layer)
 
     placements = [iterative_placement(scene) for i in range(0, attempts)]
 
@@ -54,7 +55,13 @@ def drawScene(scene, args, attempts=10, extra_points=()):
         pts.sort(key=lambda pt: coords[pt].x)
         pts.sort(key=lambda pt: coords[pt].y)
         scene_lines.append({'pt0': pts[0].name, 'pt1': pts[-1].name})
-    print('sandbox$.createScene(\'%s\');' % json.dumps({'points': scene_points, 'lines': scene_lines}));
+    scene_circles = []
+    for circle in circles:
+        if circle.centre in circle.radius.points:
+            second = next(pt for pt in circle.radius.points if pt != circle.centre)
+            if circle.centre in coords and second in coords:
+                scene_circles.append({'centre': circle.centre.name, 'pt': second.name})
+    print('sandbox$.createScene(\'%s\');' % json.dumps({'points': scene_points, 'lines': scene_lines, 'circles': scene_circles}));
 
 def drawTree(scene, prop, args):
     options = { 'max_layer': args.max_layer }
@@ -92,13 +99,13 @@ def load_args():
     return parser.parse_args()
 
 #def visualise(scene, prop=None, arguments=load_args()):
-def visualise(scene, prop=None, arguments=None):
+def visualise(scene, prop=None, arguments=None, extra_points=()):
     args = arguments if arguments else load_args()
     with open('../html/pattern.html') as f:
         for line in f.readlines():
             line = line.strip()
             if line == '$$SCENE$$':
-                drawScene(scene, args)
+                drawScene(scene, args, extra_points=extra_points)
             elif line == '$$TREE$$':
                 if prop:
                     drawTree(scene, prop, args)
