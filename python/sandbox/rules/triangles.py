@@ -101,8 +101,12 @@ class CongruentTrianglesByAngleAndTwoSidesRule(Rule):
             )
 
 class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
     def sources(self):
-        return [(a0, a1) for a0, a1 in self.context.congruent_angles_with_vertex() if a0.point_set != a1.point_set]
+        return [(a0, a1) for a0, a1 in self.context.congruent_angles_with_vertex() if a0.point_set != a1.point_set and (a0, a1) not in self.processed]
 
     def apply(self, src):
         ang0, ang1 = src
@@ -118,10 +122,9 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
                     break
             else:
                 continue
+            self.processed.add(src)
             if ca is None:
                 ca = self.context.angle_ratio_property(ang0, ang1)
-            if ca.reason.obsolete and elr.reason.obsolete:
-                continue
             yield (
                 SimilarTrianglesProperty(
                     (ang0.vertex, vec0.end, vec1.end),
