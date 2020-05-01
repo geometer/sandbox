@@ -7,7 +7,7 @@ The goal of the project is to create an app that takes a human-readable descript
 
 ## The idea
 
-The first step is to write an exhaustive search prover. The difference from existing provers is that the properties and the rules always defined in high-level terms like a human can use. E.g., there are properties “two angles are congruent” and “two triangles are similar”, and rule “if two pairs of angles of given triangles are congruent, the triangles are similar”. 
+The first step is to write an exhaustive search prover. The difference from existing provers is that the properties and the rules defined in high-level terms like a human can use. E.g., there are properties “two angles are congruent” and “two triangles are similar”, and rule “if two pairs of angles of given triangles are congruent, the triangles are similar”. 
 
 Additionally, if the direct search fails, the prover should try some additional constructions as well as assumptions (e.g., if a proof is not found, it might consider variants “the angle A is acute”, “is obtuse”, and “is right”).
 
