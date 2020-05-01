@@ -51,7 +51,7 @@ class EqualSumsOfAnglesRule(Rule):
                 if ca is None:
                     continue
                 if ca.value != 1:
-                    return
+                    continue
                 if sum0.reason.obsolete and sum1.reason.obsolete and ca.reason.obsolete:
                     continue
                 yield (
