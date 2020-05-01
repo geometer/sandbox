@@ -5,7 +5,7 @@ Solver/explainer of elementary planimetric problems.
 
 The goal of the project is to create an app that takes a human-readable description of a planimetry problem and generates a human-readable solution.
 
-## The idea
+## The concept
 
 The first step is to write an exhaustive search prover. It starts from a set of known properties and deducts new properties by applying rules from the ruleset to existing properties. This process repeats until the iteration does not generate new properties. The difference from existing provers is that the properties and the rules are defined in high-level terms like a human can use. E.g., there are properties “two angles are congruent” and “two triangles are similar”, and rule “if two pairs of angles of given triangles are congruent, the triangles are similar”.
 
