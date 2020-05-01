@@ -41,14 +41,4 @@ Possible problems are
 
 ## Plans
 
-**Most important features to code**:
-
-* In the explainer, introduce `ContradictionException`, that raises if the reason generates a contradiction. This is an important part of the meta explainer (see the next item)
-* Meta explainer that uses existing explainer and does an exhaustive search of additional constructions and assumptions
-
-**Other features**:
-
-* Write documentation that explains the existing code API
-* Introduce a machine-readable format for tasks (or use some existing, if any; maybe GeoGebra language?)
-* Create/collect/find a large task set in machine-readable form (using own task format, or python, or some existing format + parser)
-* For each property, introduce a negated property. E.g., for “two triangles are similar”, there should be “two triangles are **not** similar”. This would be useful for detecting contradictions as soon as possible, and also for speeding up the algorithm. There is no need to test for similarity again and again on each iteration if it is already known, but also if its negation is already known. Of course, there is no need to generate all possible negated properties. Only the negations that are found in a natural way (i.e., during looking for “positive” properties) should be stored.
+Please refer [the issues tracker](/geometer/sandbox/issues) to browse planned features, ideas, etc.
