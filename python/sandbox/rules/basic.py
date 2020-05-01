@@ -6,32 +6,41 @@ from sandbox.util import LazyComment, divide
 
 from .abstract import Rule, SingleSourceRule
 
-class CircularArcRule(SingleSourceRule):
+class InscribedAnglesWithCommonCircularArcRule(SingleSourceRule):
     property_type = ConcyclicPointsProperty
 
     def apply(self, prop):
         for inds0, inds1 in [((0, 1), (2, 3)), ((0, 2), (1, 3)), ((0, 3), (1, 2))]:
             pair0 = [prop.points[i] for i in inds0]
             pair1 = [prop.points[i] for i in inds1]
-            nes = []
-            for pt0, pt1 in itertools.product(pair0, pair1):
-                ne = self.context.not_equal_property(pt0, pt1)
-                if ne:
-                    nes.append(ne)
+            for p0, p1 in ((pair0, pair1), (pair1, pair0)):
+                sos = self.context.two_points_and_line_configuration_property(
+                    p0[0].segment(p0[1]), *p1
+                )
+                if sos is None or prop.reason.obsolete and sos.reason.obsolete:
+                    continue
+                ang0 = p0[0].angle(*p1)
+                ang1 = p0[1].angle(*p1)
+                if sos.same:
+                    yield (
+                        AngleRatioProperty(ang0, ang1, 1),
+                        LazyComment('%s and %s are inscribed and subtend the same arc', ang0, ang1),
+                        [prop, sos]
+                    )
                 else:
-                    break
-            if len(nes) != 4 or prop.reason.obsolete and all(ne.reason.obsolete for ne in nes):
-                continue
-            yield (
-                AngleRatioProperty(pair0[0].angle(*pair1), pair0[1].angle(*pair1), 1),
-                'circular arc',
-                [prop] + nes
-            )
-            yield (
-                AngleRatioProperty(pair1[0].angle(*pair0), pair1[1].angle(*pair0), 1),
-                'circular arc',
-                [prop] + nes
-            )
+                    # TODO: sum = 180 degree
+                    pass
+                ang0 = p1[0].angle(*p0)
+                ang1 = p1[1].angle(*p0)
+                if sos.same:
+                    yield (
+                        AngleRatioProperty(ang0, ang1, 1),
+                        LazyComment('%s and %s are inscribed and subtend the same arc', ang0, ang1),
+                        [prop, sos]
+                    )
+                else:
+                    # TODO: sum = 180 degree
+                    pass
 
 class ProportionalLengthsToLengthsRatioRule(SingleSourceRule):
     property_type = ProportionalLengthsProperty
