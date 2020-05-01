@@ -41,4 +41,4 @@ Possible problems are
 
 ## Plans
 
-Please refer [the issues tracker](/geometer/sandbox/issues) to browse planned features, ideas, etc.
+Please refer [the issues tracker](https://github.com/geometer/sandbox/issues) to browse planned features, ideas, etc.
