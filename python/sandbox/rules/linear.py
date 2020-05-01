@@ -28,12 +28,10 @@ class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
 
 class EqualSumsOfAnglesRule(Rule):
     def sources(self):
-        return itertools.combinations(self.context.list(SumOfAnglesProperty), 2)
+        return [(s0, s1) for (s0, s1) in itertools.combinations(self.context.list(SumOfAnglesProperty), 2) if s0.degree == s1.degree]
 
     def apply(self, src):
         sum0, sum1 = src
-        if sum0.degree != sum1.degree:
-            return
 
         for eq0, eq1 in itertools.product(sum0.angles, sum1.angles):
             other0 = next(ang for ang in sum0.angles if ang != eq0)
