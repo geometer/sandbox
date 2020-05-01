@@ -132,14 +132,25 @@ class CorrespondingSidesInCongruentTrianglesRule(SingleSourceRule):
 class CorrespondingSidesInSimilarTrianglesRule(SingleSourceRule):
     property_type = SimilarTrianglesProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
     def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0x7:
+            return
         sides0 = prop.triangle0.sides
         sides1 = prop.triangle1.sides
         for i in range(0, 3):
+            if mask & (1 << i):
+                continue
             lr, ratio = self.context.length_ratio_property_and_value(sides0[i], sides1[i], True)
             if lr is None:
                 continue
-            if ratio == 1 or prop.reason.obsolete and lr.reason.obsolete:
+            mask |= (1 << i)
+            if ratio == 1:
+                mask = 0x7
                 break
             for j in [j for j in range(0, 3) if j != i]:
                 yield (
@@ -147,7 +158,7 @@ class CorrespondingSidesInSimilarTrianglesRule(SingleSourceRule):
                     'Ratios of sides in similar triangles',
                     [prop, lr]
                 )
-            break
+        self.processed[prop] = mask
 
 class EquilateralTriangleAnglesRule(SingleSourceRule):
     property_type = EquilateralTriangleProperty
