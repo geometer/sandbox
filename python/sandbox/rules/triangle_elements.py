@@ -13,12 +13,10 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
         sides1 = prop.triangle1.sides
         for i, j in itertools.combinations(range(0, 3), 2):
             segments = (sides0[i], sides0[j], sides1[i], sides1[j])
-            found_four_ratio_equalities = True
             for inds in [(0, 1, 2, 3), (0, 2, 1, 3), (1, 0, 3, 2), (2, 0, 3, 1)]:
                 if not self.context.length_ratios_are_equal(*[segments[n] for n in inds]):
-                    found_four_ratio_equalities = False
                     break
-            if found_four_ratio_equalities:
+            else:
                 continue
             if segments[0] != segments[1] and segments[0] != segments[2] and \
                segments[1] != segments[3] and segments[2] != segments[3]:
