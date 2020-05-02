@@ -53,7 +53,7 @@ class ProportionalLengthsToLengthsRatioRule(SingleSourceRule):
             return
         yield (
             LengthRatioProperty(prop.segment0, prop.segment1, prop.value),
-            prop.reason.comments,
+            prop.reason.comment,
             [prop, ne]
         )
 
@@ -324,7 +324,7 @@ class Degree90ToPerpendicularSegmentsRule(Rule):
         if not prop.reason.obsolete:
             yield (
                 PerpendicularSegmentsProperty(prop.angle.vector0.as_segment, prop.angle.vector1.as_segment),
-                prop.reason.comments,
+                prop.reason.comment,
                 prop.reason.premises
             )
 
@@ -582,32 +582,32 @@ class LengthProductEqualityToRatioRule(SingleSourceRule):
                 if prop.segments[j] == prop.segments[l]:
                     yield (
                         ProportionalLengthsProperty(prop.segments[i], prop.segments[k], 1),
-                        prop.reason.comments,
+                        prop.reason.comment,
                         prop.reason.premises + [ne[j], ne[l]]
                     )
                 elif prop.segments[i] == prop.segments[j]:
                     yield (
                         ProportionalLengthsProperty(prop.segments[k], prop.segments[l], 1),
-                        prop.reason.comments,
+                        prop.reason.comment,
                         prop.reason.premises + [ne[j]]
                     )
                 elif prop.segments[k] == prop.segments[l]:
                     yield (
                         ProportionalLengthsProperty(prop.segments[i], prop.segments[j], 1),
-                        prop.reason.comments,
+                        prop.reason.comment,
                         prop.reason.premises + [ne[l]]
                     )
                 else:
                     yield (
                         EqualLengthRatiosProperty(*[prop.segments[x] for x in (i, j, k, l)]),
-                        prop.reason.comments,
+                        prop.reason.comment,
                         prop.reason.premises + [ne[j], ne[l]]
                     )
 
 class RotatedAngleRule(Rule):
     def __init__(self, context):
-        self.context = context
-        self.__processed_pairs = set()
+        super().__init__(context)
+        self.processed = set()
 
     def sources(self):
         return self.context.congruent_angles_with_vertex()
@@ -615,7 +615,7 @@ class RotatedAngleRule(Rule):
     def apply(self, src):
         ang0, ang1 = src
         key = frozenset(src)
-        if key in self.__processed_pairs:
+        if key in self.processed:
             return
         vec00 = ang0.vector0
         vec01 = ang0.vector1
@@ -624,7 +624,7 @@ class RotatedAngleRule(Rule):
         pts0 = (ang0.vertex, vec00.end, vec01.end)
         pts1 = (ang1.vertex, vec10.end, vec11.end)
         if set(pts0) == set(pts1):
-            self.__processed_pairs.add(key)
+            self.processed.add(key)
             return
         co = self.context.same_cyclic_order_property(Cycle(*pts0), Cycle(*pts1))
         if co is None:
@@ -633,10 +633,8 @@ class RotatedAngleRule(Rule):
             co = self.context.same_cyclic_order_property(Cycle(*pts0), Cycle(*pts1))
         if co is None:
             return
+        self.processed.add(key)
         ca = self.context.angle_ratio_property(ang0, ang1)
-        if ca.reason.obsolete and co.reason.obsolete:
-            return
-        self.__processed_pairs.add(key)
         try:
             new_angle0 = vec00.angle(vec10)
             new_angle1 = vec01.angle(vec11)
@@ -687,7 +685,7 @@ class AngleTypeByDegreeRule(Rule):
         else:
             yield (
                 AngleKindProperty(prop.angle, AngleKindProperty.Kind.right),
-                prop.reason.comments,
+                prop.reason.comment,
                 prop.reason.premises
             )
 
@@ -715,7 +713,7 @@ class RightAngleDegreeRule(SingleSourceRule):
             return
         yield (
             AngleValueProperty(prop.angle, 90),
-            prop.reason.comments,
+            prop.reason.comment,
             prop.reason.premises
         )
 

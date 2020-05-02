@@ -85,7 +85,7 @@ def drawTree(scene, prop, args):
 
     data = [{
         'property': htmlize(p),
-        'comment': ', '.join([htmlize(com) for com in p.reason.comments]),
+        'comment': htmlize(p.reason.comment),
         'premises': [indexes[r] for r in p.reason.premises],
         'priority': 'essential' if p.essential else 'normal'
     } for p in all_props]

@@ -11,10 +11,18 @@ class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
     """
     property_type = SumOfAnglesProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
     def apply(self, prop):
         ar = self.context.angle_ratio_property(prop.angles[0], prop.angles[1])
-        if ar is None or prop.reason.obsolete and ar.reason.obsolete:
+        if ar is None:
             return
+        self.processed.add(prop)
         value1 = divide(prop.degree, 1 + ar.value)
         value0 = prop.degree - value1
         if ar.value == 1:
@@ -27,22 +35,31 @@ class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
         yield (AngleValueProperty(ar.angle1, value1), comment1, [prop, ar])
 
 class EqualSumsOfAnglesRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {} # prop => bit mask
+
     def sources(self):
-        return itertools.combinations(self.context.list(SumOfAnglesProperty), 2)
+        return [(s0, s1) for (s0, s1) in itertools.combinations(self.context.list(SumOfAnglesProperty), 2) if s0.degree == s1.degree and self.processed.get((s0, s1), 0) != 0xF]
 
     def apply(self, src):
-        sum0, sum1 = src
-        if sum0.degree != sum1.degree:
-            return
+        mask = self.processed.get(src, 0)
 
+        sum0, sum1 = src
+        index = 0
         for eq0, eq1 in itertools.product(sum0.angles, sum1.angles):
+            bit = 1 << index
+            index += 1
+            if mask & bit:
+                continue
+
             other0 = next(ang for ang in sum0.angles if ang != eq0)
             other1 = next(ang for ang in sum1.angles if ang != eq1)
             if other0 == other1:
+                mask |= bit
                 continue
             if eq0 == eq1:
-                if sum0.reason.obsolete and sum1.reason.obsolete:
-                    continue
+                mask |= bit
                 yield (
                     AngleRatioProperty(other0, other1, 1),
                     LazyComment('%s + %s = %sº = %s + %s', other0, eq0, sum0.degree, other1, eq1),
@@ -52,9 +69,9 @@ class EqualSumsOfAnglesRule(Rule):
                 ca = self.context.angle_ratio_property(eq0, eq1)
                 if ca is None:
                     continue
+                mask |= bit
                 if ca.value != 1:
-                    return
-                if sum0.reason.obsolete and sum1.reason.obsolete and ca.reason.obsolete:
+                    mask |= 8 // bit # 0x1 <=> 0x8, 0x2 <=> 0x4
                     continue
                 yield (
                     AngleRatioProperty(other0, other1, 1),
@@ -64,3 +81,4 @@ class EqualSumsOfAnglesRule(Rule):
                     ),
                     [sum0, sum1, ca]
                 )
+        self.processed[src] = mask
