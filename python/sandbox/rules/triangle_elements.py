@@ -8,16 +8,28 @@ from .abstract import SingleSourceRule
 class SideProductsInSimilarTrianglesRule(SingleSourceRule):
     property_type = SimilarTrianglesProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
     def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0x7:
+            return
+
         sides0 = prop.triangle0.sides
         sides1 = prop.triangle1.sides
         for i, j in itertools.combinations(range(0, 3), 2):
+            bit = 1 << next(k for k in range(0, 3) if k not in (i, j))
+            if mask & bit:
+                continue
             segments = (sides0[i], sides0[j], sides1[i], sides1[j])
             for inds in [(0, 1, 2, 3), (0, 2, 1, 3), (1, 0, 3, 2), (2, 0, 3, 1)]:
                 if not self.context.length_ratios_are_equal(*[segments[n] for n in inds]):
                     break
             else:
                 continue
+            mask |= bit
             if segments[0] != segments[1] and segments[0] != segments[2] and \
                segments[1] != segments[3] and segments[2] != segments[3]:
                 yield (
@@ -25,11 +37,20 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
                     LazyComment('ratios of sides in similar %s and %s', prop.triangle0, prop.triangle1),
                     [prop]
                 )
+        self.processed[prop] = mask
 
 class CorrespondingAnglesInSimilarTrianglesRule(SingleSourceRule):
     property_type = SimilarTrianglesProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
     def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0x7:
+            return
+
         ne0 = []
         ne1 = []
         sides0 = prop.triangle0.sides
@@ -41,7 +62,11 @@ class CorrespondingAnglesInSimilarTrianglesRule(SingleSourceRule):
         angles0 = prop.triangle0.angles
         angles1 = prop.triangle1.angles
         for i in range(0, 3):
+            bit = 1 << i
+            if mask & bit:
+                continue
             if angles0[i] == angles1[i]:
+                mask |= bit
                 continue
             ne = []
             for j in range(0, 3):
@@ -50,13 +75,15 @@ class CorrespondingAnglesInSimilarTrianglesRule(SingleSourceRule):
                         ne.append(ne0[j])
                     if ne1[j]:
                         ne.append(ne1[j])
-            if len(ne) < 3 or prop.reason.obsolete and all(p.reason.obsolete for p in ne):
+            if len(ne) < 3:
                 continue
+            mask |= bit
             yield (
                 AngleRatioProperty(angles0[i], angles1[i], 1),
                 LazyComment('corresponding non-degenerate angles in similar %s and %s', prop.triangle0, prop.triangle1),
                 [prop] + ne
             )
+        self.processed[prop] = mask
 
 class BaseAnglesOfIsoscelesRule(SingleSourceRule):
     property_type = IsoscelesTriangleProperty
