@@ -248,7 +248,7 @@ class Explainer:
                         )
                         yield (
                             SameOrOppositeSideProperty(segment, pt0, pt1, True),
-                            [str(av), str(nc)], #TODO: better comment
+                            LazyComment('%s, %s', av, nc), #TODO: better comment
                             [av, nc]
                         )
 
