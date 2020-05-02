@@ -40,16 +40,16 @@ class EqualSumsOfAnglesRule(Rule):
         self.processed = {} # prop => bit mask
 
     def sources(self):
-        return [(s0, s1) for (s0, s1) in itertools.combinations(self.context.list(SumOfAnglesProperty), 2) if s0.degree == s1.degree and self.processed.get((s0, s1), 0) != 0xF]
+        return [(s0, s1) for (s0, s1) in itertools.combinations(self.context.list(SumOfAnglesProperty), 2) if s0.degree == s1.degree]
 
     def apply(self, src):
         mask = self.processed.get(src, 0)
+        if mask == 0xF:
+            return
 
         sum0, sum1 = src
-        index = 0
-        for eq0, eq1 in itertools.product(sum0.angles, sum1.angles):
+        for index, (eq0, eq1) in enumerate(itertools.product(sum0.angles, sum1.angles)):
             bit = 1 << index
-            index += 1
             if mask & bit:
                 continue
 
@@ -57,6 +57,7 @@ class EqualSumsOfAnglesRule(Rule):
             other1 = next(ang for ang in sum1.angles if ang != eq1)
             if other0 == other1:
                 mask |= bit
+                mask |= 8 // bit # 0x1 <=> 0x8, 0x2 <=> 0x4
                 continue
             if eq0 == eq1:
                 mask |= bit
@@ -76,8 +77,8 @@ class EqualSumsOfAnglesRule(Rule):
                 yield (
                     AngleRatioProperty(other0, other1, 1),
                     LazyComment(
-                        '%s + %s = %sº = %s + %s and %s = %s',
-                        other0, eq0, sum0.degree, other1, eq1, eq0, eq1
+                        '%s + %s = %sº = %s + %s and %s',
+                        other0, eq0, sum0.degree, other1, eq1, ca
                     ),
                     [sum0, sum1, ca]
                 )

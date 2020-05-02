@@ -165,6 +165,13 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
 class SimilarTrianglesWithCongruentSideRule(SingleSourceRule):
     property_type = SimilarTrianglesProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
     def apply(self, prop):
         sides0 = prop.triangle0.sides
         sides1 = prop.triangle1.sides
@@ -172,8 +179,9 @@ class SimilarTrianglesWithCongruentSideRule(SingleSourceRule):
             if sides0[i] != sides1[i]:
                 continue
             ne = self.context.not_equal_property(*sides0[i].points)
-            if ne is None or ne.reason.obsolete and prop.reason.obsolete:
+            if ne is None:
                 return
+            self.processed.add(prop)
             yield (
                 CongruentTrianglesProperty(prop.triangle0, prop.triangle1),
                 LazyComment('similar triangles with common non-zero side %s', sides0[i]),
@@ -181,14 +189,18 @@ class SimilarTrianglesWithCongruentSideRule(SingleSourceRule):
             )
             return
         for i in range(0, 3):
-            cs = self.context.congruent_segments_property(sides0[i], sides1[i], True)
+            cs, value = self.context.length_ratio_property_and_value(sides0[i], sides1[i], True)
             if cs is None:
                 continue
+            if value != 1:
+                self.processed.add(prop)
+                return
             ne = self.context.not_equal_property(*sides0[i].points)
             if ne is None:
                 ne = self.context.not_equal_property(*sides1[i].points)
-            if ne is None or ne.reason.obsolete and prop.reason.obsolete and cs.reason.obsolete:
-                return
+            if ne is None:
+                continue
+            self.processed.add(prop)
             yield (
                 CongruentTrianglesProperty(prop.triangle0, prop.triangle1),
                 LazyComment('similar triangles with congruent non-zero sides %s and %s', sides0[i], sides1[i]),
