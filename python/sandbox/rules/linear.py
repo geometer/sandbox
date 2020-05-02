@@ -40,10 +40,12 @@ class EqualSumsOfAnglesRule(Rule):
         self.processed = {} # prop => bit mask
 
     def sources(self):
-        return [(s0, s1) for (s0, s1) in itertools.combinations(self.context.list(SumOfAnglesProperty), 2) if s0.degree == s1.degree and self.processed.get((s0, s1), 0) != 0xF]
+        return [(s0, s1) for (s0, s1) in itertools.combinations(self.context.list(SumOfAnglesProperty), 2) if s0.degree == s1.degree]
 
     def apply(self, src):
         mask = self.processed.get(src, 0)
+        if mask == 0xF:
+            return
 
         sum0, sum1 = src
         for index, (eq0, eq1) in enumerate(itertools.product(sum0.angles, sum1.angles)):
