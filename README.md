@@ -5,6 +5,18 @@ Solver/explainer of elementary planimetric problems.
 
 The goal of the project is to create an app that takes a human-readable description of a planimetry problem and generates a human-readable solution.
 
+## The concept
+
+The first step is to write an exhaustive search prover. It starts from a set of known properties and deducts new properties by applying rules from the ruleset to existing properties. This process repeats until the iteration does not generate new properties. The difference from existing provers is that the properties and the rules are defined in high-level terms like a human can use. E.g., there are properties “two angles are congruent” and “two triangles are similar”, and rule “if two pairs of angles of given triangles are congruent, the triangles are similar”.
+
+Additionally, if the direct search fails, the prover should try some additional constructions as well as assumptions. E.g., if a proof is not found, it might consider variants “the angle A is acute”, “is obtuse”, and “is right”.
+
+The main benefit is that the proof is immediately human-readable. And can be made even more readable by reviewing some proofs, and adding new rules/priorities.
+
+Possible problems are
+* The prover needs a large number of rules
+* It is not clear how to be sure that the rule set is complete
+
 ## Current state
 
 **Prerequisites**:
@@ -29,14 +41,4 @@ The goal of the project is to create an app that takes a human-readable descript
 
 ## Plans
 
-**Most important features to code**:
-
-* In the explainer, introduce `ContradictionException`, that raises if the reason generates a contradiction. This is an important part of the meta explainer (see the next item)
-* Meta explainer that uses existing explainer and does an exhaustive search of additional constructions as well as assumptions (e.g., if the direct explainer fails, it might consider variants “the angle A is acute”, “is obtuse”, and “is right”)
-
-**Other features**:
-
-* Write documentation that explains the existing code API
-* Introduce a machine-readable format for tasks (or use some existing, if any; maybe GeoGebra language?)
-* Create/collect/find a big task set in machine-readable form (using own task format, or python, or some existing format + parser)
-* For each property, introduce a negated property. E.g., for “two triangles are similar”, there should be “two triangles are **not** similar”. This would be useful for detecting contradictions as soon as possible, and also for speeding up the algorithm. There is no need to test for similarity again and again on each iteration if it is already known, but also if its negation is already known. Of course, there is no need to generate all possible negated properties. Only the negations that are found in a natural way (i.e., during looking for “positive” properties) should be stored.
+Please refer [the issues tracker](https://github.com/geometer/sandbox/issues) to browse planned features, ideas, etc.
