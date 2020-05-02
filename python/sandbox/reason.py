@@ -1,10 +1,7 @@
 class Reason:
-    def __init__(self, generation, comments, premises):
+    def __init__(self, generation, comment, premises):
         self.generation = generation
-        if not isinstance(comments, (list, tuple)):
-            self.comments = [comments]
-        else:
-            self.comments = list(comments)
+        self.comment = comment
         self.premises = premises
         self.__all_premises = None
 

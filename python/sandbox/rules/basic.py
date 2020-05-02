@@ -17,7 +17,7 @@ class ProportionalLengthsToLengthsRatioRule(SingleSourceRule):
             return
         yield (
             LengthRatioProperty(prop.segment0, prop.segment1, prop.value),
-            prop.reason.comments,
+            prop.reason.comment,
             [prop, ne]
         )
 
@@ -288,7 +288,7 @@ class Degree90ToPerpendicularSegmentsRule(Rule):
         if not prop.reason.obsolete:
             yield (
                 PerpendicularSegmentsProperty(prop.angle.vector0.as_segment, prop.angle.vector1.as_segment),
-                prop.reason.comments,
+                prop.reason.comment,
                 prop.reason.premises
             )
 
@@ -546,25 +546,25 @@ class LengthProductEqualityToRatioRule(SingleSourceRule):
                 if prop.segments[j] == prop.segments[l]:
                     yield (
                         ProportionalLengthsProperty(prop.segments[i], prop.segments[k], 1),
-                        prop.reason.comments,
+                        prop.reason.comment,
                         prop.reason.premises + [ne[j], ne[l]]
                     )
                 elif prop.segments[i] == prop.segments[j]:
                     yield (
                         ProportionalLengthsProperty(prop.segments[k], prop.segments[l], 1),
-                        prop.reason.comments,
+                        prop.reason.comment,
                         prop.reason.premises + [ne[j]]
                     )
                 elif prop.segments[k] == prop.segments[l]:
                     yield (
                         ProportionalLengthsProperty(prop.segments[i], prop.segments[j], 1),
-                        prop.reason.comments,
+                        prop.reason.comment,
                         prop.reason.premises + [ne[l]]
                     )
                 else:
                     yield (
                         EqualLengthRatiosProperty(*[prop.segments[x] for x in (i, j, k, l)]),
-                        prop.reason.comments,
+                        prop.reason.comment,
                         prop.reason.premises + [ne[j], ne[l]]
                     )
 
@@ -633,7 +633,7 @@ class AngleTypeByDegreeRule(Rule):
         else:
             yield (
                 AngleKindProperty(prop.angle, AngleKindProperty.Kind.right),
-                prop.reason.comments,
+                prop.reason.comment,
                 prop.reason.premises
             )
 
@@ -661,7 +661,7 @@ class RightAngleDegreeRule(SingleSourceRule):
             return
         yield (
             AngleValueProperty(prop.angle, 90),
-            prop.reason.comments,
+            prop.reason.comment,
             prop.reason.premises
         )
 

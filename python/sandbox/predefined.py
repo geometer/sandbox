@@ -11,31 +11,31 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
 
     for cnstr in scene.constraints(Constraint.Kind.collinear):
         if all_visible(cnstr.params):
-            yield (PointsCollinearityProperty(*cnstr.params, True), cnstr.comments)
+            yield (PointsCollinearityProperty(*cnstr.params, True), cnstr.comment)
 
     for cnstr in scene.constraints(Constraint.Kind.not_collinear):
         if all_visible(cnstr.params):
-            yield (PointsCollinearityProperty(*cnstr.params, False), cnstr.comments)
-            yield (PointsCoincidenceProperty(*cnstr.params[0:2], False), cnstr.comments)
-            yield (PointsCoincidenceProperty(*cnstr.params[1:3], False), cnstr.comments)
-            yield (PointsCoincidenceProperty(cnstr.params[0], cnstr.params[2], False), cnstr.comments)
+            yield (PointsCollinearityProperty(*cnstr.params, False), cnstr.comment)
+            yield (PointsCoincidenceProperty(*cnstr.params[0:2], False), cnstr.comment)
+            yield (PointsCoincidenceProperty(*cnstr.params[1:3], False), cnstr.comment)
+            yield (PointsCoincidenceProperty(cnstr.params[0], cnstr.params[2], False), cnstr.comment)
 
     for cnstr in scene.constraints(Constraint.Kind.not_equal):
         if all_visible(cnstr.params):
-            yield (PointsCoincidenceProperty(cnstr.params[0], cnstr.params[1], False), cnstr.comments)
+            yield (PointsCoincidenceProperty(cnstr.params[0], cnstr.params[1], False), cnstr.comment)
 
     for cnstr in scene.constraints(Constraint.Kind.length_ratio):
         if all_visible(cnstr.params[0].points + cnstr.params[1].points):
             yield (
                 ProportionalLengthsProperty(cnstr.params[0], cnstr.params[1], cnstr.params[2]),
-                cnstr.comments
+                cnstr.comment
             )
 
     for cnstr in scene.constraints(Constraint.Kind.same_direction):
         if all_visible(cnstr.params):
             yield (
                 AngleValueProperty(cnstr.params[0].angle(*cnstr.params[1:]), 0),
-                cnstr.comments
+                cnstr.comment
             )
 
     for cnstr in scene.constraints(Constraint.Kind.perpendicular):
@@ -44,7 +44,7 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
         if line0 is None or line1 is None:
             yield (
                 PerpendicularSegmentsProperty(cnstr.params[0], cnstr.params[1]),
-                cnstr.comments
+                cnstr.comment
             )
             continue
 
@@ -58,7 +58,7 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
                     PerpendicularSegmentsProperty(
                         pts0[0].segment(pts0[1]), pts1[0].segment(pts1[1])
                     ),
-                    cnstr.comments
+                    cnstr.comment
                 )
 
     for cnstr in scene.constraints(Constraint.Kind.acute_angle):
@@ -66,7 +66,7 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
         if all_visible(angle.point_set):
             yield (
                 AngleKindProperty(angle, AngleKindProperty.Kind.acute),
-                cnstr.comments
+                cnstr.comment
             )
 
     for cnstr in scene.constraints(Constraint.Kind.obtuse_angle):
@@ -74,12 +74,12 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
         if all_visible(angle.point_set):
             yield (
                 AngleKindProperty(angle, AngleKindProperty.Kind.obtuse),
-                cnstr.comments
+                cnstr.comment
             )
 
     for cnstr in scene.constraints(Constraint.Kind.parallel_vectors):
         if all(all_visible(param.points) for param in cnstr.params):
-            yield (ParallelVectorsProperty(*cnstr.params), cnstr.comments)
+            yield (ParallelVectorsProperty(*cnstr.params), cnstr.comment)
 
     for cnstr in scene.constraints(Constraint.Kind.inside_angle):
         point = cnstr.params[0]
@@ -87,25 +87,25 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
         if is_visible(point) and all_visible(angle.point_set):
             yield (
                 PointInsideAngleProperty(point, angle),
-                cnstr.comments
+                cnstr.comment
             )
 
     for cnstr in scene.constraints(Constraint.Kind.inside_segment):
         if all_visible((cnstr.params[0], *cnstr.params[1].points)):
             yield (
                 PointsCoincidenceProperty(*cnstr.params[1].points, False),
-                cnstr.comments
+                cnstr.comment
             )
             yield (
                 AngleValueProperty(cnstr.params[0].angle(*cnstr.params[1].points), 180),
-                cnstr.comments
+                cnstr.comment
             )
 
     for cnstr in scene.constraints(Constraint.Kind.equilateral):
         if all_visible(cnstr.params[0].points):
             yield (
                 EquilateralTriangleProperty(cnstr.params[0]),
-                cnstr.comments
+                cnstr.comment
             )
 
     for line in scene.lines(max_layer='auxiliary'):
@@ -141,14 +141,14 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
         line = cnstr.params[2]
         yield (
             SameOrOppositeSideProperty(line.point0.segment(line.point1), cnstr.params[0], cnstr.params[1], False),
-            cnstr.comments
+            cnstr.comment
         )
 
     for cnstr in scene.constraints(Constraint.Kind.same_side):
         line = cnstr.params[2]
         yield (
             SameOrOppositeSideProperty(line.point0.segment(line.point1), cnstr.params[0], cnstr.params[1], True),
-            cnstr.comments
+            cnstr.comment
         )
 
     for cnstr in scene.constraints(Constraint.Kind.angles_ratio):
@@ -157,5 +157,5 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
         if all_visible(angle0.point_set) and all_visible(angle1.point_set):
             yield (
                 AngleRatioProperty(angle0, angle1, cnstr.params[2]),
-                cnstr.comments
+                cnstr.comment
             )

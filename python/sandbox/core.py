@@ -997,14 +997,14 @@ class Constraint:
             #    assert isinstance(arg, knd)
             self.params.append(arg)
         self.kind = kind
-        self.comments = []
+        self.comment = None
         self.update(kwargs)
 
     def update(self, kwargs):
         if 'comment' in kwargs:
-            #if kwargs['comment'] not in self.comments:
-            if not self.comments:
-                self.comments.append(kwargs['comment'])
+            kwargs = dict(kwargs)
+            if not self.comment:
+                self.comment = kwargs['comment']
             del kwargs['comment']
         self.__dict__.update(kwargs)
 
@@ -1013,9 +1013,8 @@ class Constraint:
         extras = dict(self.__dict__)
         del extras['kind']
         del extras['params']
-        del extras['comments']
-        if self.comments:
-            comments = ', '.join([str(com) for com in self.comments])
-            return 'Constraint(%s) %s %s (%s)' % (self.kind.name, params, comments, extras)
+        del extras['comment']
+        if self.comment:
+            return 'Constraint(%s) %s %s (%s)' % (self.kind.name, params, self.comment, extras)
         else:
             return 'Constraint(%s) %s (%s)' % (self.kind.name, params, extras)

@@ -96,8 +96,8 @@ class Explainer:
                 LawOfSinesRule(self.context),
             ]
 
-    def __reason(self, prop, comments, premises=None):
-        reason = Reason(self.__iteration_step_count, comments, premises)
+    def __reason(self, prop, comment, premises=None):
+        reason = Reason(self.__iteration_step_count, comment, premises)
         if prop in reason.all_premises:
             return
         def insert(pro):
@@ -457,7 +457,7 @@ class Explainer:
                 ratio_prop = self.context.equal_length_ratios_property(*ratio0, *ratio1)
                 yield (
                     ProportionalLengthsProperty(ratio0[0], ratio1[0], 1),
-                    ratio_prop.reason.comments,
+                    ratio_prop.reason.comment,
                     ratio_prop.reason.premises
                 )
 
@@ -621,11 +621,11 @@ class Explainer:
         def to_string(reason):
             if reason.premises:
                 return '%s (%s)' % (
-                    ', '.join([str(com) for com in reason.comments]),
+                    reason.comment,
                     ', '.join(['*%s' % self.context.index_of(prop) for prop in reason.premises])
                 )
             else:
-                return ', '.join([str(com) for com in reason.comments])
+                return reason.comment
 
         if len(self.context) > 0:
             print('Explained:')
