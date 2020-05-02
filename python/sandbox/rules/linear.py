@@ -11,10 +11,18 @@ class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
     """
     property_type = SumOfAnglesProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
     def apply(self, prop):
         ar = self.context.angle_ratio_property(prop.angles[0], prop.angles[1])
-        if ar is None or prop.reason.obsolete and ar.reason.obsolete:
+        if ar is None:
             return
+        self.processed.add(prop)
         value1 = divide(prop.degree, 1 + ar.value)
         value0 = prop.degree - value1
         if ar.value == 1:
