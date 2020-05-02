@@ -312,21 +312,33 @@ class CommonPerpendicularRule(SingleSourceRule):
                 )
 
 class TwoPointsBelongsToTwoPerpendicularsRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
     def sources(self):
         return itertools.combinations(self.context.list(PerpendicularSegmentsProperty), 2)
 
     def apply(self, src):
+        key = frozenset(src)
+        if key in self.processed:
+            return
         perp0, perp1 = src
         common = next((seg for seg in perp0.segments if seg in perp1.segments), None)
         if common is None:
+            self.processed.add(key)
             return
         seg0 = next(seg for seg in perp0.segments if seg != common)
         seg1 = next(seg for seg in perp1.segments if seg != common)
         points = set(seg0.points + seg1.points)
         if len(points) != 3:
+            self.processed.add(key)
             return
         ncl = self.context.collinearity_property(*points)
-        if ncl is None or ncl.collinear or ncl.reason.obsolete and perp0.reason.obsolete and perp1.reason.obsolete:
+        if ncl is None:
+            return
+        self.processed.add(key)
+        if ncl.collinear:
             return
         yield (
             PointsCoincidenceProperty(*common.points, True),
@@ -335,22 +347,33 @@ class TwoPointsBelongsToTwoPerpendicularsRule(Rule):
         )
 
 class PerpendicularTransitivityRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
     def sources(self):
         return itertools.combinations(self.context.list(PerpendicularSegmentsProperty), 2)
 
     def apply(self, src):
+        key = frozenset(src)
+        if key in self.processed:
+            return
+
         perp0, perp1 = src
         common = next((seg for seg in perp0.segments if seg in perp1.segments), None)
         if common is None:
+            self.processed.add(key)
             return
         seg0 = next(seg for seg in perp0.segments if seg != common)
         seg1 = next(seg for seg in perp1.segments if seg != common)
         common_point = next((pt for pt in seg0.points if pt in seg1.points), None)
         if common_point is None:
+            self.processed.add(key)
             return
         ne = self.context.not_equal_property(*common.points)
-        if ne is None or ne.reason.obsolete and perp0.reason.obsolete and perp1.reason.obsolete:
+        if ne is None:
             return
+        self.processed.add(key)
         pt0 = next(pt for pt in seg0.points if pt != common_point)
         pt1 = next(pt for pt in seg1.points if pt != common_point)
         yield (
@@ -499,17 +522,27 @@ class TwoPerpendicularsRule2(Rule):
     """
     Two perpendiculars to the same line are parallel
     """
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
     def sources(self):
         return itertools.combinations(self.context.list(PerpendicularSegmentsProperty), 2)
 
     def apply(self, src):
+        key = frozenset(src)
+        if key in self.processed:
+            return
+
         perp0, perp1 = src
         common = next((seg for seg in perp0.segments if seg in perp1.segments), None)
         if common is None:
+            self.processed.add(key)
             return
         ne = self.context.not_equal_property(*common.points)
-        if ne is None or perp0.reason.obsolete and perp1.reason.obsolete and ne.reason.obsolete:
+        if ne is None:
             return
+        self.processed.add(key)
         other0 = next(seg for seg in perp0.segments if seg != common)
         other1 = next(seg for seg in perp1.segments if seg != common)
         yield (
