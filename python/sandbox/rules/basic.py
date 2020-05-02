@@ -569,8 +569,12 @@ class LengthProductEqualityToRatioRule(SingleSourceRule):
                     )
 
 class RotatedAngleRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
     def sources(self):
-        return [(a0, a1) for a0, a1 in self.context.congruent_angles_with_vertex() if a0.vertex == a1.vertex]
+        return [(a0, a1) for a0, a1 in self.context.congruent_angles_with_vertex() if a0.vertex == a1.vertex and (a0, a1) not in self.processed]
 
     def apply(self, src):
         ang0, ang1 = src
@@ -578,6 +582,7 @@ class RotatedAngleRule(Rule):
         pts0 = ang0.endpoints
         pts1 = ang1.endpoints
         if next((p for p in pts0 if p in pts1), None) is not None:
+            self.processed.add(src)
             return
         co = self.context.same_cyclic_order_property(Cycle(vertex, *pts0), Cycle(vertex, *pts1))
         if co is None:
@@ -585,9 +590,8 @@ class RotatedAngleRule(Rule):
             co = self.context.same_cyclic_order_property(Cycle(vertex, *pts0), Cycle(vertex, *pts1))
         if co is None:
             return
+        self.processed.add(src)
         ca = self.context.angle_ratio_property(ang0, ang1)
-        if ca.reason.obsolete and co.reason.obsolete:
-            return
         new_angle0 = vertex.angle(pts0[0], pts1[0])
         new_angle1 = vertex.angle(pts0[1], pts1[1])
         yield (
