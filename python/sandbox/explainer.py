@@ -30,6 +30,7 @@ class Explainer:
             SumOfTwoAnglesInTriangle(self.context),
             SumAndRatioOfTwoAnglesRule(self.context),
             EqualSumsOfAnglesRule(self.context),
+            SumOfAngles180DegreeRule(self.context),
             NonCollinearPointsAreDifferentRule(self.context),
             CoincidenceTransitivityRule(self.context),
             CollinearityCollisionRule(self.context),
@@ -482,24 +483,6 @@ class Explainer:
                         LazyComment('%sº - %sº', sa.degree, av1.degree),
                         [sa, av1]
                     )
-
-            for ar in [p for p in self.context.list(SumOfAnglesProperty) if p.angles[0].vertex is not None and p.angles[0].vertex == p.angles[1].vertex and p.degree == 180]:
-                common = next((pt for pt in ar.angles[0].endpoints if pt in ar.angles[1].endpoints), None)
-                if common is None:
-                    continue
-                pt0 = next(pt for pt in ar.angles[0].endpoints if pt != common)
-                pt1 = next(pt for pt in ar.angles[1].endpoints if pt != common)
-                try:
-                    oppo = self.context[SameOrOppositeSideProperty(ar.angles[0].vertex.segment(common), pt0, pt1, False)]
-                except: # TODO: we process here case of oppo.same == True; do the same with no try/except
-                    continue
-                if not oppo or ar.reason.obsolete and oppo.reason.obsolete:
-                    continue
-                yield (
-                    AngleValueProperty(ar.angles[0].vertex.angle(pt0, pt1), 180),
-                    LazyComment('%s + %s', ar.angles[0], ar.angles[1]),
-                    [ar, oppo]
-                )
 
             for ang0, ang1 in self.context.congruent_angles_with_vertex():
                 ncl0 = self.context.not_collinear_property(*ang0.point_set)

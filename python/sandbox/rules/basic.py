@@ -6,6 +6,35 @@ from sandbox.util import LazyComment, divide
 
 from .abstract import Rule, SingleSourceRule
 
+class SumOfAngles180DegreeRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        return [p for p in self.context.list(SumOfAnglesProperty) if p.angles[0].vertex is not None and p.angles[0].vertex == p.angles[1].vertex and p.degree == 180 and p not in self.processed]
+
+    def apply(self, prop):
+        common = next((pt for pt in prop.angles[0].endpoints if pt in prop.angles[1].endpoints), None)
+        if common is None:
+            self.processed.add(prop)
+            return
+        pt0 = next(pt for pt in prop.angles[0].endpoints if pt != common)
+        pt1 = next(pt for pt in prop.angles[1].endpoints if pt != common)
+        try:
+            oppo = self.context[SameOrOppositeSideProperty(prop.angles[0].vertex.segment(common), pt0, pt1, False)]
+        except: # TODO: we process here case of oppo.same == True; do the same with no try/except
+            self.processed.add(prop)
+            return
+        if oppo is None:
+            return
+        self.processed.add(prop)
+        yield (
+            AngleValueProperty(prop.angles[0].vertex.angle(pt0, pt1), 180),
+            LazyComment('%s + %s', prop.angles[0], prop.angles[1]),
+            [prop, oppo]
+        )
+
 class ProportionalLengthsToLengthsRatioRule(SingleSourceRule):
     property_type = ProportionalLengthsProperty
 
