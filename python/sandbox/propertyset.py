@@ -8,6 +8,9 @@ from .reason import Reason
 from .stats import Stats
 from .util import LazyComment, divide
 
+class ContradictionError(Exception):
+    pass
+
 class CyclicOrderPropertySet:
     class Family:
         def __init__(self):
@@ -682,8 +685,8 @@ class PropertySet:
     def __getitem__(self, prop):
         existing = self.__full_set.get(prop)
         if existing:
-            #TODO: better way to report contradiction
-            assert existing.compare_values(prop), 'Contradiction: values are different for %s and %s' % (prop, existing)
+            if not existing.compare_values(prop):
+                raise ContradictionError('different values: `%s` vs `%s`' % (prop, existing))
             return existing
         if isinstance(prop, AngleRatioProperty):
             #TODO: check ratio value for contradiction
