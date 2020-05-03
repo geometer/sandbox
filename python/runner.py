@@ -51,7 +51,7 @@ def run_sample(scene, prop=None):
 
     if 'explanation' in args.dump:
         def dump(prop, level=0):
-            print('\t' + '  ' * level + str(prop) + ': ' + prop.reason.comment)
+            print('\t' + '  ' * level + str(prop) + ': ' + str(prop.reason.comment))
             if prop.reason.premises:
                 for premise in prop.reason.premises:
                     dump(premise, level + 1)
