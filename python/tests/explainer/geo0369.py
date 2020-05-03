@@ -8,7 +8,7 @@ class GEO0369(ExplainerTest):
     def createScene(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
+        A, B, C = scene.nondegenerate_triangle(labels=('A', 'B', 'C')).points
         F = B.segment(C).middle_point(label='F')
         D = scene.perpendicular_foot_point(C, A.line_through(B), label='D')
         E = scene.perpendicular_foot_point(B, A.line_through(C), label='E')

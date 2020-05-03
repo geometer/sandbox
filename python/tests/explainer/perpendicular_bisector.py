@@ -7,7 +7,7 @@ class ThreePointsOnPerpendicularBisectorCollinearity1(ExplainerTest):
     def createScene(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
+        A, B, C = scene.nondegenerate_triangle(labels=('A', 'B', 'C')).points
         D = scene.free_point(label='D')
         E = scene.free_point(label='E')
         A.segment(C).congruent_constraint(B.segment(C))
@@ -32,7 +32,7 @@ class ThreePointsOnPerpendicularBisectorCollinearity2(ExplainerTest):
     def createScene(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
+        A, B, C = scene.nondegenerate_triangle(labels=('A', 'B', 'C')).points
         D = scene.free_point(label='D')
         E = scene.free_point(label='E')
         A.segment(C).congruent_constraint(B.segment(C))

@@ -8,8 +8,9 @@ class GEO0374(ExplainerTest):
     def createScene(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
-        scene.equilateral_constraint((A, B, C))
+        triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
+        A, B, C = triangle.points
+        scene.equilateral_constraint(triangle)
         D = B.translated_point(A.vector(B), 2, label='D')
         F = scene.perpendicular_foot_point(D, B.line_through(C), label='F')
 

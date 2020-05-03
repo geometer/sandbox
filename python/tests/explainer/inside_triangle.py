@@ -7,7 +7,7 @@ class InsideTriangle1(ExplainerTest):
     def createScene(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
+        A, B, C = scene.nondegenerate_triangle(labels=('A', 'B', 'C')).points
         D = A.segment(B).free_point(label='D')
         E = A.segment(C).free_point(label='E')
         X = D.line_through(C).intersection_point(E.line_through(B), label='X')
@@ -27,7 +27,7 @@ class InsideTriangle2(ExplainerTest):
     def createScene(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
+        A, B, C = scene.nondegenerate_triangle(labels=('A', 'B', 'C')).points
         D = A.segment(B).free_point(label='D')
         E = A.segment(C).free_point(label='E')
         F = B.segment(C).free_point(label='F')

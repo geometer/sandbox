@@ -8,7 +8,7 @@ class TestSympy1(PlacementTest):
     def createPlacement(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
+        A, B, C = scene.nondegenerate_triangle(labels=('A', 'B', 'C')).points
         A.segment(B).congruent_constraint(A.segment(C))
         altitude = A.perpendicular_line(B.line_through(C), label='AD')
         D = altitude.intersection_point(B.line_through(C, label='BC'))
@@ -23,7 +23,7 @@ class TestSympy2(PlacementTest):
     def createPlacement(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
+        A, B, C = scene.nondegenerate_triangle(labels=('A', 'B', 'C')).points
         A.segment(B).congruent_constraint(A.segment(C))
         A.segment(B).congruent_constraint(B.segment(C))
         A.segment(B).length_constraint(1)
@@ -39,7 +39,7 @@ class TestSympy3(PlacementTest):
     def createPlacement(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
+        A, B, C = scene.nondegenerate_triangle(labels=('A', 'B', 'C')).points
         A.segment(B).congruent_constraint(A.segment(C))
         A.segment(B).congruent_constraint(B.segment(C))
         A.segment(B).length_constraint(sp.sqrt(3))

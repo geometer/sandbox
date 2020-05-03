@@ -456,7 +456,8 @@ class Placement(BasePlacement):
                 coef = np.float128(cnstr.params[2])
                 numb_square += (self.length(seg0) / self.length(seg1) - coef) ** 2
             elif cnstr.kind == Constraint.Kind.equilateral:
-                lens = [self.length(cnstr.params[i].vector(cnstr.params[(i + 1) % 3])) for i in range(0, 3)]
+                triangle = cnstr.params[0]
+                lens = [self.length(side) for side in triangle.sides]
                 numb_square += (lens[0] / lens[1] - 1) ** 2
                 numb_square += (lens[1] / lens[2] - 1) ** 2
             elif cnstr.kind == Constraint.Kind.collinear:
@@ -501,6 +502,9 @@ class Placement(BasePlacement):
 
 def iterative_placement(scene, max_attempts=10000, max_iterations=400, print_progress=False):
     for attempt in range(0, max_attempts):
+        frozen = scene.is_frozen
+        if not frozen:
+            scene.freeze()
         try:
             placement = Placement(scene)
             if placement.deviation() < 1e-14:
@@ -520,4 +524,8 @@ def iterative_placement(scene, max_attempts=10000, max_iterations=400, print_pro
         except PlacementFailedError as e:
             if print_progress:
                 print('Attempt %d failed: %s\r' % (attempt, e))
+        finally:
+            if not frozen:
+                scene.unfreeze()
+
     return None

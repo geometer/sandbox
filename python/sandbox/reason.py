@@ -1,14 +1,16 @@
 class Reason:
-    def __init__(self, index, generation, comments, premises):
-        self.index = index
+    def __init__(self, generation, comment, premises):
         self.generation = generation
-        if not isinstance(comments, (list, tuple)):
-            self.comments = [comments]
-        else:
-            self.comments = list(comments)
-        self.premises = premises
+        self.comment = comment
+        self.premises = []
+        for pre in premises:
+            if pre not in self.premises:
+                self.premises.append(pre)
         self.__all_premises = None
 
+    def reset_premises(self):
+        self.__all_premises = None
+        
     @property
     def all_premises(self):
         if self.__all_premises is None:
@@ -19,12 +21,3 @@ class Reason:
                         self.__all_premises.add(p)
                         self.__all_premises.update(p.reason.all_premises)
         return self.__all_premises
-
-    def __str__(self):
-        if self.premises:
-            return '%s (%s)' % (
-                ', '.join([str(com) for com in self.comments]),
-                ', '.join(['*%d' % prop.reason.index for prop in self.premises])
-            )
-        else:
-            return ', '.join([str(com) for com in self.comments])

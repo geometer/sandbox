@@ -10,9 +10,10 @@ class TestRoG4578_orthocentre_inside(PlacementTest):
     def createPlacement(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
-        D = scene.orthocentre_point((A, B, C))
-        D.inside_triangle_constraint(A, B, C)
+        triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
+        A, B, C = triangle.points
+        D = scene.orthocentre_point(triangle)
+        D.inside_triangle_constraint(triangle)
         A.segment(B).congruent_constraint(C.segment(D))
 
         return iterative_placement(scene)
@@ -24,8 +25,9 @@ class TestRoG4578_orthocentre_outside(PlacementTest):
     def createPlacement(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
-        D = scene.orthocentre_point((A, B, C))
+        triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
+        A, B, C = triangle.points
+        D = scene.orthocentre_point(triangle)
         D.opposite_side_constraint(B.line_through(C), A)
         D.opposite_side_constraint(A.line_through(C), B)
         A.segment(B).congruent_constraint(C.segment(D))

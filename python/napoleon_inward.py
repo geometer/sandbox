@@ -7,16 +7,18 @@ from sandbox.util import LazyComment
 
 scene = Scene()
 
-A, B, C = scene.triangle(labels=['A', 'B', 'C'])
+triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
+A, B, C = triangle.points
 
 def napoleonic(A, B, C):
     circleAB = A.circle_through(B, layer='invisible')
     circleBA = B.circle_through(A, layer='invisible')
     V = circleAB.intersection_point(circleBA, label=C.label + '1')
-    A.scene.equilateral_constraint((A, B, V), comment=LazyComment('Given: △ %s %s %s is an equilateral triangle', V, A, B))
+    equilateral = Scene.Triangle(A, B, V)
+    A.scene.equilateral_constraint(equilateral, comment=LazyComment('Given: %s is equilateral', equilateral))
     line = A.line_through(B, layer='auxiliary')
-    V.same_side_constraint(C, line, comment=LazyComment('Given: %s is inward of △ %s %s %s', V, A, B, C))
-    D = scene.incentre_point((A, B, V), label=C.label + '2')
+    V.same_side_constraint(C, line, comment=LazyComment('Given: %s is inward of %s', V, triangle))
+    D = scene.incentre_point(equilateral, label=C.label + '2')
 
 napoleonic(A, B, C)
 napoleonic(C, A, B)

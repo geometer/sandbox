@@ -7,7 +7,7 @@ class RightAngledTriangleMedian(ExplainerTest):
     def createScene(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
+        A, B, C = scene.nondegenerate_triangle(labels=('A', 'B', 'C')).points
         A.segment(C).perpendicular_constraint(B.segment(C), comment='Given: AC ⟂ BC')
         D = A.segment(B).middle_point(label='D')
 

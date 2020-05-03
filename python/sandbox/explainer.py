@@ -9,10 +9,11 @@ from .propertyset import PropertySet
 from .reason import Reason
 from .rules.advanced import *
 from .rules.basic import *
+from .rules.linear import *
 from .rules.triangle_elements import *
 from .rules.triangles import *
 from .rules.trigonometric import *
-from .scene import Scene, Triangle
+from .scene import Scene
 from .stats import Stats
 from .util import LazyComment, divide
 
@@ -29,7 +30,10 @@ class Explainer:
         self.__rules = [
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),
+            SumOfTwoAnglesInTriangle(self.context),
             SumAndRatioOfTwoAnglesRule(self.context),
+            EqualSumsOfAnglesRule(self.context),
+            SumOfAngles180DegreeRule(self.context),
             NonCollinearPointsAreDifferentRule(self.context),
             CoincidenceTransitivityRule(self.context),
             CollinearityCollisionRule(self.context),
@@ -45,6 +49,8 @@ class Explainer:
             PointsSeparatedByLineAreNotCoincidentRule(self.context),
             SameSidePointInsideSegmentRule(self.context),
             TwoPerpendicularsRule(self.context),
+            TwoPerpendicularsRule2(self.context),
+            ParallelSameSideRule(self.context),
             CommonPerpendicularRule(self.context),
             SideProductsInSimilarTrianglesRule(self.context),
             CorrespondingAnglesInCongruentTrianglesRule(self.context),
@@ -58,6 +64,7 @@ class Explainer:
             LegsOfIsoscelesRule(self.context),
             RotatedAngleRule(self.context),
             AngleTypeByDegreeRule(self.context),
+            PointsCollinearityByAngleDegreeRule(self.context),
             RightAngleDegreeRule(self.context),
             AngleTypesInObtuseangledTriangleRule(self.context),
             PartOfAcuteAngleIsAcuteRule(self.context),
@@ -93,25 +100,40 @@ class Explainer:
                 LawOfSinesRule(self.context),
             ]
 
-    def __reason(self, prop, comments, premises=None):
-        reason = Reason(len(self.context), self.__iteration_step_count, comments, premises)
+    def __reason(self, prop, comment, premises=None):
+        reason = Reason(self.__iteration_step_count, comment, premises)
         if prop in reason.all_premises:
             return
+        def insert(pro):
+            for pre in pro.reason.premises:
+                pre.implications.add(pro)
+                if self.context.index_of(pre) is None:
+                    insert(pre)
+            self.context.add(pro)
+
         existing = self.context[prop]
         #TODO: report contradiction between prop and existing
         if existing is None:
             prop.reason = reason
             prop.reason.obsolete = False
-            self.context.add(prop)
+            insert(prop)
         elif len(reason.all_premises) < len(existing.reason.all_premises):
-            reason.index = existing.reason.index
-            reason.generation = existing.reason.generation
             reason.obsolete = existing.reason.obsolete
-            if hasattr(existing, 'synthetic'):
-                prop.reason = reason
-                self.context.add(prop)
-            else:
-                existing.reason = reason
+            if self.context.index_of(existing) is not None:
+                for pre in existing.reason.premises:
+                    pre.implications.remove(existing)
+            existing.reason = reason
+            for pre in existing.reason.premises:
+                pre.implications.add(existing)
+            existing.fire_premises_change()
+            if hasattr(prop, 'rule'):
+                existing.rule = prop.rule
+            elif hasattr(existing, 'rule'):
+                delattr(existing, 'rule')
+            #TODO: if the rule reference changed from 'synthetic',
+            # add the property to a transitivity set
+            if self.context.index_of(existing) is None:
+                insert(existing)
 
     def explain(self):
         start = time.time()
@@ -130,26 +152,6 @@ class Explainer:
                     prop.rule = rule
                     yield (prop, comment, premises)
 
-            for zero in [av for av in self.context.list(AngleValueProperty) if av.degree == 0]:
-                zero_is_too_old = zero.reason.obsolete
-                for ne in self.context.list(PointsCoincidenceProperty):
-                    if ne.coincident or zero_is_too_old and ne.reason.obsolete:
-                        continue
-                    vec = ne.points[0].vector(ne.points[1])
-                    if vec.as_segment in [zero.angle.vector0.as_segment, zero.angle.vector1.as_segment]:
-                        continue
-                    for ngl0, cmpl0 in good_angles(vec, zero.angle.vector0):
-                        for ngl1, cmpl1 in good_angles(vec, zero.angle.vector1):
-                            if cmpl0 == cmpl1:
-                                prop = AngleRatioProperty(ngl0, ngl1, 1)
-                            else:
-                                prop = SumOfAnglesProperty(ngl0, ngl1, 180)
-                            yield (
-                                prop,
-                                LazyComment('%s ↑↑ %s', zero.angle.vector0, zero.angle.vector1),
-                                [zero, ne]
-                            )
-
             for pia in self.context.list(PointInsideAngleProperty):
                 A = pia.angle.vertex
                 B = pia.angle.vector0.end
@@ -163,7 +165,7 @@ class Explainer:
                 if pia.reason.obsolete and all(p.reason.obsolete for p in reasons):
                     continue
 
-                comment = LazyComment('%s is intersection of ray [%s %s) and segment [%s %s]', X, A, D, B, C)
+                comment = LazyComment('%s is the intersection of ray [%s) and segment [%s]', X, A.vector(D).as_ray, B.segment(C))
                 yield (AngleValueProperty(A.angle(D, X), 0), [comment], [pia] + reasons)
                 yield (AngleValueProperty(B.angle(C, X), 0), [comment], [pia] + reasons)
                 yield (AngleValueProperty(C.angle(B, X), 0), [comment], [pia] + reasons)
@@ -175,7 +177,10 @@ class Explainer:
                 for endpoint in pia.angle.endpoints:
                     yield (
                         PointsCollinearityProperty(pia.point, pia.angle.vertex, endpoint, False),
-                        '', #TODO: write comment
+                        LazyComment(
+                            '%s is the vertex of %s, %s lies on a side, and %s lies inside',
+                            pia.angle.vertex, pia.angle, endpoint, pia.point
+                        ),
                         [pia]
                     )
                 yield (
@@ -247,7 +252,7 @@ class Explainer:
                         )
                         yield (
                             SameOrOppositeSideProperty(segment, pt0, pt1, True),
-                            [str(av), str(nc)], #TODO: better comment
+                            LazyComment('%s, %s', av, nc), #TODO: better comment
                             [av, nc]
                         )
 
@@ -293,24 +298,6 @@ class Explainer:
                     [sos0, sos1]
                 )
 
-            for ar in self.context.same_triple_angle_ratio_properties():
-                a0 = ar.angle0
-                a1 = ar.angle1
-                third_vertex = next(pt for pt in a0.point_set if pt not in (a0.vertex, a1.vertex))
-                a2 = third_vertex.angle(a0.vertex, a1.vertex)
-                a2_reason = self.context.angle_value_property(a2)
-                if a2_reason is None:
-                    continue
-                if ar.reason.obsolete and a2_reason.reason.obsolete:
-                    continue
-                #a0 + a1 + a2 = 180
-                #a0 + a1 = 180 - a2
-                a1_value = divide(180 - a2_reason.degree, 1 + ar.value)
-                a0_value = 180 - a2_reason.degree - a1_value
-                comment = LazyComment('%s + %s + %s = 180º', a0, a1, a2)
-                yield (AngleValueProperty(a0, a0_value), comment, [ar, a2_reason])
-                yield (AngleValueProperty(a1, a1_value), comment, [ar, a2_reason])
-
             for aa in [p for p in self.context.list(AngleKindProperty) if p.kind == AngleKindProperty.Kind.acute]:
                 base = aa.angle
                 if base.vertex is None:
@@ -338,7 +325,7 @@ class Explainer:
                     continue
                 for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
                     for perp in self.context.list(PerpendicularSegmentsProperty, [vec0.as_segment]):
-                        other = perp.segment0 if vec0.as_segment == perp.segment1 else perp.segment1
+                        other = perp.segments[0] if vec0.as_segment == perp.segments[1] else perp.segments[1]
                         if vec1.end not in other.points:
                             continue
                         foot = next(pt for pt in other.points if pt != vec1.end)
@@ -362,7 +349,7 @@ class Explainer:
                     continue
                 for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
                     for perp in self.context.list(PerpendicularSegmentsProperty, [vec0.as_segment]):
-                        other = perp.segment0 if vec0.as_segment == perp.segment1 else perp.segment1
+                        other = perp.segments[0] if vec0.as_segment == perp.segments[1] else perp.segments[1]
                         if vec1.end not in other.points:
                             continue
                         foot = next(pt for pt in other.points if pt != vec1.end)
@@ -386,7 +373,7 @@ class Explainer:
                     continue
                 for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
                     for perp in self.context.list(PerpendicularSegmentsProperty, [vec0.as_segment]):
-                        other = perp.segment0 if vec0.as_segment == perp.segment1 else perp.segment1
+                        other = perp.segments[0] if vec0.as_segment == perp.segments[1] else perp.segments[1]
                         if vec1.end not in other.points:
                             continue
                         foot = next(pt for pt in other.points if pt != vec1.end)
@@ -404,26 +391,26 @@ class Explainer:
                             [perp, col, aa]
                         )
 
-            for oa in [p for p in self.context.list(AngleKindProperty) if p.kind == AngleKindProperty.Kind.obtuse]:
-                base = oa.angle
-                if base.vertex is None:
-                    continue
-                for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
-                    for col in [p for p in self.context.list(PointsCollinearityProperty, [vec0.as_segment]) if p.collinear]:
-                        reasons_are_too_old = oa.reason.obsolete and col.reason.obsolete
-                        pt = next(pt for pt in col.points if pt not in vec0.points)
-                        for angle in [pt.angle(vec1.end, p) for p in vec0.points]:
-                            ka = self.context.angle_value_property(angle)
-                            if ka is None or reasons_are_too_old and ka.reason.obsolete:
-                                continue
-                            if ka.degree <= 90:
-                                comment = LazyComment(
-                                    '%s, %s, %s are collinear, %s is obtuse, and %s = %sº',
-                                    pt, *vec0.points, base, angle, ka.degree
-                                )
-                                zero = base.vertex.angle(vec0.end, pt)
-                                yield (AngleValueProperty(zero, 180), comment, [col, oa, ka])
-                            break
+#            for oa in [p for p in self.context.list(AngleKindProperty) if p.kind == AngleKindProperty.Kind.obtuse]:
+#                base = oa.angle
+#                if base.vertex is None:
+#                    continue
+#                for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
+#                    for col in [p for p in self.context.list(PointsCollinearityProperty, [vec0.as_segment]) if p.collinear]:
+#                        reasons_are_too_old = oa.reason.obsolete and col.reason.obsolete
+#                        pt = next(pt for pt in col.points if pt not in vec0.points)
+#                        for angle in [pt.angle(vec1.end, p) for p in vec0.points]:
+#                            ka = self.context.angle_value_property(angle)
+#                            if ka is None or reasons_are_too_old and ka.reason.obsolete:
+#                                continue
+#                            if ka.degree <= 90:
+#                                comment = LazyComment(
+#                                    '%s, %s, %s are collinear, %s is obtuse, and %s = %sº',
+#                                    pt, *vec0.points, base, angle, ka.degree
+#                                )
+#                                zero = base.vertex.angle(vec0.end, pt)
+#                                yield (AngleValueProperty(zero, 180), comment, [col, oa, ka])
+#                            break
 
             for ka in self.context.nondegenerate_angle_value_properties():
                 base = ka.angle
@@ -474,56 +461,20 @@ class Explainer:
                 ratio_prop = self.context.equal_length_ratios_property(*ratio0, *ratio1)
                 yield (
                     ProportionalLengthsProperty(ratio0[0], ratio1[0], 1),
-                    ratio_prop.reason.comments,
+                    ratio_prop.reason.comment,
                     ratio_prop.reason.premises
                 )
 
-            for av in self.context.angle_value_properties():
-                if av.angle.vertex is None:
-                    continue
-                av_is_too_old = av.reason.obsolete
-
-                second = av.angle.vector0.end.angle(av.angle.vertex, av.angle.vector1.end)
-                third = av.angle.vector1.end.angle(av.angle.vertex, av.angle.vector0.end)
-                if av.degree == 180:
-                    if av_is_too_old:
-                        continue
-                    for ang in second, third:
-                        yield (
-                            AngleValueProperty(ang, 0),
-                            LazyComment('%s = 180º', av.angle),
-                            [av]
-                        )
-                else:
-                    second_reason = self.context.angle_value_property(second)
-                    if second_reason:
-                        if av_is_too_old and second_reason.reason.obsolete:
-                            continue
-                        yield (
-                            AngleValueProperty(third, 180 - av.degree - second_reason.degree),
-                            LazyComment('%s + %s + %s = 180º', third, av.angle, second),
-                            [av, second_reason]
-                        )
-                    else:
-                        third_reason = self.context.angle_value_property(third)
-                        if third_reason is None or av_is_too_old and third_reason.reason.obsolete:
-                            continue
-                        yield (
-                            AngleValueProperty(second, 180 - av.degree - third_reason.degree),
-                            LazyComment('%s + %s + %s = 180º', second, av.angle, third),
-                            [av, third_reason]
-                        )
-
             for sa in self.context.list(SumOfAnglesProperty):
-                av0 = self.context.angle_value_property(sa.angle0)
-                av1 = self.context.angle_value_property(sa.angle1)
+                av0 = self.context.angle_value_property(sa.angles[0])
+                av1 = self.context.angle_value_property(sa.angles[1])
                 if av0 and av1:
                     continue
                 elif av0:
                     if sa.reason.obsolete and av0.reason.obsolete:
                         continue
                     yield (
-                        AngleValueProperty(sa.angle1, sa.degree - av0.degree),
+                        AngleValueProperty(sa.angles[1], sa.degree - av0.degree),
                         LazyComment('%sº - %sº', sa.degree, av0.degree),
                         [sa, av0]
                     )
@@ -531,34 +482,10 @@ class Explainer:
                     if sa.reason.obsolete and av1.reason.obsolete:
                         continue
                     yield (
-                        AngleValueProperty(sa.angle0, sa.degree - av1.degree),
+                        AngleValueProperty(sa.angles[0], sa.degree - av1.degree),
                         LazyComment('%sº - %sº', sa.degree, av1.degree),
                         [sa, av1]
                     )
-
-            for ar in [p for p in self.context.list(SumOfAnglesProperty) if p.angle0.vertex is not None and p.angle0.vertex == p.angle1.vertex and p.degree == 180]:
-                common = next((pt for pt in ar.angle0.endpoints if pt in ar.angle1.endpoints), None)
-                if common is None:
-                    continue
-                pt0 = next(pt for pt in ar.angle0.endpoints if pt not in ar.angle1.endpoints)
-                pt1 = next(pt for pt in ar.angle1.endpoints if pt not in ar.angle0.endpoints)
-                oppo = self.context[SameOrOppositeSideProperty(ar.angle0.vertex.segment(common), pt0, pt1, False)]
-                if not oppo or oppo.same or ar.reason.obsolete and oppo.reason.obsolete:
-                    continue
-                yield (
-                    AngleValueProperty(ar.angle0.vertex.angle(pt0, pt1), 180),
-                    LazyComment('%s + %s', ar.angle0, ar.angle1),
-                    [ar, oppo]
-                )
-
-            for av in self.context.list(AngleValueProperty):
-                if av.reason.obsolete or av.angle.vertex is None:
-                    continue
-                yield (
-                    PointsCollinearityProperty(*av.angle.point_set, av.degree in (0, 180)),
-                    '',#TODO: write comment
-                    [av]
-                )
 
             for ang0, ang1 in self.context.congruent_angles_with_vertex():
                 ncl0 = self.context.not_collinear_property(*ang0.point_set)
@@ -677,12 +604,21 @@ class Explainer:
                 break
 
     def dump(self, properties_to_explain=[]):
+        def to_string(reason):
+            if reason.premises:
+                return '%s (%s)' % (
+                    reason.comment,
+                    ', '.join(['*%s' % self.context.index_of(prop) for prop in reason.premises])
+                )
+            else:
+                return reason.comment
+
         if len(self.context) > 0:
             print('Explained:')
             explained = self.context.all
-            explained.sort(key=lambda p: p.reason.index)
+            explained.sort(key=lambda p: self.context.index_of(p))
             for prop in explained:
-                print('\t%2d (%d): %s [%s]' % (prop.reason.index, prop.reason.generation, prop, prop.reason))
+                print('\t%2d (%d): %s [%s]' % (self.context.index_of(prop), prop.reason.generation, prop, to_string(prop.reason)))
         if properties_to_explain:
             unexplained = [prop for prop in properties_to_explain if prop not in self.context]
             if len(unexplained) > 0:

@@ -1,5 +1,7 @@
 import sympy as sp
 
+from .figure import Figure
+
 def keys_for_triangle(triangle, lengths):
     collection = []
     if lengths is None or 3 in lengths:
@@ -51,6 +53,13 @@ def good_angles(vector0, vector1, include_four_point=False):
         ]
     return []
 
+class LazyString:
+    def __init__(self, obj):
+        self.obj = obj
+
+    def __str__(self):
+        return str(self.obj)
+
 class LazyComment:
     def __init__(self, format_string, *params):
         self.format_string = format_string
@@ -58,6 +67,15 @@ class LazyComment:
 
     def __eq__(self, other):
         return isinstance(other, ParametrizedString) and self.format_string == other.format_string and self.params == other.params
+
+    def html(self):
+        def htmlize(obj):
+            if isinstance(obj, Figure):
+                return '<span class="figure %s"></span>' % obj.css_class()
+            while hasattr(obj, 'html'):
+                obj = obj.html()
+            return obj
+        return self.format_string % tuple(htmlize(p) for p in self.params)
 
     def __str__(self):
         from .core import CoreScene

@@ -1,11 +1,16 @@
 import itertools
 
+from sandbox import Scene
 from sandbox.property import *
 from sandbox.util import LazyComment
 
 from .abstract import Rule, SingleSourceRule
 
 class SimilarTrianglesByTwoAnglesRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
     def sources(self):
         groups = {}
         for a0, a1 in self.context.congruent_angles_with_vertex():
@@ -28,20 +33,24 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
 
         for group in groups.values():
             for pair0, pair1 in itertools.combinations(group, 2):
+                key = frozenset((pair0, pair1))
+                if key in self.processed:
+                    continue
                 common = next((angle for angle in pair0 if angle in pair1), None)
                 if common:
                     continue
-                yield (prop_for(pair0), prop_for(pair1))
+                yield (prop_for(pair0), prop_for(pair1), key)
 
     def apply(self, src):
-        ca0, ca1 = src
+        ca0, ca1, key = src
 
-        ncl = self.context.not_collinear_property(*ca0.angle0.point_set)
-        first_non_degenerate = True
+        ncl = self.context.collinearity_property(*ca0.angle0.point_set)
         if ncl is None:
-            ncl = self.context.not_collinear_property(*ca1.angle1.point_set)
-            first_non_degenerate = False
-        if ncl is None or ca0.reason.obsolete and ca1.reason.obsolete and ncl.reason.obsolete:
+            ncl = self.context.collinearity_property(*ca1.angle1.point_set)
+        if ncl is None:
+            return
+        self.processed.add(key)
+        if ncl.collinear:
             return
 
         #this code ensures that vertices are listed in corresponding orders
@@ -53,18 +62,24 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
             tr1 = [ca0.angle1.vertex, ca1.angle0.vertex]
         tr0.append(next(p for p in ca0.angle0.point_set if p not in tr0))
         tr1.append(next(p for p in ca0.angle1.point_set if p not in tr1))
-        if not self.context.triangles_are_similar(tuple(tr0), tuple(tr1)):
-            yield (
-                SimilarTrianglesProperty(tr0, tr1),
-                LazyComment('Two pairs of congruent angles, and △ %s %s %s is non-degenerate', *(tr0 if first_non_degenerate else tr1)),
-                [ca0, ca1, ncl]
-            )
+        yield (
+            SimilarTrianglesProperty(tr0, tr1),
+            LazyComment('congruent angles %s and %s', ca0, ca1),
+            [ca0, ca1, ncl]
+        )
 
 class CongruentTrianglesByAngleAndTwoSidesRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
     def sources(self):
         return self.context.congruent_angles_with_vertex()
 
     def apply(self, src):
+        mask = self.processed.get(src, 0)
+        if mask == 0x3:
+            return
         ang0, ang1 = src
         if ang0.point_set == ang1.point_set:
             return
@@ -73,24 +88,34 @@ class CongruentTrianglesByAngleAndTwoSidesRule(Rule):
         def congruent_segments(seg0, seg1):
             if seg0 == seg1:
                 return True
-            return self.context.congruent_segments_property(seg0, seg1, True)
+            return self.context.length_ratio_property_and_value(seg0, seg1, True)
 
-        for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
+        for vec0, vec1, bit in [(ang0.vector0, ang0.vector1, 1), (ang0.vector1, ang0.vector0, 2)]:
+            if bit & mask:
+                continue
             rsn0 = congruent_segments(vec0.as_segment, ang1.vector0.as_segment)
             if rsn0 is None:
                 continue
+            if isinstance(rsn0, tuple):
+                if rsn0[1] != 1:
+                    mask |= bit
+                    continue
+                rsn0 = rsn0[0]
             rsn1 = congruent_segments(vec1.as_segment, ang1.vector1.as_segment)
             if rsn1 is None:
                 continue
+            mask |= bit
+            if isinstance(rsn1, tuple):
+                if rsn1[1] != 1:
+                    continue
+                rsn1 = rsn1[0]
             if ca is None:
                 ca = self.context.angle_ratio_property(ang0, ang1)
-            if ca.reason.obsolete and (rsn0 == True or rsn0.reason.obsolete) and (rsn1 == True or rsn1.reason.obsolete):
-                continue
             if rsn0 == True:
-                comment = LazyComment('Common side %s, pair of congruent sides, and angle between the sides', vec0)
+                comment = LazyComment('common side %s, %s, and %s', vec0, rsn1, ca)
                 premises = [rsn1, ca]
             elif rsn1 == True:
-                comment = LazyComment('Common side %s, pair of congruent sides, and angle between the sides', vec1)
+                comment = LazyComment('common side %s, %s, and %s', vec1, rsn0, ca)
                 premises = [rsn0, ca]
             else:
                 comment = 'Two pairs of congruent sides, and angle between the sides'
@@ -101,20 +126,20 @@ class CongruentTrianglesByAngleAndTwoSidesRule(Rule):
                     (ang1.vertex, ang1.vector0.end, ang1.vector1.end)
                 ), comment, premises
             )
+        self.processed[src] = mask
 
 class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
     def sources(self):
-        return [(a0, a1) for a0, a1 in self.context.congruent_angles_with_vertex() if a0.point_set != a1.point_set]
+        return [(a0, a1) for a0, a1 in self.context.congruent_angles_with_vertex() if a0.point_set != a1.point_set and (a0, a1) not in self.processed]
 
     def apply(self, src):
         ang0, ang1 = src
         ca = None
         for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
-            if self.context.triangles_are_similar( \
-                (vec0.start, vec0.end, vec1.end), \
-                (ang1.vertex, ang1.vector0.end, ang1.vector1.end) \
-            ):
-                continue
             segments = (
                 vec0.as_segment, vec1.as_segment,
                 ang1.vector0.as_segment, ang1.vector1.as_segment
@@ -125,37 +150,63 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
                     break
             else:
                 continue
+            self.processed.add(src)
             if ca is None:
                 ca = self.context.angle_ratio_property(ang0, ang1)
-            if ca.reason.obsolete and elr.reason.obsolete:
-                continue
             yield (
                 SimilarTrianglesProperty(
                     (ang0.vertex, vec0.end, vec1.end),
                     (ang1.vertex, ang1.vector0.end, ang1.vector1.end)
                 ),
-                'Two pairs of sides with the same ratio, and angle between the sides',
+                LazyComment('%s and %s', elr, ca),
                 [elr, ca]
             )
 
 class SimilarTrianglesWithCongruentSideRule(SingleSourceRule):
     property_type = SimilarTrianglesProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
     def apply(self, prop):
         sides0 = prop.triangle0.sides
         sides1 = prop.triangle1.sides
         for i in range(0, 3):
-            cs = self.context.congruent_segments_property(sides0[i], sides1[i], True)
-            if cs is None:
+            if sides0[i] != sides1[i]:
                 continue
-            if prop.reason.obsolete and cs.reason.obsolete:
-                break
+            ne = self.context.not_equal_property(*sides0[i].points)
+            if ne is None:
+                return
+            self.processed.add(prop)
             yield (
                 CongruentTrianglesProperty(prop.triangle0, prop.triangle1),
-                'Similar triangles with congruent corresponding sides',
-                [prop, cs]
+                LazyComment('similar triangles with common non-zero side %s', sides0[i]),
+                [prop, ne]
             )
-            break
+            return
+        for i in range(0, 3):
+            cs, value = self.context.length_ratio_property_and_value(sides0[i], sides1[i], True)
+            if cs is None:
+                continue
+            if value != 1:
+                self.processed.add(prop)
+                return
+            ne = self.context.not_equal_property(*sides0[i].points)
+            if ne is None:
+                ne = self.context.not_equal_property(*sides1[i].points)
+            if ne is None:
+                continue
+            self.processed.add(prop)
+            yield (
+                CongruentTrianglesProperty(prop.triangle0, prop.triangle1),
+                LazyComment('similar triangles with congruent non-zero sides %s and %s', sides0[i], sides1[i]),
+                [prop, cs, ne]
+            )
+            return
 
 class CongruentTrianglesByThreeSidesRule(Rule):
     def sources(self):
@@ -194,7 +245,7 @@ class CongruentTrianglesByThreeSidesRule(Rule):
             if third0.as_segment == third1.as_segment:
                 yield (
                     prop,
-                    LazyComment('Common side %s, two pairs of congruent sides', third0),
+                    LazyComment('common side %s, %s, %s', third0, cs0, cs1),
                     [cs0, cs1]
                 )
             else:
@@ -202,7 +253,7 @@ class CongruentTrianglesByThreeSidesRule(Rule):
                 if cs2:
                     yield (
                         prop,
-                        'Three pairs of congruent sides',
+                        LazyComment('three pairs of congruent sides'),
                         [cs0, cs1, cs2]
                     )
 
@@ -274,7 +325,7 @@ class EquilateralTriangleByThreeSidesRule(Rule):
         if cs2:
             yield (
                 EquilateralTriangleProperty((common, pt0, pt1)),
-                'Congruent sides',
+                LazyComment('congruent sides %s and %s', prop, cs2),
                 [prop, cs2]
             )
 
@@ -296,7 +347,7 @@ class IsoscelesTriangleByConrguentLegsRule(Rule):
         if ne and not (prop.reason.obsolete and ne.reason.obsolete):
             yield (
                 IsoscelesTriangleProperty(apex, base0.segment(base1)),
-                'Congruent legs',
+                LazyComment('congruent legs %s and %s', prop.segment0, prop.segment1),
                 [prop, ne]
             )
 
@@ -318,6 +369,6 @@ class IsoscelesTriangleByConrguentBaseAnglesRule(Rule):
         apex = next(pt for pt in ang0.point_set if pt not in base.point_set)
         yield (
             IsoscelesTriangleProperty(apex, base),
-            'Congruent base angles',
+            LazyComment('congruent base angles'),
             [ca, nc]
         )

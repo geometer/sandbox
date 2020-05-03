@@ -5,7 +5,7 @@ from sandbox.property import EquilateralTriangleProperty
 
 scene = Scene()
 
-A, B, C = scene.triangle(labels=('A', 'B', 'C'))
+A, B, C = scene.nondegenerate_triangle(labels=('A', 'B', 'C')).points
 A1 = scene.free_point(label='A1')
 B1 = scene.free_point(label='B1')
 C1 = scene.free_point(label='C1')

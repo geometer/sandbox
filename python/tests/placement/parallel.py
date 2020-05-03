@@ -6,7 +6,7 @@ class TestParallel(PlacementTest):
     def createPlacement(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
+        A, B, C = scene.nondegenerate_triangle(labels=('A', 'B', 'C')).points
         A.distance_constraint(B, 5)
         C.distance_constraint(B, 3)
         C.distance_constraint(A, 4)

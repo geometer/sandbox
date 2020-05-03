@@ -5,7 +5,6 @@ import numpy as np
 from . import Scene, iterative_placement
 from .placement import Placement
 from .property import *
-from .scene import Triangle
 from .stats import Stats
 from .util import LazyComment, divide
 
@@ -22,7 +21,7 @@ class AngleWrapper:
 
 class TriangleWrapper:
     def __init__(self, pts):
-        self.triangle = pts if isinstance(pts, Triangle) else Triangle(pts)
+        self.triangle = pts if isinstance(pts, Scene.Triangle) else Scene.Triangle(*pts)
         self.__variations = None
         self.ratios = None
 
@@ -154,7 +153,7 @@ class Hunter:
     def __triangles(self):
         points = self.placement.scene.points(max_layer=self.max_layer)
         for triple in itertools.combinations(points, 3):
-            triangle = Triangle(triple)
+            triangle = Scene.Triangle(*triple)
             sides = triangle.sides
             if all(self.__segment_length[side] > ERROR for side in sides):
                 yield TriangleWrapper(triangle)

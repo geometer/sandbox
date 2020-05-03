@@ -1,5 +1,6 @@
 import itertools
 import networkx as nx
+import re
 
 from .core import CoreScene
 from .property import AngleKindProperty, AngleValueProperty, AngleRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, SimilarTrianglesProperty, CongruentTrianglesProperty
@@ -41,6 +42,8 @@ class CyclicOrderPropertySet:
         return (None, None)
 
     def add(self, prop):
+        if hasattr(prop, 'rule') and prop.rule == 'synthetic':
+            return
         fam0, order0 = self.__find_by_cycle(prop.cycle0)
         fam1, order1 = self.__find_by_cycle(prop.cycle1)
         if fam0 and fam1:
@@ -80,15 +83,21 @@ class CyclicOrderPropertySet:
 
 class AngleRatioPropertySet:
     class CommentFromPath:
-        def __init__(self, path, multiplier, angle_to_ratio):
+        def __init__(self, path, premises, multiplier, angle_to_ratio):
             self.path = path
+            self.premises = [None] + premises
             self.multiplier = multiplier
             self.angle_to_ratio = dict(angle_to_ratio)
 
-        def __str__(self):
+        def html(self):
             pattern = []
             params = []
-            for vertex in self.path:
+            for vertex, premise in zip(self.path, self.premises):
+                if premise:
+                    if isinstance(premise, AngleRatioProperty) and premise.same:
+                        pattern.append(' ≡ ')
+                    else:
+                        pattern.append(' = ')
                 if isinstance(vertex, CoreScene.Angle):
                     coef = divide(self.multiplier, self.angle_to_ratio[vertex])
                     if coef == 1:
@@ -101,7 +110,30 @@ class AngleRatioPropertySet:
                 else:
                     pattern.append('%sº')
                     params.append(self.multiplier * vertex)
-            return str(LazyComment(' = '.join(pattern), *params))
+            return LazyComment(''.join(pattern), *params)
+
+        def __str__(self):
+            pattern = []
+            params = []
+            for vertex, premise in zip(self.path, self.premises):
+                if premise:
+                    if isinstance(premise, AngleRatioProperty) and premise.same:
+                        pattern.append(' ≡ ')
+                    else:
+                        pattern.append(' = ')
+                if isinstance(vertex, CoreScene.Angle):
+                    coef = divide(self.multiplier, self.angle_to_ratio[vertex])
+                    if coef == 1:
+                        pattern.append('%s')
+                        params.append(vertex)
+                    else:
+                        pattern.append('%s %s')
+                        params.append(coef)
+                        params.append(vertex)
+                else:
+                    pattern.append('%sº')
+                    params.append(self.multiplier * vertex)
+            return str(LazyComment(''.join(pattern), *params))
 
     class Family:
         def __init__(self):
@@ -111,7 +143,7 @@ class AngleRatioPropertySet:
 
         def explanation_from_path(self, path, multiplier):
             premises = [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
-            return (AngleRatioPropertySet.CommentFromPath(path, multiplier, self.angle_to_ratio), premises)
+            return (AngleRatioPropertySet.CommentFromPath(path, premises, multiplier, self.angle_to_ratio), premises)
 
         def value_property(self, angle):
             ratio = self.angle_to_ratio.get(angle)
@@ -122,8 +154,8 @@ class AngleRatioPropertySet:
                 return self.premises_graph[path[0]][path[1]]['prop']
             comment, premises = self.explanation_from_path(path, ratio)
             prop = AngleValueProperty(angle, self.degree * ratio)
-            prop.synthetic = True
-            prop.reason = Reason(-2, -2, comment, premises)
+            prop.rule = 'synthetic'
+            prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
             prop.reason.obsolete = all(p.reason.obsolete for p in premises)
             return prop
 
@@ -136,8 +168,8 @@ class AngleRatioPropertySet:
                     continue
                 comment, premises = self.explanation_from_path(path, ratio)
                 prop = AngleValueProperty(angle, self.degree * ratio)
-                prop.synthetic = True
-                prop.reason = Reason(-2, -2, comment, premises)
+                prop.rule = 'synthetic'
+                prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
                 prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                 properties.append(prop)
             return properties
@@ -168,17 +200,15 @@ class AngleRatioPropertySet:
                 else:
                     angles_map[key] = [item]
             for ar in angles_map.values():
-                for item0, item1 in itertools.combinations(ar, 2):
-                    angle0, ratio0 = item0
-                    angle1, ratio1 = item1
+                for (angle0, ratio0), (angle1, ratio1) in itertools.combinations(ar, 2):
                     path = nx.algorithms.shortest_path(self.premises_graph, angle0, angle1)
                     if len(path) == 2:
                         yield self.premises_graph[path[0]][path[1]]['prop']
                     else:
                         comment, premises = self.explanation_from_path(path, ratio0)
                         prop = AngleRatioProperty(angle0, angle1, divide(ratio0, ratio1))
-                        prop.synthetic = True
-                        prop.reason = Reason(-2, -2, comment, premises)
+                        prop.rule = 'synthetic'
+                        prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
                         prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                         yield prop
 
@@ -252,8 +282,8 @@ class AngleRatioPropertySet:
         comment, premises = fam.explanation_from_path(path, coef)
         value = divide(coef, fam.angle_to_ratio[angle1])
         prop = AngleRatioProperty(angle0, angle1, value)
-        prop.synthetic = True
-        prop.reason = Reason(-2, -2, comment, premises)
+        prop.rule = 'synthetic'
+        prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
         prop.reason.obsolete = all(p.reason.obsolete for p in premises)
         return prop
 
@@ -276,6 +306,8 @@ class AngleRatioPropertySet:
                     yield a
 
     def add(self, prop):
+        if hasattr(prop, 'rule') and prop.rule == 'synthetic':
+            return
         if isinstance(prop, AngleRatioProperty):
             self.__add_ratio_property(prop)
         elif isinstance(prop, AngleValueProperty):
@@ -451,6 +483,8 @@ class LengthRatioPropertySet:
             self.ratio_to_family[ratio1] = fam
 
     def add(self, prop):
+        if hasattr(prop, 'rule') and prop.rule == 'synthetic':
+            return
         if isinstance(prop, EqualLengthRatiosProperty):
             self.__add_elr(prop)
         elif isinstance(prop, LengthRatioProperty):
@@ -512,8 +546,8 @@ class LengthRatioPropertySet:
                     yield premises[0]
                 else:
                     prop = LengthRatioProperty(*ratio, fam.ratio_value)
-                    prop.synthetic = True
-                    prop.reason = Reason(-2, -2, comment, premises)
+                    prop.rule = 'synthetic'
+                    prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
                     prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                     yield prop
 
@@ -534,8 +568,8 @@ class LengthRatioPropertySet:
             value = divide(1, fam.ratio_value)
         comment, premises = fam.value_explanation(ratio)
         prop = LengthRatioProperty(*ratio, fam.ratio_value)
-        prop.synthetic = True
-        prop.reason = Reason(-2, -2, comment, premises)
+        prop.rule = 'synthetic'
+        prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
         prop.reason.obsolete = all(p.reason.obsolete for p in premises)
         pair = (prop, value)
         self.__cache[key] = pair
@@ -545,6 +579,7 @@ class PropertySet:
     def __init__(self):
         self.__combined = {} # (type, key) => [prop] and type => prop
         self.__full_set = {} # prop => prop
+        self.__indexes = {} # prop => number
         self.__angle_kinds = {} # angle => prop
         self.__angle_ratios = AngleRatioPropertySet()
         self.__length_ratios = LengthRatioPropertySet()
@@ -567,6 +602,7 @@ class PropertySet:
         for key in prop.keys():
             put((type_key, key))
         self.__full_set[prop] = prop
+        self.__indexes[prop] = len(self.__indexes)
         if type_key == AngleValueProperty:
             self.__angle_ratios.add(prop)
         elif type_key == AngleKindProperty:
@@ -652,6 +688,9 @@ class PropertySet:
         #TODO: SameCyclicOrderProperty
         return False
 
+    def index_of(self, prop):
+        return self.__indexes.get(prop)
+
     def __getitem__(self, prop):
         existing = self.__full_set.get(prop)
         if existing:
@@ -713,7 +752,7 @@ class PropertySet:
         return self.__angle_ratios.congruent_angles_with_vertex()
 
     def congruent_angles_for(self, angle):
-        return sefl.__angle_ratios.congruent_angles_for(angle)
+        return self.__angle_ratios.congruent_angles_for(angle)
 
     def length_ratios(self, allow_zeroes):
         if allow_zeroes:
@@ -768,8 +807,8 @@ class PropertySet:
         if len(premises) == 1:
             return premises[0]
         prop = EqualLengthRatiosProperty(segment0, segment1, segment2, segment3)
-        prop.synthetic = True
-        prop.reason = Reason(-2, -2, comment, premises)
+        prop.rule = 'synthetic'
+        prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
         prop.reason.obsolete = all(p.reason.obsolete for p in premises)
         return prop
 
@@ -780,8 +819,8 @@ class PropertySet:
             return existing
         comment, premises = self.__cyclic_orders.explanation(cycle0, cycle1)
         if comment:
-            prop.synthetic = True
-            prop.reason = Reason(-2, -2, comment, premises)
+            prop.rule = 'synthetic'
+            prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
             prop.reason.obsolete = all(p.reason.obsolete for p in premises)
             return prop
         return None
@@ -789,7 +828,7 @@ class PropertySet:
     def foot_of_perpendicular(self, point, segment):
         #TODO: cache not-None values (?)
         for prop in self.list(PerpendicularSegmentsProperty, [segment]):
-            other = prop.segment1 if segment == prop.segment0 else prop.segment0
+            other = prop.segments[1] if segment == prop.segments[0] else prop.segments[0]
             if not point in other.points:
                 continue
             candidate = next(pt for pt in other.points if pt != point)

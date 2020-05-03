@@ -1,4 +1,5 @@
 import argparse
+import re
 
 from sandbox import iterative_placement
 from sandbox.core import CoreScene
@@ -9,14 +10,14 @@ from sandbox.propertyset import PropertySet
 def run_sample(scene, prop=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--max-layer', default='user', choices=CoreScene.layers)
-    parser.add_argument('--dump', nargs='+', choices=('scene', 'stats', 'properties', 'explanation'), default='stats')
+    parser.add_argument('--dump', nargs='+', choices=('scene', 'constraints', 'stats', 'result', 'properties', 'explanation'), default=('stats', 'result'))
     parser.add_argument('--run-hunter', action='store_true')
     parser.add_argument('--extra-rules', nargs='+', choices=('advanced', 'trigonometric'), default=())
     parser.add_argument('--profile', action='store_true')
     args = parser.parse_args()
 
     if 'scene' in args.dump:
-        scene.dump()
+        scene.dump(include_constraints='constraints' in args.dump, max_layer=args.max_layer)
 
     if args.run_hunter:
         placement = iterative_placement(scene)
@@ -41,15 +42,16 @@ def run_sample(scene, prop=None):
     if 'stats' in args.dump:
         explainer.stats(properties).dump()
 
-    if prop:
-        if explainer.explained(prop):
-            print('\tExplained: %s' % prop)
+    if prop and 'result' in args.dump:
+        explanation = explainer.explanation(prop)
+        if explanation:
+            print('\tExplained: %s' % explanation)
         else:
             print('\tNot explained: %s' % prop)
 
     if 'explanation' in args.dump:
         def dump(prop, level=0):
-            print('\t' + '  ' * level + str(prop) + ': ' + ' + '.join([str(com) for com in prop.reason.comments]))
+            print('\t' + '  ' * level + str(prop) + ': ' + str(prop.reason.comment))
             if prop.reason.premises:
                 for premise in prop.reason.premises:
                     dump(premise, level + 1)
@@ -75,7 +77,7 @@ def run_sample(scene, prop=None):
             for prop in explanation.reason.all_premises:
                 if prop.reason.generation == -1:
                     key = 'Given'
-                elif hasattr(prop, 'synthetic'):
+                elif hasattr(prop, 'rule') and prop.rule == 'synthetic':
                     key = 'Synthetic (transitivity)'
                 else:
                     key = type(prop.rule).__name__ if hasattr(prop, 'rule') else 'Unknown'

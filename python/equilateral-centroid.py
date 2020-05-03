@@ -4,9 +4,9 @@ from runner import run_sample
 
 scene = Scene()
 
-A, B, C = scene.triangle(labels=['A', 'B', 'C'])
-A.segment(C).congruent_constraint(A.segment(B))
-B.segment(C).congruent_constraint(A.segment(B))
-scene.centroid_point((A, B, C), label='D')
+triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
+triangle.sides[0].congruent_constraint(triangle.sides[1])
+triangle.sides[0].congruent_constraint(triangle.sides[2])
+scene.centroid_point(triangle, label='D')
 
 run_sample(scene)

@@ -8,17 +8,17 @@ class TestNapoleon(PlacementTest):
     def createPlacement(self):
         scene = Scene()
 
-        A = scene.free_point(label='A')
-        B = scene.free_point(label='B')
-        C = scene.free_point(label='C')
+        triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
+        A, B, C = triangle.points
 
         def napoleonic(A: Scene.Point, B: Scene.Point, C: Scene.Point):
             c0 = A.circle_through(B)
             c1 = B.circle_through(A)
             line = A.line_through(B, layer='auxiliary')
             V = c0.intersection_point(c1, label=C.label + '1')
+            equilateral = Scene.Triangle(A, B, V)
             V.opposite_side_constraint(C, line)
-            scene.centroid_point((A, B, V), label=C.label + '2')
+            scene.centroid_point(equilateral, label=C.label + '2')
 
         napoleonic(A, B, C)
         napoleonic(C, A, B)

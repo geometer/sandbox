@@ -6,7 +6,8 @@ class TestTrianglePoints(PlacementTest):
     def createPlacement(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
+        triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
+        A, B, C = triangle.points
 
         bisectorA = A.angle(B, C).bisector_line()
         bisectorB = B.angle(A, C).bisector_line()
@@ -50,8 +51,8 @@ class TestCircumcentre(PlacementTest):
     def createPlacement(self):
         scene = Scene()
 
-        A, B, C = scene.triangle(labels=('A', 'B', 'C'))
-        O = scene.circumcentre_point((A, B, C), label='O')
+        triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
+        O = scene.circumcentre_point(triangle, label='O')
 
         return iterative_placement(scene)
 
