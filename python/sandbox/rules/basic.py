@@ -259,21 +259,35 @@ class SumOfThreeAnglesInTriangle(Rule):
             [ne0, ne1, ne2]
         )
 
-class SumOfTwoAnglesInTriangle(Rule):
-    def sources(self):
-        return [av for av in self.context.nondegenerate_angle_value_properties() if av.angle.vertex and av.degree not in (0, 180)]
+class SumOfTwoAnglesInTriangle(SingleSourceRule):
+    property_type = SumOfThreeAnglesProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
 
     def apply(self, prop):
-        if prop.reason.obsolete:
+        mask = self.processed.get(prop, 0)
+        if mask == 0x7:
             return
-        angle0 = prop.angle
-        angle1 = angle0.endpoints[0].angle(angle0.vertex, angle0.endpoints[1])
-        angle2 = angle0.endpoints[1].angle(angle0.vertex, angle0.endpoints[0])
-        yield (
-            SumOfAnglesProperty(angle1, angle2, 180 - prop.degree),
-            LazyComment('180º = %s + %s + %s = %s + %s + %sº', angle1, angle2, angle0, angle1, angle2, prop.degree),
-            [prop]
-        )
+
+        original = mask
+        for index, angle in enumerate(prop.angles):
+            bit = 1 << index
+            if mask & bit:
+                continue
+            av = self.context.angle_value_property(angle)
+            if av is None:
+                continue
+            mask |= bit
+            others = [ang for ang in prop.angles if ang != angle]
+            yield (
+                SumOfAnglesProperty(*others, prop.degree - av.degree),
+                LazyComment('%sº = %s + %s + %s = %s + %s + %sº', prop.degree, *others, angle, *others, av.degree),
+                [prop, av]
+            )
+        if mask != original:
+            self.processed[prop] = mask
 
 class LengthRatioRule(SingleSourceRule):
     property_type = ProportionalLengthsProperty
