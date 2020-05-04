@@ -204,10 +204,6 @@ class SameOrOppositeSideProperty(Property):
     def essential(self):
         return False
 
-    @property
-    def essential(self):
-        return False
-
     def keys(self):
         return [self.segment]
 
