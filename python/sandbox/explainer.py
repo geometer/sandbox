@@ -27,6 +27,7 @@ class Explainer:
         self.__rules = [
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),
+            LengthRatiosWithCommonDenominatorRule(self.context),
             SumOfThreeAnglesInTriangleRule(self.context),
             SumOfTwoAnglesByThreeRule(self.context),
             SumAndRatioOfTwoAnglesRule(self.context),
@@ -451,17 +452,6 @@ class Explainer:
                     AngleValueProperty(other0.angle(other1), 0),
                     LazyComment('Both %s and %s are acute', aa0.angle, aa1.angle),
                     [aa0, aa1, col]
-                )
-
-            for ratio0, ratio1 in self.context.equal_length_ratios_with_common_denominator():
-                prop = self.context.congruent_segments_property(ratio0[0], ratio1[0], True)
-                if prop:
-                    continue
-                ratio_prop = self.context.equal_length_ratios_property(*ratio0, *ratio1)
-                yield (
-                    ProportionalLengthsProperty(ratio0[0], ratio1[0], 1),
-                    ratio_prop.reason.comment,
-                    ratio_prop.reason.premises
                 )
 
             for ang0, ang1 in self.context.congruent_angles_with_vertex():

@@ -50,6 +50,28 @@ class ProportionalLengthsToLengthsRatioRule(SingleSourceRule):
             [prop, ne]
         )
 
+class LengthRatiosWithCommonDenominatorRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        return self.context.equal_length_ratios_with_common_denominator()
+
+    def apply(self, src):
+        key = frozenset(src)
+        if key in self.processed:
+            return
+        self.processed.add(key)
+
+        ratio0, ratio1 = src
+        ratio_prop = self.context.equal_length_ratios_property(*ratio0, *ratio1)
+        yield (
+            ProportionalLengthsProperty(ratio0[0], ratio1[0], 1),
+            ratio_prop.reason.comment,
+            ratio_prop.reason.premises
+        )
+
 class LengthRatioTransitivityRule(Rule):
     """
     For three segments seg0, seg1, and seg2, from
