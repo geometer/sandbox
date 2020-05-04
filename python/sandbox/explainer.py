@@ -27,6 +27,7 @@ class Explainer:
         self.__rules = [
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),
+            SumOfThreeAnglesInTriangle(self.context),
             SumOfTwoAnglesInTriangle(self.context),
             SumAndRatioOfTwoAnglesRule(self.context),
             EqualSumsOfAnglesRule(self.context),
