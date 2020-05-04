@@ -7,7 +7,7 @@ from sandbox.explainer import Explainer
 from sandbox.hunter import Hunter
 from sandbox.propertyset import PropertySet
 
-def run_sample(scene, prop=None):
+def run_sample(scene, *props):
     parser = argparse.ArgumentParser()
     parser.add_argument('--max-layer', default='user', choices=CoreScene.layers)
     parser.add_argument('--dump', nargs='+', choices=('scene', 'constraints', 'stats', 'result', 'properties', 'explanation'), default=('stats', 'result'))
@@ -46,12 +46,13 @@ def run_sample(scene, prop=None):
     if 'stats' in args.dump:
         explainer.stats(properties).dump()
 
-    if prop and 'result' in args.dump:
-        explanation = explainer.explanation(prop)
-        if explanation:
-            print('\tExplained: %s' % explanation)
-        else:
-            print('\tNot explained: %s' % prop)
+    if 'result' in args.dump:
+        for prop in props:
+            explanation = explainer.explanation(prop)
+            if explanation:
+                print('\tExplained: %s' % explanation)
+            else:
+                print('\tNot explained: %s' % prop)
 
     if 'explanation' in args.dump:
         def dump(prop, level=0):
@@ -71,25 +72,26 @@ def run_sample(scene, prop=None):
                 premises.add(p)
             return premises
 
-        explanation = explainer.explanation(prop)
-        if explanation:
-            dump(explanation)
-            print('Depth = %s' % depth(explanation))
-            count_essentials = explanation.reason.essential_premises_count
-            count_all = len(explanation.reason.all_premises)
-            print('Props = %d (%d + %d)' % (count_all, count_essentials, count_all - count_essentials))
-            all_premises(explanation).stats().dump()
-            rules_map = {}
-            for prop in explanation.reason.all_premises:
-                if prop.reason.generation == -1:
-                    key = 'Given'
-                elif hasattr(prop, 'rule') and prop.rule == 'synthetic':
-                    key = 'Synthetic (transitivity)'
-                else:
-                    key = type(prop.rule).__name__ if hasattr(prop, 'rule') else 'Unknown'
-                rules_map[key] = rules_map.get(key, 0) + 1
-            items = list(rules_map.items())
-            items.sort(key=lambda pair: -pair[1])
-            print('Rules:')
-            for pair in items:
-                print('\t%s: %s' % pair)
+        for prop in props:
+            explanation = explainer.explanation(prop)
+            if explanation:
+                dump(explanation)
+                print('Depth = %s' % depth(explanation))
+                count_essentials = explanation.reason.essential_premises_count
+                count_all = len(explanation.reason.all_premises)
+                print('Props = %d (%d + %d)' % (count_all, count_essentials, count_all - count_essentials))
+                all_premises(explanation).stats().dump()
+                rules_map = {}
+                for prop in explanation.reason.all_premises:
+                    if prop.reason.generation == -1:
+                        key = 'Given'
+                    elif hasattr(prop, 'rule') and prop.rule == 'synthetic':
+                        key = 'Synthetic (transitivity)'
+                    else:
+                        key = type(prop.rule).__name__ if hasattr(prop, 'rule') else 'Unknown'
+                    rules_map[key] = rules_map.get(key, 0) + 1
+                items = list(rules_map.items())
+                items.sort(key=lambda pair: -pair[1])
+                print('Rules:')
+                for pair in items:
+                    print('\t%s: %s' % pair)

@@ -32,7 +32,7 @@ class Explainer:
             SumOfThreeAnglesInTriangleRule(self.context),
             SumOfTwoAnglesByThreeRule(self.context),
             SumAndRatioOfTwoAnglesRule(self.context),
-            EqualSumsOfAnglesRule(self.context),
+            #EqualSumsOfAnglesRule(self.context),
             AngleFromSumOfTwoAnglesRule(self.context),
             SumOfAngles180DegreeRule(self.context),
             NonCollinearPointsAreDifferentRule(self.context),
