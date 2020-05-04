@@ -48,6 +48,7 @@ class EqualSumsOfAnglesRule(Rule):
             return
 
         sum0, sum1 = src
+        original = mask
         for index, (eq0, eq1) in enumerate(itertools.product(sum0.angles, sum1.angles)):
             bit = 1 << index
             if mask & bit:
@@ -82,4 +83,6 @@ class EqualSumsOfAnglesRule(Rule):
                     ),
                     [sum0, sum1, ca]
                 )
-        self.processed[src] = mask
+
+        if original != mask:
+            self.processed[src] = mask
