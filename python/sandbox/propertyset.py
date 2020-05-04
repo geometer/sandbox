@@ -3,7 +3,7 @@ import networkx as nx
 import re
 
 from .core import CoreScene
-from .property import AngleKindProperty, AngleValueProperty, AngleRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, SimilarTrianglesProperty, CongruentTrianglesProperty
+from .property import AngleKindProperty, AngleValueProperty, AngleRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, SimilarTrianglesProperty, CongruentTrianglesProperty, LinearAngleProperty
 from .reason import Reason
 from .stats import Stats
 from .util import LazyComment, divide
@@ -77,6 +77,18 @@ class CyclicOrderPropertySet:
         if order:
             return fam.explanation(cycle0, cycle1)
         return fam.explanation(cycle0.reversed, cycle1.reversed)
+
+class LinearAngleSet:
+    def __init__(self):
+        self.__equations = []
+
+    def add(self, prop):
+        self.__equations.append(prop.equation)
+
+    def dump(self):
+        for eq in self.__equations:
+            print(eq)
+        print('Total: %d equations' % len(self.__equations))
 
 class AngleRatioPropertySet:
     class CommentFromPath:
@@ -578,6 +590,7 @@ class PropertySet:
         self.__full_set = {} # prop => prop
         self.__indexes = {} # prop => number
         self.__angle_kinds = {} # angle => prop
+        self.__linear_angles = LinearAngleSet()
         self.__angle_ratios = AngleRatioPropertySet()
         self.__length_ratios = LengthRatioPropertySet()
         self.__cyclic_orders = CyclicOrderPropertySet()
@@ -600,6 +613,8 @@ class PropertySet:
             put((type_key, key))
         self.__full_set[prop] = prop
         self.__indexes[prop] = len(self.__indexes)
+        if isinstance(prop, LinearAngleProperty):
+            self.__linear_angles.add(prop)
         if type_key == AngleValueProperty:
             self.__angle_ratios.add(prop)
         elif type_key == AngleKindProperty:
@@ -847,6 +862,8 @@ class PropertySet:
         return (None, [])
 
     def stats(self):
+        self.__linear_angles.dump()
+
         def type_presentation(kind):
             return kind.__doc__.strip() if kind.__doc__ else kind.__name__
 
