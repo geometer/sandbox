@@ -90,6 +90,7 @@ class CongruentTrianglesByAngleAndTwoSidesRule(Rule):
                 return True
             return self.context.length_ratio_property_and_value(seg0, seg1, True)
 
+        original = mask
         for vec0, vec1, bit in [(ang0.vector0, ang0.vector1, 1), (ang0.vector1, ang0.vector0, 2)]:
             if bit & mask:
                 continue
@@ -126,7 +127,9 @@ class CongruentTrianglesByAngleAndTwoSidesRule(Rule):
                     (ang1.vertex, ang1.vector0.end, ang1.vector1.end)
                 ), comment, premises
             )
-        self.processed[src] = mask
+
+        if original != mask:
+            self.processed[src] = mask
 
 class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
     def __init__(self, context):

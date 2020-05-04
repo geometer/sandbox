@@ -5,11 +5,64 @@ from sandbox.util import LazyComment, divide
 
 from .abstract import Rule, SingleSourceRule
 
+class AngleFromSumOfTwoAnglesRule(SingleSourceRule):
+    property_type = SumOfTwoAnglesProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accept(self, prop):
+        return prop not in self.processed
+
+    def apply(self, prop):
+        for a0, a1 in (prop.angles, reversed(prop.angles)):
+            av = self.context.angle_value_property(a0)
+            if av is None:
+                continue
+            self.processed.add(prop)
+            yield (
+                AngleValueProperty(a1, prop.degree - av.degree),
+                LazyComment('%s + %sº = %s + %s = %sº', a1, av.degree, a1, a0, prop.degree),
+                [prop, av]
+            )
+            return
+
+class SumOfTwoAnglesByThreeRule(SingleSourceRule):
+    property_type = SumOfThreeAnglesProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
+    def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0x7:
+            return
+
+        original = mask
+        for index, angle in enumerate(prop.angles):
+            bit = 1 << index
+            if mask & bit:
+                continue
+            av = self.context.angle_value_property(angle)
+            if av is None:
+                continue
+            mask |= bit
+            others = [ang for ang in prop.angles if ang != angle]
+            yield (
+                SumOfTwoAnglesProperty(*others, prop.degree - av.degree),
+                LazyComment('%sº = %s + %s + %s = %s + %s + %sº', prop.degree, *others, angle, *others, av.degree),
+                [prop, av]
+            )
+        if mask != original:
+            self.processed[prop] = mask
+
 class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
     """
     If the sum and the ratio of two angles are known, we can find the values
     """
-    property_type = SumOfAnglesProperty
+    property_type = SumOfTwoAnglesProperty
 
     def __init__(self, context):
         super().__init__(context)
@@ -40,7 +93,7 @@ class EqualSumsOfAnglesRule(Rule):
         self.processed = {} # prop => bit mask
 
     def sources(self):
-        return [(s0, s1) for (s0, s1) in itertools.combinations(self.context.list(SumOfAnglesProperty), 2) if s0.degree == s1.degree]
+        return [(s0, s1) for (s0, s1) in itertools.combinations(self.context.list(SumOfTwoAnglesProperty), 2) if s0.degree == s1.degree]
 
     def apply(self, src):
         mask = self.processed.get(src, 0)
@@ -48,6 +101,7 @@ class EqualSumsOfAnglesRule(Rule):
             return
 
         sum0, sum1 = src
+        original = mask
         for index, (eq0, eq1) in enumerate(itertools.product(sum0.angles, sum1.angles)):
             bit = 1 << index
             if mask & bit:
@@ -82,4 +136,6 @@ class EqualSumsOfAnglesRule(Rule):
                     ),
                     [sum0, sum1, ca]
                 )
-        self.processed[src] = mask
+
+        if original != mask:
+            self.processed[src] = mask

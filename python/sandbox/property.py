@@ -309,7 +309,10 @@ class AngleKindProperty(Property):
     def __hash__(self):
         return hash(AngleKindProperty) + hash(self.angle)
 
-class AngleValueProperty(Property):
+class LinearAngleProperty(Property):
+    pass
+
+class AngleValueProperty(LinearAngleProperty):
     """
     Angle value
     """
@@ -350,7 +353,7 @@ class AngleValueProperty(Property):
     def __hash__(self):
         return hash(AngleValueProperty) + hash(self.angle)
 
-class AngleRatioProperty(Property):
+class AngleRatioProperty(LinearAngleProperty):
     """
     Two angle values ratio
     """
@@ -397,7 +400,33 @@ class AngleRatioProperty(Property):
             self.__hash = hash(AngleRatioProperty) + hash(self.angle_set)
         return self.__hash
 
-class SumOfAnglesProperty(Property):
+class SumOfThreeAnglesProperty(LinearAngleProperty):
+    """
+    Sum of three angles is equal to degree
+    """
+    def __init__(self, angle0, angle1, angle2, degree):
+        super().__init__()
+        self.angles = (angle0, angle1, angle2)
+        self.degree = degree
+        self.angle_set = frozenset(self.angles)
+
+    def keys(self):
+        return self.angles
+
+    @property
+    def description(self):
+        return LazyComment('%s + %s + %s = %sº', *self.angles, self.degree)
+
+    def compare_values(self, other):
+        return self.degree == other.degree
+
+    def __eq__(self, other):
+        return isinstance(other, SumOfThreeAnglesProperty) and self.angle_set == other.angle_set
+
+    def __hash__(self):
+        return hash(SumOfThreeAnglesProperty) + hash(self.angle_set)
+
+class SumOfTwoAnglesProperty(LinearAngleProperty):
     """
     Sum of two angles is equal to degree
     """
@@ -418,10 +447,10 @@ class SumOfAnglesProperty(Property):
         return self.degree == other.degree
 
     def __eq__(self, other):
-        return isinstance(other, SumOfAnglesProperty) and self.angle_set == other.angle_set
+        return isinstance(other, SumOfTwoAnglesProperty) and self.angle_set == other.angle_set
 
     def __hash__(self):
-        return hash(SumOfAnglesProperty) + hash(self.angle_set)
+        return hash(SumOfTwoAnglesProperty) + hash(self.angle_set)
 
 class LengthRatioProperty(Property):
     """
