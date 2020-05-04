@@ -15,7 +15,7 @@ from .rules.triangles import *
 from .rules.trigonometric import *
 from .scene import Scene
 from .stats import Stats
-from .util import LazyComment, divide
+from .util import LazyComment
 
 class Explainer:
     def __init__(self, scene, options={}):
