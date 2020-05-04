@@ -418,7 +418,7 @@ class SumOfThreeAnglesProperty(LinearAngleProperty):
     def __hash__(self):
         return hash(SumOfThreeAnglesProperty) + hash(self.angle_set)
 
-class SumOfAnglesProperty(LinearAngleProperty):
+class SumOfTwoAnglesProperty(LinearAngleProperty):
     """
     Sum of two angles is equal to degree
     """
@@ -439,10 +439,10 @@ class SumOfAnglesProperty(LinearAngleProperty):
         return self.degree == other.degree
 
     def __eq__(self, other):
-        return isinstance(other, SumOfAnglesProperty) and self.angle_set == other.angle_set
+        return isinstance(other, SumOfTwoAnglesProperty) and self.angle_set == other.angle_set
 
     def __hash__(self):
-        return hash(SumOfAnglesProperty) + hash(self.angle_set)
+        return hash(SumOfTwoAnglesProperty) + hash(self.angle_set)
 
 class LengthRatioProperty(Property):
     """

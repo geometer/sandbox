@@ -27,10 +27,11 @@ class Explainer:
         self.__rules = [
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),
-            SumOfThreeAnglesInTriangle(self.context),
-            SumOfTwoAnglesInTriangle(self.context),
+            SumOfThreeAnglesInTriangleRule(self.context),
+            SumOfTwoAnglesByThreeRule(self.context),
             SumAndRatioOfTwoAnglesRule(self.context),
             EqualSumsOfAnglesRule(self.context),
+            AngleFromSumOfTwoAnglesRule(self.context),
             SumOfAngles180DegreeRule(self.context),
             NonCollinearPointsAreDifferentRule(self.context),
             CoincidenceTransitivityRule(self.context),
@@ -462,28 +463,6 @@ class Explainer:
                     ratio_prop.reason.comment,
                     ratio_prop.reason.premises
                 )
-
-            for sa in self.context.list(SumOfAnglesProperty):
-                av0 = self.context.angle_value_property(sa.angles[0])
-                av1 = self.context.angle_value_property(sa.angles[1])
-                if av0 and av1:
-                    continue
-                elif av0:
-                    if sa.reason.obsolete and av0.reason.obsolete:
-                        continue
-                    yield (
-                        AngleValueProperty(sa.angles[1], sa.degree - av0.degree),
-                        LazyComment('%sº - %sº', sa.degree, av0.degree),
-                        [sa, av0]
-                    )
-                elif av1:
-                    if sa.reason.obsolete and av1.reason.obsolete:
-                        continue
-                    yield (
-                        AngleValueProperty(sa.angles[0], sa.degree - av1.degree),
-                        LazyComment('%sº - %sº', sa.degree, av1.degree),
-                        [sa, av1]
-                    )
 
             for ang0, ang1 in self.context.congruent_angles_with_vertex():
                 ncl0 = self.context.not_collinear_property(*ang0.point_set)
