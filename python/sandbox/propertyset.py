@@ -1,6 +1,7 @@
 import itertools
 import networkx as nx
 import re
+import sympy as sp
 
 from .core import CoreScene
 from .property import AngleKindProperty, AngleValueProperty, AngleRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, SimilarTrianglesProperty, CongruentTrianglesProperty, LinearAngleProperty
@@ -89,6 +90,10 @@ class LinearAngleSet:
         for eq in self.__equations:
             print(eq)
         print('Total: %d equations' % len(self.__equations))
+        solution = sp.solve(self.__equations)
+        for elt in solution.items():
+            print(elt)
+        print('Total: %d elements' % len(solution))
 
 class AngleRatioPropertySet:
     class CommentFromPath:
