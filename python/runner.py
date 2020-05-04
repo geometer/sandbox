@@ -71,7 +71,9 @@ def run_sample(scene, prop=None):
         if explanation:
             dump(explanation)
             print('Depth = %s' % depth(explanation))
-            print('Props = %s' % len(explanation.reason.all_premises))
+            count_essentials = explanation.reason.essential_premises_count
+            count_all = len(explanation.reason.all_premises)
+            print('Props = %d (%d + %d)' % (count_all, count_essentials, count_all - count_essentials))
             all_premises(explanation).stats().dump()
             rules_map = {}
             for prop in explanation.reason.all_premises:

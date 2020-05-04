@@ -10,7 +10,7 @@ from .util import LazyComment, divide
 
 class ContradictionError(Exception):
     def __init__(self, message, prop0, prop1):
-        self.message = message
+        super().__init__(message)
         self.prop0 = prop0
         self.prop1 = prop1
 
@@ -695,7 +695,7 @@ class PropertySet:
         existing = self.__full_set.get(prop)
         if existing:
             if not existing.compare_values(prop):
-                raise ContradictionError(LazyComment('Contradiction: \'%s\' vs \'%s\'' % (prop, existing)), prop, existing)
+                raise ContradictionError('different values: `%s` vs `%s`' % (prop, existing), prop, existing)
             return existing
 
         if isinstance(prop, AngleRatioProperty):

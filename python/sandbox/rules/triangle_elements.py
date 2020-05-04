@@ -19,6 +19,7 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
 
         sides0 = prop.triangle0.sides
         sides1 = prop.triangle1.sides
+        original = mask
         for i, j in itertools.combinations(range(0, 3), 2):
             bit = 1 << next(k for k in range(0, 3) if k not in (i, j))
             if mask & bit:
@@ -37,7 +38,9 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
                     LazyComment('ratios of sides in similar %s and %s', prop.triangle0, prop.triangle1),
                     [prop]
                 )
-        self.processed[prop] = mask
+
+        if original != mask:
+            self.processed[prop] = mask
 
 class CorrespondingAnglesInSimilarTrianglesRule(SingleSourceRule):
     property_type = SimilarTrianglesProperty
@@ -61,6 +64,7 @@ class CorrespondingAnglesInSimilarTrianglesRule(SingleSourceRule):
 
         angles0 = prop.triangle0.angles
         angles1 = prop.triangle1.angles
+        original = mask
         for i in range(0, 3):
             bit = 1 << i
             if mask & bit:
@@ -83,7 +87,9 @@ class CorrespondingAnglesInSimilarTrianglesRule(SingleSourceRule):
                 LazyComment('corresponding non-degenerate angles in similar %s and %s', prop.triangle0, prop.triangle1),
                 [prop] + ne
             )
-        self.processed[prop] = mask
+
+        if original != mask:
+            self.processed[prop] = mask
 
 class BaseAnglesOfIsoscelesRule(SingleSourceRule):
     property_type = IsoscelesTriangleProperty
@@ -167,6 +173,7 @@ class CorrespondingSidesInSimilarTrianglesRule(SingleSourceRule):
             return
         sides0 = prop.triangle0.sides
         sides1 = prop.triangle1.sides
+        original = mask
         for i in range(0, 3):
             if mask & (1 << i):
                 continue
@@ -183,7 +190,9 @@ class CorrespondingSidesInSimilarTrianglesRule(SingleSourceRule):
                     'Ratios of sides in similar triangles',
                     [prop, lr]
                 )
-        self.processed[prop] = mask
+
+        if original != mask:
+            self.processed[prop] = mask
 
 class EquilateralTriangleAnglesRule(SingleSourceRule):
     property_type = EquilateralTriangleProperty

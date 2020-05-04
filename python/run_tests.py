@@ -15,6 +15,8 @@ from tests.explainer.geo0324 import *
 from tests.explainer.geo0369 import *
 from tests.explainer.geo0374 import *
 
+from tests.meta.contradiction import *
+
 from tests.placement.sympy import *
 from tests.placement.intersection import *
 from tests.placement.napoleon import *

@@ -12,6 +12,10 @@ class Reason:
         self.__all_premises = None
         
     @property
+    def essential_premises_count(self):
+        return sum(1 if prop.essential else 0 for prop in self.all_premises)
+
+    @property
     def all_premises(self):
         if self.__all_premises is None:
             self.__all_premises = set()
