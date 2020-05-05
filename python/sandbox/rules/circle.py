@@ -18,9 +18,39 @@ class TrivialPointOnCircleRule(SingleSourceRule):
         for pt in prop.points:
             yield(
                 PointAndCircleProperty(pt, *prop.points, 0),
-                LazyComment('%s %s %s is a circle goes through %s', *prop.points, pt),
+                LazyComment('circle %s %s %s goes through %s', *prop.points, pt),
                 [prop]
             )
+
+class FourPointsOnCircleRule(SingleSourceRule):
+    property_type = ConcyclicPointsProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
+    def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0xF:
+            return
+
+        original = mask
+        for index, pt in enumerate(prop.points):
+            bit = 1 << index
+            if mask & bit:
+                continue
+            circle = [p for p in prop.points if p != pt]
+            ncl = self.context.collinearity_property(*circle)
+            if ncl is None:
+                continue
+            mask |= bit
+            yield (
+                PointAndCircleProperty(pt, *circle, 0),
+                LazyComment('points %s, %s, %s, and %s belong to a circle', *prop.points),
+                [prop, ncl]
+            )
+        if mask != original:
+            self.processed[prop] = mask
 
 class InscribedAnglesWithCommonCircularArcRule(SingleSourceRule):
     property_type = ConcyclicPointsProperty
