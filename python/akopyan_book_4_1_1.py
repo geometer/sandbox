@@ -18,6 +18,7 @@ altitudeB = scene.altitude(triangle, B)
 B1 = altitudeB.intersection_point(A.line_through(C), label='B_1')
 B2 = altitudeB.intersection_point(circ, label='B_2')
 B2.not_equal_constraint(B)
+#B2.opposite_side_constraint(B, A.line_through(C))
 
 altitudeC = scene.altitude(triangle, C)
 C1 = altitudeC.intersection_point(B.line_through(A), label='C_1')
