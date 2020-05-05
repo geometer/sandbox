@@ -15,7 +15,7 @@ from .rules.triangles import *
 from .rules.trigonometric import *
 from .scene import Scene
 from .stats import Stats
-from .util import LazyComment, divide
+from .util import LazyComment
 
 class Explainer:
     def __init__(self, scene, options={}):
@@ -27,9 +27,13 @@ class Explainer:
         self.__rules = [
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),
-            SumOfTwoAnglesInTriangle(self.context),
+            LengthRatiosWithCommonDenominatorRule(self.context),
+            SumOfThreeAnglesInTriangleRule(self.context),
+            SumOfTwoAnglesByThreeRule(self.context),
             SumAndRatioOfTwoAnglesRule(self.context),
             EqualSumsOfAnglesRule(self.context),
+            AngleFromSumOfTwoAnglesRule(self.context),
+            SumOfAngles180DegreeRule(self.context),
             NonCollinearPointsAreDifferentRule(self.context),
             CoincidenceTransitivityRule(self.context),
             CollinearityCollisionRule(self.context),
@@ -96,14 +100,15 @@ class Explainer:
                 LawOfSinesRule(self.context),
             ]
 
-    def __reason(self, prop, comments, premises=None):
-        reason = Reason(self.__iteration_step_count, comments, premises)
+    def __reason(self, prop, comment, premises=None):
+        reason = Reason(self.__iteration_step_count, comment, premises)
         if prop in reason.all_premises:
             return
         def insert(pro):
             for pre in pro.reason.premises:
+                pre.implications.add(pro)
                 if self.context.index_of(pre) is None:
-                    self.context.add(pre)
+                    insert(pre)
             self.context.add(pro)
 
         existing = self.context[prop]
@@ -114,7 +119,13 @@ class Explainer:
             insert(prop)
         elif len(reason.all_premises) < len(existing.reason.all_premises):
             reason.obsolete = existing.reason.obsolete
+            if self.context.index_of(existing) is not None:
+                for pre in existing.reason.premises:
+                    pre.implications.remove(existing)
             existing.reason = reason
+            for pre in existing.reason.premises:
+                pre.implications.add(existing)
+            existing.fire_premises_change()
             if hasattr(prop, 'rule'):
                 existing.rule = prop.rule
             elif hasattr(existing, 'rule'):
@@ -241,7 +252,7 @@ class Explainer:
                         )
                         yield (
                             SameOrOppositeSideProperty(segment, pt0, pt1, True),
-                            [str(av), str(nc)], #TODO: better comment
+                            LazyComment('%s, %s', av, nc), #TODO: better comment
                             [av, nc]
                         )
 
@@ -443,93 +454,6 @@ class Explainer:
                     [aa0, aa1, col]
                 )
 
-            for ratio0, ratio1 in self.context.equal_length_ratios_with_common_denominator():
-                prop = self.context.congruent_segments_property(ratio0[0], ratio1[0], True)
-                if prop:
-                    continue
-                ratio_prop = self.context.equal_length_ratios_property(*ratio0, *ratio1)
-                yield (
-                    ProportionalLengthsProperty(ratio0[0], ratio1[0], 1),
-                    ratio_prop.reason.comments,
-                    ratio_prop.reason.premises
-                )
-
-            for av in self.context.angle_value_properties():
-                if av.angle.vertex is None:
-                    continue
-                av_is_too_old = av.reason.obsolete
-
-                second = av.angle.vector0.end.angle(av.angle.vertex, av.angle.vector1.end)
-                third = av.angle.vector1.end.angle(av.angle.vertex, av.angle.vector0.end)
-                if av.degree == 180:
-                    if av_is_too_old:
-                        continue
-                    for ang in second, third:
-                        yield (
-                            AngleValueProperty(ang, 0),
-                            LazyComment('%s = 180º', av.angle),
-                            [av]
-                        )
-                else:
-                    second_reason = self.context.angle_value_property(second)
-                    if second_reason:
-                        if av_is_too_old and second_reason.reason.obsolete:
-                            continue
-                        yield (
-                            AngleValueProperty(third, 180 - av.degree - second_reason.degree),
-                            LazyComment('%s + %s + %s = 180º', third, av.angle, second),
-                            [av, second_reason]
-                        )
-                    else:
-                        third_reason = self.context.angle_value_property(third)
-                        if third_reason is None or av_is_too_old and third_reason.reason.obsolete:
-                            continue
-                        yield (
-                            AngleValueProperty(second, 180 - av.degree - third_reason.degree),
-                            LazyComment('%s + %s + %s = 180º', second, av.angle, third),
-                            [av, third_reason]
-                        )
-
-            for sa in self.context.list(SumOfAnglesProperty):
-                av0 = self.context.angle_value_property(sa.angles[0])
-                av1 = self.context.angle_value_property(sa.angles[1])
-                if av0 and av1:
-                    continue
-                elif av0:
-                    if sa.reason.obsolete and av0.reason.obsolete:
-                        continue
-                    yield (
-                        AngleValueProperty(sa.angles[1], sa.degree - av0.degree),
-                        LazyComment('%sº - %sº', sa.degree, av0.degree),
-                        [sa, av0]
-                    )
-                elif av1:
-                    if sa.reason.obsolete and av1.reason.obsolete:
-                        continue
-                    yield (
-                        AngleValueProperty(sa.angles[0], sa.degree - av1.degree),
-                        LazyComment('%sº - %sº', sa.degree, av1.degree),
-                        [sa, av1]
-                    )
-
-            for ar in [p for p in self.context.list(SumOfAnglesProperty) if p.angles[0].vertex is not None and p.angles[0].vertex == p.angles[1].vertex and p.degree == 180]:
-                common = next((pt for pt in ar.angles[0].endpoints if pt in ar.angles[1].endpoints), None)
-                if common is None:
-                    continue
-                pt0 = next(pt for pt in ar.angles[0].endpoints if pt != common)
-                pt1 = next(pt for pt in ar.angles[1].endpoints if pt != common)
-                try:
-                    oppo = self.context[SameOrOppositeSideProperty(ar.angles[0].vertex.segment(common), pt0, pt1, False)]
-                except: # TODO: we process here case of oppo.same == True; do the same with no try/except
-                    continue
-                if not oppo or ar.reason.obsolete and oppo.reason.obsolete:
-                    continue
-                yield (
-                    AngleValueProperty(ar.angles[0].vertex.angle(pt0, pt1), 180),
-                    LazyComment('%s + %s', ar.angles[0], ar.angles[1]),
-                    [ar, oppo]
-                )
-
             for ang0, ang1 in self.context.congruent_angles_with_vertex():
                 ncl0 = self.context.not_collinear_property(*ang0.point_set)
                 ncl1 = self.context.not_collinear_property(*ang1.point_set)
@@ -650,11 +574,11 @@ class Explainer:
         def to_string(reason):
             if reason.premises:
                 return '%s (%s)' % (
-                    ', '.join([str(com) for com in reason.comments]),
+                    reason.comment,
                     ', '.join(['*%s' % self.context.index_of(prop) for prop in reason.premises])
                 )
             else:
-                return ', '.join([str(com) for com in reason.comments])
+                return reason.comment
 
         if len(self.context) > 0:
             print('Explained:')

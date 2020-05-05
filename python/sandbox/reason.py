@@ -1,12 +1,19 @@
 class Reason:
-    def __init__(self, generation, comments, premises):
+    def __init__(self, generation, comment, premises):
         self.generation = generation
-        if not isinstance(comments, (list, tuple)):
-            self.comments = [comments]
-        else:
-            self.comments = list(comments)
-        self.premises = premises
+        self.comment = comment
+        self.premises = []
+        for pre in premises:
+            if pre not in self.premises:
+                self.premises.append(pre)
         self.__all_premises = None
+
+    def reset_premises(self):
+        self.__all_premises = None
+        
+    @property
+    def essential_premises_count(self):
+        return sum(1 if prop.essential else 0 for prop in self.all_premises)
 
     @property
     def all_premises(self):

@@ -97,6 +97,9 @@ class LineSet:
                 # TODO: implement
                 pass
 
+class ContradictionError(Exception):
+    pass
+
 class CyclicOrderPropertySet:
     class Family:
         def __init__(self):
@@ -166,15 +169,21 @@ class CyclicOrderPropertySet:
 
 class AngleRatioPropertySet:
     class CommentFromPath:
-        def __init__(self, path, multiplier, angle_to_ratio):
+        def __init__(self, path, premises, multiplier, angle_to_ratio):
             self.path = path
+            self.premises = [None] + premises
             self.multiplier = multiplier
             self.angle_to_ratio = dict(angle_to_ratio)
 
         def html(self):
             pattern = []
             params = []
-            for vertex in self.path:
+            for vertex, premise in zip(self.path, self.premises):
+                if premise:
+                    if isinstance(premise, AngleRatioProperty) and premise.same:
+                        pattern.append(' ≡ ')
+                    else:
+                        pattern.append(' = ')
                 if isinstance(vertex, CoreScene.Angle):
                     coef = divide(self.multiplier, self.angle_to_ratio[vertex])
                     if coef == 1:
@@ -187,12 +196,17 @@ class AngleRatioPropertySet:
                 else:
                     pattern.append('%sº')
                     params.append(self.multiplier * vertex)
-            return LazyComment(' = '.join(pattern), *params)
+            return LazyComment(''.join(pattern), *params)
 
         def __str__(self):
             pattern = []
             params = []
-            for vertex in self.path:
+            for vertex, premise in zip(self.path, self.premises):
+                if premise:
+                    if isinstance(premise, AngleRatioProperty) and premise.same:
+                        pattern.append(' ≡ ')
+                    else:
+                        pattern.append(' = ')
                 if isinstance(vertex, CoreScene.Angle):
                     coef = divide(self.multiplier, self.angle_to_ratio[vertex])
                     if coef == 1:
@@ -205,7 +219,7 @@ class AngleRatioPropertySet:
                 else:
                     pattern.append('%sº')
                     params.append(self.multiplier * vertex)
-            return str(LazyComment(' = '.join(pattern), *params))
+            return str(LazyComment(''.join(pattern), *params))
 
     class Family:
         def __init__(self):
@@ -215,7 +229,7 @@ class AngleRatioPropertySet:
 
         def explanation_from_path(self, path, multiplier):
             premises = [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
-            return (AngleRatioPropertySet.CommentFromPath(path, multiplier, self.angle_to_ratio), premises)
+            return (AngleRatioPropertySet.CommentFromPath(path, premises, multiplier, self.angle_to_ratio), premises)
 
         def value_property(self, angle):
             ratio = self.angle_to_ratio.get(angle)
@@ -760,8 +774,8 @@ class PropertySet:
     def __getitem__(self, prop):
         existing = self.__full_set.get(prop)
         if existing:
-            #TODO: better way to report contradiction
-            assert existing.compare_values(prop), 'Contradiction: values are different for %s and %s' % (prop, existing)
+            if not existing.compare_values(prop):
+                raise ContradictionError('different values: `%s` vs `%s`' % (prop, existing))
             return existing
         if isinstance(prop, AngleRatioProperty):
             #TODO: check ratio value for contradiction
