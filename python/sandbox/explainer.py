@@ -9,6 +9,7 @@ from .propertyset import PropertySet
 from .reason import Reason
 from .rules.advanced import *
 from .rules.basic import *
+from .rules.circle import *
 from .rules.linear import *
 from .rules.triangle_elements import *
 from .rules.triangles import *
@@ -26,6 +27,7 @@ class Explainer:
         self.__iteration_step_count = -1
         self.__rules = [
             InscribedAnglesWithCommonCircularArcRule(self.context),
+            TrivialPointOnCircleRule(self.context),
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),
             LengthRatiosWithCommonDenominatorRule(self.context),

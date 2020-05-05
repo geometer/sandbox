@@ -44,11 +44,11 @@ class PointAndCircleProperty(Property):
     @property
     def description(self):
         if self.location == -1:
-            return LazyComment('%s lies inside the circle via %s, %s, %s', self.point, *self.circle)
+            return LazyComment('%s lies inside the circle through %s, %s, and %s', self.point, *self.circle)
         elif self.location == 1:
-            return LazyComment('%s lies outside of the circle via %s, %s, %s', self.point, *self.circle)
+            return LazyComment('%s lies outside of the circle through %s, %s, and %s', self.point, *self.circle)
         else:
-            return LazyComment('%s lies on the circle via %s, %s, %s', self.point, *self.circle)
+            return LazyComment('%s lies on the circle through %s, %s, and %s', self.point, *self.circle)
 
     def compare_values(self, other):
         return self.inside == other.inside
