@@ -1,3 +1,5 @@
+import itertools
+
 from sandbox.property import *
 from sandbox.util import LazyComment
 
@@ -21,6 +23,54 @@ class TrivialPointOnCircleRule(SingleSourceRule):
                 LazyComment('circle %s %s %s goes through %s', *prop.points, pt),
                 [prop]
             )
+
+class ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule(SingleSourceRule):
+    property_type = ConcyclicPointsProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
+    def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0xF:
+            return
+
+        pair_to_ne = {}
+        def ne(pair):
+            cached = pair_to_ne.get(pair)
+            if cached is not None:
+                return cached
+            prop = self.context.coincidence_property(*pair)
+            if not prop:
+                prop = False
+            pair_to_ne[pair] = prop
+            return prop
+
+        original = mask
+        for index, pt in enumerate(prop.points):
+            bit = 1 << index
+            if mask & bit:
+                continue
+            circle = [p for p in prop.points if p != pt]
+            premises = [prop]
+            for pair in itertools.combinations(circle, 2):
+                neq = ne(pair)
+                if neq == False or neq.coincident:
+                    break
+                premises.append(neq)
+            if len(premises) < 4:
+                if neq != False:
+                    mask |= bit
+                continue
+            mask |= bit
+            yield (
+                PointsCollinearityProperty(*circle, False),
+                LazyComment('three non-coincident points on a circle'),
+                premises
+            )
+        if mask != original:
+            self.processed[prop] = mask
 
 class FourPointsOnCircleRule(SingleSourceRule):
     property_type = ConcyclicPointsProperty

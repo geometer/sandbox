@@ -707,6 +707,9 @@ class PropertySet:
         prop = self.__collinearity.get(frozenset([pt0, pt1, pt2]))
         return prop if prop and not prop.collinear else None
 
+    def coincidence_property(self, pt0, pt1):
+        return self.__coincidence.get(frozenset([pt0, pt1]))
+
     def not_equal_property(self, pt0, pt1):
         prop = self.__coincidence.get(frozenset([pt0, pt1]))
         return prop if prop and not prop.coincident else None
