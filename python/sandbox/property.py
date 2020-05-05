@@ -39,7 +39,11 @@ class PointAndCircleProperty(Property):
         self.point = point
         self.circle = (cpoint0, cpoint1, cpoint2)
         self.location = location
-        self.property_key = (self.point, frozenset(self.circle))
+        self.circle_key = frozenset(self.circle)
+        self.property_key = (self.point, self.circle_key)
+
+    def keys(self):
+        return self.property_key
 
     @property
     def description(self):
@@ -52,6 +56,9 @@ class PointAndCircleProperty(Property):
 
     def compare_values(self, other):
         return self.inside == other.inside
+
+    def same_circle(other):
+        return self.circle_key == other.circle_key
 
     def __eq__(self, other):
         return isinstance(other, PointAndCircleProperty) and self.circle == other.circle
