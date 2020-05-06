@@ -26,10 +26,9 @@ class Explainer:
         self.__explanation_time = None
         self.__iteration_step_count = -1
         self.__rules = [
-            ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule(self.context),
-            FourPointsOnCircleRule(self.context),
+            #ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule(self.context),
+            PointsOnCircleRule(self.context),
             InscribedAnglesWithCommonCircularArcRule(self.context),
-            TrivialPointOnCircleRule(self.context),
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),
             LengthRatiosWithCommonDenominatorRule(self.context),
@@ -599,6 +598,7 @@ class Explainer:
                     print('\t%s' % prop)
 
     def stats(self, properties_to_explain=[]):
+        self.context.circles.dump()
         def type_presentation(kind):
             return kind.__doc__.strip() if kind.__doc__ else kind.__name__
 

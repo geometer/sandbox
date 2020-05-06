@@ -3,7 +3,7 @@ import networkx as nx
 import re
 
 from .core import CoreScene
-from .property import AngleKindProperty, AngleValueProperty, AngleRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, SimilarTrianglesProperty, CongruentTrianglesProperty, SameOrOppositeSideProperty
+from .property import AngleKindProperty, AngleValueProperty, AngleRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, SimilarTrianglesProperty, CongruentTrianglesProperty, SameOrOppositeSideProperty, PointAndCircleProperty
 from .reason import Reason
 from .stats import Stats
 from .util import LazyComment, divide
@@ -14,33 +14,69 @@ class ContradictionError(Exception):
 class CircleSet:
     class Circle:
         def __init__(self, points):
+            self.key = set(points)
             self.points = set(points)
 
     def __init__(self):
         self.__circle_by_key = {}
         self.__all_circles = set()
 
-    def by_three_points(self, points):
+    def add_point_to_circle(self, point, circle):
+        if point in circle.points:
+            return
+
+        old = list(circle.points)
+        circle.points.add(point)
+        duplicates = set()
+        for pt0, pt1 in itertools.combinations(old, 2):
+            dup = self.by_three_points(point, pt0, pt1, False)
+            if dup and dup != circle:
+                duplicates.add(dup)
+        self.__merge(circle, duplicates)
+
+    def __merge(self, circle, duplicates):
+        for dup in duplicates:
+            circle.points.update(dup.points)
+            self.__all_circles.remove(dup)
+        for k, v in list(self.__circle_by_key.items()):
+            if v in duplicates:
+                self.__circle_by_key[k] = circle
+
+    def by_three_points(self, pt0, pt1, pt2, create_if_not_exists):
+        points = {pt0, pt1, pt2}
         key = frozenset(points)
         circle = self.__circle_by_key.get(key)
-        if circle is None:
-            points = set(points)
-            existing = [circ for circ in self.__all_circles if points.subset(circ.points)]
-            if existing:
-                circle = existing[0]
-                if len(existing) > 1:
-                    duplicates = existing[1:]
-                    for circ in duplicates:
-                        circle.points.update(circ.points)
-                        self.__all_circles.remove(circ)
-                    for key, value in list(self.__circle_by_key.items()):
-                        if value in duplicates:
-                            self.__circle_by_key[key] = circle
-            else:
-                circle = Circle(points)
-                self.__all_circles.add(circle)
-            self.__circle_by_key[key] = circle
+        if circle or not create_if_not_exists:
+            return circle
+
+        existing = [circ for circ in self.__all_circles if points.issubset(circ.points)]
+        if existing:
+            circle = existing[0]
+            if len(existing) > 1:
+                self.__merge(circle, existing[1:])
+        else:
+            circle = CircleSet.Circle(points)
+            self.__all_circles.add(circle)
+        self.__circle_by_key[key] = circle
         return circle
+
+    def add(self, prop):
+        if isinstance(prop, PointsCollinearityProperty):
+            if not prop.collinear:
+                self.by_three_points(*prop.points, True)
+        elif isinstance(prop, PointAndCircleProperty):
+            circle = self.by_three_points(*prop.circle, True)
+            self.add_point_to_circle(prop.point, circle)
+
+    def n_concyclic_points(self, n):
+        for circle in self.__all_circles:
+            for points in itertools.combinations(circle.points, n):
+                yield points
+
+    def dump(self):
+        for circle in self.__all_circles:
+            print('circle ' + ', '.join([str(pt) for pt in circle.points]))
+        print('%d circles by %d keys' % (len(self.__all_circles), len(self.__circle_by_key)))
 
 class CyclicOrderPropertySet:
     class Family:
@@ -646,7 +682,10 @@ class PropertySet:
         elif type_key == PointsCoincidenceProperty:
             self.__coincidence[prop.point_set] = prop
         elif type_key == PointsCollinearityProperty:
+            self.circles.add(prop)
             self.__collinearity[prop.point_set] = prop
+        elif type_key == PointAndCircleProperty:
+            self.circles.add(prop)
         elif type_key == EqualLengthRatiosProperty:
             self.__length_ratios.add(prop)
         elif type_key == SameCyclicOrderProperty:
@@ -864,6 +903,9 @@ class PropertySet:
             if value[0]:
                 self.__intersections[key] = value
         return value
+
+    def n_concyclic_points(self, n):
+        return self.circles.n_concyclic_points(n)
 
     def __intersection_of_lines(self, segment0, segment1):
         common = next((pt for pt in segment0.points if pt in segment1.points), None)
