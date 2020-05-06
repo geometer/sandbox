@@ -11,6 +11,37 @@ from .util import LazyComment, divide
 class ContradictionError(Exception):
     pass
 
+class CircleSet:
+    class Circle:
+        def __init__(self, points):
+            self.points = set(points)
+
+    def __init__(self):
+        self.__circle_by_key = {}
+        self.__all_circles = set()
+
+    def by_three_points(self, points):
+        key = frozenset(points)
+        circle = self.__circle_by_key.get(key)
+        if circle is None:
+            points = set(points)
+            existing = [circ for circ in self.__all_circles if points.subset(circ.points)]
+            if existing:
+                circle = existing[0]
+                if len(existing) > 1:
+                    duplicates = existing[1:]
+                    for circ in duplicates:
+                        circle.points.update(circ.points)
+                        self.__all_circles.remove(circ)
+                    for key, value in list(self.__circle_by_key.items()):
+                        if value in duplicates:
+                            self.__circle_by_key[key] = circle
+            else:
+                circle = Circle(points)
+                self.__all_circles.add(circle)
+            self.__circle_by_key[key] = circle
+        return circle
+
 class CyclicOrderPropertySet:
     class Family:
         def __init__(self):
@@ -577,6 +608,7 @@ class PropertySet:
         self.__combined = {} # (type, key) => [prop] and type => prop
         self.__full_set = {} # prop => prop
         self.__indexes = {} # prop => number
+        self.circles = CircleSet()
         self.__angle_kinds = {} # angle => prop
         self.__angle_ratios = AngleRatioPropertySet()
         self.__length_ratios = LengthRatioPropertySet()
