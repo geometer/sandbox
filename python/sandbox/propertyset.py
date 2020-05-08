@@ -13,9 +13,9 @@ class ContradictionError(Exception):
 
 class CircleSet:
     class Circle:
-        def __init__(self, points):
-            self.key = set(points)
-            self.points = set(points)
+        def __init__(self, points_key):
+            self.keys = {points_key}
+            self.points = set(points_key)
 
     def __init__(self, context):
         self.context = context
@@ -37,11 +37,11 @@ class CircleSet:
 
     def __merge(self, circle, duplicates):
         for dup in duplicates:
+            circle.keys.update(dup.keys)
             circle.points.update(dup.points)
             self.__all_circles.remove(dup)
-        for k, v in list(self.__circle_by_key.items()):
-            if v in duplicates:
-                self.__circle_by_key[k] = circle
+            for key in dup.keys:
+                self.__circle_by_key[key] = circle
 
     def by_three_points(self, pt0, pt1, pt2, create_if_not_exists):
         points = {pt0, pt1, pt2}
@@ -55,8 +55,9 @@ class CircleSet:
             circle = existing[0]
             if len(existing) > 1:
                 self.__merge(circle, existing[1:])
+            circle.keys.add(key)
         else:
-            circle = CircleSet.Circle(points)
+            circle = CircleSet.Circle(key)
             self.__all_circles.add(circle)
         self.__circle_by_key[key] = circle
         return circle
@@ -95,7 +96,7 @@ class CircleSet:
 
     def dump(self):
         for circle in self.__all_circles:
-            print('circle ' + ', '.join([str(pt) for pt in circle.points]))
+            print('circle ' + ', '.join([str(pt) for pt in circle.points]) + ' %d key(s)' % len(circle.keys))
         print('%d circles by %d keys' % (len(self.__all_circles), len(self.__circle_by_key)))
 
 class CyclicOrderPropertySet:
