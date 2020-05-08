@@ -189,12 +189,16 @@ class SameOrOppositeSideProperty(Property):
     """
     Two points on opposite/same sides of a line
     """
+    @staticmethod
+    def unique_key(segment, point0, point1):
+        return frozenset([segment, point0, point1])
+
     def __init__(self, segment, point0, point1, same):
         super().__init__()
         self.segment = segment
         self.points = (point0, point1)
         self.same = same
-        self.__object_set = frozenset([segment, point0, point1])
+        self.property_key = SameOrOppositeSideProperty.unique_key(segment, point0, point1)
 
     @property
     def essential(self):
@@ -214,10 +218,10 @@ class SameOrOppositeSideProperty(Property):
         return self.same == other.same
 
     def __eq__(self, other):
-        return isinstance(other, SameOrOppositeSideProperty) and self.__object_set == other.__object_set
+        return isinstance(other, SameOrOppositeSideProperty) and self.property_key == other.property_key
 
     def __hash__(self):
-        return hash(SameOrOppositeSideProperty) + hash(self.__object_set)
+        return hash(SameOrOppositeSideProperty) + hash(self.property_key)
 
 class PointInsideAngleProperty(Property):
     """
