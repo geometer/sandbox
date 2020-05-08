@@ -17,7 +17,8 @@ class CircleSet:
             self.key = set(points)
             self.points = set(points)
 
-    def __init__(self):
+    def __init__(self, context):
+        self.context = context
         self.__circle_by_key = {}
         self.__all_circles = set()
 
@@ -78,8 +79,17 @@ class CircleSet:
         if circle and pt in circle.points:
             prop = PointAndCircleProperty(pt, *cpoints, PointAndCircleProperty.Kind.on)
             prop.rule = 'synthetic'
-            prop.reason = Reason(-2, LazyComment('Temp comment'), [])
-            prop.reason.obsolete = False
+            if pt in cpoints:
+                premise = self.context.not_collinear_property(*cpoints)
+                prop.reason = Reason(
+                    premise.reason.generation,
+                    LazyComment('%s, %s, and %s are not collinear', *cpoints),
+                    [premise]
+                )
+                prop.reason.obsolete = premise.reason.obsolete
+            else:
+                prop.reason = Reason(-2, LazyComment('Temp comment'), [])
+                prop.reason.obsolete = False
             return prop
         return None
 
@@ -654,7 +664,7 @@ class PropertySet:
         self.__combined = {} # (type, key) => [prop] and type => prop
         self.__full_set = {} # prop => prop
         self.__indexes = {} # prop => number
-        self.circles = CircleSet()
+        self.circles = CircleSet(self)
         self.__angle_kinds = {} # angle => prop
         self.__angle_ratios = AngleRatioPropertySet()
         self.__length_ratios = LengthRatioPropertySet()

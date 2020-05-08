@@ -25,6 +25,8 @@ props = (
     PointAndCircleProperty(D, *triangle.points, PointAndCircleProperty.Kind.on),
     # known
     PointAndCircleProperty(G, D, E, F, PointAndCircleProperty.Kind.on),
+    # trivial: D in DEF
+    PointAndCircleProperty(D, D, E, F, PointAndCircleProperty.Kind.on),
     # A in ABC, ABC eq DEF
     PointAndCircleProperty(scene.get('A'), D, E, F, PointAndCircleProperty.Kind.on),
     # incorrect
