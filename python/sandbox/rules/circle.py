@@ -76,7 +76,7 @@ class PointsOnCircleRule(SingleSourceRule):
         self.processed.add(prop)
         for pt in [pt for pt in prop.points if pt not in triple]:
             yield (
-                PointAndCircleProperty(pt, *triple, 0),
+                PointAndCircleProperty(pt, *triple, PointAndCircleProperty.Kind.on),
                 LazyComment('%s, %s, %s, and %s are concyclic', pt, *triple),
                 [prop, ncl]
             )

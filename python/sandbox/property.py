@@ -34,6 +34,14 @@ class PointAndCircleProperty(Property):
     """
     Point location relatively to circle
     """
+    class Kind(Enum):
+        inside  = auto()
+        on      = auto()
+        outside = auto()
+
+        def __str__(self):
+            return self.name
+
     @staticmethod
     def unique_key(point, cpoints):
         return (point, frozenset(cpoints))
@@ -50,12 +58,14 @@ class PointAndCircleProperty(Property):
 
     @property
     def description(self):
-        if self.location == -1:
+        if self.location == PointAndCircleProperty.Kind.inside:
             return LazyComment('%s lies inside the circle through %s, %s, and %s', self.point, *self.circle)
-        elif self.location == 1:
+        elif self.location == PointAndCircleProperty.Kind.outside:
             return LazyComment('%s lies outside of the circle through %s, %s, and %s', self.point, *self.circle)
-        else:
+        elif self.location == PointAndCircleProperty.Kind.on:
             return LazyComment('%s lies on the circle through %s, %s, and %s', self.point, *self.circle)
+        else:
+            raise Exception('location %s is not of type PointAndCircleProperty.Kind' % self.location)
 
     def compare_values(self, other):
         return self.location == other.location

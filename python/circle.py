@@ -22,21 +22,21 @@ scene.nondegenerate_triangle_constraint(Scene.Triangle(scene.get('B'), G, G_1))
 
 props = (
     # known
-    PointAndCircleProperty(D, *triangle.points, 0),
+    PointAndCircleProperty(D, *triangle.points, PointAndCircleProperty.Kind.on),
     # known
-    PointAndCircleProperty(G, D, E, F, 0),
+    PointAndCircleProperty(G, D, E, F, PointAndCircleProperty.Kind.on),
     # A in ABC, ABC eq DEF
-    PointAndCircleProperty(scene.get('A'), D, E, F, 0),
+    PointAndCircleProperty(scene.get('A'), D, E, F, PointAndCircleProperty.Kind.on),
     # incorrect
-    PointAndCircleProperty(scene.get('A'), D, E, G, 0),
+    PointAndCircleProperty(scene.get('A'), D, E, G, PointAndCircleProperty.Kind.on),
     # A in ABC, ABC eq DFG
-    PointAndCircleProperty(scene.get('A'), D, F, G, 0),
+    PointAndCircleProperty(scene.get('A'), D, F, G, PointAndCircleProperty.Kind.on),
     # E in DEF, DEF eq BGG_1 or E in ABC, ABC eq BGG_1
-    PointAndCircleProperty(E, scene.get('B'), G, G_1, 0),
+    PointAndCircleProperty(E, scene.get('B'), G, G_1, PointAndCircleProperty.Kind.on),
     # G in DEF, DEF eq ABC
-    PointAndCircleProperty(G, *triangle.points, 0),
+    PointAndCircleProperty(G, *triangle.points, PointAndCircleProperty.Kind.on),
     # E in DEF, DEF eq DFG or E in ABC, ABC eq DFG
-    PointAndCircleProperty(E, D, F, G, 0),
+    PointAndCircleProperty(E, D, F, G, PointAndCircleProperty.Kind.on),
 )
 
 # DEF eq DFG: ncl DFG, ncl DEF, G in DEF

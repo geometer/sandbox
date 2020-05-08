@@ -20,7 +20,7 @@ I.belongs_to(circle1)
 scene.nondegenerate_triangle_constraint(Scene.Triangle(G, H, I))
 
 props = (
-    PointAndCircleProperty(A, D, E, F, 0),
+    PointAndCircleProperty(A, D, E, F, PointAndCircleProperty.Kind.on),
 )
 
 run_sample(scene, *props)

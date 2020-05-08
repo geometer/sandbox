@@ -76,7 +76,7 @@ class CircleSet:
     def point_and_circle_property(self, pt, cpoints):
         circle = self.by_three_points(*cpoints, False)
         if circle and pt in circle.points:
-            prop = PointAndCircleProperty(pt, *cpoints, 0)
+            prop = PointAndCircleProperty(pt, *cpoints, PointAndCircleProperty.Kind.on)
             prop.rule = 'synthetic'
             prop.reason = Reason(-2, LazyComment('Temp comment'), [])
             prop.reason.obsolete = False
