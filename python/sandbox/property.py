@@ -34,13 +34,16 @@ class PointAndCircleProperty(Property):
     """
     Point location relatively to circle
     """
+    @staticmethod
+    def unique_key(point, cpoints):
+        return (point, frozenset(cpoints))
+
     def __init__(self, point, cpoint0, cpoint1, cpoint2, location):
         super().__init__()
         self.point = point
         self.circle = (cpoint0, cpoint1, cpoint2)
         self.location = location
-        self.circle_key = frozenset(self.circle)
-        self.property_key = (self.point, self.circle_key)
+        self.property_key = PointAndCircleProperty.unique_key(self.point, self.circle)
 
     def keys(self):
         return self.property_key
@@ -55,10 +58,7 @@ class PointAndCircleProperty(Property):
             return LazyComment('%s lies on the circle through %s, %s, and %s', self.point, *self.circle)
 
     def compare_values(self, other):
-        return self.inside == other.inside
-
-    def same_circle(other):
-        return self.circle_key == other.circle_key
+        return self.location == other.location
 
     def __eq__(self, other):
         return isinstance(other, PointAndCircleProperty) and self.circle == other.circle

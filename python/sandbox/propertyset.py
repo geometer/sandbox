@@ -73,6 +73,16 @@ class CircleSet:
             for points in itertools.combinations(circle.points, n):
                 yield points
 
+    def point_and_circle_property(self, pt, cpoints):
+        circle = self.by_three_points(*cpoints, False)
+        if circle and pt in circle.points:
+            prop = PointAndCircleProperty(pt, *cpoints, 0)
+            prop.rule = 'synthetic'
+            prop.reason = Reason(-2, LazyComment('Temp comment'), [])
+            prop.reason.obsolete = False
+            return prop
+        return None
+
     def dump(self):
         for circle in self.__all_circles:
             print('circle ' + ', '.join([str(pt) for pt in circle.points]))
@@ -755,21 +765,20 @@ class PropertySet:
 
     def __getitem__(self, prop):
         existing = self.__full_set.get(prop)
-        if existing:
-            if not existing.compare_values(prop):
-                raise ContradictionError('different values: `%s` vs `%s`' % (prop, existing))
-            return existing
-        if isinstance(prop, AngleRatioProperty):
-            #TODO: check ratio value for contradiction
-            return self.angle_ratio_property(prop.angle0, prop.angle1)
-        if isinstance(prop, AngleValueProperty) and prop.degree != 0:
-            #TODO: check degree for contradiction
-            return self.angle_value_property(prop.angle)
-        if isinstance(prop, SameCyclicOrderProperty):
-            return self.same_cyclic_order_property(prop.cycle0, prop.cycle1)
+        if not existing:
+            if isinstance(prop, AngleRatioProperty):
+                existing = self.angle_ratio_property(prop.angle0, prop.angle1)
+            elif isinstance(prop, AngleValueProperty) and prop.degree != 0:
+                existing = self.angle_value_property(prop.angle)
+            elif isinstance(prop, SameCyclicOrderProperty):
+                existing = self.same_cyclic_order_property(prop.cycle0, prop.cycle1)
+            elif isinstance(prop, PointAndCircleProperty):
+                existing = self.point_and_circle_property(prop.point, prop.circle)
         #TODO: LengthRatioProperty
         #TODO: EqualLengthRatiosProperty
-        return None
+        if existing and not existing.compare_values(prop):
+            raise ContradictionError('different values: `%s` vs `%s`' % (prop, existing))
+        return existing
 
     def collinearity_property(self, pt0, pt1, pt2):
         return self.__collinearity.get(frozenset([pt0, pt1, pt2]))
@@ -906,6 +915,12 @@ class PropertySet:
 
     def n_concyclic_points(self, n):
         return self.circles.n_concyclic_points(n)
+
+    def point_and_circle_property(self, pt, cpoints):
+        prop = self.__full_set.get(PointAndCircleProperty.unique_key(pt, cpoints))
+        if prop:
+            return prop
+        return self.circles.point_and_circle_property(pt, cpoints)
 
     def __intersection_of_lines(self, segment0, segment1):
         common = next((pt for pt in segment0.points if pt in segment1.points), None)

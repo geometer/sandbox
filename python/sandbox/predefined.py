@@ -135,7 +135,7 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
         if len(pts) >= 4:
             yield (
                 ConcyclicPointsProperty(*pts),
-                LazyComment('four points on the same circle')
+                LazyComment('points on the same circle')
             )
 
     for cnstr in scene.constraints(Constraint.Kind.opposite_side):
