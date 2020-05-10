@@ -30,6 +30,7 @@ class Explainer:
             PointsOnCircleRule(self.context),
             InscribedAnglesWithCommonCircularArcRule(self.context),
             TwoChordsIntersectionRule(self.context),
+            ThreeCollinearPointsOnCircleRule(self.context),
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),
             LengthRatiosWithCommonDenominatorRule(self.context),

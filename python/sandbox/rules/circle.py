@@ -81,6 +81,37 @@ class PointsOnCircleRule(SingleSourceRule):
                 [prop, ncl]
             )
 
+class ThreeCollinearPointsOnCircleRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        return self.context.n_concyclic_points(3)
+
+    def apply(self, points):
+        key = frozenset(points)
+        if key in self.processed:
+            return
+        col = self.context.collinearity_property(*points)
+        if col is None:
+            return
+        if not col.collinear:
+            self.processed.add(key)
+            return
+        pairs = list(itertools.combinations(points, 2))
+        neq = [self.context.coincidence_property(*pair) for pair in pairs]
+        for ne0, ne1, pair in ((neq[0], neq[1], pairs[2]), (neq[0], neq[2], pairs[1]), (neq[1], neq[2], pairs[0])):
+            if ne0 and ne1 and not ne0.coincident and not ne1.coincident:
+                self.processed.add(key)
+                yield (
+                    PointsCoincidenceProperty(*points[:2], True),
+                    # TODO: circle name
+                    LazyComment('%s, %s, and %s are collinear points that lie on circle XXX', *points),
+                    # concyclic points
+                    [col, ne0, ne1]
+                )
+
 class TwoChordsIntersectionRule(Rule):
     def sources(self):
         return self.context.n_concyclic_points(4)
