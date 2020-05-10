@@ -165,27 +165,20 @@ class InscribedAnglesWithCommonCircularArcRule(Rule):
                 )
                 if sos is None:
                     continue
-                ang0 = p0[0].angle(*p1)
-                ang1 = p0[1].angle(*p1)
-                if sos.same:
-                    yield (
-                        AngleRatioProperty(ang0, ang1, 1),
-                        LazyComment('%s and %s are inscribed and subtend the same arc', ang0, ang1),
-                        # TODO: add concyclic points reasons
-                        [sos]
-                    )
-                else:
-                    # TODO: sum = 180 degree
-                    pass
-                ang0 = p1[0].angle(*p0)
-                ang1 = p1[1].angle(*p0)
-                if sos.same:
-                    yield (
-                        AngleRatioProperty(ang0, ang1, 1),
-                        LazyComment('%s and %s are inscribed and subtend the same arc', ang0, ang1),
-                        # TODO: add concyclic points reasons
-                        [sos]
-                    )
-                else:
-                    # TODO: sum = 180 degree
-                    pass
+                for pp0, pp1 in ((p0, p1), (p1, p0)):
+                    ang0 = pp0[0].angle(*pp1)
+                    ang1 = pp0[1].angle(*pp1)
+                    if sos.same:
+                        yield (
+                            AngleRatioProperty(ang0, ang1, 1),
+                            LazyComment('%s and %s are inscribed and subtend the same arc', ang0, ang1),
+                            # TODO: add concyclic points reasons
+                            [sos]
+                        )
+                    else:
+                        yield (
+                            SumOfTwoAnglesProperty(ang0, ang1, 180),
+                            LazyComment('%s and %s are inscribed and subtend complementary arcs', ang0, ang1),
+                            # TODO: add concyclic points reasons
+                            [sos]
+                        )
