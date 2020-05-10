@@ -81,6 +81,44 @@ class PointsOnCircleRule(SingleSourceRule):
                 [prop, ncl]
             )
 
+class TwoChordsIntersectionRule(Rule):
+    def sources(self):
+        return self.context.n_concyclic_points(4)
+
+    def apply(self, points):
+        # TODO: implement duplicate protection
+        for inds0, inds1 in [((0, 1), (2, 3)), ((0, 2), (1, 3)), ((0, 3), (1, 2))]:
+            pair0 = [points[i] for i in inds0]
+            pair1 = [points[i] for i in inds1]
+            segment0 = pair0[0].segment(pair0[1])
+            segment1 = pair1[0].segment(pair1[1])
+            crossing, premises = self.context.intersection_of_lines(segment0, segment1)
+            if crossing is None:
+                continue
+            if crossing in pair0 or crossing in pair1:
+                continue
+            angle0 = crossing.angle(*pair0)
+            angle1 = crossing.angle(*pair1)
+            av0 = self.context.angle_value_property(angle0)
+            av1 = self.context.angle_value_property(angle1)
+            for av, angle in ((av0, angle1), (av1, angle0)):
+                if av is None:
+                    continue
+                if av.degree == 0:
+                    # TODO: circle name
+                    comment = LazyComment('%s lies outside of circle XXX', crossing),
+                elif av.degree == 180:
+                    # TODO: circle name
+                    comment = LazyComment('%s lies inside circle XXX', crossing),
+                else:
+                    assert False, 'Contradiction'
+                yield (
+                    AngleValueProperty(angle, av.degree),
+                    comment,
+                    # TODO: concyclic property
+                    premises
+                )
+
 class InscribedAnglesWithCommonCircularArcRule(Rule):
     def sources(self):
         return self.context.n_concyclic_points(4)

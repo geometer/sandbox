@@ -29,6 +29,7 @@ class Explainer:
             #ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule(self.context),
             PointsOnCircleRule(self.context),
             InscribedAnglesWithCommonCircularArcRule(self.context),
+            TwoChordsIntersectionRule(self.context),
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),
             LengthRatiosWithCommonDenominatorRule(self.context),

@@ -915,15 +915,6 @@ class PropertySet:
                 return (candidate, [prop, col])
         return (None, [])
 
-    def intersection_of_lines(self, segment0, segment1):
-        key = frozenset([segment0, segment1])
-        value = self.__intersections.get(key)
-        if value is None:
-            value = self.__intersection_of_lines(segment0, segment1)
-            if value[0]:
-                self.__intersections[key] = value
-        return value
-
     def n_concyclic_points(self, n):
         return self.circles.n_concyclic_points(n)
 
@@ -932,6 +923,15 @@ class PropertySet:
         if prop:
             return prop
         return self.circles.point_and_circle_property(pt, cpoints)
+
+    def intersection_of_lines(self, segment0, segment1):
+        key = frozenset([segment0, segment1])
+        value = self.__intersections.get(key)
+        if value is None:
+            value = self.__intersection_of_lines(segment0, segment1)
+            if value[0]:
+                self.__intersections[key] = value
+        return value
 
     def __intersection_of_lines(self, segment0, segment1):
         common = next((pt for pt in segment0.points if pt in segment1.points), None)
