@@ -1,5 +1,6 @@
 from enum import Enum, auto
 import itertools
+import sympy as sp
 
 from .figure import Figure
 from .scene import Scene
@@ -352,7 +353,9 @@ class AngleKindProperty(Property):
         return hash(AngleKindProperty) + hash(self.angle)
 
 class LinearAngleProperty(Property):
-    pass
+    @property
+    def equation(self):
+        raise Exception('The method should be implemented in descendants')
 
 class AngleValueProperty(LinearAngleProperty):
     """
@@ -367,6 +370,10 @@ class AngleValueProperty(LinearAngleProperty):
         super().__init__()
         self.angle = angle
         self.degree = normalize_number(degree)
+
+    @property
+    def equation(self):
+        return sp.Symbol(str(self.angle)) - self.degree
 
     @property
     def essential(self):
@@ -419,6 +426,10 @@ class AngleRatioProperty(LinearAngleProperty):
         return [self.angle0, self.angle1]
 
     @property
+    def equation(self):
+        return sp.Symbol(str(self.angle0)) - self.value * sp.Symbol(str(self.angle1))
+
+    @property
     def essential(self):
         return not self.same
 
@@ -456,6 +467,10 @@ class SumOfThreeAnglesProperty(LinearAngleProperty):
         return self.angles
 
     @property
+    def equation(self):
+        return sp.Symbol(str(self.angles[0])) + sp.Symbol(str(self.angles[1])) + sp.Symbol(str(self.angles[2])) - self.degree
+
+    @property
     def description(self):
         return LazyComment('%s + %s + %s = %sº', *self.angles, self.degree)
 
@@ -480,6 +495,10 @@ class SumOfTwoAnglesProperty(LinearAngleProperty):
 
     def keys(self):
         return self.angles
+
+    @property
+    def equation(self):
+        return sp.Symbol(str(self.angles[0])) + sp.Symbol(str(self.angles[1])) - self.degree
 
     @property
     def description(self):
