@@ -2,11 +2,11 @@ ABC is a non-degenerate triangle
 
 A B C_1 is an equilateral triangle
 C_1 is outward of triangle ABC
-C_2 is the centre of ABC_1
+  C_2 is a centre of the   ABC_1
 
-A B_1 C is an equilateral triangle
+A, B_1,C is equilateral triangle
 B_1 is outward of ABC
-B_2 is the centre of ACB_1
+B_2 is the center of ACB_1
 
 A_1BC is an equilateral triangle
 A_1 is outward of ABC
