@@ -4,6 +4,7 @@ import sys
 
 class Token:
     class Kind(Enum):
+        number       = auto()
         identifier   = auto()
         article      = auto()
         noun         = auto()
@@ -19,7 +20,9 @@ class Token:
 
     @staticmethod
     def __detect(text):
-        if re.match(r'[A-Z_0-9]+', text):
+        if re.match(r'[\d]+', text):
+            return (Token.Kind.number, text)
+        if re.match(r'[A-Z_\d]+', text):
             return (Token.Kind.identifier, text)
         word = text.lower()
         if word.endswith('center'):
@@ -60,7 +63,7 @@ class Token:
         return hash(self.type) + hash(self.canonical)
 
 def tokenize(string):
-    return [Token(elt) for elt in filter(None, re.split(r'[^a-zA-Z0-9_-]+', string))]
+    return [Token(elt) for elt in filter(None, re.split(r'[^a-zA-Z0-9_º|-]+', string))]
 
 with open(sys.argv[1]) as f:
     unknown_words = {}
