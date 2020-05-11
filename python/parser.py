@@ -24,15 +24,15 @@ class Token:
         word = text.lower()
         if word.endswith('center'):
             word = word[:-6] + 'centre'
-        if word in ('triangle', 'square', 'centre', 'altitude', 'incentre', 'orthocentre', 'circumcentre', 'centroid', 'point', 'segment', 'line', 'vector', 'halfline', 'intersection'):
+        if word in ('triangle', 'square', 'centre', 'altitude', 'incentre', 'orthocentre', 'circumcentre', 'centroid', 'point', 'segment', 'line', 'vector', 'halfline', 'intersection', 'circle', 'circumcircle'):
             return (Token.Kind.noun, word)
         if word in ('equilateral', 'non-degenerate', 'collinear', 'isosceles'):
             return (Token.Kind.adjective, word)
-        if word in ('inward', 'outward', 'inside', 'outside'):
+        if word in ('inward', 'outward', 'inside', 'outside', 'acute', 'obtuse', 'right', 'not'):
             return (Token.Kind.adverb, word)
-        if word in ('of', 'in'):
+        if word in ('of', 'in', 'with'):
             return (Token.Kind.preposition, word)
-        if word in ('is', 'lies', 'are'):
+        if word in ('is', 'lies', 'are', 'does', 'coincide'):
             return (Token.Kind.verb, word)
         if word in ('a', 'an', 'the'):
             return (Token.Kind.article, word)
@@ -53,11 +53,24 @@ class Token:
             return '[%s]' % self.canonical
         return self.canonical
 
+    def __eq__(self, other):
+        return self.type == other.type and self.canonical == other.canonical
+
+    def __hash__(self):
+        return hash(self.type) + hash(self.canonical)
+
 def tokenize(string):
-    tokens = [Token(elt) for elt in filter(None, re.split(r'[^a-zA-Z0-9_-]+', string))]
-    if tokens:
-        print(' '.join(str(t) for t in tokens))
+    return [Token(elt) for elt in filter(None, re.split(r'[^a-zA-Z0-9_-]+', string))]
 
 with open(sys.argv[1]) as f:
+    unknown_words = {}
     for line in f.readlines():
-        tokenize(line)
+        tokens = tokenize(line)
+        for tok in tokens:
+            if tok.type == Token.Kind.unknown:
+                unknown_words[tok] = unknown_words.get(tok, 0) + 1
+        if tokens:
+            print(' '.join(str(tok) for tok in tokens))
+    print('\n%d token(s) of unknown type' % len(unknown_words))
+    for tok, count in unknown_words.items():
+        print('%s:\t%s' % (tok, count))

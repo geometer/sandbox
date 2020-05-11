@@ -1,0 +1,19 @@
+ABC is a non-degenerate triangle
+circ is the circumcircle of triangle ABC
+H is the orthocentre of triangle ABC
+
+AA_1 is an altitude of ABC
+A_2 is an intersection of circ and AA_1
+A_2 does not coincide with A
+
+BB_1 is an altitude of ABC
+B_2 is an intersection of circ and BB_1
+B_2 does not coincide with B
+
+CC_1 is an altitude of ABC
+C_2 is an intersection of circ and CC_1
+C_2 does not coincide with C
+
+Angle ABC is acute
+BAC is acute
+BCA is acute
