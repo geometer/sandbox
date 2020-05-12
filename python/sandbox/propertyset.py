@@ -412,7 +412,8 @@ class AngleRatioPropertySet:
         coef = fam.angle_to_ratio[angle0]
         comment, premises = fam.explanation_from_path(path, coef)
         value = divide(coef, fam.angle_to_ratio[angle1])
-        prop = AngleRatioProperty(angle0, angle1, value)
+        same = value == 1 and all(isinstance(prop, AngleRatioProperty) and prop.same for prop in [fam.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])])
+        prop = AngleRatioProperty(angle0, angle1, value, same=same)
         prop.rule = 'synthetic'
         prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
         prop.reason.obsolete = all(p.reason.obsolete for p in premises)
