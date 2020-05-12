@@ -231,11 +231,25 @@ class Scene(CoreScene):
         pts[2].segment(pts[3]).perpendicular_constraint(pts[0].segment(pts[3]), **kwargs)
         pts[2].segment(pts[3]).perpendicular_constraint(pts[1].segment(pts[2]), **kwargs)
 
+        self.convex_quadrilateral_constraint(*pts, **kwargs)
+
         #TODO: this is a hack for sketches
         pts[0].line_through(pts[1])
         pts[1].line_through(pts[2])
         pts[2].line_through(pts[3])
         pts[3].line_through(pts[0])
+
+    def convex_quadrilateral_constraint(self, *points, **kwargs):
+        assert len(points) == 4
+        if 'comment' not in kwargs:
+            kwargs = dict(kwargs)
+            kwargs['comment'] = LazyComment('%s is a convex quadrangle', Scene.Polygon(*points))
+
+        for i in range(0, 4):
+            pts = [points[j % 4] for j in range(i, i + 4)]
+            pts[0].same_side_constraint(pts[1], pts[2].line_through(pts[3], layer='auxiliary'), **kwargs) 
+        points[0].opposite_side_constraint(points[2], points[1].line_through(points[3], layer='auxiliary'), **kwargs) 
+        points[1].opposite_side_constraint(points[3], points[0].line_through(points[2], layer='auxiliary'), **kwargs) 
 
     def parallelogram(self, labels=None):
         """
