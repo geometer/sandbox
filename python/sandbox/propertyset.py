@@ -15,8 +15,11 @@ class ContradictionError(Exception):
 class CircleSet:
     class Circle:
         def __init__(self, points_key):
+            self.main_key = points_key
             self.keys = {points_key}
             self.points_on = set(points_key)
+            self.points_inside = set()
+            self.points_outside = set()
 
     def __init__(self, context):
         self.context = context
@@ -69,16 +72,24 @@ class CircleSet:
                 self.by_three_points(*prop.points, True)
         elif isinstance(prop, PointAndCircleProperty):
             circle = self.by_three_points(*prop.circle, True)
-            self.add_point_to_circle(prop.point, circle)
+            if prop.location == PointAndCircleProperty.Kind.on:
+                self.add_point_to_circle(prop.point, circle)
+            elif prop.location == PointAndCircleProperty.Kind.inside:
+                circle.points_inside.add(prop.point)
+            elif prop.location == PointAndCircleProperty.Kind.outside:
+                circle.points_outside.add(prop.point)
 
     def n_concyclic_points(self, n):
         for circle in self.__all_circles:
             for points in itertools.combinations(circle.points_on, n):
-                yield points
+                yield (points, circle, [])
 
     def point_and_circle_property(self, pt, cpoints):
         circle = self.by_three_points(*cpoints, False)
-        if circle and pt in circle.points_on:
+        if not circle:
+            return None
+
+        if pt in circle.points_on:
             prop = PointAndCircleProperty(pt, *cpoints, PointAndCircleProperty.Kind.on)
             prop.rule = 'synthetic'
             if pt in cpoints:
@@ -93,6 +104,19 @@ class CircleSet:
                 prop.reason = Reason(-2, LazyComment('Temp comment'), [])
                 prop.reason.obsolete = False
             return prop
+        elif pt in circle.points_inside:
+            prop = PointAndCircleProperty(pt, *cpoints, PointAndCircleProperty.Kind.inside)
+            prop.rule = 'synthetic'
+            prop.reason = Reason(-2, LazyComment('Temp comment'), [])
+            prop.reason.obsolete = False
+            return prop
+        elif pt in circle.points_outside:
+            prop = PointAndCircleProperty(pt, *cpoints, PointAndCircleProperty.Kind.outside)
+            prop.rule = 'synthetic'
+            prop.reason = Reason(-2, LazyComment('Temp comment'), [])
+            prop.reason.obsolete = False
+            return prop
+
         return None
 
     def dump(self):
@@ -973,6 +997,11 @@ class PropertySet:
         if prop:
             return prop
         return self.circles.point_and_circle_property(pt, cpoints)
+
+    def collinear_points_with_properties(self, pt0, pt1):
+        for prop in self.list(PointsCollinearityProperty, [pt0.segment(pt1)]):
+            if prop.collinear:
+                yield (next(pt for pt in prop.points if pt not in (pt0, pt1)), prop)
 
     def intersection_of_lines(self, segment0, segment1):
         key = frozenset([segment0, segment1])

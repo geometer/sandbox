@@ -87,7 +87,7 @@ class ThreeCollinearPointsOnCircleRule(Rule):
         self.processed = set()
 
     def sources(self):
-        return self.context.n_concyclic_points(3)
+        return [triple[0] for triple in self.context.n_concyclic_points(3)]
 
     def apply(self, points):
         key = frozenset(points)
@@ -114,7 +114,7 @@ class ThreeCollinearPointsOnCircleRule(Rule):
 
 class TwoChordsIntersectionRule(Rule):
     def sources(self):
-        return self.context.n_concyclic_points(4)
+        return [triple[0] for triple in self.context.n_concyclic_points(4)]
 
     def apply(self, points):
         # TODO: implement duplicate protection
@@ -150,9 +150,45 @@ class TwoChordsIntersectionRule(Rule):
                     premises
                 )
 
+class PointsOnChordRule(Rule):
+    def sources(self):
+        return self.context.n_concyclic_points(2)
+
+    def apply(self, triple):
+        points, circle, premises = triple
+        for pt, _ in self.context.collinear_points_with_properties(*points):
+            av = self.context.angle_value_property(pt.angle(*points))
+            pc = self.context.point_and_circle_property(pt, circle.main_key)
+            if av:
+                if av.degree == 0:
+                    location = PointAndCircleProperty.Kind.outside
+                    comment = LazyComment('%s lies on line %s', pt, points[0].segment(points[1]).as_line)
+                elif av.degree == 180:
+                    location = PointAndCircleProperty.Kind.inside
+                    comment = LazyComment('%s lies on chord %s', pt, points[0].segment(points[1]))
+                else:
+                    assert False, 'Contradiction'
+                yield (
+                    PointAndCircleProperty(pt, *circle.main_key, location),
+                    comment,
+                    [av] + premises
+                )
+            if pc:
+                if pc.location == PointAndCircleProperty.Kind.inside:
+                    degree = 180
+                elif pc.location == PointAndCircleProperty.Kind.inside:
+                    degree = 0
+                else:
+                    continue
+                yield (
+                    AngleValueProperty(pt.angle(*points), degree),
+                    LazyComment('temp comment'),
+                    [pc] + premises
+                )
+
 class InscribedAnglesWithCommonCircularArcRule(Rule):
     def sources(self):
-        return self.context.n_concyclic_points(4)
+        return [triple[0] for triple in self.context.n_concyclic_points(4)]
 
     def apply(self, points):
         # TODO: implement duplicate protection
