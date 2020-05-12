@@ -207,10 +207,10 @@ class LinearAngleSet:
 #                print(eq)
             print('Total: %d symbols' % len(subset.symbols))
             print('Total: %d equations' % len(subset.equations))
-            solution = sp.solve(subset.equations)
+#            solution = sp.solve(subset.equations)
 #            for elt in solution.items():
 #                print(elt)
-            print('Total: %d elements' % len(solution))
+#            print('Total: %d elements' % len(solution))
 
 class AngleRatioPropertySet:
     class CommentFromPath:
