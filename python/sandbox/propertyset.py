@@ -313,7 +313,7 @@ class AngleRatioPropertySet:
 
     def __add_value_property(self, prop):
         self.__value_cache[prop.angle] = prop
-        if prop.degree in (0, 180):
+        if prop.degree == 0:
             # TODO: implement special families
             return
         fam = self.angle_to_family.get(prop.angle)
@@ -668,7 +668,7 @@ class PropertySet:
             #TODO: check ratio value for contradiction
             fam = self.__angle_ratios.angle_to_family.get(prop.angle0)
             return fam and prop.angle1 in fam.angle_to_ratio
-        if isinstance(prop, AngleValueProperty) and prop.degree not in (0, 180):
+        if isinstance(prop, AngleValueProperty) and prop.degree != 0:
             #TODO: check degree for contradiction
             fam = self.__angle_ratios.family_with_degree
             return fam and prop.angle in fam.angle_to_ratio
@@ -682,10 +682,10 @@ class PropertySet:
 
     def __getitem__(self, prop):
         existing = self.__full_set.get(prop)
-        if existing is None:
+        if not existing:
             if isinstance(prop, AngleRatioProperty):
                 existing = self.angle_ratio_property(prop.angle0, prop.angle1)
-            elif isinstance(prop, AngleValueProperty) and prop.degree not in (0, 180):
+            elif isinstance(prop, AngleValueProperty) and prop.degree != 0:
                 existing = self.angle_value_property(prop.angle)
             elif isinstance(prop, SameCyclicOrderProperty):
                 existing = self.same_cyclic_order_property(prop.cycle0, prop.cycle1)
@@ -716,7 +716,7 @@ class PropertySet:
         return self.__angle_ratios.value_properties()
 
     def angle_value_properties(self):
-        return [p for p in self.list(AngleValueProperty) if p.degree in (0, 180)] + self.nondegenerate_angle_value_properties()
+        return [p for p in self.list(AngleValueProperty) if p.degree == 0] + self.nondegenerate_angle_value_properties()
 
     def angle_ratio_property(self, angle0, angle1):
         return self.__angle_ratios.ratio_property(angle0, angle1)
