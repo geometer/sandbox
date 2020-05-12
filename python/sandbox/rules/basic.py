@@ -519,7 +519,7 @@ class EquidistantToPerpendicularRule(Rule):
             return
         yield (
             SameOrOppositeSideProperty(segment0, *pts0, False),
-            LazyComment('Perpendicular bisector %s separates endpoints of the segment %s', segment0.as_line, segment1),
+            LazyComment('perpendicular bisector %s separates endpoints of the segment %s', segment0.as_line, segment1),
             [cs0, cs1, ne0, ne1]
         )
 
