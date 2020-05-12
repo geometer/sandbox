@@ -682,20 +682,18 @@ class PropertySet:
 
     def __getitem__(self, prop):
         existing = self.__full_set.get(prop)
-        if existing:
-            if not existing.compare_values(prop):
-                raise ContradictionError('different values: `%s` vs `%s`' % (prop, existing))
-            return existing
-        if isinstance(prop, AngleRatioProperty):
-            #TODO: check ratio value for contradiction
-            return self.angle_ratio_property(prop.angle0, prop.angle1)
-        if isinstance(prop, AngleValueProperty) and prop.degree not in (0, 180):
-            #TODO: check degree for contradiction
-            return self.angle_value_property(prop.angle)
+        if existing is None:
+            if isinstance(prop, AngleRatioProperty):
+                existing = self.angle_ratio_property(prop.angle0, prop.angle1)
+            elif isinstance(prop, AngleValueProperty) and prop.degree not in (0, 180):
+                existing = self.angle_value_property(prop.angle)
+            elif isinstance(prop, SameCyclicOrderProperty):
+                existing = self.same_cyclic_order_property(prop.cycle0, prop.cycle1)
         #TODO: LengthRatioProperty
         #TODO: EqualLengthRatiosProperty
-        #TODO: SameCyclicOrderProperty
-        return None
+        if existing and not existing.compare_values(prop):
+            raise ContradictionError('different values: `%s` vs `%s`' % (prop, existing))
+        return existing
 
     def collinearity_property(self, pt0, pt1, pt2):
         return self.__collinearity.get(frozenset([pt0, pt1, pt2]))
@@ -792,7 +790,7 @@ class PropertySet:
 
     def same_cyclic_order_property(self, cycle0, cycle1):
         prop = SameCyclicOrderProperty(cycle0, cycle1)
-        existing = self[prop]
+        existing = self.__full_set.get(prop)
         if existing:
             return existing
         comment, premises = self.__cyclic_orders.explanation(cycle0, cycle1)
