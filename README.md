@@ -23,7 +23,6 @@ Possible problems are
 
 * Python 3 (tested with 3.6 and 3.7)
 * Required libraries: numpy, scipy, sympy, networkx
-* Optional library: matplotlib (used in the sketcher only)
 
 **Implemented features**:
 
@@ -32,7 +31,6 @@ Possible problems are
 * Property hunter: a script that takes a scene placement and collects properties like “two triangles are similar” or “the ratio of two angles is integer” ([hunter.py](python/sandbox/hunter.py))
 * Explainer, an app that takes a scene, and applies rules to prove the facts about the scene. The explainer does not add any additional constructions nor make assumptions to analyse separate variants ([explainer.py](python/sandbox/explainer.py))
 * Web UI for explanations that shows the reason tree and a sketch of the scene. The sketch is implemented using [JSXGraph](https://jsxgraph.uni-bayreuth.de/wp/index.html). See examples in the [examples](examples) folder and `visualise_*.py` generator scripts in the [python](python) folder.
-* Sketcher: a simple app that takes scene, makes several placements, selects "the best one" and plots it using matplotlib ([sketcher.py](python/sketcher.py))
 
 **Tests and samples**:
 
