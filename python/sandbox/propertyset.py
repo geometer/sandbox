@@ -16,7 +16,7 @@ class CircleSet:
     class Circle:
         def __init__(self, points_key):
             self.keys = {points_key}
-            self.points = set(points_key)
+            self.points_on = set(points_key)
 
     def __init__(self, context):
         self.context = context
@@ -24,11 +24,11 @@ class CircleSet:
         self.__all_circles = set()
 
     def add_point_to_circle(self, point, circle):
-        if point in circle.points:
+        if point in circle.points_on:
             return
 
-        old = list(circle.points)
-        circle.points.add(point)
+        old = list(circle.points_on)
+        circle.points_on.add(point)
         duplicates = set()
         for pt0, pt1 in itertools.combinations(old, 2):
             dup = self.by_three_points(point, pt0, pt1, False)
@@ -39,7 +39,7 @@ class CircleSet:
     def __merge(self, circle, duplicates):
         for dup in duplicates:
             circle.keys.update(dup.keys)
-            circle.points.update(dup.points)
+            circle.points_on.update(dup.points_on)
             self.__all_circles.remove(dup)
             for key in dup.keys:
                 self.__circle_by_key[key] = circle
@@ -51,7 +51,7 @@ class CircleSet:
         if circle or not create_if_not_exists:
             return circle
 
-        existing = [circ for circ in self.__all_circles if points.issubset(circ.points)]
+        existing = [circ for circ in self.__all_circles if points.issubset(circ.points_on)]
         if existing:
             circle = existing[0]
             if len(existing) > 1:
@@ -73,12 +73,12 @@ class CircleSet:
 
     def n_concyclic_points(self, n):
         for circle in self.__all_circles:
-            for points in itertools.combinations(circle.points, n):
+            for points in itertools.combinations(circle.points_on, n):
                 yield points
 
     def point_and_circle_property(self, pt, cpoints):
         circle = self.by_three_points(*cpoints, False)
-        if circle and pt in circle.points:
+        if circle and pt in circle.points_on:
             prop = PointAndCircleProperty(pt, *cpoints, PointAndCircleProperty.Kind.on)
             prop.rule = 'synthetic'
             if pt in cpoints:
@@ -97,7 +97,7 @@ class CircleSet:
 
     def dump(self):
         for circle in self.__all_circles:
-            print('circle ' + ', '.join([str(pt) for pt in circle.points]) + ' %d key(s)' % len(circle.keys))
+            print('circle ' + ', '.join([str(pt) for pt in circle.points_on]) + ' %d key(s)' % len(circle.keys))
         print('%d circles by %d keys' % (len(self.__all_circles), len(self.__circle_by_key)))
 
 class CyclicOrderPropertySet:
