@@ -72,6 +72,7 @@ class Explainer:
             SameAngleRule2(self.context),
             SupplementaryAnglesRule(self.context),
             VerticalAnglesRule(self.context),
+            ReversedVerticalAnglesRule(self.context),
             CorrespondingAndAlternateAnglesRule(self.context),
             CyclicOrderRule(self.context),
             PlanePositionsToLinePositionsRule(self.context),

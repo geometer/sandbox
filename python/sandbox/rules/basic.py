@@ -828,6 +828,44 @@ class VerticalAnglesRule(Rule):
             [av0, av1]
         )
 
+class ReversedVerticalAnglesRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {} # pair (prop, oppo) => mask
+
+    def sources(self):
+        return [p for p in self.context.angle_value_properties_for_degree(180) if p.angle.vertex]
+
+    def apply(self, prop):
+        angle = prop.angle
+        line = angle.vector0.end.segment(angle.vector1.end)
+        for oppo in self.context.list(SameOrOppositeSideProperty, [line]):
+            if oppo.same:
+                continue
+            key = (prop, oppo)
+            mask = self.processed.get(key, 0)
+            if mask == 0x3:
+                continue
+            original = mask
+            for pt0, pt1, bit in ((*oppo.points, 0x1), (*reversed(oppo.points), 0x2)):
+                if mask & bit:
+                    continue
+                ang0 = angle.vertex.angle(angle.vector0.end, pt0)
+                ang1 = angle.vertex.angle(angle.vector1.end, pt1)
+                ar = self.context.angle_ratio_property(ang0, ang1)
+                if ar is None:
+                    continue
+                mask |= bit
+                if ar.value != 1:
+                    continue
+                yield (
+                    AngleValueProperty(angle.vertex.angle(pt0, pt1), 180),
+                    LazyComment('%s = %s and %s lies on segment %s', ang0, ang1, angle.vertex, angle.vector0.end.segment(angle.vector1.end)),
+                    [prop, ar, oppo]
+                )
+            if mask != original:
+                self.processed[key] = mask
+
 class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
     property_type = SameOrOppositeSideProperty
 
