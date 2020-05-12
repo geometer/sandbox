@@ -352,7 +352,7 @@ class PerpendicularSegmentsRule(SingleSourceRule):
 
 class Degree90ToPerpendicularSegmentsRule(Rule):
     def sources(self):
-        return [p for p in self.context.nondegenerate_angle_value_properties() if p.degree == 90]
+        return self.context.angle_value_properties_for_degree(90)
 
     def apply(self, prop):
         if not prop.reason.obsolete:
@@ -807,7 +807,7 @@ class AngleTypesInObtuseangledTriangleRule(SingleSourceRule):
 
 class VerticalAnglesRule(Rule):
     def sources(self):
-        return itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 180], 2)
+        return itertools.combinations([av for av in self.context.angle_value_properties_for_degree(180) if av.angle.vertex], 2)
 
     def apply(self, src):
         av0, av1 = src
@@ -941,21 +941,53 @@ class SameAngleRule(SingleSourceRule):
         for ne in self.context.list(PointsCoincidenceProperty):
             if ne.coincident or prop.reason.obsolete and ne.reason.obsolete:
                 continue
-            vec = ne.points[0].vector(ne.points[1])
+            common0 = next((pt for pt in ne.points if pt in ang.vector0.points), None)
+            if common0 is None:
+                continue
+            common1 = next((pt for pt in ne.points if pt in ang.vector1.points), None)
+            if common1 is None:
+                continue
+            vec = common0.vector(next(pt for pt in ne.points if pt != common0))
             if vec.as_segment in (ang.vector0.as_segment, ang.vector1.as_segment):
                 continue
-            for ngl0, cmpl0 in good_angles(vec, ang.vector0):
-                for ngl1, cmpl1 in good_angles(vec, ang.vector1):
-                    if cmpl0 == cmpl1:
-                        same = ngl0.vertex and ngl0.vertex == ngl1.vertex
-                        new_prop = AngleRatioProperty(ngl0, ngl1, 1, same=same)
-                    else:
-                        new_prop = SumOfTwoAnglesProperty(ngl0, ngl1, 180)
-                    yield (
-                        new_prop,
-                        LazyComment('common ray %s, and %s ↑↑ %s', vec, ang.vector0, ang.vector1),
-                        [prop, ne]
-                    )
+
+            if ang.vector0.start == common0:
+                vec0 = ang.vector0
+                rev = False
+            else:
+                vec0 = ang.vector0.reversed
+                rev = True
+            ngl0 = vec.angle(vec0)
+
+            if common0 == common1:
+                if ang.vector1.start == common1:
+                    vec1 = ang.vector1
+                else:
+                    vec1 = ang.vector1.reversed
+                    rev = not rev
+                ngl1 = vec.angle(vec1)
+            else:
+                if ang.vector1.start == common1:
+                    vec1 = ang.vector1
+                    rev = not rev
+                else:
+                    vec1 = ang.vector1.reversed
+                ngl1 = vec.reversed.angle(vec1)
+
+            if rev:
+                new_prop = SumOfTwoAnglesProperty(ngl0, ngl1, 180)
+                if common0 == common1:
+                    comment = LazyComment('supplementary angles: common side %s, and %s ↑↓ %s', vec.as_ray, vec0.as_ray, vec1.as_ray)
+                else:
+                    comment = LazyComment('consecutive angles: common line %s, and %s ↑↑ %s', vec.as_line, vec0.as_ray, vec1.as_ray)
+            else:
+                if common0 == common1:
+                    new_prop = AngleRatioProperty(ngl0, ngl1, 1, same=True)
+                    comment = LazyComment('same angle: common ray %s, and %s coincides with %s', vec.as_ray, vec0.as_ray, vec1.as_ray)
+                else:
+                    new_prop = AngleRatioProperty(ngl0, ngl1, 1)
+                    comment = LazyComment('alternate angles: common line %s, and %s ↑↓ %s', vec.as_line, vec0.as_ray, vec1.as_ray)
+            yield (new_prop, comment, [prop, ne])
 
 class SameAngleRule2(Rule):
     def sources(self):
