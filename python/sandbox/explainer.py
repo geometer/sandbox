@@ -173,10 +173,10 @@ class Explainer:
                     continue
 
                 comment = LazyComment('%s is the intersection of ray [%s) and segment [%s]', X, A.vector(D).as_ray, B.segment(C))
-                yield (AngleValueProperty(A.angle(D, X), 0), [comment], [pia] + reasons)
-                yield (AngleValueProperty(B.angle(C, X), 0), [comment], [pia] + reasons)
-                yield (AngleValueProperty(C.angle(B, X), 0), [comment], [pia] + reasons)
-                yield (AngleValueProperty(X.angle(B, C), 180), [comment], [pia] + reasons)
+                yield (AngleValueProperty(A.angle(D, X), 0), comment, [pia] + reasons)
+                yield (AngleValueProperty(B.angle(C, X), 0), comment, [pia] + reasons)
+                yield (AngleValueProperty(C.angle(B, X), 0), comment, [pia] + reasons)
+                yield (AngleValueProperty(X.angle(B, C), 180), comment, [pia] + reasons)
 
             for pia in self.context.list(PointInsideAngleProperty):
                 if pia.reason.obsolete:
