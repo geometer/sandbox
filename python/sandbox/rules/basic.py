@@ -412,7 +412,7 @@ class TwoPointsBelongsToTwoPerpendicularsRule(Rule):
             return
         yield (
             PointsCoincidenceProperty(*common.points, True),
-            LazyComment('%s and %s lie on perpendiculars to non-parallel lines %s and %s', *common.points, seg0, seg1),
+            LazyComment('%s and %s both lie on perpendiculars to non-parallel lines %s and %s', *common.points, seg0, seg1),
             [perp0, perp1, ncl]
         )
 
