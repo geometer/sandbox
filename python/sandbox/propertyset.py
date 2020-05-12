@@ -171,6 +171,23 @@ class AngleRatioPropertySet:
                 properties.append(prop)
             return properties
 
+        def value_properties_for_degree(self, degree):
+            properties = []
+            for angle, ratio in self.angle_to_ratio.items():
+                if self.degree * ratio != degree:
+                    continue
+                path = nx.algorithms.shortest_path(self.premises_graph, angle, self.degree)
+                if len(path) == 2:
+                    properties.append(self.premises_graph[path[0]][path[1]]['prop'])
+                    continue
+                comment, premises = self.explanation_from_path(path, ratio)
+                prop = AngleValueProperty(angle, degree)
+                prop.rule = 'synthetic'
+                prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+                prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+                properties.append(prop)
+            return properties
+
         def congruent_angles_with_vertex(self):
             reverse_map = {}
             for angle, ratio in self.angle_to_ratio.items():
@@ -257,6 +274,10 @@ class AngleRatioPropertySet:
     def value_properties(self):
         fam = self.family_with_degree
         return fam.value_properties() if fam else []
+
+    def value_properties_for_degree(self, degree):
+        fam = self.family_with_degree
+        return fam.value_properties_for_degree(degree) if fam else []
 
     def ratio_property(self, angle0, angle1):
         key = frozenset((angle0, angle1))
@@ -714,6 +735,9 @@ class PropertySet:
 
     def nondegenerate_angle_value_properties(self):
         return self.__angle_ratios.value_properties()
+
+    def angle_value_properties_for_degree(self, degree):
+        return self.__angle_ratios.value_properties_for_degree(degree)
 
     def angle_value_properties(self):
         return [p for p in self.list(AngleValueProperty) if p.degree == 0] + self.nondegenerate_angle_value_properties()

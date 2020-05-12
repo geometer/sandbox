@@ -352,7 +352,7 @@ class PerpendicularSegmentsRule(SingleSourceRule):
 
 class Degree90ToPerpendicularSegmentsRule(Rule):
     def sources(self):
-        return [p for p in self.context.nondegenerate_angle_value_properties() if p.degree == 90]
+        return self.context.angle_value_properties_for_degree(90)
 
     def apply(self, prop):
         if not prop.reason.obsolete:
@@ -797,7 +797,7 @@ class AngleTypesInObtuseangledTriangleRule(SingleSourceRule):
 
 class VerticalAnglesRule(Rule):
     def sources(self):
-        return itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 180], 2)
+        return itertools.combinations([av for av in self.context.angle_value_properties_for_degree(180) if av.angle.vertex], 2)
 
     def apply(self, src):
         av0, av1 = src
