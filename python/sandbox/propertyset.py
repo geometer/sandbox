@@ -168,20 +168,49 @@ class CyclicOrderPropertySet:
         return fam.explanation(cycle0.reversed, cycle1.reversed)
 
 class LinearAngleSet:
+    class Subset:
+        def __init__(self):
+            self.symbols = set()
+            self.equations = []
+
     def __init__(self):
-        self.__equations = []
+        self.__subsets = {} # symbol => subset
+        self.__all_subsets = []
 
     def add(self, prop):
-        self.__equations.append(prop.equation)
+        existing = []
+        for subset in [self.__subsets.get(sym) for sym in prop.equation.free_symbols]:
+            if subset and not subset in existing:
+                existing.append(subset)
+
+        if existing:
+            subset = existing[0]
+            if len(existing) > 1:
+                for duplicate in existing[1:]:
+                    subset.symbols.update(duplicate.symbols)
+                    subset.equations += duplicate.equations
+                    for sym in duplicate.symbols:
+                        self.__subsets[sym] = subset
+                    self.__all_subsets.remove(duplicate)
+        else:
+            subset = LinearAngleSet.Subset()
+            self.__all_subsets.append(subset)
+
+        subset.symbols.update(prop.equation.free_symbols)
+        subset.equations.append(prop.equation)
+        for sym in prop.equation.free_symbols:
+            self.__subsets[sym] = subset
 
     def dump(self):
-        for eq in self.__equations:
-            print(eq)
-        print('Total: %d equations' % len(self.__equations))
-        solution = sp.solve(self.__equations)
-        for elt in solution.items():
-            print(elt)
-        print('Total: %d elements' % len(solution))
+        for subset in self.__all_subsets:
+#            for eq in subset.equations:
+#                print(eq)
+            print('Total: %d symbols' % len(subset.symbols))
+            print('Total: %d equations' % len(subset.equations))
+            solution = sp.solve(subset.equations)
+#            for elt in solution.items():
+#                print(elt)
+            print('Total: %d elements' % len(solution))
 
 class AngleRatioPropertySet:
     class CommentFromPath:
