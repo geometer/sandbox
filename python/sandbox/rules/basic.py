@@ -1161,3 +1161,62 @@ class SameSideToInsideAngleRule(Rule):
                 comment,
                 [op0, op1]
             )
+
+class TwoPointsRelativelyToLineTransitivityRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        return [(p0, p1) for p0, p1 in itertools.combinations(self.context.list(SameOrOppositeSideProperty), 2) if p0.segment == p1.segment]
+
+    def apply(self, src):
+        key = frozenset(src)
+        if key in self.processed:
+            return
+        self.processed.add(key)
+
+        sos0, sos1 = src
+        if sos0.points[0] in sos1.points:
+            common = sos0.points[0]
+            other0 = sos0.points[1]
+        elif sos0.points[1] in sos1.points:
+            common = sos0.points[1]
+            other0 = sos0.points[0]
+        else:
+            return
+        other1 = sos1.points[0] if sos1.points[1] == common else sos1.points[1]
+        if sos0.same and sos1.same:
+            comment = LazyComment(
+                '%s, %s, and %s lies on the same side of %s',
+                other0, common, other1, sos0.segment.as_line
+            )
+            pts = (other0, other1)
+            premises = [sos0, sos1]
+        elif sos0.same:
+            comment = LazyComment(
+                '%s, %s lies on the same side of %s, %s is on the opposite side',
+                other0, common, sos0.segment.as_line, other1
+            )
+            pts = (other0, other1)
+            premises = [sos0, sos1]
+        elif sos1.same:
+            comment = LazyComment(
+                '%s, %s lies on the same side of %s, %s is on the opposite side',
+                other1, common, sos0.segment.as_line, other0
+            )
+            pts = (other1, other0)
+            premises = [sos1, sos0]
+        else:
+            comment = LazyComment(
+                '%s, %s lies on opposite sides of %s, and %s, %s too',
+                other0, common, sos0.segment.as_line, common, other1
+            )
+            pts = (other0, other1)
+            premises = [sos0, sos1]
+
+        yield (
+            SameOrOppositeSideProperty(sos0.segment, *pts, sos0.same == sos1.same),
+            comment,
+            premises
+        )
