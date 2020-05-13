@@ -21,14 +21,12 @@ class SumOfAngles180DegreeRule(Rule):
             return
         pt0 = next(pt for pt in prop.angles[0].endpoints if pt != common)
         pt1 = next(pt for pt in prop.angles[1].endpoints if pt != common)
-        try:
-            oppo = self.context[SameOrOppositeSideProperty(prop.angles[0].vertex.segment(common), pt0, pt1, False)]
-        except: # TODO: we process here case of oppo.same == True; do the same with no try/except
-            self.processed.add(prop)
-            return
+        oppo = self.context.two_points_relatively_to_line_property(prop.angles[0].vertex.segment(common), pt0, pt1)
         if oppo is None:
             return
         self.processed.add(prop)
+        if oppo.same:
+            return
         yield (
             AngleValueProperty(prop.angles[0].vertex.angle(pt0, pt1), 180),
             LazyComment('%s + %s', prop.angles[0], prop.angles[1]),
@@ -469,20 +467,19 @@ class PerpendicularToEquidistantRule(SingleSourceRule):
                 [seg0.points[1].segment(pt) for pt in seg1.points]
             )
             cs = self.context.congruent_segments_property(*segments[0], True)
-            if cs:
-                if prop.reason.obsolete and cs.reason.obsolete:
-                    continue
-                new_prop = ProportionalLengthsProperty(*segments[1], 1)
-            else:
-                cs = self.context.congruent_segments_property(*segments[1], True)
-                if cs is None or prop.reason.obsolete and cs.reason.obsolete:
-                    continue
-                new_prop = ProportionalLengthsProperty(*segments[0], 1)
-            yield (
-                new_prop,
-                LazyComment('%s and %s lie on the same perpendicular to %s', *seg0.points, seg1),
-                [prop, cs]
-            )
+            if cs and not(prop.reason.obsolete and cs.reason.obsolete):
+                yield (
+                    ProportionalLengthsProperty(*segments[1], 1),
+                    LazyComment('%s lies on the perpendicular bisector to %s', seg0.points[1], seg1),
+                    [prop, cs]
+                )
+            cs = self.context.congruent_segments_property(*segments[1], True)
+            if cs and not(prop.reason.obsolete and cs.reason.obsolete):
+                yield (
+                    ProportionalLengthsProperty(*segments[0], 1),
+                    LazyComment('%s lies on the perpendicular bisector to %s', seg0.points[0], seg1),
+                    [prop, cs]
+                )
 
 class EquidistantToPerpendicularRule(Rule):
     def sources(self):
