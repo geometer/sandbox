@@ -737,6 +737,8 @@ class PropertySet:
         return self.__angle_ratios.value_properties()
 
     def angle_value_properties_for_degree(self, degree):
+        if degree == 0:
+            return [p for p in self.list(AngleValueProperty) if p.degree == 0]
         return self.__angle_ratios.value_properties_for_degree(degree)
 
     def angle_value_properties(self):
