@@ -79,6 +79,7 @@ class Explainer:
             CeviansIntersectionRule(self.context),
             SameSideToInsideAngleRule(self.context),
             TwoAnglesWithCommonSideRule(self.context),
+            TwoPointsRelativelyToLineTransitivityRule(self.context),
 
             EquilateralTriangleByThreeSidesRule(self.context),
             IsoscelesTriangleByConrguentLegsRule(self.context),
@@ -280,29 +281,6 @@ class Explainer:
                         LazyComment('%s lies inside segment %s, and %s is not on the line %s', av.angle.vertex, segment, vertex, segment),
                         [av, ncl]
                     )
-
-            for sos0, sos1 in itertools.combinations(self.context.list(SameOrOppositeSideProperty), 2):
-                if sos0.reason.obsolete and sos1.reason.obsolete:
-                    continue
-                if sos0.segment != sos1.segment:
-                    continue
-
-                if sos0.points[0] in sos1.points:
-                    common = sos0.points[0]
-                    other0 = sos0.points[1]
-                elif sos0.points[1] in sos1.points:
-                    common = sos0.points[1]
-                    other0 = sos0.points[0]
-                else:
-                    continue
-                other1 = sos1.points[0] if sos1.points[1] == common else sos1.points[1]
-                if other0 == other1:
-                    break
-                yield (
-                    SameOrOppositeSideProperty(sos0.segment, other0, other1, sos0.same == sos1.same),
-                    'Transitivity', #TODO: better comment
-                    [sos0, sos1]
-                )
 
             for aa in [p for p in self.context.list(AngleKindProperty) if p.kind == AngleKindProperty.Kind.acute]:
                 base = aa.angle
