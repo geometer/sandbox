@@ -69,7 +69,7 @@ class Explainer:
             AngleTypesInObtuseangledTriangleRule(self.context),
             PartOfAcuteAngleIsAcuteRule(self.context),
             SameAngleRule(self.context),
-            SameAngleRule2(self.context),
+            TransversalRule(self.context),
             SupplementaryAnglesRule(self.context),
             VerticalAnglesRule(self.context),
             ReversedVerticalAnglesRule(self.context),

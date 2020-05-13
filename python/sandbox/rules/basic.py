@@ -958,7 +958,7 @@ class SupplementaryAnglesRule(SingleSourceRule):
                 [prop, ne]
             )
 
-class SameAngleRule(SingleSourceRule):
+class TransversalRule(SingleSourceRule):
     property_type = AngleValueProperty
 
     def accepts(self, prop):
@@ -1017,7 +1017,7 @@ class SameAngleRule(SingleSourceRule):
                     comment = LazyComment('alternate angles: common line %s, and %s ↑↓ %s', vec.as_line, vec0.as_ray, vec1.as_ray)
             yield (new_prop, comment, [prop, ne])
 
-class SameAngleRule2(Rule):
+class SameAngleRule(Rule):
     def sources(self):
         return itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 0], 2)
 
