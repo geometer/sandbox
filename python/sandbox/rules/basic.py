@@ -905,7 +905,11 @@ class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
                 if all(p.reason.obsolete for p in reasons):
                     continue
                 for p in AngleValueProperty.generate(lp0.vector(pt0), lp1.vector(pt1), 0):
-                    yield (p, 'Sum of alternate angles = 180º', reasons)
+                    yield (
+                        p,
+                        LazyComment('sum of consecutive angles: %s + %s = 180º', angle0, angle1),
+                        reasons
+                    )
             else:
                 ratio_reason = self.context.angle_ratio_property(angle0, angle1)
                 if ratio_reason is None or prop.reason.obsolete and ratio_reason.reason.obsolete:
@@ -914,7 +918,7 @@ class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
                     for p in AngleValueProperty.generate(lp0.vector(pt0), pt1.vector(lp1), 0):
                         yield (
                             p,
-                            LazyComment('corresponding angles %s and %s are equal', angle0, angle1),
+                            LazyComment('alternate angles %s and %s are equal', angle0, angle1),
                             [prop, ratio_reason]
                         )
 
