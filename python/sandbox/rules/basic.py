@@ -838,6 +838,44 @@ class VerticalAnglesRule(Rule):
             [av0, av1]
         )
 
+class ReversedVerticalAnglesRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {} # pair (prop, oppo) => mask
+
+    def sources(self):
+        return [p for p in self.context.angle_value_properties_for_degree(180) if p.angle.vertex]
+
+    def apply(self, prop):
+        angle = prop.angle
+        line = angle.vector0.end.segment(angle.vector1.end)
+        for oppo in self.context.list(SameOrOppositeSideProperty, [line]):
+            if oppo.same:
+                continue
+            key = (prop, oppo)
+            mask = self.processed.get(key, 0)
+            if mask == 0x3:
+                continue
+            original = mask
+            for pt0, pt1, bit in ((*oppo.points, 0x1), (*reversed(oppo.points), 0x2)):
+                if mask & bit:
+                    continue
+                ang0 = angle.vertex.angle(angle.vector0.end, pt0)
+                ang1 = angle.vertex.angle(angle.vector1.end, pt1)
+                ar = self.context.angle_ratio_property(ang0, ang1)
+                if ar is None:
+                    continue
+                mask |= bit
+                if ar.value != 1:
+                    continue
+                yield (
+                    AngleValueProperty(angle.vertex.angle(pt0, pt1), 180),
+                    LazyComment('%s = %s and %s lies on segment %s', ang0, ang1, angle.vertex, angle.vector0.end.segment(angle.vector1.end)),
+                    [prop, ar, oppo]
+                )
+            if mask != original:
+                self.processed[key] = mask
+
 class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
     property_type = SameOrOppositeSideProperty
 
@@ -877,7 +915,11 @@ class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
                 if all(p.reason.obsolete for p in reasons):
                     continue
                 for p in AngleValueProperty.generate(lp0.vector(pt0), lp1.vector(pt1), 0):
-                    yield (p, 'Sum of alternate angles = 180º', reasons)
+                    yield (
+                        p,
+                        LazyComment('sum of consecutive angles: %s + %s = 180º', angle0, angle1),
+                        reasons
+                    )
             else:
                 ratio_reason = self.context.angle_ratio_property(angle0, angle1)
                 if ratio_reason is None or prop.reason.obsolete and ratio_reason.reason.obsolete:
@@ -886,7 +928,7 @@ class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
                     for p in AngleValueProperty.generate(lp0.vector(pt0), pt1.vector(lp1), 0):
                         yield (
                             p,
-                            LazyComment('corresponding angles %s and %s are equal', angle0, angle1),
+                            LazyComment('alternate angles %s and %s are equal', angle0, angle1),
                             [prop, ratio_reason]
                         )
 
@@ -930,11 +972,9 @@ class SupplementaryAnglesRule(SingleSourceRule):
                 [prop, ne]
             )
 
-class SameAngleRule(SingleSourceRule):
-    property_type = AngleValueProperty
-
-    def accepts(self, prop):
-        return prop.degree == 0
+class TransversalRule(Rule):
+    def sources(self):
+        return self.context.angle_value_properties_for_degree(0) + self.context.angle_value_properties_for_degree(180)
 
     def apply(self, prop):
         ang = prop.angle
@@ -951,12 +991,12 @@ class SameAngleRule(SingleSourceRule):
             if vec.as_segment in (ang.vector0.as_segment, ang.vector1.as_segment):
                 continue
 
+            rev = prop.degree == 180
             if ang.vector0.start == common0:
                 vec0 = ang.vector0
-                rev = False
             else:
                 vec0 = ang.vector0.reversed
-                rev = True
+                rev = not rev
             ngl0 = vec.angle(vec0)
 
             if common0 == common1:
@@ -974,6 +1014,9 @@ class SameAngleRule(SingleSourceRule):
                     vec1 = ang.vector1.reversed
                 ngl1 = vec.reversed.angle(vec1)
 
+            if ang.vertex is None and (vec0 == ang.vector0) != (vec1 == ang.vector1):
+                continue
+
             if rev:
                 new_prop = SumOfTwoAnglesProperty(ngl0, ngl1, 180)
                 if common0 == common1:
@@ -989,7 +1032,7 @@ class SameAngleRule(SingleSourceRule):
                     comment = LazyComment('alternate angles: common line %s, and %s ↑↓ %s', vec.as_line, vec0.as_ray, vec1.as_ray)
             yield (new_prop, comment, [prop, ne])
 
-class SameAngleRule2(Rule):
+class SameAngleRule(Rule):
     def sources(self):
         return itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 0], 2)
 

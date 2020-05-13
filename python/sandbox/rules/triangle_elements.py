@@ -84,7 +84,7 @@ class CorrespondingAnglesInSimilarTrianglesRule(SingleSourceRule):
             mask |= bit
             yield (
                 AngleRatioProperty(angles0[i], angles1[i], 1),
-                LazyComment('corresponding non-degenerate angles in similar %s and %s', prop.triangle0, prop.triangle1),
+                LazyComment('corresponding angles in similar %s and %s', prop.triangle0, prop.triangle1),
                 [prop] + ne
             )
 

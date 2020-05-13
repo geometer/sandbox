@@ -68,6 +68,10 @@
 	padding-right: 0.1em;
 }
 
+.sandbox-text .angle-comma {
+	padding-right: 0.2em;
+}
+
 .sandbox-text .figure {
 	cursor: pointer;
 	border-style: solid;

@@ -76,9 +76,10 @@ class Explainer:
             AngleTypesInObtuseangledTriangleRule(self.context),
             PartOfAcuteAngleIsAcuteRule(self.context),
             SameAngleRule(self.context),
-            SameAngleRule2(self.context),
+            TransversalRule(self.context),
             SupplementaryAnglesRule(self.context),
             VerticalAnglesRule(self.context),
+            ReversedVerticalAnglesRule(self.context),
             CorrespondingAndAlternateAnglesRule(self.context),
             CyclicOrderRule(self.context),
             PlanePositionsToLinePositionsRule(self.context),
@@ -125,6 +126,11 @@ class Explainer:
             prop.reason.obsolete = False
             insert(prop)
         elif len(reason.all_premises) < len(existing.reason.all_premises):
+            #### +++ HACK +++
+            # TODO: move this hack outside of explainer
+            if isinstance(prop, AngleRatioProperty) and prop.same:
+                existing.same = True
+            #### --- HACK ---
             reason.obsolete = existing.reason.obsolete
             if self.context.index_of(existing) is not None:
                 for pre in existing.reason.premises:
