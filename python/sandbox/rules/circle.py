@@ -196,7 +196,7 @@ class InscribedAnglesWithCommonCircularArcRule(Rule):
             pair0 = [points[i] for i in inds0]
             pair1 = [points[i] for i in inds1]
             for p0, p1 in ((pair0, pair1), (pair1, pair0)):
-                sos = self.context.two_points_and_line_configuration_property(
+                sos = self.context.two_points_relatively_to_line_property(
                     p0[0].segment(p0[1]), *p1
                 )
                 if sos is None:

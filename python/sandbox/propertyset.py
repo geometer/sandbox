@@ -767,7 +767,7 @@ class PropertySet:
         self.__collinearity = {} # {point, point, point} => prop
         self.__intersections = {} # {segment, segment} => point, [reasons]
         self.__similar_triangles = {} # (three points) => {(three points)}
-        self.__two_points_and_line_configuration = {} # key => SameOrOppositeSideProperty
+        self.__two_points_relatively_to_line = {} # key => SameOrOppositeSideProperty
 
     def add(self, prop):
         def put(key):
@@ -807,7 +807,7 @@ class PropertySet:
         elif type_key == SameCyclicOrderProperty:
             self.__cyclic_orders.add(prop)
         elif type_key == SameOrOppositeSideProperty:
-            self.__two_points_and_line_configuration[prop.property_key] = prop
+            self.__two_points_relatively_to_line[prop.property_key] = prop
         elif type_key in (SimilarTrianglesProperty, CongruentTrianglesProperty):
             for key0, key1 in zip(prop.triangle0.permutations, prop.triangle1.permutations):
                 triples = self.__similar_triangles.get(key0)
@@ -972,8 +972,8 @@ class PropertySet:
         triples = self.__similar_triangles.get(points0)
         return triples and points1 in triples
 
-    def two_points_and_line_configuration_property(self, segment, point0, point1):
-        return self.__two_points_and_line_configuration.get(SameOrOppositeSideProperty.unique_key(segment, point0, point1))
+    def two_points_relatively_to_line_property(self, segment, point0, point1):
+        return self.__two_points_relatively_to_line.get(SameOrOppositeSideProperty.unique_key(segment, point0, point1))
 
     def length_ratios_are_equal(self, segment0, segment1, segment2, segment3):
         return self.__length_ratios.contains((segment0, segment1), (segment2, segment3))
