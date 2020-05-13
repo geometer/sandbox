@@ -21,14 +21,12 @@ class SumOfAngles180DegreeRule(Rule):
             return
         pt0 = next(pt for pt in prop.angles[0].endpoints if pt != common)
         pt1 = next(pt for pt in prop.angles[1].endpoints if pt != common)
-        try:
-            oppo = self.context[SameOrOppositeSideProperty(prop.angles[0].vertex.segment(common), pt0, pt1, False)]
-        except: # TODO: we process here case of oppo.same == True; do the same with no try/except
-            self.processed.add(prop)
-            return
+        oppo = self.context.two_points_relatively_to_line_property(prop.angles[0].vertex.segment(common), pt0, pt1)
         if oppo is None:
             return
         self.processed.add(prop)
+        if oppo.same:
+            return
         yield (
             AngleValueProperty(prop.angles[0].vertex.angle(pt0, pt1), 180),
             LazyComment('%s + %s', prop.angles[0], prop.angles[1]),
