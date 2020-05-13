@@ -373,9 +373,13 @@ class CommonPerpendicularRule(SingleSourceRule):
                 if prop.reason.obsolete and perp.reason.obsolete:
                     continue
                 other = perp.segments[1] if seg0 == perp.segments[0] else perp.segments[0]
+                if prop.angle.vertex:
+                    comment = LazyComment('%s is the same line as %s', seg0.as_line, seg1.as_line)
+                else:
+                    comment = LazyComment('any line perpendicular to %s is also perpendicular to %s', seg0.as_line, seg1.as_line)
                 yield (
                     PerpendicularSegmentsProperty(seg1, other),
-                    LazyComment('Any line perpendicular to %s is also perpendicular to %s', seg0, seg1),
+                    comment,
                     [perp, prop]
                 )
 
