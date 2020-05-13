@@ -543,7 +543,7 @@ class Explainer:
                             continue
                         yield (
                             SameOrOppositeSideProperty(other.segment(pt), *sos.points, sos.same),
-                            LazyComment('%s is same line as %s', other.segment(pt), sos.segment),
+                            LazyComment('%s is the same line as %s', other.segment(pt), sos.segment),
                             [sos, col, ne]
                         )
 
