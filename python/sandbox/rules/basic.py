@@ -962,11 +962,9 @@ class SupplementaryAnglesRule(SingleSourceRule):
                 [prop, ne]
             )
 
-class TransversalRule(SingleSourceRule):
-    property_type = AngleValueProperty
-
-    def accepts(self, prop):
-        return prop.degree == 0
+class TransversalRule(Rule):
+    def sources(self):
+        return self.context.angle_value_properties_for_degree(0) + self.context.angle_value_properties_for_degree(180)
 
     def apply(self, prop):
         ang = prop.angle
@@ -983,12 +981,12 @@ class TransversalRule(SingleSourceRule):
             if vec.as_segment in (ang.vector0.as_segment, ang.vector1.as_segment):
                 continue
 
+            rev = prop.degree == 180
             if ang.vector0.start == common0:
                 vec0 = ang.vector0
-                rev = False
             else:
                 vec0 = ang.vector0.reversed
-                rev = True
+                rev = not rev
             ngl0 = vec.angle(vec0)
 
             if common0 == common1:
@@ -1005,6 +1003,9 @@ class TransversalRule(SingleSourceRule):
                 else:
                     vec1 = ang.vector1.reversed
                 ngl1 = vec.reversed.angle(vec1)
+
+            if ang.vertex is None and (vec0 == ang.vector0) != (vec1 == ang.vector1):
+                continue
 
             if rev:
                 new_prop = SumOfTwoAnglesProperty(ngl0, ngl1, 180)
