@@ -18,6 +18,7 @@ class LineSet:
             self.main_key = points_key
             self.keys = {points_key}
             self.points_on = set(points_key)
+            self.points_not_on = set()
 
     def __init__(self, context):
         self.context = context
@@ -42,6 +43,7 @@ class LineSet:
         for dup in duplicates:
             line.keys.update(dup.keys)
             line.points_on.update(dup.points_on)
+            line.points_not_on.update(dup.points_not_on)
             self.__all_lines.remove(dup)
             for key in dup.keys:
                 self.__line_by_key[key] = line
@@ -84,9 +86,14 @@ class LineSet:
                         self.__add_collinearity_property(colli)
                         self.__not_processed.remove(colli)
 
-        elif isinstance(prop, PointsCollinearityProperty) and prop.collinear:
-            if not self.__add_collinearity_property(prop):
-                self.__not_processed.add(prop)
+        elif isinstance(prop, PointsCollinearityProperty):
+            if prop.collinear:
+                if not self.__add_collinearity_property(prop):
+                    self.__not_processed.add(prop)
+            else:
+                for pt in prop.points:
+                    line = self.by_two_points(*[p for p in prop.points if p != pt], True)
+                    line.points_not_on.add(pt)
 
     def collinearity_property(self, *three_points):
         for line in self.__all_lines:
@@ -96,11 +103,21 @@ class LineSet:
                 prop.reason = Reason(-2, LazyComment('Temp comment'), [])
                 prop.reason.obsolete = False
                 return prop
+
+        for pt in three_points:
+            line = self.by_two_points(*[p for p in three_points if p != pt], False)
+            if line and pt in line.points_not_on:
+                prop = PointsCollinearityProperty(*three_points, False)
+                prop.rule = 'synthetic'
+                prop.reason = Reason(-2, LazyComment('Temp comment'), [])
+                prop.reason.obsolete = False
+                return prop
+
         return None
 
     def dump(self):
         for line in self.__all_lines:
-            print('line ' + ', '.join([str(pt) for pt in line.points_on]) + ' %d key(s)' % len(line.keys))
+            print('line ' + ', '.join([str(pt) for pt in line.points_on]) + ' / ' + ', '.join([str(pt) for pt in line.points_not_on]) + ' %d key(s)' % len(line.keys))
         print('%d lines by %d keys' % (len(self.__all_lines), len(self.__line_by_key)))
 
 class CircleSet:
@@ -988,7 +1005,7 @@ class PropertySet:
         return self.lines.collinearity_property(pt0, pt1, pt2)
 
     def not_collinear_property(self, pt0, pt1, pt2):
-        prop = self.__collinearity.get(frozenset([pt0, pt1, pt2]))
+        prop = self.collinearity.property(pt0, pt1, pt2)
         return prop if prop and not prop.collinear else None
 
     def coincidence_property(self, pt0, pt1):
