@@ -229,7 +229,7 @@ createTree: function(json) {
 				points = cls.split('__').slice(1);
 				element.append(beautified(points[0]));
 				element.append(beautified(points[1]));
-				element.append(',');
+				element.append('<span class="angle-comma">,</span>');
 				element.append(beautified(points[2]));
 				element.append(beautified(points[3]));
 			} else if (cls.startsWith('vec__')) {

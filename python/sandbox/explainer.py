@@ -9,6 +9,7 @@ from .propertyset import PropertySet
 from .reason import Reason
 from .rules.advanced import *
 from .rules.basic import *
+from .rules.circle import *
 from .rules.linear import *
 from .rules.triangle_elements import *
 from .rules.triangles import *
@@ -25,15 +26,16 @@ class Explainer:
         self.__explanation_time = None
         self.__iteration_step_count = -1
         self.__rules = [
+            CyclicQuadrilateralRule(self.context),
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),
             LengthRatiosWithCommonDenominatorRule(self.context),
             SumOfThreeAnglesInTriangleRule(self.context),
             SumOfTwoAnglesByThreeRule(self.context),
             SumAndRatioOfTwoAnglesRule(self.context),
-            EqualSumsOfAnglesRule(self.context),
+            #EqualSumsOfAnglesRule(self.context),
             AngleFromSumOfTwoAnglesRule(self.context),
-            SumOfAngles180DegreeRule(self.context),
+            #SumOfAngles180DegreeRule(self.context),
             NonCollinearPointsAreDifferentRule(self.context),
             CoincidenceTransitivityRule(self.context),
             CollinearityCollisionRule(self.context),
@@ -69,15 +71,17 @@ class Explainer:
             AngleTypesInObtuseangledTriangleRule(self.context),
             PartOfAcuteAngleIsAcuteRule(self.context),
             SameAngleRule(self.context),
-            SameAngleRule2(self.context),
+            TransversalRule(self.context),
             SupplementaryAnglesRule(self.context),
             VerticalAnglesRule(self.context),
+            ReversedVerticalAnglesRule(self.context),
             CorrespondingAndAlternateAnglesRule(self.context),
             CyclicOrderRule(self.context),
             PlanePositionsToLinePositionsRule(self.context),
             CeviansIntersectionRule(self.context),
             SameSideToInsideAngleRule(self.context),
             TwoAnglesWithCommonSideRule(self.context),
+            TwoPointsRelativelyToLineTransitivityRule(self.context),
 
             EquilateralTriangleByThreeSidesRule(self.context),
             IsoscelesTriangleByConrguentLegsRule(self.context),
@@ -118,6 +122,11 @@ class Explainer:
             prop.reason.obsolete = False
             insert(prop)
         elif len(reason.all_premises) < len(existing.reason.all_premises):
+            #### +++ HACK +++
+            # TODO: move this hack outside of explainer
+            if isinstance(prop, AngleRatioProperty) and prop.same:
+                existing.same = True
+            #### --- HACK ---
             reason.obsolete = existing.reason.obsolete
             if self.context.index_of(existing) is not None:
                 for pre in existing.reason.premises:
@@ -166,10 +175,10 @@ class Explainer:
                     continue
 
                 comment = LazyComment('%s is the intersection of ray [%s) and segment [%s]', X, A.vector(D).as_ray, B.segment(C))
-                yield (AngleValueProperty(A.angle(D, X), 0), [comment], [pia] + reasons)
-                yield (AngleValueProperty(B.angle(C, X), 0), [comment], [pia] + reasons)
-                yield (AngleValueProperty(C.angle(B, X), 0), [comment], [pia] + reasons)
-                yield (AngleValueProperty(X.angle(B, C), 180), [comment], [pia] + reasons)
+                yield (AngleValueProperty(A.angle(D, X), 0), comment, [pia] + reasons)
+                yield (AngleValueProperty(B.angle(C, X), 0), comment, [pia] + reasons)
+                yield (AngleValueProperty(C.angle(B, X), 0), comment, [pia] + reasons)
+                yield (AngleValueProperty(X.angle(B, C), 180), comment, [pia] + reasons)
 
             for pia in self.context.list(PointInsideAngleProperty):
                 if pia.reason.obsolete:
@@ -274,29 +283,6 @@ class Explainer:
                         LazyComment('%s lies inside segment %s, and %s is not on the line %s', av.angle.vertex, segment, vertex, segment),
                         [av, ncl]
                     )
-
-            for sos0, sos1 in itertools.combinations(self.context.list(SameOrOppositeSideProperty), 2):
-                if sos0.reason.obsolete and sos1.reason.obsolete:
-                    continue
-                if sos0.segment != sos1.segment:
-                    continue
-
-                if sos0.points[0] in sos1.points:
-                    common = sos0.points[0]
-                    other0 = sos0.points[1]
-                elif sos0.points[1] in sos1.points:
-                    common = sos0.points[1]
-                    other0 = sos0.points[0]
-                else:
-                    continue
-                other1 = sos1.points[0] if sos1.points[1] == common else sos1.points[1]
-                if other0 == other1:
-                    break
-                yield (
-                    SameOrOppositeSideProperty(sos0.segment, other0, other1, sos0.same == sos1.same),
-                    'Transitivity', #TODO: better comment
-                    [sos0, sos1]
-                )
 
             for aa in [p for p in self.context.list(AngleKindProperty) if p.kind == AngleKindProperty.Kind.acute]:
                 base = aa.angle

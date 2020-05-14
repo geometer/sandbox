@@ -21,14 +21,12 @@ class SumOfAngles180DegreeRule(Rule):
             return
         pt0 = next(pt for pt in prop.angles[0].endpoints if pt != common)
         pt1 = next(pt for pt in prop.angles[1].endpoints if pt != common)
-        try:
-            oppo = self.context[SameOrOppositeSideProperty(prop.angles[0].vertex.segment(common), pt0, pt1, False)]
-        except: # TODO: we process here case of oppo.same == True; do the same with no try/except
-            self.processed.add(prop)
-            return
+        oppo = self.context.two_points_relatively_to_line_property(prop.angles[0].vertex.segment(common), pt0, pt1)
         if oppo is None:
             return
         self.processed.add(prop)
+        if oppo.same:
+            return
         yield (
             AngleValueProperty(prop.angles[0].vertex.angle(pt0, pt1), 180),
             LazyComment('%s + %s', prop.angles[0], prop.angles[1]),
@@ -352,7 +350,7 @@ class PerpendicularSegmentsRule(SingleSourceRule):
 
 class Degree90ToPerpendicularSegmentsRule(Rule):
     def sources(self):
-        return [p for p in self.context.nondegenerate_angle_value_properties() if p.degree == 90]
+        return self.context.angle_value_properties_for_degree(90)
 
     def apply(self, prop):
         if not prop.reason.obsolete:
@@ -375,9 +373,13 @@ class CommonPerpendicularRule(SingleSourceRule):
                 if prop.reason.obsolete and perp.reason.obsolete:
                     continue
                 other = perp.segments[1] if seg0 == perp.segments[0] else perp.segments[0]
+                if prop.angle.vertex:
+                    comment = LazyComment('%s is the same line as %s', seg0.as_line, seg1.as_line)
+                else:
+                    comment = LazyComment('any line perpendicular to %s is also perpendicular to %s', seg0.as_line, seg1.as_line)
                 yield (
                     PerpendicularSegmentsProperty(seg1, other),
-                    LazyComment('Any line perpendicular to %s is also perpendicular to %s', seg0, seg1),
+                    comment,
                     [perp, prop]
                 )
 
@@ -412,7 +414,7 @@ class TwoPointsBelongsToTwoPerpendicularsRule(Rule):
             return
         yield (
             PointsCoincidenceProperty(*common.points, True),
-            LazyComment('%s and %s lie on perpendiculars to non-parallel lines %s and %s', *common.points, seg0, seg1),
+            LazyComment('%s and %s both lie on perpendiculars to non-parallel lines %s and %s', *common.points, seg0, seg1),
             [perp0, perp1, ncl]
         )
 
@@ -469,20 +471,19 @@ class PerpendicularToEquidistantRule(SingleSourceRule):
                 [seg0.points[1].segment(pt) for pt in seg1.points]
             )
             cs = self.context.congruent_segments_property(*segments[0], True)
-            if cs:
-                if prop.reason.obsolete and cs.reason.obsolete:
-                    continue
-                new_prop = ProportionalLengthsProperty(*segments[1], 1)
-            else:
-                cs = self.context.congruent_segments_property(*segments[1], True)
-                if cs is None or prop.reason.obsolete and cs.reason.obsolete:
-                    continue
-                new_prop = ProportionalLengthsProperty(*segments[0], 1)
-            yield (
-                new_prop,
-                LazyComment('%s and %s lie on the same perpendicular to %s', *seg0.points, seg1),
-                [prop, cs]
-            )
+            if cs and not(prop.reason.obsolete and cs.reason.obsolete):
+                yield (
+                    ProportionalLengthsProperty(*segments[1], 1),
+                    LazyComment('%s lies on the perpendicular bisector to %s', seg0.points[1], seg1),
+                    [prop, cs]
+                )
+            cs = self.context.congruent_segments_property(*segments[1], True)
+            if cs and not(prop.reason.obsolete and cs.reason.obsolete):
+                yield (
+                    ProportionalLengthsProperty(*segments[0], 1),
+                    LazyComment('%s lies on the perpendicular bisector to %s', seg0.points[0], seg1),
+                    [prop, cs]
+                )
 
 class EquidistantToPerpendicularRule(Rule):
     def sources(self):
@@ -519,7 +520,7 @@ class EquidistantToPerpendicularRule(Rule):
             return
         yield (
             SameOrOppositeSideProperty(segment0, *pts0, False),
-            LazyComment('Perpendicular bisector %s separates endpoints of the segment %s', segment0.as_line, segment1),
+            LazyComment('perpendicular bisector %s separates endpoints of the segment %s', segment0.as_line, segment1),
             [cs0, cs1, ne0, ne1]
         )
 
@@ -725,6 +726,8 @@ class AngleTypeByDegreeRule(Rule):
     def apply(self, prop):
         if prop.reason.obsolete:
             return
+        if prop.degree in (0, 180):
+            return
         if prop.degree < 90:
             yield (
                 AngleKindProperty(prop.angle, AngleKindProperty.Kind.acute),
@@ -795,7 +798,7 @@ class AngleTypesInObtuseangledTriangleRule(SingleSourceRule):
 
 class VerticalAnglesRule(Rule):
     def sources(self):
-        return itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 180], 2)
+        return itertools.combinations([av for av in self.context.angle_value_properties_for_degree(180) if av.angle.vertex], 2)
 
     def apply(self, src):
         av0, av1 = src
@@ -825,6 +828,44 @@ class VerticalAnglesRule(Rule):
             LazyComment('vertical angles'),
             [av0, av1]
         )
+
+class ReversedVerticalAnglesRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {} # pair (prop, oppo) => mask
+
+    def sources(self):
+        return [p for p in self.context.angle_value_properties_for_degree(180) if p.angle.vertex]
+
+    def apply(self, prop):
+        angle = prop.angle
+        line = angle.vector0.end.segment(angle.vector1.end)
+        for oppo in self.context.list(SameOrOppositeSideProperty, [line]):
+            if oppo.same:
+                continue
+            key = (prop, oppo)
+            mask = self.processed.get(key, 0)
+            if mask == 0x3:
+                continue
+            original = mask
+            for pt0, pt1, bit in ((*oppo.points, 0x1), (*reversed(oppo.points), 0x2)):
+                if mask & bit:
+                    continue
+                ang0 = angle.vertex.angle(angle.vector0.end, pt0)
+                ang1 = angle.vertex.angle(angle.vector1.end, pt1)
+                ar = self.context.angle_ratio_property(ang0, ang1)
+                if ar is None:
+                    continue
+                mask |= bit
+                if ar.value != 1:
+                    continue
+                yield (
+                    AngleValueProperty(angle.vertex.angle(pt0, pt1), 180),
+                    LazyComment('%s = %s and %s lies on segment %s', ang0, ang1, angle.vertex, angle.vector0.end.segment(angle.vector1.end)),
+                    [prop, ar, oppo]
+                )
+            if mask != original:
+                self.processed[key] = mask
 
 class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
     property_type = SameOrOppositeSideProperty
@@ -865,7 +906,11 @@ class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
                 if all(p.reason.obsolete for p in reasons):
                     continue
                 for p in AngleValueProperty.generate(lp0.vector(pt0), lp1.vector(pt1), 0):
-                    yield (p, 'Sum of alternate angles = 180º', reasons)
+                    yield (
+                        p,
+                        LazyComment('sum of consecutive angles: %s + %s = 180º', angle0, angle1),
+                        reasons
+                    )
             else:
                 ratio_reason = self.context.angle_ratio_property(angle0, angle1)
                 if ratio_reason is None or prop.reason.obsolete and ratio_reason.reason.obsolete:
@@ -874,7 +919,7 @@ class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
                     for p in AngleValueProperty.generate(lp0.vector(pt0), pt1.vector(lp1), 0):
                         yield (
                             p,
-                            LazyComment('corresponding angles %s and %s are equal', angle0, angle1),
+                            LazyComment('alternate angles %s and %s are equal', angle0, angle1),
                             [prop, ratio_reason]
                         )
 
@@ -918,34 +963,67 @@ class SupplementaryAnglesRule(SingleSourceRule):
                 [prop, ne]
             )
 
-class SameAngleRule(SingleSourceRule):
-    property_type = AngleValueProperty
-
-    def accepts(self, prop):
-        return prop.degree == 0
+class TransversalRule(Rule):
+    def sources(self):
+        return self.context.angle_value_properties_for_degree(0) + self.context.angle_value_properties_for_degree(180)
 
     def apply(self, prop):
         ang = prop.angle
         for ne in self.context.list(PointsCoincidenceProperty):
             if ne.coincident or prop.reason.obsolete and ne.reason.obsolete:
                 continue
-            vec = ne.points[0].vector(ne.points[1])
+            common0 = next((pt for pt in ne.points if pt in ang.vector0.points), None)
+            if common0 is None:
+                continue
+            common1 = next((pt for pt in ne.points if pt in ang.vector1.points), None)
+            if common1 is None:
+                continue
+            vec = common0.vector(next(pt for pt in ne.points if pt != common0))
             if vec.as_segment in (ang.vector0.as_segment, ang.vector1.as_segment):
                 continue
-            for ngl0, cmpl0 in good_angles(vec, ang.vector0):
-                for ngl1, cmpl1 in good_angles(vec, ang.vector1):
-                    if cmpl0 == cmpl1:
-                        same = ngl0.vertex and ngl0.vertex == ngl1.vertex
-                        new_prop = AngleRatioProperty(ngl0, ngl1, 1, same=same)
-                    else:
-                        new_prop = SumOfTwoAnglesProperty(ngl0, ngl1, 180)
-                    yield (
-                        new_prop,
-                        LazyComment('common ray %s, and %s ↑↑ %s', vec, ang.vector0, ang.vector1),
-                        [prop, ne]
-                    )
 
-class SameAngleRule2(Rule):
+            rev = prop.degree == 180
+            if ang.vector0.start == common0:
+                vec0 = ang.vector0
+            else:
+                vec0 = ang.vector0.reversed
+                rev = not rev
+            ngl0 = vec.angle(vec0)
+
+            if common0 == common1:
+                if ang.vector1.start == common1:
+                    vec1 = ang.vector1
+                else:
+                    vec1 = ang.vector1.reversed
+                    rev = not rev
+                ngl1 = vec.angle(vec1)
+            else:
+                if ang.vector1.start == common1:
+                    vec1 = ang.vector1
+                    rev = not rev
+                else:
+                    vec1 = ang.vector1.reversed
+                ngl1 = vec.reversed.angle(vec1)
+
+            if ang.vertex is None and (vec0 == ang.vector0) != (vec1 == ang.vector1):
+                continue
+
+            if rev:
+                new_prop = SumOfTwoAnglesProperty(ngl0, ngl1, 180)
+                if common0 == common1:
+                    comment = LazyComment('supplementary angles: common side %s, and %s ↑↓ %s', vec.as_ray, vec0.as_ray, vec1.as_ray)
+                else:
+                    comment = LazyComment('consecutive angles: common line %s, and %s ↑↑ %s', vec.as_line, vec0.as_ray, vec1.as_ray)
+            else:
+                if common0 == common1:
+                    new_prop = AngleRatioProperty(ngl0, ngl1, 1, same=True)
+                    comment = LazyComment('same angle: common ray %s, and %s coincides with %s', vec.as_ray, vec0.as_ray, vec1.as_ray)
+                else:
+                    new_prop = AngleRatioProperty(ngl0, ngl1, 1)
+                    comment = LazyComment('alternate angles: common line %s, and %s ↑↓ %s', vec.as_line, vec0.as_ray, vec1.as_ray)
+            yield (new_prop, comment, [prop, ne])
+
+class SameAngleRule(Rule):
     def sources(self):
         return itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 0], 2)
 
@@ -1074,3 +1152,62 @@ class SameSideToInsideAngleRule(Rule):
                 comment,
                 [op0, op1]
             )
+
+class TwoPointsRelativelyToLineTransitivityRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        return [(p0, p1) for p0, p1 in itertools.combinations(self.context.list(SameOrOppositeSideProperty), 2) if p0.segment == p1.segment]
+
+    def apply(self, src):
+        key = frozenset(src)
+        if key in self.processed:
+            return
+        self.processed.add(key)
+
+        sos0, sos1 = src
+        if sos0.points[0] in sos1.points:
+            common = sos0.points[0]
+            other0 = sos0.points[1]
+        elif sos0.points[1] in sos1.points:
+            common = sos0.points[1]
+            other0 = sos0.points[0]
+        else:
+            return
+        other1 = sos1.points[0] if sos1.points[1] == common else sos1.points[1]
+        if sos0.same and sos1.same:
+            comment = LazyComment(
+                '%s, %s, and %s lies on the same side of %s',
+                other0, common, other1, sos0.segment.as_line
+            )
+            pts = (other0, other1)
+            premises = [sos0, sos1]
+        elif sos0.same:
+            comment = LazyComment(
+                '%s, %s lies on the same side of %s, %s is on the opposite side',
+                other0, common, sos0.segment.as_line, other1
+            )
+            pts = (other0, other1)
+            premises = [sos0, sos1]
+        elif sos1.same:
+            comment = LazyComment(
+                '%s, %s lies on the same side of %s, %s is on the opposite side',
+                other1, common, sos0.segment.as_line, other0
+            )
+            pts = (other1, other0)
+            premises = [sos1, sos0]
+        else:
+            comment = LazyComment(
+                '%s, %s lies on opposite sides of %s, and %s, %s too',
+                other0, common, sos0.segment.as_line, common, other1
+            )
+            pts = (other0, other1)
+            premises = [sos0, sos1]
+
+        yield (
+            SameOrOppositeSideProperty(sos0.segment, *pts, sos0.same == sos1.same),
+            comment,
+            premises
+        )

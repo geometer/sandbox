@@ -3,7 +3,7 @@ import networkx as nx
 import re
 
 from .core import CoreScene
-from .property import AngleKindProperty, AngleValueProperty, AngleRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, SimilarTrianglesProperty, CongruentTrianglesProperty
+from .property import AngleKindProperty, AngleValueProperty, AngleRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, SimilarTrianglesProperty, CongruentTrianglesProperty, SameOrOppositeSideProperty
 from .reason import Reason
 from .stats import Stats
 from .util import LazyComment, divide
@@ -260,6 +260,23 @@ class AngleRatioPropertySet:
                 properties.append(prop)
             return properties
 
+        def value_properties_for_degree(self, degree):
+            properties = []
+            for angle, ratio in self.angle_to_ratio.items():
+                if self.degree * ratio != degree:
+                    continue
+                path = nx.algorithms.shortest_path(self.premises_graph, angle, self.degree)
+                if len(path) == 2:
+                    properties.append(self.premises_graph[path[0]][path[1]]['prop'])
+                    continue
+                comment, premises = self.explanation_from_path(path, ratio)
+                prop = AngleValueProperty(angle, degree)
+                prop.rule = 'synthetic'
+                prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+                prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+                properties.append(prop)
+            return properties
+
         def congruent_angles_with_vertex(self):
             reverse_map = {}
             for angle, ratio in self.angle_to_ratio.items():
@@ -347,6 +364,10 @@ class AngleRatioPropertySet:
         fam = self.family_with_degree
         return fam.value_properties() if fam else []
 
+    def value_properties_for_degree(self, degree):
+        fam = self.family_with_degree
+        return fam.value_properties_for_degree(degree) if fam else []
+
     def ratio_property(self, angle0, angle1):
         key = frozenset((angle0, angle1))
         cached = self.__ratio_cache.get(key)
@@ -367,7 +388,8 @@ class AngleRatioPropertySet:
         coef = fam.angle_to_ratio[angle0]
         comment, premises = fam.explanation_from_path(path, coef)
         value = divide(coef, fam.angle_to_ratio[angle1])
-        prop = AngleRatioProperty(angle0, angle1, value)
+        same = value == 1 and all(isinstance(prop, AngleRatioProperty) and prop.same for prop in [fam.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])])
+        prop = AngleRatioProperty(angle0, angle1, value, same=same)
         prop.rule = 'synthetic'
         prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
         prop.reason.obsolete = all(p.reason.obsolete for p in premises)
@@ -401,7 +423,7 @@ class AngleRatioPropertySet:
 
     def __add_value_property(self, prop):
         self.__value_cache[prop.angle] = prop
-        if prop.degree in (0, 180):
+        if prop.degree == 0:
             # TODO: implement special families
             return
         fam = self.angle_to_family.get(prop.angle)
@@ -675,6 +697,7 @@ class PropertySet:
         self.__intersections = {} # {segment, segment} => point, [reasons]
         self.__similar_triangles = {} # (three points) => {(three points)}
         self.__lines = LineSet()
+        self.__two_points_relatively_to_line = {} # key => SameOrOppositeSideProperty
 
     def add(self, prop):
         def put(key):
@@ -710,6 +733,8 @@ class PropertySet:
             self.__length_ratios.add(prop)
         elif type_key == SameCyclicOrderProperty:
             self.__cyclic_orders.add(prop)
+        elif type_key == SameOrOppositeSideProperty:
+            self.__two_points_relatively_to_line[prop.property_key] = prop
         elif type_key in (SimilarTrianglesProperty, CongruentTrianglesProperty):
             for key0, key1 in zip(prop.triangle0.permutations, prop.triangle1.permutations):
                 triples = self.__similar_triangles.get(key0)
@@ -759,7 +784,7 @@ class PropertySet:
             #TODO: check ratio value for contradiction
             fam = self.__angle_ratios.angle_to_family.get(prop.angle0)
             return fam and prop.angle1 in fam.angle_to_ratio
-        if isinstance(prop, AngleValueProperty) and prop.degree not in (0, 180):
+        if isinstance(prop, AngleValueProperty) and prop.degree != 0:
             #TODO: check degree for contradiction
             fam = self.__angle_ratios.family_with_degree
             return fam and prop.angle in fam.angle_to_ratio
@@ -773,20 +798,18 @@ class PropertySet:
 
     def __getitem__(self, prop):
         existing = self.__full_set.get(prop)
-        if existing:
-            if not existing.compare_values(prop):
-                raise ContradictionError('different values: `%s` vs `%s`' % (prop, existing))
-            return existing
-        if isinstance(prop, AngleRatioProperty):
-            #TODO: check ratio value for contradiction
-            return self.angle_ratio_property(prop.angle0, prop.angle1)
-        if isinstance(prop, AngleValueProperty) and prop.degree not in (0, 180):
-            #TODO: check degree for contradiction
-            return self.angle_value_property(prop.angle)
+        if not existing:
+            if isinstance(prop, AngleRatioProperty):
+                existing = self.angle_ratio_property(prop.angle0, prop.angle1)
+            elif isinstance(prop, AngleValueProperty) and prop.degree != 0:
+                existing = self.angle_value_property(prop.angle)
+            elif isinstance(prop, SameCyclicOrderProperty):
+                existing = self.same_cyclic_order_property(prop.cycle0, prop.cycle1)
         #TODO: LengthRatioProperty
         #TODO: EqualLengthRatiosProperty
-        #TODO: SameCyclicOrderProperty
-        return None
+        if existing and not existing.compare_values(prop):
+            raise ContradictionError('different values: `%s` vs `%s`' % (prop, existing))
+        return existing
 
     def collinearity_property(self, pt0, pt1, pt2):
         return self.__collinearity.get(frozenset([pt0, pt1, pt2]))
@@ -808,8 +831,13 @@ class PropertySet:
     def nondegenerate_angle_value_properties(self):
         return self.__angle_ratios.value_properties()
 
+    def angle_value_properties_for_degree(self, degree):
+        if degree == 0:
+            return [p for p in self.list(AngleValueProperty) if p.degree == 0]
+        return self.__angle_ratios.value_properties_for_degree(degree)
+
     def angle_value_properties(self):
-        return [p for p in self.list(AngleValueProperty) if p.degree in (0, 180)] + self.nondegenerate_angle_value_properties()
+        return [p for p in self.list(AngleValueProperty) if p.degree == 0] + self.nondegenerate_angle_value_properties()
 
     def angle_ratio_property(self, angle0, angle1):
         return self.__angle_ratios.ratio_property(angle0, angle1)
@@ -866,6 +894,9 @@ class PropertySet:
         triples = self.__similar_triangles.get(points0)
         return triples and points1 in triples
 
+    def two_points_relatively_to_line_property(self, segment, point0, point1):
+        return self.__two_points_relatively_to_line.get(SameOrOppositeSideProperty.unique_key(segment, point0, point1))
+
     def length_ratios_are_equal(self, segment0, segment1, segment2, segment3):
         return self.__length_ratios.contains((segment0, segment1), (segment2, segment3))
 
@@ -883,7 +914,7 @@ class PropertySet:
 
     def same_cyclic_order_property(self, cycle0, cycle1):
         prop = SameCyclicOrderProperty(cycle0, cycle1)
-        existing = self[prop]
+        existing = self.__full_set.get(prop)
         if existing:
             return existing
         comment, premises = self.__cyclic_orders.explanation(cycle0, cycle1)
