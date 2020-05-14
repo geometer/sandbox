@@ -587,6 +587,7 @@ class Explainer:
 
     def stats(self, properties_to_explain=[]):
         self.context.circles.dump()
+        self.context.lines.dump()
         def type_presentation(kind):
             return kind.__doc__.strip() if kind.__doc__ else kind.__name__
 

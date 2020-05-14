@@ -12,6 +12,97 @@ from .util import LazyComment, divide
 class ContradictionError(Exception):
     pass
 
+class LineSet:
+    class Line:
+        def __init__(self, points_key):
+            self.main_key = points_key
+            self.keys = {points_key}
+            self.points_on = set(points_key)
+
+    def __init__(self, context):
+        self.context = context
+        self.__line_by_key = {}
+        self.__all_lines = set()
+        self.__not_processed = set()
+
+    def add_point_to_line(self, point, line):
+        if point in line.points_on:
+            return
+
+        old_list = list(line.points_on)
+        line.points_on.add(point)
+        duplicates = set()
+        for pt in old_list:
+            dup = self.by_two_points(point, pt, False)
+            if dup and dup != line:
+                duplicates.add(dup)
+        self.__merge(line, duplicates)
+
+    def __merge(self, line, duplicates):
+        for dup in duplicates:
+            line.keys.update(dup.keys)
+            line.points_on.update(dup.points_on)
+            self.__all_lines.remove(dup)
+            for key in dup.keys:
+                self.__line_by_key[key] = line
+
+    def by_two_points(self, pt0, pt1, create_if_not_exists):
+        key = frozenset([pt0, pt1])
+        line = self.__line_by_key.get(key)
+        if line or not create_if_not_exists:
+            return line
+
+        existing = [ln for ln in self.__all_lines if key.issubset(ln.points_on)]
+        if existing:
+            line = existing[0]
+            if len(existing) > 1:
+                self.__merge(line, existing[1:])
+            line.keys.add(key)
+        else:
+            line = LineSet.Line(key)
+            self.__all_lines.add(line)
+        self.__line_by_key[key] = line
+        return line
+
+    def __add_collinearity_property(self, prop):
+        lines = []
+        for pt in prop.points:
+            line = self.by_two_points(*[p for p in prop.points if p != pt], False)
+            if line:
+                self.add_point_to_line(pt, line)
+                lines.append(line)
+        if len(lines) > 1:
+            self.__merge(lines[0], lines[1:])
+        return lines
+
+    def add(self, prop):
+        if isinstance(prop, PointsCoincidenceProperty):
+            if not prop.coincident:
+                self.by_two_points(*prop.points, True)
+                for colli in list(self.__not_processed):
+                    if all(pt in colli.points for pt in prop.points):
+                        self.__add_collinearity_property(colli)
+                        self.__not_processed.remove(colli)
+
+        elif isinstance(prop, PointsCollinearityProperty) and prop.collinear:
+            if not self.__add_collinearity_property(prop):
+                self.__not_processed.add(prop)
+
+    def collinearity_property(self, *three_points):
+        for line in self.__all_lines:
+            if all(pt in line.points_on for pt in three_points):
+                prop = PointsCollinearityProperty(*three_points, True)
+                prop.rule = 'synthetic'
+                prop.reason = Reason(-2, LazyComment('Temp comment'), [])
+                prop.reason.obsolete = False
+                return prop
+        return None
+
+    def dump(self):
+        for line in self.__all_lines:
+            print('line ' + ', '.join([str(pt) for pt in line.points_on]) + ' %d key(s)' % len(line.keys))
+        print('%d lines by %d keys' % (len(self.__all_lines), len(self.__line_by_key)))
+
 class CircleSet:
     class Circle:
         def __init__(self, points_key):
@@ -48,13 +139,12 @@ class CircleSet:
                 self.__circle_by_key[key] = circle
 
     def by_three_points(self, pt0, pt1, pt2, create_if_not_exists):
-        points = {pt0, pt1, pt2}
-        key = frozenset(points)
+        key = frozenset([pt0, pt1, pt2])
         circle = self.__circle_by_key.get(key)
         if circle or not create_if_not_exists:
             return circle
 
-        existing = [circ for circ in self.__all_circles if points.issubset(circ.points_on)]
+        existing = [circ for circ in self.__all_circles if key.issubset(circ.points_on)]
         if existing:
             circle = existing[0]
             if len(existing) > 1:
@@ -757,6 +847,7 @@ class PropertySet:
         self.__combined = {} # (type, key) => [prop] and type => prop
         self.__full_set = {} # prop => prop
         self.__indexes = {} # prop => number
+        self.lines = LineSet(self)
         self.circles = CircleSet(self)
         self.__angle_kinds = {} # angle => prop
         self.__linear_angles = LinearAngleSet()
@@ -796,8 +887,10 @@ class PropertySet:
         elif type_key == LengthRatioProperty:
             self.__length_ratios.add(prop)
         elif type_key == PointsCoincidenceProperty:
+            self.lines.add(prop)
             self.__coincidence[prop.point_set] = prop
         elif type_key == PointsCollinearityProperty:
+            self.lines.add(prop)
             self.circles.add(prop)
             self.__collinearity[prop.point_set] = prop
         elif type_key == PointAndCircleProperty:
@@ -874,12 +967,14 @@ class PropertySet:
         if not existing:
             if isinstance(prop, AngleRatioProperty):
                 existing = self.angle_ratio_property(prop.angle0, prop.angle1)
-            elif isinstance(prop, AngleValueProperty) and prop.degree != 0:
+            elif isinstance(prop, AngleValueProperty):
                 existing = self.angle_value_property(prop.angle)
             elif isinstance(prop, SameCyclicOrderProperty):
                 existing = self.same_cyclic_order_property(prop.cycle0, prop.cycle1)
             elif isinstance(prop, PointAndCircleProperty):
                 existing = self.point_and_circle_property(prop.point, prop.circle)
+            elif isinstance(prop, PointsCollinearityProperty):
+                existing = self.collinearity_property(*prop.points)
         #TODO: LengthRatioProperty
         #TODO: EqualLengthRatiosProperty
         if existing and not existing.compare_values(prop):
@@ -887,7 +982,10 @@ class PropertySet:
         return existing
 
     def collinearity_property(self, pt0, pt1, pt2):
-        return self.__collinearity.get(frozenset([pt0, pt1, pt2]))
+        prop = self.__collinearity.get(frozenset([pt0, pt1, pt2]))
+        if prop:
+            return prop
+        return self.lines.collinearity_property(pt0, pt1, pt2)
 
     def not_collinear_property(self, pt0, pt1, pt2):
         prop = self.__collinearity.get(frozenset([pt0, pt1, pt2]))
@@ -1062,7 +1160,7 @@ class PropertySet:
         return (None, [])
 
     def stats(self):
-        self.__linear_angles.dump()
+        #self.__linear_angles.dump()
 
         def type_presentation(kind):
             return kind.__doc__.strip() if kind.__doc__ else kind.__name__
