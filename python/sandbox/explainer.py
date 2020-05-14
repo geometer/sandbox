@@ -9,6 +9,7 @@ from .propertyset import PropertySet
 from .reason import Reason
 from .rules.advanced import *
 from .rules.basic import *
+from .rules.circle import *
 from .rules.linear import *
 from .rules.triangle_elements import *
 from .rules.triangles import *
@@ -25,6 +26,7 @@ class Explainer:
         self.__explanation_time = None
         self.__iteration_step_count = -1
         self.__rules = [
+            CyclicQuadrilateralRule(self.context),
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),
             LengthRatiosWithCommonDenominatorRule(self.context),
