@@ -34,14 +34,15 @@ class ConcyclicPointsProperty(Property):
     """
     Concyclic points
     """
-    def __init__(self, point0, point1, point2, point3):
+    def __init__(self, *points):
         super().__init__()
-        self.points = (point0, point1, point2, point3)
+        assert len(points) >= 4, 'ConcyclicPointsProperty makes no sense for %s (<4) points' % len(points)
+        self.points = points
         self.point_set = frozenset(self.points)
 
     @property
     def description(self):
-        return LazyComment('Points %s, %s, %s, and %s are concyclic', *self.points)
+        return LazyComment('Points' + ' %s,' * (len(self.points) - 1) + ' and %s are concyclic', *self.points)
 
     def __eq__(self, other):
         return isinstance(other, ConcyclicPointsProperty) and self.point_set == other.point_set

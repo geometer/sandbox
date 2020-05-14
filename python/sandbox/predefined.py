@@ -130,12 +130,13 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
                     ProportionalLengthsProperty(rad0, rad1, 1),
                     LazyComment('two radiuses of the circle with centre %s', circle.centre)
                 )
-        for pts in itertools.combinations(circle.all_points, 4):
-            if all_visible(pts):
-                yield (
-                    ConcyclicPointsProperty(*pts),
-                    LazyComment('four points on the same circle')
-                )
+
+        pts = [pt for pt in circle.all_points if is_visible(pt)]
+        if len(pts) >= 4:
+            yield (
+                ConcyclicPointsProperty(*pts),
+                LazyComment('points on the same circle')
+            )
 
     for cnstr in scene.constraints(Constraint.Kind.opposite_side):
         line = cnstr.params[2]
