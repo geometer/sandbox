@@ -27,6 +27,7 @@ class Explainer:
         self.__iteration_step_count = -1
         self.__rules = [
             #ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule(self.context),
+            CyclicQuadrilateralRule(self.context),
             PointsOnCircleRule(self.context),
             InscribedAnglesWithCommonCircularArcRule(self.context),
             PointsOnChordRule(self.context),
