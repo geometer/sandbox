@@ -83,7 +83,8 @@ class ConcyclicPointsProperty(Property):
     """
     def __init__(self, *points):
         super().__init__()
-        self.points = tuple(points)
+        assert len(points) >= 4, 'ConcyclicPointsProperty makes no sense for %s (<4) points' % len(points)
+        self.points = points
         self.point_set = frozenset(self.points)
 
     @property
