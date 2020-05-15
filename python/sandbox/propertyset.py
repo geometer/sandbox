@@ -300,49 +300,91 @@ class CyclicOrderPropertySet:
         return fam.explanation(cycle0.reversed, cycle1.reversed)
 
 class LinearAngleSet:
-    class Subset:
-        def __init__(self):
-            self.symbols = set()
-            self.equations = []
-
     def __init__(self):
-        self.__subsets = {} # symbol => subset
-        self.__all_subsets = []
+        self.properties = []
 
     def add(self, prop):
-        existing = []
-        for subset in [self.__subsets.get(sym) for sym in prop.equation.free_symbols]:
-            if subset and not subset in existing:
-                existing.append(subset)
-
-        if existing:
-            subset = existing[0]
-            if len(existing) > 1:
-                for duplicate in existing[1:]:
-                    subset.symbols.update(duplicate.symbols)
-                    subset.equations += duplicate.equations
-                    for sym in duplicate.symbols:
-                        self.__subsets[sym] = subset
-                    self.__all_subsets.remove(duplicate)
-        else:
-            subset = LinearAngleSet.Subset()
-            self.__all_subsets.append(subset)
-
-        subset.symbols.update(prop.equation.free_symbols)
-        subset.equations.append(prop.equation)
-        for sym in prop.equation.free_symbols:
-            self.__subsets[sym] = subset
+        self.properties.append(prop)
 
     def dump(self):
-        for subset in self.__all_subsets:
-#            for eq in subset.equations:
-#                print(eq)
-            print('Total: %d symbols' % len(subset.symbols))
-            print('Total: %d equations' % len(subset.equations))
-#            solution = sp.solve(subset.equations)
-#            for elt in solution.items():
-#                print(elt)
-#            print('Total: %d elements' % len(solution))
+        values = {} # angle => num
+        equivalents = {} # angle => list(angle)
+        others = []
+        for prop in self.properties:
+            if isinstance(prop, AngleValueProperty):
+                values[prop.angle] = prop.degree
+            elif isinstance(prop, AngleRatioProperty) and prop.same:
+                equ0 = equivalents.get(prop.angle0)
+                equ1 = equivalents.get(prop.angle1)
+                if equ0 and equ1:
+                    if equ0 != equ1:
+                        equ0 += equ1
+                        for angle in equ1:
+                            equivalents[angle] = equ0
+                elif equ0:
+                    equ0.append(prop.angle1)
+                elif equ1:
+                    equ1.append(prop.angle0)
+                else:
+                    lst = [prop.angle0, prop.angle1]
+                    equivalents[prop.angle0] = lst
+                    equivalents[prop.angle1] = lst
+            else:
+                others.append(prop)
+
+        def angle_to_expression(angle):
+            val = values.get(angle)
+            if val is not None:
+                return val
+            equi_set = equivalents.get(angle)
+            if equi_set:
+                angle = equi_set[0]
+            return sp.Symbol(str(angle))
+
+        equations = [prop.equation(angle_to_expression) for prop in others]
+        equations = [eq for eq in equations if eq != 0]
+
+        class Group:
+            def __init__(self, symbols):
+                self.symbols = set(symbols)
+                self.equations = []
+
+            def update(self, other):
+                self.symbols.update(other.symbols)
+                self.equations += other.equations
+
+        symbol_to_group = {}
+        for eq in equations:
+            groups = list(set(filter(None, [symbol_to_group.get(sym) for sym in eq.free_symbols])))
+            if groups:
+                the_group = groups[0]
+                for gro in groups[1:]:
+                    the_group.update(gro)
+                    for sym in gro.symbols:
+                        symbol_to_group[sym] = the_group
+                the_group.symbols.update(eq.free_symbols)
+            else:
+                the_group = Group(eq.free_symbols)
+            for sym in eq.free_symbols:
+                symbol_to_group[sym] = the_group
+            the_group.equations.append(eq)
+
+#        for eq in subset.equations:
+#            print(eq)
+        #print('Total: %d symbols' % len(symbols))
+        print('Total: %d equations' % len(equations))
+        for group in set(symbol_to_group.values()):
+            print('Group: %d symbols' % len(group.symbols))
+            print('Group: %d equations' % len(group.equations))
+            if len(group.equations) < 10:
+                for eq in group.equations:
+                    print('%s' % eq)
+            solution = sp.solve(group.equations)
+        #solution = sp.groebner(equations)
+        #print(solution)
+#        for elt in solution.items():
+#            print(elt)
+#        print('Total: %d elements' % len(solution))
 
 class AngleRatioPropertySet:
     class CommentFromPath:
@@ -1180,7 +1222,7 @@ class PropertySet:
         return (None, [])
 
     def stats(self):
-        #self.__linear_angles.dump()
+        self.__linear_angles.dump()
 
         def type_presentation(kind):
             return kind.__doc__.strip() if kind.__doc__ else kind.__name__

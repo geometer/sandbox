@@ -1,6 +1,5 @@
 from enum import Enum, auto
 import itertools
-import sympy as sp
 
 from .figure import Figure
 from .scene import Scene
@@ -354,8 +353,7 @@ class AngleKindProperty(Property):
         return hash(AngleKindProperty) + hash(self.angle)
 
 class LinearAngleProperty(Property):
-    @property
-    def equation(self):
+    def equation(self, angle_to_expression):
         raise Exception('The method should be implemented in descendants')
 
 class AngleValueProperty(LinearAngleProperty):
@@ -372,9 +370,8 @@ class AngleValueProperty(LinearAngleProperty):
         self.angle = angle
         self.degree = normalize_number(degree)
 
-    @property
-    def equation(self):
-        return sp.Symbol(str(self.angle)) - self.degree
+    def equation(self, angle_to_expression):
+        return angle_to_expression(self.angle) - self.degree
 
     @property
     def essential(self):
@@ -426,9 +423,8 @@ class AngleRatioProperty(LinearAngleProperty):
     def keys(self):
         return [self.angle0, self.angle1]
 
-    @property
-    def equation(self):
-        return sp.Symbol(str(self.angle0)) - self.value * sp.Symbol(str(self.angle1))
+    def equation(self, angle_to_expression):
+        return angle_to_expression(self.angle0) - self.value * angle_to_expression(self.angle1)
 
     @property
     def essential(self):
@@ -467,9 +463,8 @@ class SumOfThreeAnglesProperty(LinearAngleProperty):
     def keys(self):
         return self.angles
 
-    @property
-    def equation(self):
-        return sp.Symbol(str(self.angles[0])) + sp.Symbol(str(self.angles[1])) + sp.Symbol(str(self.angles[2])) - self.degree
+    def equation(self, angle_to_expression):
+        return angle_to_expression(self.angles[0]) + angle_to_expression(self.angles[1]) + angle_to_expression(self.angles[2]) - self.degree
 
     @property
     def description(self):
@@ -497,9 +492,8 @@ class SumOfTwoAnglesProperty(LinearAngleProperty):
     def keys(self):
         return self.angles
 
-    @property
-    def equation(self):
-        return sp.Symbol(str(self.angles[0])) + sp.Symbol(str(self.angles[1])) - self.degree
+    def equation(self, angle_to_expression):
+        return angle_to_expression(self.angles[0]) + angle_to_expression(self.angles[1]) - self.degree
 
     @property
     def description(self):
