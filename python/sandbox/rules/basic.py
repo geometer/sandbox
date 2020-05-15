@@ -693,39 +693,29 @@ class RotatedAngleRule(Rule):
         self.processed = set()
 
     def sources(self):
-        return self.context.congruent_angles_with_vertex()
+        return [(a0, a1) for a0, a1 in self.context.congruent_angles_with_vertex() if a0.vertex == a1.vertex and (a0, a1) not in self.processed]
 
     def apply(self, src):
         ang0, ang1 = src
-        key = frozenset(src)
-        if key in self.processed:
+        vertex = ang0.vertex
+        pts0 = ang0.endpoints
+        pts1 = ang1.endpoints
+        if next((p for p in pts0 if p in pts1), None) is not None:
+            self.processed.add(src)
             return
-        vec00 = ang0.vector0
-        vec01 = ang0.vector1
-        vec10 = ang1.vector0
-        vec11 = ang1.vector1
-        pts0 = (ang0.vertex, vec00.end, vec01.end)
-        pts1 = (ang1.vertex, vec10.end, vec11.end)
-        if set(pts0) == set(pts1):
-            self.processed.add(key)
-            return
-        co = self.context.same_cyclic_order_property(Cycle(*pts0), Cycle(*pts1))
+        co = self.context.same_cyclic_order_property(Cycle(vertex, *pts0), Cycle(vertex, *pts1))
         if co is None:
-            vec10, vec11 = vec11, vec10
-            pts1 = (ang1.vertex, vec10.end, vec11.end)
-            co = self.context.same_cyclic_order_property(Cycle(*pts0), Cycle(*pts1))
+            pts1 = (pts1[1], pts1[0])
+            co = self.context.same_cyclic_order_property(Cycle(vertex, *pts0), Cycle(vertex, *pts1))
         if co is None:
             return
-        self.processed.add(key)
+        self.processed.add(src)
         ca = self.context.angle_ratio_property(ang0, ang1)
-        try:
-            new_angle0 = vec00.angle(vec10)
-            new_angle1 = vec01.angle(vec11)
-        except:
-            return
+        new_angle0 = vertex.angle(pts0[0], pts1[0])
+        new_angle1 = vertex.angle(pts0[1], pts1[1])
         yield (
             AngleRatioProperty(new_angle0, new_angle1, 1),
-            LazyComment('%s is %s rotated by %s, %s is %s rotated by %s, %s = %s', vec00.as_ray, vec01.as_ray, ang0, vec10.as_ray, vec11.as_ray, ang1, ang0, ang1),
+            LazyComment('%s is %s rotated by %s = %s', new_angle0, new_angle1, ang0, ang1),
             [ca, co]
         )
 
