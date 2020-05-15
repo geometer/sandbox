@@ -627,8 +627,10 @@ class ParallelSameSideRule(SingleSourceRule):
 
     def apply(self, prop):
         for seg0, seg1 in (prop.segments, reversed(prop.segments)):
-            ncl = self.context.collinearity_property(*seg0.points, seg1.points[0])
-            if ncl is None:
+            ncl = None
+            if seg1.points[0] not in seg0.points:
+                ncl = self.context.collinearity_property(*seg0.points, seg1.points[0])
+            if ncl is None and seg1.points[1] not in seg0.points:
                 ncl = self.context.collinearity_property(*seg0.points, seg1.points[1])
             if ncl is None or prop.reason.obsolete and ncl.reason.obsolete:
                 continue
