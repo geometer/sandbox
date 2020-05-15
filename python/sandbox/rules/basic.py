@@ -625,22 +625,35 @@ class TwoPerpendicularsRule2(Rule):
 class ParallelSameSideRule(SingleSourceRule):
     property_type = ParallelSegmentsProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
     def apply(self, prop):
-        for seg0, seg1 in (prop.segments, reversed(prop.segments)):
-            ncl = None
+        mask = self.processed.get(prop, 0)
+        if mask == 0x3:
+            return
+        original = mask
+        for seg0, seg1, bit in ((*prop.segments, 1), (*reversed(prop.segments), 2)):
+            if mask & bit:
+                continue
+            ncl = False
             if seg1.points[0] not in seg0.points:
                 ncl = self.context.collinearity_property(*seg0.points, seg1.points[0])
-            if ncl is None and seg1.points[1] not in seg0.points:
+            if not ncl and seg1.points[1] not in seg0.points:
                 ncl = self.context.collinearity_property(*seg0.points, seg1.points[1])
-            if ncl is None or prop.reason.obsolete and ncl.reason.obsolete:
+            in ncl is None:
                 continue
-            if ncl.collinear:
-                return
+            mask |= bit
+            if ncl == False or ncl.collinear:
+                continue
             yield (
                 SameOrOppositeSideProperty(seg0, *seg1.points, True),
-                '', #TODO: write comment
-                []
+                LazyComment('%s and %s lie on a line parallel to %s', *seg1.points, seg0) 
+                [prop, ncl]
             )
+        if mask != original:
+            self.processed[prop] = mask
 
 class LengthProductEqualityToRatioRule(SingleSourceRule):
     property_type = EqualLengthProductsProperty
