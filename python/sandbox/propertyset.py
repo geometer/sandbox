@@ -1125,6 +1125,8 @@ class PropertySet:
             if not point in other.points:
                 continue
             candidate = next(pt for pt in other.points if pt != point)
+            if candidate in segment.points:
+                return (candidate, [prop])
             col = self.collinearity_property(*segment.points, candidate)
             if col and col.collinear:
                 return (candidate, [prop, col])
