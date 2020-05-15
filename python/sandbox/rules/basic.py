@@ -642,14 +642,14 @@ class ParallelSameSideRule(SingleSourceRule):
                 ncl = self.context.collinearity_property(*seg0.points, seg1.points[0])
             if not ncl and seg1.points[1] not in seg0.points:
                 ncl = self.context.collinearity_property(*seg0.points, seg1.points[1])
-            in ncl is None:
+            if ncl is None:
                 continue
             mask |= bit
             if ncl == False or ncl.collinear:
                 continue
             yield (
                 SameOrOppositeSideProperty(seg0, *seg1.points, True),
-                LazyComment('%s and %s lie on a line parallel to %s', *seg1.points, seg0) 
+                LazyComment('%s and %s lie on a line parallel to %s', *seg1.points, seg0),
                 [prop, ncl]
             )
         if mask != original:
