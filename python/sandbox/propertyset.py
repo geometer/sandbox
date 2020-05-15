@@ -67,13 +67,14 @@ class LineSet:
         return line
 
     def __add_collinearity_property(self, prop):
-        lines = []
+        lines = set()
         for pt in prop.points:
             line = self.by_two_points(*[p for p in prop.points if p != pt], False)
             if line:
                 self.add_point_to_line(pt, line)
-                lines.append(line)
+                lines.add(line)
         if len(lines) > 1:
+            lines = list(lines)
             self.__merge(lines[0], lines[1:])
         return lines
 
@@ -1005,7 +1006,7 @@ class PropertySet:
         return self.lines.collinearity_property(pt0, pt1, pt2)
 
     def not_collinear_property(self, pt0, pt1, pt2):
-        prop = self.collinearity.property(pt0, pt1, pt2)
+        prop = self.collinearity_property(pt0, pt1, pt2)
         return prop if prop and not prop.collinear else None
 
     def coincidence_property(self, pt0, pt1):
