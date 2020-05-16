@@ -127,10 +127,10 @@ class CorrespondingAnglesInCongruentTrianglesRule(SingleSourceRule):
     property_type = CongruentTrianglesProperty
 
     def apply(self, prop):
-        ncl = self.context.not_collinear_property(*prop.triangle0.points)
+        ncl = self.context.collinearity_property(*prop.triangle0.points)
         if ncl is None:
-            ncl = self.context.not_collinear_property(*prop.triangle1.points)
-        if ncl is None or prop.reason.obsolete and ncl.reason.obsolete:
+            ncl = self.context.collinearity_property(*prop.triangle1.points)
+        if ncl is None or ncl.collinear or prop.reason.obsolete and ncl.reason.obsolete:
             return
         angles0 = prop.triangle0.angles
         angles1 = prop.triangle1.angles

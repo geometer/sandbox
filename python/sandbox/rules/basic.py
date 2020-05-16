@@ -1089,7 +1089,7 @@ class PlanePositionsToLinePositionsRule(SingleSourceRule):
 
 class CeviansIntersectionRule(Rule):
     def sources(self):
-        return itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 180], 2)
+        return itertools.combinations([av for av in self.context.angle_value_properties_for_degree(180) if av.angle.vertex], 2)
 
     def apply(self, src):
         av0, av1 = src
@@ -1102,8 +1102,8 @@ class CeviansIntersectionRule(Rule):
         pt1 = next(pt for pt in ends1 if pt != vertex)
         if pt0 == pt1:
             return
-        ncl = self.context.not_collinear_property(vertex, pt0, pt1)
-        if ncl is None:
+        ncl = self.context.collinearity_property(vertex, pt0, pt1)
+        if ncl is None or ncl.collinear:
             return
         segment0 = pt0.segment(av1.angle.vertex)
         segment1 = pt1.segment(av0.angle.vertex)

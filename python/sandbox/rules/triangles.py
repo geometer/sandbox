@@ -294,8 +294,8 @@ class SimilarTrianglesByThreeSidesRule(Rule):
             return
         third0 = other_point(num0, common0).vector(other_point(num1, common0))
         third1 = other_point(den0, common1).vector(other_point(den1, common1))
-        ncl = self.context.not_collinear_property(common0, *third0.points)
-        if ncl is None:
+        ncl = self.context.collinearity_property(common0, *third0.points)
+        if ncl is None or ncl.collinear:
             return
         ps2, value2 = self.context.length_ratio_property_and_value(third0.as_segment, third1.as_segment, True)
         if ps2 is None or value2 != value0:
@@ -362,8 +362,8 @@ class IsoscelesTriangleByConrguentBaseAnglesRule(Rule):
         ang0, ang1 = src
         if ang0.point_set != ang1.point_set:
             return
-        nc = self.context.not_collinear_property(*ang0.point_set)
-        if nc is None:
+        nc = self.context.collinearity_property(*ang0.point_set)
+        if nc is None or nc.collinear:
             return
         ca = self.context.angle_ratio_property(ang0, ang1)
         if ca.reason.obsolete and nc.reason.obsolete:

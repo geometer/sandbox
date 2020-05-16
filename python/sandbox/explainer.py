@@ -503,8 +503,8 @@ class Explainer:
 
             for zero in [p for p in self.context.list(AngleValueProperty) if p.angle.vertex is None and p.degree == 0]:
                 ang = zero.angle
-                ncl = self.context.not_collinear_property(*ang.vector0.points, ang.vector1.points[0])
-                if ncl is None:
+                ncl = self.context.collinearity_property(*ang.vector0.points, ang.vector1.points[0])
+                if ncl is None or ncl.collinear:
                     continue
                 ne = self.context.not_equal_property(*ang.vector1.points)
                 if ne is None:
@@ -537,11 +537,7 @@ class Explainer:
                 )
 
             for sos in self.context.list(SameOrOppositeSideProperty):
-                for col in [p for p in self.context.list(PointsCollinearityProperty) if p.collinear]:
-                    if sos.segment.points[0] not in col.points:
-                        continue
-                    if sos.segment.points[1] not in col.points:
-                        continue
+                for col in [p for p in self.context.list(PointsCollinearityProperty, [sos.segment]) if p.collinear]:
                     too_old = sos.reason.obsolete and col.reason.obsolete
                     other = next(pt for pt in col.points if pt not in sos.segment.points)
                     for pt in sos.segment.points:
