@@ -313,7 +313,8 @@ class LinearAngleSet:
         for prop in self.properties:
             if isinstance(prop, AngleValueProperty):
                 values[prop.angle] = prop.degree
-            elif isinstance(prop, AngleRatioProperty) and prop.same:
+            #elif isinstance(prop, AngleRatioProperty) and prop.same:
+            elif isinstance(prop, AngleRatioProperty) and prop.value == 1:
                 equ0 = equivalents.get(prop.angle0)
                 equ1 = equivalents.get(prop.angle1)
                 if equ0 and equ1:
@@ -379,9 +380,9 @@ class LinearAngleSet:
             if len(group.equations) < 10:
                 for eq in group.equations:
                     print('%s' % eq)
-            solution = sp.solve(group.equations)
-        #solution = sp.groebner(equations)
-        #print(solution)
+            #solution = sp.solve(group.equations)
+            solution = sp.groebner(group.equations, *group.symbols)
+            #print(solution)
 #        for elt in solution.items():
 #            print(elt)
 #        print('Total: %d elements' % len(solution))
