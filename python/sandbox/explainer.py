@@ -453,35 +453,35 @@ class Explainer:
                     [aa0, aa1, col]
                 )
 
-            for zero in [p for p in self.context.list(AngleValueProperty) if p.angle.vertex is None and p.degree == 0]:
-                zero_is_too_old = zero.reason.obsolete
-                ang = zero.angle
-
-                for vec0, vec1 in [(ang.vector0, ang.vector1), (ang.vector1, ang.vector0)]:
-                    for i, j in [(0, 1), (1, 0)]:
-                        ncl = self.context.not_collinear_property(*vec0.points, vec1.points[i])
-                        if ncl is None:
-                            continue
-                        ne = self.context.not_equal_property(*vec1.points)
-                        if ne is None:
-                            continue
-                        if zero_is_too_old and ncl.reason.obsolete and ne.reason.obsolete:
-                            continue
-                        yield (
-                            PointsCollinearityProperty(*vec0.points, vec1.points[j], False),
-                            'Transitivity',
-                            [ncl, zero, ne]
-                        )
-                        yield (
-                            PointsCollinearityProperty(*vec1.points, vec0.points[i], False),
-                            'Transitivity',
-                            [ncl, zero, ne]
-                        )
-                        yield (
-                            PointsCollinearityProperty(*vec1.points, vec0.points[j], False),
-                            'Transitivity',
-                            [ncl, zero, ne]
-                        )
+#            for zero in [p for p in self.context.list(AngleValueProperty) if p.angle.vertex is None and p.degree == 0]:
+#                zero_is_too_old = zero.reason.obsolete
+#                ang = zero.angle
+#
+#                for vec0, vec1 in [(ang.vector0, ang.vector1), (ang.vector1, ang.vector0)]:
+#                    for i, j in [(0, 1), (1, 0)]:
+#                        ncl = self.context.not_collinear_property(*vec0.points, vec1.points[i])
+#                        if ncl is None:
+#                            continue
+#                        ne = self.context.not_equal_property(*vec1.points)
+#                        if ne is None:
+#                            continue
+#                        if zero_is_too_old and ncl.reason.obsolete and ne.reason.obsolete:
+#                            continue
+#                        yield (
+#                            PointsCollinearityProperty(*vec0.points, vec1.points[j], False),
+#                            'Transitivity',
+#                            [ncl, zero, ne]
+#                        )
+#                        yield (
+#                            PointsCollinearityProperty(*vec1.points, vec0.points[i], False),
+#                            'Transitivity',
+#                            [ncl, zero, ne]
+#                        )
+#                        yield (
+#                            PointsCollinearityProperty(*vec1.points, vec0.points[j], False),
+#                            'Transitivity',
+#                            [ncl, zero, ne]
+#                        )
 
             for zero in [p for p in self.context.list(AngleValueProperty) if p.angle.vertex is None and p.degree == 0]:
                 ang = zero.angle
