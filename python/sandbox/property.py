@@ -98,12 +98,13 @@ class ConcyclicPointsProperty(Property):
 
 class LineCoincidenceProperty(Property):
     """
-    Two lines (defined by segments) are coincident
+    Two lines (defined by segments) are [not] coincident
     """
-    def __init__(self, segment0, segment1):
+    def __init__(self, segment0, segment1, coincident):
         super().__init__()
         self.segments = (segment0, segment1)
         self.property_key = frozenset(self.segments)
+        self.coincident = coincident
 
     @property
     def essential(self):
@@ -111,10 +112,17 @@ class LineCoincidenceProperty(Property):
 
     @property
     def description(self):
-        return LazyComment('%s is the same line as %s', self.segments[0].as_line, self.segments[1].as_line)
+        if self.coincident:
+            return LazyComment(
+                '%s is the same line as %s', self.segments[0].as_line, self.segments[1].as_line
+            )
+        else:
+            return LazyComment(
+                '%s and %s are different lines', self.segments[0].as_line, self.segments[1].as_line
+            )
 
     def compare_values(self, other):
-        return True
+        return self.coincident == other.coincident
 
     def __eq__(self, other):
         return isinstance(other, LineCoincidenceProperty) and self.property_key == other.property_key

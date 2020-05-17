@@ -91,6 +91,7 @@ class Explainer:
             TwoPointsRelativelyToLineTransitivityRule(self.context),
             CongruentAnglesDegeneracyRule(self.context),
             CollinearityToSameLineRule(self.context),
+            CollinearityToDifferentLinesRule(self.context),
 
             EquilateralTriangleByThreeSidesRule(self.context),
             IsoscelesTriangleByConrguentLegsRule(self.context),

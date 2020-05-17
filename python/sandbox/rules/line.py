@@ -33,10 +33,31 @@ class CollinearityToSameLineRule(SingleSourceRule):
             if eq0.coincident or eq1.coincident:
                 continue
             yield (
-                LineCoincidenceProperty(side0, side1),
+                LineCoincidenceProperty(side0, side1, True),
                 LazyComment('points %s, %s, and %s are collinear', *prop.points),
                 [prop, eq0, eq1]
             )
 
         if mask != original:
             self.processed[prop] = mask
+
+class CollinearityToDifferentLinesRule(SingleSourceRule):
+    property_type = PointsCollinearityProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return not prop.collinear and prop not in self.processed
+
+    def apply(self, prop):
+        self.processed.add(prop)
+
+        sides = Scene.Triangle(*prop.points).sides
+        for side0, side1 in itertools.combinations(sides, 2):
+            yield (
+                LineCoincidenceProperty(side0, side1, False),
+                LazyComment('points %s, %s, and %s are not collinear', *prop.points),
+                [prop]
+            )
