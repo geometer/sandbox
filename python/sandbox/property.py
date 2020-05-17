@@ -38,17 +38,17 @@ class ConcyclicPointsProperty(Property):
         super().__init__()
         assert len(points) >= 4, 'ConcyclicPointsProperty makes no sense for %s (<4) points' % len(points)
         self.points = points
-        self.point_set = frozenset(self.points)
+        self.property_key = frozenset(self.points)
 
     @property
     def description(self):
         return LazyComment('Points' + ' %s,' * (len(self.points) - 1) + ' and %s are concyclic', *self.points)
 
     def __eq__(self, other):
-        return isinstance(other, ConcyclicPointsProperty) and self.point_set == other.point_set
+        return isinstance(other, ConcyclicPointsProperty) and self.property_key == other.property_key
 
     def __hash__(self):
-        return hash(ConcyclicPointsProperty) + hash(self.point_set)
+        return hash(ConcyclicPointsProperty) + hash(self.property_key)
 
 class PointsCollinearityProperty(Property):
     """
@@ -57,7 +57,7 @@ class PointsCollinearityProperty(Property):
     def __init__(self, point0, point1, point2, collinear):
         super().__init__()
         self.points = (point0, point1, point2)
-        self.point_set = frozenset(self.points)
+        self.property_key = frozenset(self.points)
         self.collinear = collinear
 
     @property
@@ -78,10 +78,10 @@ class PointsCollinearityProperty(Property):
         return self.collinear == other.collinear
 
     def __eq__(self, other):
-        return isinstance(other, PointsCollinearityProperty) and self.point_set == other.point_set
+        return isinstance(other, PointsCollinearityProperty) and self.property_key == other.property_key
 
     def __hash__(self):
-        return hash(PointsCollinearityProperty) + hash(self.point_set)
+        return hash(PointsCollinearityProperty) + hash(self.property_key)
 
 class ParallelVectorsProperty(Property):
     """
@@ -160,7 +160,7 @@ class PointsCoincidenceProperty(Property):
     def __init__(self, point0, point1, coincident):
         super().__init__()
         self.points = [point0, point1]
-        self.point_set = frozenset(self.points)
+        self.property_key = frozenset(self.points)
         self.coincident = coincident
 
     @property
@@ -181,10 +181,10 @@ class PointsCoincidenceProperty(Property):
         return self.coincident == other.coincident
 
     def __eq__(self, other):
-        return isinstance(other, PointsCoincidenceProperty) and self.point_set == other.point_set
+        return isinstance(other, PointsCoincidenceProperty) and self.property_key == other.property_key
 
     def __hash__(self):
-        return hash(PointsCoincidenceProperty) + hash(self.point_set)
+        return hash(PointsCoincidenceProperty) + hash(self.property_key)
 
 class SameOrOppositeSideProperty(Property):
     """
@@ -258,7 +258,7 @@ class EquilateralTriangleProperty(Property):
     def __init__(self, points):
         super().__init__()
         self.triangle = points if isinstance(points, Scene.Triangle) else Scene.Triangle(*points)
-        self.__point_set = frozenset(self.triangle.points)
+        self.property_key = frozenset(self.triangle.points)
 
     def keys(self, lengths=None):
         return keys_for_triangle(self.triangle, lengths)
@@ -268,10 +268,10 @@ class EquilateralTriangleProperty(Property):
         return LazyComment('%s is equilateral', self.triangle)
 
     def __eq__(self, other):
-        return isinstance(other, EquilateralTriangleProperty) and self.__point_set == other.__point_set
+        return isinstance(other, EquilateralTriangleProperty) and self.property_key == other.property_key
 
     def __hash__(self):
-        return hash(EquilateralTriangleProperty) + hash(self.__point_set)
+        return hash(EquilateralTriangleProperty) + hash(self.property_key)
 
 class AngleKindProperty(Property):
     """

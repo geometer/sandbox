@@ -637,9 +637,9 @@ class PropertySet:
         elif type_key == LengthRatioProperty:
             self.__length_ratios.add(prop)
         elif type_key == PointsCoincidenceProperty:
-            self.__coincidence[prop.point_set] = prop
+            self.__coincidence[prop.property_key] = prop
         elif type_key == PointsCollinearityProperty:
-            self.__collinearity[prop.point_set] = prop
+            self.__collinearity[prop.property_key] = prop
         elif type_key == EqualLengthRatiosProperty:
             self.__length_ratios.add(prop)
         elif type_key == SameCyclicOrderProperty:
