@@ -191,10 +191,8 @@ class TwoPointsBelongsToTwoLinesRule(SingleSourceRule):
 
 class CollinearityCollisionRule(Rule):
     """
-    If a point belongs to some line, and another one does not,
+    If a point belongs to some line, and another does not,
     then the points are different.
-    Moreover, if a third point belongs to the line and does not coincide to the first,
-    then the three points are not collinear.
     """
     def sources(self):
         return itertools.product( \
@@ -218,17 +216,6 @@ class CollinearityCollisionRule(Rule):
                 LazyComment('%s lies on the line %s %s, %s does not', pt_col, *common_points, pt_ncl),
                 [ncl, col]
             )
-        for common in common_points:
-            ne = self.context.not_equal_property(common, pt_col)
-            if ne is not None and not (reasons_are_too_old and ne.reason.obsolete):
-                yield (
-                    PointsCollinearityProperty(common, pt_col, pt_ncl, False),
-                    LazyComment(
-                        '%s and %s lie on the line %s %s, %s does not',
-                        common, pt_col, *common_points, pt_ncl
-                    ),
-                    [ncl, col, ne]
-                )
 
 class NonCollinearPointsAreDifferentRule(SingleSourceRule):
     """

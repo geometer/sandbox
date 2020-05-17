@@ -3,13 +3,148 @@ import networkx as nx
 import re
 
 from .core import CoreScene
-from .property import AngleKindProperty, AngleValueProperty, AngleRatioProperty, LengthRatioProperty, PointsCoincidenceProperty, PointsCollinearityProperty, EqualLengthRatiosProperty, SameCyclicOrderProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, SimilarTrianglesProperty, CongruentTrianglesProperty, SameOrOppositeSideProperty
+from .property import *
 from .reason import Reason
 from .stats import Stats
 from .util import LazyComment, divide
 
 class ContradictionError(Exception):
     pass
+
+class LineSet:
+    class Line:
+        def __init__(self):
+            self.premises_graph = nx.Graph()
+
+        @property
+        def segments(self):
+            return self.premises_graph.nodes
+
+        def add(self, prop):
+            self.premises_graph.add_edge(*prop.segments, prop=prop)
+
+        def same_line_explanation(self, segment0, segment1):
+            edge = self.premises_graph.get_edge_data(segment0, segment1)
+            if edge:
+                prop = edge['prop']
+                return (
+                    LazyComment('%s and %s is the same line', segment0.as_line, segment1.as_line),
+                    [prop]
+                )
+            path = nx.algorithms.shortest_path(self.premises_graph, segment0, segment1)
+            pattern = ' = '.join(['%s'] * len(path))
+            return (
+                LazyComment(pattern, *path),
+                [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
+            )
+
+        def same_line_property(self, segment0, segment1):
+            comment, premises = self.same_line_explanation(segment0, segment1)
+            prop = LineCoincidenceProperty(segment0, segment1, True)
+            prop.rule = 'synthetic'
+            prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+            prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+            return prop
+
+    def __init__(self):
+        self.segment_to_line = {}
+        self.__all_lines = set()
+        self.different_lines_graph = nx.Graph()
+
+    def __add_same_line_property(self, prop):
+        line0 = self.segment_to_line.get(prop.segments[0])
+        line1 = self.segment_to_line.get(prop.segments[1])
+        if line0 and line1:
+            if line0 != line1:
+                for segment in line1.segments:
+                    self.segment_to_line[segment] = line0
+                line0.premises_graph.add_edges_from(line1.premises_graph.edges(data=True))
+            line0.add(prop)
+        elif line0:
+            line0.add(prop)
+            self.segment_to_line[prop.segments[1]] = line0
+        elif line1:
+            line1.add(prop)
+            self.segment_to_line[prop.segments[0]] = line1
+        else:
+            line = LineSet.Line()
+            line.add(prop)
+            self.segment_to_line[prop.segments[0]] = line
+            self.segment_to_line[prop.segments[1]] = line
+            self.__all_lines.add(line)
+
+    def __add_different_lines_property(self, prop):
+        def line_by_segment(segment):
+            line = self.segment_to_line.get(segment)
+            if line is None:
+                line = LineSet.Line()
+                line.premises_graph.add_node(segment)
+                self.segment_to_line[segment] = line
+            return line
+
+        line0 = line_by_segment(prop.segments[0])
+        line1 = line_by_segment(prop.segments[1])
+        edge = self.different_lines_graph.get_edge_data(line0, line1)
+        if edge is None:
+            self.different_lines_graph.add_edge(line0, line1, props={prop})
+        else:
+            edge['props'].add(prop)
+
+    def add(self, prop):
+        if prop.coincident:
+            self.__add_same_line_property(prop)
+        else:
+            self.__add_different_lines_property(prop)
+
+    def collinearity_property(self, pt0, pt1, pt2):
+        lines = [(side, self.segment_to_line.get(side)) for side in Scene.Triangle(pt0, pt1, pt2).sides]
+        lines = [lw for lw in lines if lw[1]]
+        if len(lines) < 2:
+            return None
+        candidates = []
+        for (segment0, line0), (segment1, line1) in itertools.combinations(lines, 2):
+            if line0 == line1:
+                comment, premises = line0.same_line_explanation(segment0, segment1)
+                prop = PointsCollinearityProperty(pt0, pt1, pt2, True)
+                prop.rule = 'synthetic'
+                prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+                prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+                candidates.append(prop)
+                continue
+            data = self.different_lines_graph.get_edge_data(line0, line1)
+            if data:
+                for prop in data['props']:
+                    seg0, seg1 = prop.segments
+                    if self.segment_to_line[seg0] == line1:
+                        seg0, seg1 = seg1, seg0
+                    premises = [prop]
+                    if seg0 == segment0 and seg1 == segment1:
+                        comment = LazyComment('%s and %s are different lines', segment0, segment1)
+                    elif seg0 == segment0:
+                        comment = LazyComment('%s and %s are different lines, %s is the same as %s', segment0, segment1, seg1, segment1) 
+                        premises.append(line1.same_line_property(seg1, segment1))
+                    elif seg1 == segment1:
+                        comment = LazyComment('%s and %s are different lines, %s is the same as %s', segment0, segment1, seg0, segment0) 
+                        premises.append(line0.same_line_property(seg0, segment0))
+                    else:
+                        comment = LazyComment('%s and %s are different lines, %s is the same as %s, and %s is the same as %s', segment0, segment1, seg0, segment0, seg1, segment1) 
+                        premises.append(line0.same_line_property(seg0, segment0))
+                        premises.append(line1.same_line_property(seg1, segment1))
+                    prop = PointsCollinearityProperty(pt0, pt1, pt2, False)
+                    prop.rule = 'synthetic'
+                    prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+                    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+                    candidates.append(prop)
+        if not candidates:
+            return None
+        best = candidates[0]
+        cost = len(best.reason.all_premises)
+        for cand in candidates[1:]:
+            cand_cost = len(cand.reason.all_premises)
+            if cand_cost < cost:
+                best = cand
+                cost = cand_cost
+        return best
 
 class CyclicOrderPropertySet:
     class Family:
@@ -603,6 +738,7 @@ class PropertySet:
         self.__full_set = {} # prop => prop
         self.__indexes = {} # prop => number
         self.__angle_kinds = {} # angle => prop
+        self.__line_set = LineSet()
         self.__angle_ratios = AngleRatioPropertySet()
         self.__length_ratios = LengthRatioPropertySet()
         self.__cyclic_orders = CyclicOrderPropertySet()
@@ -644,6 +780,8 @@ class PropertySet:
             self.__length_ratios.add(prop)
         elif type_key == SameCyclicOrderProperty:
             self.__cyclic_orders.add(prop)
+        elif type_key == LineCoincidenceProperty:
+            self.__line_set.add(prop)
         elif type_key == SameOrOppositeSideProperty:
             self.__two_points_relatively_to_line[prop.property_key] = prop
         elif type_key in (SimilarTrianglesProperty, CongruentTrianglesProperty):
@@ -723,10 +861,11 @@ class PropertySet:
         return existing
 
     def collinearity_property(self, pt0, pt1, pt2):
-        return self.__collinearity.get(frozenset([pt0, pt1, pt2]))
+        prop = self.__collinearity.get(frozenset([pt0, pt1, pt2]))
+        return prop if prop else self.__line_set.collinearity_property(pt0, pt1, pt2)
 
     def not_collinear_property(self, pt0, pt1, pt2):
-        prop = self.__collinearity.get(frozenset([pt0, pt1, pt2]))
+        prop = self.collinearity_property(pt0, pt1, pt2)
         return prop if prop and not prop.collinear else None
 
     def coincidence_property(self, pt0, pt1):
