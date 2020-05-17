@@ -851,6 +851,12 @@ class PropertySet:
             points.append(next(pt for pt in prop.points if pt not in segment.points))
         return points
 
+    def not_collinear_points(self, segment):
+        points = []
+        for prop in [p for p in self.list(PointsCollinearityProperty, [segment]) if not p.collinear]:
+            points.append(next(pt for pt in prop.points if pt not in segment.points))
+        return points
+
     def intersection_of_lines(self, segment0, segment1):
         key = frozenset([segment0, segment1])
         value = self.__intersections.get(key)
