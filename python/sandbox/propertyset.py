@@ -146,9 +146,10 @@ class AngleRatioPropertySet:
             ratio = self.angle_to_ratio.get(angle)
             if ratio is None:
                 return None
+            edge = self.premises_graph.get_edge_data(angle, self.degree)
+            if edge:
+                return edge['prop']
             path = nx.algorithms.shortest_path(self.premises_graph, angle, self.degree)
-            if len(path) == 2:
-                return self.premises_graph[path[0]][path[1]]['prop']
             comment, premises = self.explanation_from_path(path, ratio)
             prop = AngleValueProperty(angle, self.degree * ratio)
             prop.rule = 'synthetic'
@@ -159,10 +160,11 @@ class AngleRatioPropertySet:
         def value_properties(self):
             properties = []
             for angle, ratio in self.angle_to_ratio.items():
-                path = nx.algorithms.shortest_path(self.premises_graph, angle, self.degree)
-                if len(path) == 2:
-                    properties.append(self.premises_graph[path[0]][path[1]]['prop'])
+                edge = self.premises_graph.get_edge_data(angle, self.degree)
+                if edge:
+                    properties.append(edge['prop'])
                     continue
+                path = nx.algorithms.shortest_path(self.premises_graph, angle, self.degree)
                 comment, premises = self.explanation_from_path(path, ratio)
                 prop = AngleValueProperty(angle, self.degree * ratio)
                 prop.rule = 'synthetic'
@@ -176,10 +178,11 @@ class AngleRatioPropertySet:
             for angle, ratio in self.angle_to_ratio.items():
                 if self.degree * ratio != degree:
                     continue
-                path = nx.algorithms.shortest_path(self.premises_graph, angle, self.degree)
-                if len(path) == 2:
-                    properties.append(self.premises_graph[path[0]][path[1]]['prop'])
+                edge = self.premises_graph.get_edge_data(angle, self.degree)
+                if edge:
+                    properties.append(edge['prop'])
                     continue
+                path = nx.algorithms.shortest_path(self.premises_graph, angle, self.degree)
                 comment, premises = self.explanation_from_path(path, ratio)
                 prop = AngleValueProperty(angle, degree)
                 prop.rule = 'synthetic'
@@ -215,16 +218,17 @@ class AngleRatioPropertySet:
                     angles_map[key] = [item]
             for ar in angles_map.values():
                 for (angle0, ratio0), (angle1, ratio1) in itertools.combinations(ar, 2):
+                    edge = self.premises_graph.get_edge_data(angle0, angle1)
+                    if edge:
+                        yield edge['prop']
+                        continue
                     path = nx.algorithms.shortest_path(self.premises_graph, angle0, angle1)
-                    if len(path) == 2:
-                        yield self.premises_graph[path[0]][path[1]]['prop']
-                    else:
-                        comment, premises = self.explanation_from_path(path, ratio0)
-                        prop = AngleRatioProperty(angle0, angle1, divide(ratio0, ratio1))
-                        prop.rule = 'synthetic'
-                        prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
-                        prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-                        yield prop
+                    comment, premises = self.explanation_from_path(path, ratio0)
+                    prop = AngleRatioProperty(angle0, angle1, divide(ratio0, ratio1))
+                    prop.rule = 'synthetic'
+                    prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+                    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+                    yield prop
 
         def add_value_property(self, prop):
             ratio = self.angle_to_ratio.get(prop.angle)
@@ -293,9 +297,10 @@ class AngleRatioPropertySet:
         fam = self.angle_to_family.get(angle0)
         if fam is None or angle1 not in fam.angle_to_ratio:
             return None
+        edge = fam.premises_graph.get_edge_data(angle0, angle1)
+        if edge:
+            return edge['prop']
         path = nx.algorithms.shortest_path(fam.premises_graph, angle0, angle1)
-        if len(path) == 2:
-            return fam.premises_graph[path[0]][path[1]]['prop']
         coef = fam.angle_to_ratio[angle0]
         comment, premises = fam.explanation_from_path(path, coef)
         value = divide(coef, fam.angle_to_ratio[angle1])
