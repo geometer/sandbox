@@ -190,7 +190,7 @@ class PointsOnChordRule(Rule):
 
     def apply(self, triple):
         points, circle, premises = triple
-        for pt, _ in self.context.collinear_points_with_properties(*points):
+        for pt in self.context.collinear_points(points[0].segment(points[1])):
             av = self.context.angle_value_property(pt.angle(*points))
             pc = self.context.point_and_circle_property(pt, circle.main_key)
             if av:

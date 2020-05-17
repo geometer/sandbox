@@ -1185,11 +1185,6 @@ class PropertySet:
             return prop
         return self.circles.point_and_circle_property(pt, cpoints)
 
-    def collinear_points_with_properties(self, pt0, pt1):
-        for prop in self.list(PointsCollinearityProperty, [pt0.segment(pt1)]):
-            if prop.collinear:
-                yield (next(pt for pt in prop.points if pt not in (pt0, pt1)), prop)
-
     def collinear_points(self, segment):
         points = []
         for prop in [p for p in self.list(PointsCollinearityProperty, [segment]) if p.collinear]:
