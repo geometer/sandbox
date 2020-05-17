@@ -208,7 +208,7 @@ class Explainer:
                 )
 
             for ss0, ss1 in itertools.combinations([p for p in self.context.list(SameOrOppositeSideProperty) if p.same], 2):
-                for pts in itertools.combinations(ss0.segment.points + ss1.segment.points, 3):
+                for pts in itertools.combinations(set(ss0.segment.points + ss1.segment.points), 3):
                     ncl = self.context.not_collinear_property(*pts)
                     if ncl:
                         break
@@ -319,6 +319,8 @@ class Explainer:
                         if vec1.end not in other.points:
                             continue
                         foot = next(pt for pt in other.points if pt != vec1.end)
+                        if foot in vec0.points:
+                            continue
                         col = self.context.collinearity_property(foot, *vec0.points)
                         if col is None or not col.collinear:
                             continue
@@ -367,6 +369,8 @@ class Explainer:
                         if vec1.end not in other.points:
                             continue
                         foot = next(pt for pt in other.points if pt != vec1.end)
+                        if foot in vec0.points:
+                            continue
                         col = self.context.collinearity_property(foot, *vec0.points)
                         if col is None or not col.collinear:
                             continue
