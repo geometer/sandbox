@@ -950,11 +950,11 @@ class PropertySet:
             self.__length_ratios.add(prop)
         elif type_key == PointsCoincidenceProperty:
             self.lines.add(prop)
-            self.__coincidence[prop.point_set] = prop
+            self.__coincidence[prop.property_key] = prop
         elif type_key == PointsCollinearityProperty:
             self.lines.add(prop)
             self.circles.add(prop)
-            self.__collinearity[prop.point_set] = prop
+            self.__collinearity[prop.property_key] = prop
         elif type_key == PointAndCircleProperty:
             self.circles.add(prop)
         elif type_key == EqualLengthRatiosProperty:
