@@ -88,6 +88,7 @@ class Explainer:
             SameSideToInsideAngleRule(self.context),
             TwoAnglesWithCommonSideRule(self.context),
             TwoPointsRelativelyToLineTransitivityRule(self.context),
+            CongruentAnglesDegeneracyRule(self.context),
 
             EquilateralTriangleByThreeSidesRule(self.context),
             IsoscelesTriangleByConrguentLegsRule(self.context),
@@ -451,25 +452,6 @@ class Explainer:
                     LazyComment('Both %s and %s are acute', aa0.angle, aa1.angle),
                     [aa0, aa1, col]
                 )
-
-            for ang0, ang1 in self.context.congruent_angles_with_vertex():
-                ncl0 = self.context.not_collinear_property(*ang0.point_set)
-                ncl1 = self.context.not_collinear_property(*ang1.point_set)
-                if ncl0 and ncl1 or not ncl0 and not ncl1:
-                    continue
-                ca = self.context.angle_ratio_property(ang0, ang1)
-                if ncl0:
-                    yield (
-                        PointsCollinearityProperty(*ang1.point_set, False),
-                        'Transitivity',
-                        [ca, ncl0]
-                    )
-                else:
-                    yield (
-                        PointsCollinearityProperty(*ang0.point_set, False),
-                        'Transitivity',
-                        [ca, ncl1]
-                    )
 
             for zero in [p for p in self.context.list(AngleValueProperty) if p.angle.vertex is None and p.degree == 0]:
                 zero_is_too_old = zero.reason.obsolete

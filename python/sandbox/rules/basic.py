@@ -1231,3 +1231,37 @@ class TwoPointsRelativelyToLineTransitivityRule(Rule):
             comment,
             premises
         )
+
+class CongruentAnglesDegeneracyRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        return self.context.congruent_angles_with_vertex()
+
+    def apply(self, src):
+        ca = None
+        for key in (src, (src[1], src[0])):
+            if key in self.processed:
+                continue
+            ang0, ang1 = key
+            col = self.context.collinearity_property(*ang0.point_set)
+            if col is None:
+                continue
+            self.processed.add(key)
+            if ca is None:
+                ca = self.context.angle_ratio_property(ang0, ang1)
+            if col.collinear:
+                comment = LazyComment(
+                    'angles %s and %s are congruent, %s is degenerate', ang1, ang0, ang0
+                )
+            else:
+                comment = LazyComment(
+                    'angles %s and %s are congruent, %s is non-degenerate', ang1, ang0, ang0
+                )
+            yield (
+                PointsCollinearityProperty(*ang1.point_set, col.collinear),
+                comment,
+                [ca, col]
+            )
