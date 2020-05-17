@@ -245,7 +245,7 @@ class CyclicOrderPropertySet:
             path = nx.algorithms.shortest_path(self.premises_graph, cycle0, cycle1)
             pattern = ' = '.join(['%s'] * len(path))
             comment = LazyComment(pattern, *path)
-            premises = [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
+            premises = [self.premises_graph.get_edge_data(i, j)['prop'] for i, j in zip(path[:-1], path[1:])]
             return (comment, premises)
 
     def __init__(self):
@@ -448,7 +448,7 @@ class AngleRatioPropertySet:
             self.degree = None
 
         def explanation_from_path(self, path, multiplier):
-            premises = [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
+            premises = [self.premises_graph.get_edge_data(i, j)['prop'] for i, j in zip(path[:-1], path[1:])]
             return (AngleRatioPropertySet.CommentFromPath(path, premises, multiplier, self.angle_to_ratio), premises)
 
         def value_property(self, angle):
@@ -613,7 +613,7 @@ class AngleRatioPropertySet:
         coef = fam.angle_to_ratio[angle0]
         comment, premises = fam.explanation_from_path(path, coef)
         value = divide(coef, fam.angle_to_ratio[angle1])
-        same = value == 1 and all(isinstance(prop, AngleRatioProperty) and prop.same for prop in [fam.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])])
+        same = value == 1 and all(isinstance(prop, AngleRatioProperty) and prop.same for prop in [fam.premises_graph.get_edge_data(i, j)['prop'] for i, j in zip(path[:-1], path[1:])])
         prop = AngleRatioProperty(angle0, angle1, value, same=same)
         prop.rule = 'synthetic'
         prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
@@ -690,9 +690,7 @@ class AngleRatioPropertySet:
                 for key in self.angle_to_family:
                     if self.angle_to_family[key] == fam1:
                         self.angle_to_family[key] = fam0
-                fam0.premises_graph.add_edges_from(fam1.premises_graph.edges)
-                for a0, a1 in fam1.premises_graph.edges:
-                    fam0.premises_graph[a0][a1].update(fam1.premises_graph[a0][a1])
+                fam0.premises_graph.add_edges_from(fam1.premises_graph.edges(data=True))
         elif fam0:
             fam0.add_ratio_property(prop)
             self.angle_to_family[prop.angle1] = fam0
@@ -736,7 +734,7 @@ class LengthRatioPropertySet:
             path = nx.algorithms.shortest_path(self.premises_graph, ratio0, ratio1)
             pattern = ' = '.join(['|%s| / |%s|' if len(v) == 2 else '%s' for v in path])
             comment = LazyComment(pattern, *sum(path, ()))
-            premises = [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
+            premises = [self.premises_graph.get_edge_data(i, j)['prop'] for i, j in zip(path[:-1], path[1:])]
             return (comment, premises)
 
         def value_explanation(self, ratio):
