@@ -6,8 +6,10 @@ from .scene import Scene
 from .util import LazyComment, divide, good_angles, normalize_number, keys_for_triangle
 
 class Property:
-    def __init__(self):
+    def __init__(self, property_key):
         self.implications = set()
+        self.property_key = property_key
+        self.__hash = None
 
     @property
     def essential(self):
@@ -24,40 +26,40 @@ class Property:
     def html(self):
         return self.description
 
+    def compare_values(self, other):
+        return True
+
     def __str__(self):
         return str(self.description)
 
-    def compare_values(self, other):
-        return True
+    def __eq__(self, other):
+        return type(self) == type(other) and self.property_key == other.property_key
+
+    def __hash__(self):
+        if self.__hash is None:
+            self.__hash = hash(type(self)) + hash(self.property_key)
+        return self.__hash
 
 class ConcyclicPointsProperty(Property):
     """
     Concyclic points
     """
     def __init__(self, *points):
-        super().__init__()
         assert len(points) >= 4, 'ConcyclicPointsProperty makes no sense for %s (<4) points' % len(points)
         self.points = points
-        self.property_key = frozenset(self.points)
+        super().__init__(frozenset(self.points))
 
     @property
     def description(self):
         return LazyComment('Points' + ' %s,' * (len(self.points) - 1) + ' and %s are concyclic', *self.points)
-
-    def __eq__(self, other):
-        return isinstance(other, ConcyclicPointsProperty) and self.property_key == other.property_key
-
-    def __hash__(self):
-        return hash(ConcyclicPointsProperty) + hash(self.property_key)
 
 class PointsCollinearityProperty(Property):
     """
     [Not] collinear points
     """
     def __init__(self, point0, point1, point2, collinear):
-        super().__init__()
         self.points = (point0, point1, point2)
-        self.property_key = frozenset(self.points)
+        super().__init__(frozenset(self.points))
         self.collinear = collinear
 
     @property
@@ -77,21 +79,14 @@ class PointsCollinearityProperty(Property):
     def compare_values(self, other):
         return self.collinear == other.collinear
 
-    def __eq__(self, other):
-        return isinstance(other, PointsCollinearityProperty) and self.property_key == other.property_key
-
-    def __hash__(self):
-        return hash(PointsCollinearityProperty) + hash(self.property_key)
-
 class ParallelVectorsProperty(Property):
     """
     Two vectors are parallel (or at least one of them has zero length)
     """
     def __init__(self, vector0, vector1):
-        super().__init__()
         self.vector0 = vector0
         self.vector1 = vector1
-        self.__vector_set = frozenset([vector0, vector1])
+        super().__init__(frozenset([vector0, vector1]))
 
     def keys(self):
         return [self.vector0.as_segment, self.vector1.as_segment]
@@ -100,21 +95,13 @@ class ParallelVectorsProperty(Property):
     def description(self):
         return LazyComment('%s ↑↑ %s', self.vector0, self.vector1)
 
-    def __eq__(self, other):
-        return isinstance(other, ParallelVectorsProperty) and \
-            self.__vector_set == other.__vector_set
-
-    def __hash__(self):
-        return hash(ParallelVectorsProperty) + hash(self.__vector_set)
-
 class ParallelSegmentsProperty(Property):
     """
     Two segments are parallel (or at least one of them has zero length)
     """
     def __init__(self, segment0, segment1):
-        super().__init__()
         self.segments = (segment0, segment1)
-        self.__segment_set = frozenset(self.segments)
+        super().__init__(frozenset(self.segments))
 
     def keys(self):
         return self.segments
@@ -123,21 +110,13 @@ class ParallelSegmentsProperty(Property):
     def description(self):
         return LazyComment('%s ∥ %s', *self.segments)
 
-    def __eq__(self, other):
-        return isinstance(other, ParallelSegmentsProperty) and \
-            self.__segment_set == other.__segment_set
-
-    def __hash__(self):
-        return hash(ParallelSegmentsProperty) + hash(self.__segment_set)
-
 class PerpendicularSegmentsProperty(Property):
     """
     Two segments are perpendicular (or at least one of them has zero length)
     """
     def __init__(self, segment0, segment1):
-        super().__init__()
         self.segments = (segment0, segment1)
-        self.__segment_set = frozenset(self.segments)
+        super().__init__(frozenset(self.segments))
 
     def keys(self):
         return self.segments
@@ -146,21 +125,13 @@ class PerpendicularSegmentsProperty(Property):
     def description(self):
         return LazyComment('%s ⟂ %s', *self.segments)
 
-    def __eq__(self, other):
-        return isinstance(other, PerpendicularSegmentsProperty) and \
-            self.__segment_set == other.__segment_set
-
-    def __hash__(self):
-        return hash(PerpendicularSegmentsProperty) + hash(self.__segment_set)
-
 class PointsCoincidenceProperty(Property):
     """
     [Not] coincident points
     """
     def __init__(self, point0, point1, coincident):
-        super().__init__()
         self.points = [point0, point1]
-        self.property_key = frozenset(self.points)
+        super().__init__(frozenset(self.points))
         self.coincident = coincident
 
     @property
@@ -180,12 +151,6 @@ class PointsCoincidenceProperty(Property):
     def compare_values(self, other):
         return self.coincident == other.coincident
 
-    def __eq__(self, other):
-        return isinstance(other, PointsCoincidenceProperty) and self.property_key == other.property_key
-
-    def __hash__(self):
-        return hash(PointsCoincidenceProperty) + hash(self.property_key)
-
 class SameOrOppositeSideProperty(Property):
     """
     Two points on opposite/same sides of a line
@@ -195,11 +160,10 @@ class SameOrOppositeSideProperty(Property):
         return frozenset([segment, point0, point1])
 
     def __init__(self, segment, point0, point1, same):
-        super().__init__()
         self.segment = segment
         self.points = (point0, point1)
         self.same = same
-        self.property_key = SameOrOppositeSideProperty.unique_key(segment, point0, point1)
+        super().__init__(SameOrOppositeSideProperty.unique_key(segment, point0, point1))
 
     @property
     def essential(self):
@@ -218,21 +182,14 @@ class SameOrOppositeSideProperty(Property):
     def compare_values(self, other):
         return self.same == other.same
 
-    def __eq__(self, other):
-        return isinstance(other, SameOrOppositeSideProperty) and self.property_key == other.property_key
-
-    def __hash__(self):
-        return hash(SameOrOppositeSideProperty) + hash(self.property_key)
-
 class PointInsideAngleProperty(Property):
     """
     Point is inside an angle
     """
     def __init__(self, point, angle):
-        super().__init__()
         self.point = point
         self.angle = angle
-        self.__key = (point, angle)
+        super().__init__((point, angle))
 
     @property
     def essential(self):
@@ -245,20 +202,13 @@ class PointInsideAngleProperty(Property):
     def keys(self):
         return [self.point, self.angle]
 
-    def __eq__(self, other):
-        return isinstance(other, PointInsideAngleProperty) and self.__key == other.__key
-
-    def __hash__(self):
-        return hash(self.__key)
-
 class EquilateralTriangleProperty(Property):
     """
     Equilateral triangle
     """
     def __init__(self, points):
-        super().__init__()
         self.triangle = points if isinstance(points, Scene.Triangle) else Scene.Triangle(*points)
-        self.property_key = frozenset(self.triangle.points)
+        super().__init__(frozenset(self.triangle.points))
 
     def keys(self, lengths=None):
         return keys_for_triangle(self.triangle, lengths)
@@ -266,12 +216,6 @@ class EquilateralTriangleProperty(Property):
     @property
     def description(self):
         return LazyComment('%s is equilateral', self.triangle)
-
-    def __eq__(self, other):
-        return isinstance(other, EquilateralTriangleProperty) and self.property_key == other.property_key
-
-    def __hash__(self):
-        return hash(EquilateralTriangleProperty) + hash(self.property_key)
 
 class AngleKindProperty(Property):
     """
@@ -286,9 +230,9 @@ class AngleKindProperty(Property):
             return self.name
 
     def __init__(self, angle, kind):
-        super().__init__()
         self.angle = angle
         self.kind = kind
+        super().__init__(angle)
 
     def keys(self):
         return [self.angle]
@@ -299,12 +243,6 @@ class AngleKindProperty(Property):
 
     def compare_values(self, other):
         return self.kind == other.kind
-
-    def __eq__(self, other):
-        return isinstance(other, AngleKindProperty) and self.angle == other.angle
-
-    def __hash__(self):
-        return hash(AngleKindProperty) + hash(self.angle)
 
 class LinearAngleProperty(Property):
     pass
@@ -319,9 +257,9 @@ class AngleValueProperty(LinearAngleProperty):
             yield AngleValueProperty(ngl, 180 - value if complementary else value)
 
     def __init__(self, angle, degree):
-        super().__init__()
         self.angle = angle
         self.degree = normalize_number(degree)
+        super().__init__(angle)
 
     @property
     def essential(self):
@@ -342,20 +280,11 @@ class AngleValueProperty(LinearAngleProperty):
     def compare_values(self, other):
         return self.degree == other.degree
 
-    def __eq__(self, other):
-        if not isinstance(other, AngleValueProperty):
-            return False
-        return self.angle == other.angle
-
-    def __hash__(self):
-        return hash(AngleValueProperty) + hash(self.angle)
-
 class AngleRatioProperty(LinearAngleProperty):
     """
     Two angle values ratio
     """
     def __init__(self, angle0, angle1, ratio, same=False):
-        super().__init__()
         # angle0 / angle1 = ratio
         if ratio >= 1:
             self.angle0 = angle0
@@ -367,8 +296,7 @@ class AngleRatioProperty(LinearAngleProperty):
             self.value = divide(1, ratio)
         self.same = same
 
-        self.angle_set = frozenset([angle0, angle1])
-        self.__hash = None
+        super().__init__(frozenset([angle0, angle1]))
 
     def keys(self):
         return [self.angle0, self.angle1]
@@ -389,23 +317,14 @@ class AngleRatioProperty(LinearAngleProperty):
     def compare_values(self, other):
         return self.value == other.value
 
-    def __eq__(self, other):
-        return isinstance(other, AngleRatioProperty) and self.angle_set == other.angle_set
-
-    def __hash__(self):
-        if self.__hash is None:
-            self.__hash = hash(AngleRatioProperty) + hash(self.angle_set)
-        return self.__hash
-
 class SumOfThreeAnglesProperty(LinearAngleProperty):
     """
     Sum of three angles is equal to degree
     """
     def __init__(self, angle0, angle1, angle2, degree):
-        super().__init__()
         self.angles = (angle0, angle1, angle2)
         self.degree = degree
-        self.angle_set = frozenset(self.angles)
+        super().__init__(frozenset(self.angles))
 
     def keys(self):
         return self.angles
@@ -417,21 +336,14 @@ class SumOfThreeAnglesProperty(LinearAngleProperty):
     def compare_values(self, other):
         return self.degree == other.degree
 
-    def __eq__(self, other):
-        return isinstance(other, SumOfThreeAnglesProperty) and self.angle_set == other.angle_set
-
-    def __hash__(self):
-        return hash(SumOfThreeAnglesProperty) + hash(self.angle_set)
-
 class SumOfTwoAnglesProperty(LinearAngleProperty):
     """
     Sum of two angles is equal to degree
     """
     def __init__(self, angle0, angle1, degree):
-        super().__init__()
         self.angles = (angle0, angle1)
         self.degree = degree
-        self.angle_set = frozenset([angle0, angle1])
+        super().__init__(frozenset([angle0, angle1]))
 
     def keys(self):
         return self.angles
@@ -443,18 +355,11 @@ class SumOfTwoAnglesProperty(LinearAngleProperty):
     def compare_values(self, other):
         return self.degree == other.degree
 
-    def __eq__(self, other):
-        return isinstance(other, SumOfTwoAnglesProperty) and self.angle_set == other.angle_set
-
-    def __hash__(self):
-        return hash(SumOfTwoAnglesProperty) + hash(self.angle_set)
-
 class LengthRatioProperty(Property):
     """
     Two non-zero segment lengths ratio
     """
     def __init__(self, segment0, segment1, ratio):
-        super().__init__()
         if ratio >= 1:
             self.segment0 = segment0
             self.segment1 = segment1
@@ -463,7 +368,7 @@ class LengthRatioProperty(Property):
             self.segment0 = segment1
             self.segment1 = segment0
             self.value = divide(1, ratio)
-        self.segment_set = frozenset([segment0, segment1])
+        super().__init__(frozenset([segment0, segment1]))
 
     def keys(self):
         return [self.segment0, self.segment1]
@@ -475,18 +380,11 @@ class LengthRatioProperty(Property):
     def compare_values(self, other):
         return self.value == other.value
 
-    def __eq__(self, other):
-        return isinstance(other, LengthRatioProperty) and self.segment_set == other.segment_set
-
-    def __hash__(self):
-        return hash(LengthRatioProperty) + hash(self.segment_set)
-
 class ProportionalLengthsProperty(Property):
     """
     Two segment lengths ratio
     """
     def __init__(self, segment0, segment1, ratio):
-        super().__init__()
         if ratio >= 1:
             self.segment0 = segment0
             self.segment1 = segment1
@@ -495,7 +393,7 @@ class ProportionalLengthsProperty(Property):
             self.segment0 = segment1
             self.segment1 = segment0
             self.value = divide(1, ratio)
-        self.segment_set = frozenset([segment0, segment1])
+        super().__init__(frozenset([segment0, segment1]))
 
     def keys(self):
         return [self.segment0, self.segment1]
@@ -508,12 +406,6 @@ class ProportionalLengthsProperty(Property):
 
     def compare_values(self, other):
         return self.value == other.value
-
-    def __eq__(self, other):
-        return isinstance(other, ProportionalLengthsProperty) and self.segment_set == other.segment_set
-
-    def __hash__(self):
-        return hash(ProportionalLengthsProperty) + hash(self.segment_set)
 
 class EqualLengthProductsProperty(Property):
     """
@@ -528,23 +420,15 @@ class EqualLengthProductsProperty(Property):
         ])
 
     def __init__(self, segment0, segment1, segment2, segment3):
-        super().__init__()
         """
         |segment0| * |segment3| == |segment1| * |segment2|
         """
         self.segments = (segment0, segment1, segment2, segment3)
-        self.segment_set = frozenset(self.segments)
-        self.key = EqualLengthProductsProperty.unique_key(segment0, segment1, segment2, segment3)
+        super().__init__(EqualLengthProductsProperty.unique_key(segment0, segment1, segment2, segment3))
 
     @property
     def description(self):
         return LazyComment('|%s| * |%s| = |%s| * |%s|', *[self.segments[i] for i in (0, 3, 1, 2)])
-
-    def __eq__(self, other):
-        return isinstance(other, EqualLengthProductsProperty) and self.key == other.key
-
-    def __hash__(self):
-        return hash(EqualLengthProductsProperty) + hash(self.key)
 
 class EqualLengthRatiosProperty(Property):
     """
@@ -559,34 +443,25 @@ class EqualLengthRatiosProperty(Property):
         ])
 
     def __init__(self, segment0, segment1, segment2, segment3):
-        super().__init__()
         """
         |segment0| / |segment1| == |segment2| / |segment3|
         """
         self.segments = (segment0, segment1, segment2, segment3)
-        self.segment_set = frozenset(self.segments)
-        self.key = EqualLengthRatiosProperty.unique_key(segment0, segment1, segment2, segment3)
+        super().__init__(EqualLengthRatiosProperty.unique_key(segment0, segment1, segment2, segment3))
 
     @property
     def description(self):
         return LazyComment('|%s| / |%s| = |%s| / |%s|', *self.segments)
-
-    def __eq__(self, other):
-        return isinstance(other, EqualLengthRatiosProperty) and self.key == other.key
-
-    def __hash__(self):
-        return hash(EqualLengthRatiosProperty) + hash(self.key)
 
 class SimilarTrianglesProperty(Property):
     """
     Two triangles are similar
     """
     def __init__(self, points0, points1):
-        super().__init__()
         self.triangle0 = points0 if isinstance(points0, Scene.Triangle) else Scene.Triangle(*points0)
         self.triangle1 = points1 if isinstance(points1, Scene.Triangle) else Scene.Triangle(*points1)
         pairs = [frozenset(perms) for perms in zip(self.triangle0.permutations, self.triangle1.permutations)]
-        self.__triangle_set = frozenset(pairs)
+        super().__init__(frozenset(pairs))
 
     def keys(self, lengths=None):
         return keys_for_triangle(self.triangle0, lengths) + keys_for_triangle(self.triangle1, lengths)
@@ -595,23 +470,15 @@ class SimilarTrianglesProperty(Property):
     def description(self):
         return LazyComment('%s ~ %s', self.triangle0, self.triangle1)
 
-    def __eq__(self, other):
-        return isinstance(other, SimilarTrianglesProperty) and \
-            self.__triangle_set == other.__triangle_set
-
-    def __hash__(self):
-        return hash(SimilarTrianglesProperty) + hash(self.__triangle_set)
-
 class CongruentTrianglesProperty(Property):
     """
     Two triangles are congruent
     """
     def __init__(self, points0, points1):
-        super().__init__()
         self.triangle0 = points0 if isinstance(points0, Scene.Triangle) else Scene.Triangle(*points0)
         self.triangle1 = points1 if isinstance(points1, Scene.Triangle) else Scene.Triangle(*points1)
         pairs = [frozenset(perms) for perms in zip(self.triangle0.permutations, self.triangle1.permutations)]
-        self.__triangle_set = frozenset(pairs)
+        super().__init__(frozenset(pairs))
 
     def keys(self, lengths=None):
         return keys_for_triangle(self.triangle0, lengths) + keys_for_triangle(self.triangle1, lengths)
@@ -620,22 +487,15 @@ class CongruentTrianglesProperty(Property):
     def description(self):
         return LazyComment('%s = %s', self.triangle0, self.triangle1)
 
-    def __eq__(self, other):
-        return isinstance(other, CongruentTrianglesProperty) and \
-            self.__triangle_set == other.__triangle_set
-
-    def __hash__(self):
-        return hash(CongruentTrianglesProperty) + hash(self.__triangle_set)
-
 class IsoscelesTriangleProperty(Property):
     """
     Isosceles triangle
     """
     def __init__(self, apex, base):
-        super().__init__()
         self.apex = apex
         self.base = base
         self.triangle = Scene.Triangle(apex, *base.points)
+        super().__init__((apex, base))
 
     def keys(self, lengths=None):
         return keys_for_triangle(self.triangle, lengths)
@@ -643,13 +503,6 @@ class IsoscelesTriangleProperty(Property):
     @property
     def description(self):
         return LazyComment('%s is isosceles (with apex %s)', self.triangle, self.apex)
-
-    def __eq__(self, other):
-        return isinstance(other, IsoscelesTriangleProperty) and \
-            self.apex == other.apex and self.base == other.base
-
-    def __hash__(self):
-        return hash(IsoscelesTriangleProperty) + hash(self.apex) + hash(self.base)
 
 class Cycle(Figure):
     def __init__(self, pt0, pt1, pt2):
@@ -681,12 +534,11 @@ class SameCyclicOrderProperty(Property):
     Two triples of points have the same cyclic order
     """
     def __init__(self, cycle0, cycle1):
-        super().__init__()
         self.cycle0 = cycle0
         self.cycle1 = cycle1
-        self.__key = frozenset([
+        super().__init__(frozenset([
             frozenset([cycle0, cycle1]), frozenset([cycle0.reversed, cycle1.reversed])
-        ])
+        ]))
 
     @property
     def essential(self):
@@ -695,9 +547,3 @@ class SameCyclicOrderProperty(Property):
     @property
     def description(self):
         return LazyComment('%s and %s have the same order', self.cycle0, self.cycle1)
-
-    def __eq__(self, other):
-        return isinstance(other, SameCyclicOrderProperty) and self.__key == other.__key
-
-    def __hash__(self):
-        return hash(self.__key)

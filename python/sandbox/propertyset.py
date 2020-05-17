@@ -519,7 +519,7 @@ class LengthRatioPropertySet:
             self.__add_lr(prop, ratio, value)
             self.__cache[ratio] = (prop, value)
         elif isinstance(prop, ProportionalLengthsProperty):
-            self.proportional_lengths[prop.segment_set] = prop
+            self.proportional_lengths[prop.property_key] = prop
 
     def contains(self, ratio0, ratio1):
         fam = self.ratio_to_family.get(ratio0)
