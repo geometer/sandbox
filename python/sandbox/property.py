@@ -96,6 +96,32 @@ class ConcyclicPointsProperty(Property):
     def __hash__(self):
         return hash(ConcyclicPointsProperty) + hash(self.point_set)
 
+class LineCoincidenceProperty(Property):
+    """
+    Two lines (defined by segments) are coincident
+    """
+    def __init__(self, segment0, segment1):
+        super().__init__()
+        self.segments = (segment0, segment1)
+        self.property_key = frozenset(self.segments)
+
+    @property
+    def essential(self):
+        return False
+
+    @property
+    def description(self):
+        return LazyComment('%s is the same line as %s', self.segments[0].as_line, self.segments[1].as_line)
+
+    def compare_values(self, other):
+        return True
+
+    def __eq__(self, other):
+        return isinstance(other, LineCoincidenceProperty) and self.property_key == other.property_key
+
+    def __hash__(self):
+        return hash(LineCoincidenceProperty) + hash(self.property_key)
+
 class PointsCollinearityProperty(Property):
     """
     [Not] collinear points
