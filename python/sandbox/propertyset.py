@@ -1190,6 +1190,12 @@ class PropertySet:
             if prop.collinear:
                 yield (next(pt for pt in prop.points if pt not in (pt0, pt1)), prop)
 
+    def collinear_points(self, segment):
+        points = []
+        for prop in [p for p in self.list(PointsCollinearityProperty, [segment]) if p.collinear]:
+            points.append(next(pt for pt in prop.points if pt not in segment.points))
+        return points
+
     def intersection_of_lines(self, segment0, segment1):
         key = frozenset([segment0, segment1])
         value = self.__intersections.get(key)
@@ -1212,15 +1218,18 @@ class PropertySet:
             if col and col.collinear:
                 return (segment0.points[index], [col])
 
-        first_list = [p for p in self.list(PointsCollinearityProperty, [segment0]) if p.collinear]
-        if first_list:
-            second_list = [p for p in self.list(PointsCollinearityProperty, [segment1]) if p.collinear]
-            for col0 in first_list:
-                for col1 in second_list:
-                    common = next((pt for pt in col0.points if pt in col1.points), None)
-                    if common:
-                        return (common, [col0, col1])
-        return (None, [])
+        pts0 = self.collinear_points(segment0)
+        if not pts0:
+            return (None, [])
+        pts1 = self.collinear_points(segment1)
+        if not pts1:
+            return (None, [])
+        common_points = [pt for pt in pts0 if pt in pts1]
+        if len(common_points) != 1:
+            return (None, [])
+        col0 = self.collinearity_property(*segment0.points, common_points[0])
+        col1 = self.collinearity_property(*segment1.points, common_points[0])
+        return (common_points[0], [col0, col1])
 
     def stats(self):
         self.__linear_angles.dump()

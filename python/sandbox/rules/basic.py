@@ -154,8 +154,9 @@ class TwoPointsBelongsToTwoLinesRule(SingleSourceRule):
         sides = triangle.sides
         for side, pt0 in [(sides[i], triangle.points[i]) for i in range(0, 3)]:
             third_points = [pt0]
-            for cl1 in [p for p in self.context.list(PointsCollinearityProperty, [side]) if p.collinear and p != cl0]:
-                pt1 = next(pt for pt in cl1.points if pt not in side.points)
+            for pt1 in self.context.collinear_points(side):
+                if pt1 == pt0:
+                    continue
                 third_points.append(pt1)
 
                 for ncl_pt in side.points:
@@ -164,7 +165,10 @@ class TwoPointsBelongsToTwoLinesRule(SingleSourceRule):
                         break
                 else:
                     continue
-                if ncl.collinear or cl0.reason.obsolete and cl1.reason.obsolete and ncl.reason.obsolete:
+                if ncl.collinear:
+                    continue
+                cl1 = self.context.collinearity_property(*side.points, pt1)
+                if cl0.reason.obsolete and cl1.reason.obsolete and ncl.reason.obsolete:
                     continue
                 yield (
                     PointsCoincidenceProperty(*side.points, True),
@@ -176,11 +180,12 @@ class TwoPointsBelongsToTwoLinesRule(SingleSourceRule):
                 for triple in itertools.combinations(third_points, 3):
                     ncl = self.context.collinearity_property(*triple)
                     if ncl and not ncl.collinear:
+                        cls = [self.context.collinearity_property(*side.points, pt) for pt in triple]
                         lines = [pt.segment(side.points[0]) for pt in triple]
                         yield (
                             PointsCoincidenceProperty(*side.points, True),
                             LazyComment('%s and %s belong to three lines %s, %s, and %s, at least two of them are different', *side.points, *lines),
-                            [cl0, cl1, ncl]
+                            cls + [ncl]
                         )
                         break
 
