@@ -10,6 +10,7 @@ from .reason import Reason
 from .rules.advanced import *
 from .rules.basic import *
 from .rules.circle import *
+from .rules.line import *
 from .rules.linear import *
 from .rules.triangle_elements import *
 from .rules.triangles import *
@@ -83,6 +84,8 @@ class Explainer:
             TwoAnglesWithCommonSideRule(self.context),
             TwoPointsRelativelyToLineTransitivityRule(self.context),
             CongruentAnglesDegeneracyRule(self.context),
+            CollinearityToSameLineRule(self.context),
+            NonCollinearityToDifferentLinesRule(self.context),
 
             EquilateralTriangleByThreeSidesRule(self.context),
             IsoscelesTriangleByConrguentLegsRule(self.context),

@@ -53,6 +53,33 @@ class ConcyclicPointsProperty(Property):
     def description(self):
         return LazyComment('Points' + ' %s,' * (len(self.points) - 1) + ' and %s are concyclic', *self.points)
 
+class LineCoincidenceProperty(Property):
+    """
+    Two lines (defined by segments) are [not] coincident
+    """
+    def __init__(self, segment0, segment1, coincident):
+        self.segments = (segment0, segment1)
+        super().__init__(frozenset(self.segments))
+        self.coincident = coincident
+
+    @property
+    def essential(self):
+        return False
+
+    @property
+    def description(self):
+        if self.coincident:
+            return LazyComment(
+                '%s is the same line as %s', self.segments[0].as_line, self.segments[1].as_line
+            )
+        else:
+            return LazyComment(
+                '%s and %s are different lines', self.segments[0].as_line, self.segments[1].as_line
+            )
+
+    def compare_values(self, other):
+        return self.coincident == other.coincident
+
 class PointsCollinearityProperty(Property):
     """
     [Not] collinear points
