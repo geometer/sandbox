@@ -36,17 +36,33 @@ class SumOfAngles180DegreeRule(Rule):
 class ProportionalLengthsToLengthsRatioRule(SingleSourceRule):
     property_type = ProportionalLengthsProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
     def apply(self, prop):
-        ne = self.context.not_equal_property(*prop.segment0.points)
-        if ne is None:
-            ne = self.context.not_equal_property(*prop.segment1.points)
-        if ne is None or prop.reason.obsolete and ne.reason.obsolete:
+        mask = self.processed.get(prop, 0)
+        if mask == 0x3:
             return
-        yield (
-            LengthRatioProperty(prop.segment0, prop.segment1, prop.value),
-            prop.reason.comment,
-            [prop, ne]
-        )
+
+        original = mask
+        for segment, bit in ((prop.segment0, 1), (prop.segment1, 2)):
+            if mask & bit:
+                continue
+            ne = self.context.coincidence_property(*segment.points)
+            if ne is None:
+                continue
+            mask |= bit
+            if ne.coincident:
+                continue
+            yield (
+                LengthRatioProperty(prop.segment0, prop.segment1, prop.value),
+                prop.reason.comment,
+                [prop, ne]
+            )
+
+        if mask != original:
+            self.processed[prop] = mask
 
 class LengthRatiosWithCommonDenominatorRule(Rule):
     def __init__(self, context):
