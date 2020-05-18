@@ -5,7 +5,7 @@ Solver/explainer of elementary planimetric problems.
 
 The goal of the project is to create an app that takes a human-readable description of a planimetry problem and generates a human-readable solution.
 
-## Demos
+## Web-based demos
 
 Here is a short list of generated proofs/solutions.
 
