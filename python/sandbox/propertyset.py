@@ -206,6 +206,24 @@ class LineSet:
                 cost = cand_cost
         return best
 
+    def intersection_of_lines(self, segment0, segment1):
+        line0 = self.__segment_to_line.get(segment0)
+        if line0 is None:
+            return (None, [])
+        line1 = self.__segment_to_line.get(segment1)
+        #if line1 is None or line1 == line0 or self.__different_lines_graph.get_edge_data(line0, line1) is None:
+        if line1 is None or line1 == line0:
+            return (None, [])
+        pt = next((pt for pt in line0.points_on if pt in line1.points_on), None)
+        if pt is None:
+            return (None, [])
+        premises = []
+        if pt not in segment0.points:
+            premises.append(self.collinearity_property(pt, *segment0.points))
+        if pt not in segment1.points:
+            premises.append(self.collinearity_property(pt, *segment1.points))
+        return (pt, premises)
+
     def collinear_points(self, segment):
         line = self.__segment_to_line.get(segment)
         if line is None:
@@ -816,7 +834,6 @@ class PropertySet:
         self.__length_ratios = LengthRatioPropertySet()
         self.__cyclic_orders = CyclicOrderPropertySet()
         self.__coincidence = {} # {point, point} => prop
-        self.__intersections = {} # {segment, segment} => point, [reasons]
         self.__similar_triangles = {} # (three points) => {(three points)}
         self.__two_points_relatively_to_line = {} # key => SameOrOppositeSideProperty
 
@@ -1064,39 +1081,12 @@ class PropertySet:
         return self.__line_set.not_collinear_points(segment)
 
     def intersection_of_lines(self, segment0, segment1):
-        key = frozenset([segment0, segment1])
-        value = self.__intersections.get(key)
-        if value is None:
-            value = self.__intersection_of_lines(segment0, segment1)
-            if value[0]:
-                self.__intersections[key] = value
-        return value
-
-    def __intersection_of_lines(self, segment0, segment1):
+        if segment0 == segment1:
+            return (None, [])
         common = next((pt for pt in segment0.points if pt in segment1.points), None)
         if common:
             return (common, [])
-
-        for index in range(0, 2):
-            col = self.collinearity_property(*segment0.points, segment1.points[index])
-            if col and col.collinear:
-                return (segment1.points[index], [col])
-            col = self.collinearity_property(*segment1.points, segment0.points[index])
-            if col and col.collinear:
-                return (segment0.points[index], [col])
-
-        pts0 = self.collinear_points(segment0)
-        if not pts0:
-            return (None, [])
-        pts1 = self.collinear_points(segment1)
-        if not pts1:
-            return (None, [])
-        common_points = [pt for pt in pts0 if pt in pts1]
-        if len(common_points) != 1:
-            return (None, [])
-        col0 = self.collinearity_property(*segment0.points, common_points[0])
-        col1 = self.collinearity_property(*segment1.points, common_points[0])
-        return (common_points[0], [col0, col1])
+        return self.__line_set.intersection_of_lines(segment0, segment1)
 
     def stats(self):
         def type_presentation(kind):
