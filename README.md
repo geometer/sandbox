@@ -5,6 +5,14 @@ Solver/explainer of elementary planimetric problems.
 
 The goal of the project is to create an app that takes a human-readable description of a planimetry problem and generates a human-readable solution.
 
+## Demos
+
+Here is a short list of generated proofs.
+
+* [Napoleon's theorem](https://en.wikipedia.org/wiki/Napoleon%27s_theorem), [the proof](http://demo.geometer.name/examples/napoleon.html)
+* [A problem from “Romantics of geometry” facebook group](https://www.facebook.com/groups/parmenides52/permalink/2779763428804012/), [the proof](http://demo.geometer.name/examples/4578.html)
+* [Problem 5.3.1](http://vivacognita.org/555geometry.html/_/5/5-3/53-1-r371) from the [Akopyan's book](https://www.amazon.com/Geometry-Figures-Second-Arseniy-Akopyan/dp/1548710784), [the proof](http://demo.geometer.name/examples/akopyan_book_5_3_1.html)
+
 ## The concept
 
 The first step is to write an exhaustive search prover. It starts from a set of known properties and deducts new properties by applying rules from the ruleset to existing properties. This process repeats until the iteration does not generate new properties. The difference from existing provers is that the properties and the rules are defined in high-level terms like a human can use. E.g., there are properties “two angles are congruent” and “two triangles are similar”, and rule “if two pairs of angles of given triangles are congruent, the triangles are similar”.
