@@ -1,18 +1,27 @@
 @charset "UTF-8";
 
+.main {
+  width: 13in;
+  padding-left: 20px;
+}
+
+.description {
+  padding-bottom: 20px;
+}
+
 .sandbox-selections {
-	padding-top: 20px;
-	padding-right: 12px;
-	padding-left: 12px;
-	line-height: 1.6em;
+  padding-top: 20px;
+  padding-right: 12px;
+  padding-left: 12px;
+  line-height: 1.6em;
 }
 
 .sandbox-selections > span.figure {
-	margin-right: 0.6em;
+  margin-right: 0.6em;
 }
 
 .sandbox-selections > span.space {
-	display: inline-block;
+  display: inline-block;
 }
 
 .sandbox-tree ul {
@@ -35,11 +44,11 @@
   content: "⊡";
   color: #888888;
   display: inline-block;
-	font-size: 16pt;
-	width: 16px;
-	height: 16px;
+  font-size: 16pt;
+  width: 16px;
+  height: 16px;
   margin-right: 6px;
-	pointer-events: auto;
+  pointer-events: auto;
 }
 
 .sandbox-tree li.closed > span.handler, .sandbox-tree li.open > span.handler {
@@ -59,33 +68,33 @@
 }
 
 .sandbox-tree .implication {
-	padding-left: 0.5em;
-	padding-right: 0.5em;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
 }
 
 .sandbox-text .point {
-	padding-left: 0.1em;
-	padding-right: 0.1em;
+  padding-left: 0.1em;
+  padding-right: 0.1em;
 }
 
 .sandbox-text .angle-comma {
-	padding-right: 0.2em;
+  padding-right: 0.2em;
 }
 
 .sandbox-text .figure {
-	cursor: pointer;
-	border-style: solid;
-	border-width: 0.3px;
-	padding-bottom: 0.1em;
-	border-color: #4FC3F7;
-	background-color: #E1F5FE;
+  cursor: pointer;
+  border-style: solid;
+  border-width: 0.3px;
+  padding-bottom: 0.1em;
+  border-color: #4FC3F7;
+  background-color: #E1F5FE;
 }
 
 .sandbox-text .figure.selected {
-	border-color: #EF5350;
-	background-color: #FFCDD2; 
+  border-color: #EF5350;
+  background-color: #FFCDD2; 
 }
 
 .jxgbox .JXGText {
-	font-size: 16px !important;
+  font-size: 16px !important;
 }

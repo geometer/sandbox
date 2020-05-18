@@ -85,7 +85,7 @@ def drawTree(scene, prop, args):
     
     print('sandbox$.createTree(\'%s\');' % re.sub('\\\\"', '\\\\\\\\"', json.dumps(data)))
 
-def visualise(scene, prop):
+def visualise(scene, prop, title=None, description=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--max-layer', default='user', choices=CoreScene.layers)
     parser.add_argument('--extra-rules', nargs='+', choices=('advanced', 'trigonometric'), default=())
@@ -98,5 +98,11 @@ def visualise(scene, prop):
                 drawScene(scene, args)
             elif line == '$$TREE$$':
                 drawTree(scene, prop, args)
+            elif '$$TITLE$$' in line:
+                if title:
+                    print(line.replace('$$TITLE$$', title))
+            elif '$$DESCRIPTION$$' in line:
+                if description:
+                    print(line.replace('$$DESCRIPTION$$', description))
             else:
                 print(line)
