@@ -112,8 +112,6 @@ class Explainer:
 
     def __reason(self, prop, comment, premises=None):
         reason = Reason(self.__iteration_step_count, comment, premises)
-        if prop in reason.all_premises:
-            return
         def insert(pro):
             for pre in pro.reason.premises:
                 pre.implications.add(pro)
@@ -537,7 +535,10 @@ class Explainer:
         while itertools.count():
             explained_size = len(self.context)
             for prop, comment, premises in iteration():
-                self.__reason(prop, comment, premises)
+                try:
+                    self.__reason(prop, comment, premises)
+                except Property.LoopException:
+                    pass
             for prop in self.context.all:
                 prop.reason.obsolete = prop.reason.generation < self.__iteration_step_count
             self.__iteration_step_count += 1

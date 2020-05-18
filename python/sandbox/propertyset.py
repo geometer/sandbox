@@ -144,9 +144,12 @@ class LineSet:
                 )
                 premises = [known, line.same_line_property(known.segment, segment)]
                 prop.rule = 'synthetic'
-                prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
-                prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-                candidates.append(prop)
+                try:
+                    prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+                    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+                    candidates.append(prop)
+                except Property.LoopException:
+                    pass
 
         for (segment0, line0, _), (segment1, line1, _) in itertools.combinations(lines, 2):
             if line0 == line1:
@@ -178,9 +181,12 @@ class LineSet:
                         premises.append(line1.same_line_property(seg1, segment1))
                     prop = PointsCollinearityProperty(pt0, pt1, pt2, False)
                     prop.rule = 'synthetic'
-                    prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
-                    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-                    candidates.append(prop)
+                    try:
+                        prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+                        prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+                        candidates.append(prop)
+                    except Property.LoopException:
+                        pass
 
         if not candidates:
             return None
@@ -360,9 +366,12 @@ class AngleRatioPropertySet:
                 comment, premises = self.explanation_from_path(path, ratio)
                 prop = AngleValueProperty(angle, self.degree * ratio)
                 prop.rule = 'synthetic'
-                prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
-                prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-                properties.append(prop)
+                try:
+                    prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+                    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+                    properties.append(prop)
+                except Property.LoopException:
+                    pass
             return properties
 
         def value_properties_for_degree(self, degree):

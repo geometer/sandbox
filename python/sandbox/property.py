@@ -10,6 +10,20 @@ class Property:
         self.implications = set()
         self.property_key = property_key
         self.__hash = None
+        self.__reason = None
+
+    @property
+    def reason(self):
+        return self.__reason
+
+    class LoopException(Exception):
+        pass
+
+    @reason.setter
+    def reason(self, value):
+        if self in value.all_premises:
+            raise Property.LoopException()
+        self.__reason = value
 
     @property
     def essential(self):
