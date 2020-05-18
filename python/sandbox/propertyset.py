@@ -45,6 +45,8 @@ class LineSet:
 
         def same_line_property(self, segment0, segment1):
             comment, premises = self.same_line_explanation(segment0, segment1)
+            if len(premises) == 1:
+                return premises[0]
             prop = LineCoincidenceProperty(segment0, segment1, True)
             prop.rule = 'synthetic'
             prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
