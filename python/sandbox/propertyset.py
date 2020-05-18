@@ -33,7 +33,7 @@ class LineSet:
             if edge:
                 prop = edge['prop']
                 return (
-                    LazyComment('%s and %s is the same line', segment0.as_line, segment1.as_line),
+                    LazyComment('%s and %s are the same line', segment0.as_line, segment1.as_line),
                     [prop]
                 )
             path = nx.algorithms.shortest_path(self.premises_graph, segment0, segment1)
