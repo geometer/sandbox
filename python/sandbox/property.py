@@ -53,6 +53,29 @@ class ConcyclicPointsProperty(Property):
     def description(self):
         return LazyComment('Points' + ' %s,' * (len(self.points) - 1) + ' and %s are concyclic', *self.points)
 
+class PointOnLineProperty(Property):
+    """
+    A point lies [not] on a line
+    """
+    def __init__(self, segment, point, on_line):
+        super().__init__((segment, point))
+        self.segment = segment
+        self.point = point
+        self.on_line = on_line
+
+    @property
+    def essential(self):
+        return False
+
+    @property
+    def description(self):
+        return LazyComment(
+            '%s lies on line %s', self.point, self.segment.as_line
+        )
+
+    def compare_values(self, other):
+        return self.on_line == other.on_line
+
 class LineCoincidenceProperty(Property):
     """
     Two lines (defined by segments) are [not] coincident
@@ -211,7 +234,7 @@ class SameOrOppositeSideProperty(Property):
 
 class PointInsideAngleProperty(Property):
     """
-    Point is inside an angle
+    A point lies inside an angle
     """
     def __init__(self, point, angle):
         self.point = point

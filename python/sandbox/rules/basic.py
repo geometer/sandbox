@@ -545,8 +545,7 @@ class SameSidePointInsideSegmentRule(SingleSourceRule):
 
     def apply(self, prop):
         segment = prop.points[0].segment(prop.points[1])
-        for col in [p for p in self.context.list(PointsCollinearityProperty, [segment]) if p.collinear]:
-            pt = next(p for p in col.points if p not in prop.points)
+        for pt in self.context.collinear_points(segment):
             value = self.context.angle_value_property(pt.angle(*prop.points))
             if not value or value.degree != 180 or prop.reason.obsolete and value.reason.obsolete:
                 return
