@@ -56,6 +56,7 @@ class LineSet:
     def __init__(self):
         self.__segment_to_line = {}
         self.__different_lines_graph = nx.Graph()
+        self.__collinearity = {} # {point, point, point} => prop
 
     def __add_same_line_property(self, prop):
         line0 = self.__segment_to_line.get(prop.segments[0])
@@ -112,8 +113,14 @@ class LineSet:
                 self.__add_different_lines_property(prop)
         elif isinstance(prop, PointOnLineProperty):
             self.__add_point_on_line_property(prop)
+        elif isinstance(prop, PointsCollinearityProperty):
+            self.__collinearity[prop.property_key] = prop
 
     def collinearity_property(self, pt0, pt1, pt2):
+        cached = self.__collinearity.get(frozenset([pt0, pt1, pt2]))
+        if cached:
+            return cached
+
         candidates = []
         triangle = Scene.Triangle(pt0, pt1, pt2)
         sides_and_vertices = zip(triangle.sides, triangle.points)
@@ -809,7 +816,6 @@ class PropertySet:
         self.__length_ratios = LengthRatioPropertySet()
         self.__cyclic_orders = CyclicOrderPropertySet()
         self.__coincidence = {} # {point, point} => prop
-        self.__collinearity = {} # {point, point, point} => prop
         self.__intersections = {} # {segment, segment} => point, [reasons]
         self.__similar_triangles = {} # (three points) => {(three points)}
         self.__two_points_relatively_to_line = {} # key => SameOrOppositeSideProperty
@@ -840,13 +846,11 @@ class PropertySet:
             self.__length_ratios.add(prop)
         elif type_key == PointsCoincidenceProperty:
             self.__coincidence[prop.property_key] = prop
-        elif type_key == PointsCollinearityProperty:
-            self.__collinearity[prop.property_key] = prop
         elif type_key == EqualLengthRatiosProperty:
             self.__length_ratios.add(prop)
         elif type_key == SameCyclicOrderProperty:
             self.__cyclic_orders.add(prop)
-        elif type_key in (LineCoincidenceProperty, PointOnLineProperty):
+        elif type_key in (LineCoincidenceProperty, PointOnLineProperty, PointsCollinearityProperty):
             self.__line_set.add(prop)
         elif type_key == SameOrOppositeSideProperty:
             self.__two_points_relatively_to_line[prop.property_key] = prop
@@ -927,8 +931,7 @@ class PropertySet:
         return existing
 
     def collinearity_property(self, pt0, pt1, pt2):
-        prop = self.__collinearity.get(frozenset([pt0, pt1, pt2]))
-        return prop if prop else self.__line_set.collinearity_property(pt0, pt1, pt2)
+        return self.__line_set.collinearity_property(pt0, pt1, pt2)
 
     def coincidence_property(self, pt0, pt1):
         return self.__coincidence.get(frozenset([pt0, pt1]))
