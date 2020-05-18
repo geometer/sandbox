@@ -140,17 +140,19 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
 
     for cnstr in scene.constraints(Constraint.Kind.opposite_side):
         line = cnstr.params[2]
-        yield (
-            SameOrOppositeSideProperty(line.point0.segment(line.point1), cnstr.params[0], cnstr.params[1], False),
-            cnstr.comment
-        )
+        if all_visible((line.point0, line.point1, *cnstr.params[0:1])):
+            yield (
+                SameOrOppositeSideProperty(line.point0.segment(line.point1), cnstr.params[0], cnstr.params[1], False),
+                cnstr.comment
+            )
 
     for cnstr in scene.constraints(Constraint.Kind.same_side):
         line = cnstr.params[2]
-        yield (
-            SameOrOppositeSideProperty(line.point0.segment(line.point1), cnstr.params[0], cnstr.params[1], True),
-            cnstr.comment
-        )
+        if all_visible((line.point0, line.point1, *cnstr.params[0:1])):
+            yield (
+                SameOrOppositeSideProperty(line.point0.segment(line.point1), cnstr.params[0], cnstr.params[1], True),
+                cnstr.comment
+            )
 
     for cnstr in scene.constraints(Constraint.Kind.angles_ratio):
         angle0 = cnstr.params[0]
