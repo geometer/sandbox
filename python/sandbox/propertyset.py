@@ -954,7 +954,7 @@ class PropertySet:
         return self.__coincidence.get(frozenset([pt0, pt1]))
 
     def not_equal_property(self, pt0, pt1):
-        prop = self.__coincidence.get(frozenset([pt0, pt1]))
+        prop = self.coincidence_property(pt0, pt1)
         return prop if prop and not prop.coincident else None
 
     def angle_value_property(self, angle):
