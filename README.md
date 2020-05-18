@@ -10,7 +10,7 @@ The goal of the project is to create an app that takes a human-readable descript
 Here is a short list of generated proofs.
 
 * [Napoleon's theorem](https://en.wikipedia.org/wiki/Napoleon%27s_theorem), [the proof](http://demo.geometer.name/examples/napoleon.html)
-* [A problem from “Romantics of geometry” facebook group](https://www.facebook.com/groups/parmenides52/permalink/2779763428804012/), [the proof](http://demo.geometer.name/examples/4578.html)
+* [A problem](https://www.facebook.com/groups/parmenides52/permalink/2779763428804012/) from [“Romantics of geometry”](https://www.facebook.com/groups/parmenides52/) facebook group, [the proof](http://demo.geometer.name/examples/4578.html)
 * [Problem 5.3.1](http://vivacognita.org/555geometry.html/_/5/5-3/53-1-r371) from the [Akopyan's book](https://www.amazon.com/Geometry-Figures-Second-Arseniy-Akopyan/dp/1548710784), [the proof](http://demo.geometer.name/examples/akopyan_book_5_3_1.html)
 
 ## The concept
