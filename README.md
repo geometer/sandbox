@@ -1,4 +1,4 @@
-Geometer's sandbox
+Geometer's Sandbox
 ==================
 
 Solver/explainer of elementary planimetric problems.
