@@ -339,7 +339,7 @@ class AngleValueProperty(LinearAngleProperty):
                 return LazyComment('%s, %s in the same direction from %s', self.angle.vector0.end, self.angle.vector1.end, self.angle.vertex)
             if self.degree == 180:
                 return LazyComment('%s lies inside segment %s', self.angle.vertex, self.angle.vector0.end.segment(self.angle.vector1.end))
-        return LazyComment('%s = %dº', self.angle, self.degree)
+        return LazyComment('%s = %sº', self.angle, self.degree)
 
     def compare_values(self, other):
         return self.degree == other.degree
