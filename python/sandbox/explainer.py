@@ -535,10 +535,7 @@ class Explainer:
         while itertools.count():
             explained_size = len(self.context)
             for prop, comment, premises in iteration():
-                try:
-                    self.__reason(prop, comment, premises)
-                except Property.LoopException:
-                    pass
+                self.__reason(prop, comment, premises)
             for prop in self.context.all:
                 prop.reason.obsolete = prop.reason.generation < self.__iteration_step_count
             self.__iteration_step_count += 1

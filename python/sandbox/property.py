@@ -16,13 +16,13 @@ class Property:
     def reason(self):
         return self.__reason
 
-    class LoopException(Exception):
-        pass
-
     @reason.setter
     def reason(self, value):
-        if self in value.all_premises:
-            raise Property.LoopException()
+        while self in value.all_premises:
+            # TODO: select the best variant
+            for prop in value.all_premises:
+                if prop == self:
+                    value = prop.reason
         self.__reason = value
 
     @property
