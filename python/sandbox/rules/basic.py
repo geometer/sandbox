@@ -884,7 +884,7 @@ class ReversedVerticalAnglesRule(Rule):
                 yield (
                     AngleValueProperty(angle.vertex.angle(pt0, pt1), 180),
                     LazyComment('%s = %s and %s lies on segment %s', ang0, ang1, angle.vertex, angle.vector0.end.segment(angle.vector1.end)),
-                    [prop, ar, oppo]
+                    [ar, prop, oppo]
                 )
             if mask != original:
                 self.processed[key] = mask
