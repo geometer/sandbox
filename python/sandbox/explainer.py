@@ -125,7 +125,7 @@ class Explainer:
             prop.reason = reason
             prop.reason.obsolete = False
             insert(prop)
-        elif len(reason.all_premises) < len(existing.reason.all_premises):
+        elif reason.cost < existing.reason.cost:
             #### +++ HACK +++
             # TODO: move this hack outside of explainer
             if isinstance(prop, AngleRatioProperty) and prop.same:

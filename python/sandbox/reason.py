@@ -6,14 +6,21 @@ class Reason:
         for pre in premises:
             if pre not in self.premises:
                 self.premises.append(pre)
-        self.__all_premises = None
+        self.reset_premises()
 
     def reset_premises(self):
         self.__all_premises = None
+        self.__cost = None
         
     @property
     def essential_premises_count(self):
         return sum(1 if prop.essential else 0 for prop in self.all_premises)
+
+    @property
+    def cost(self):
+        if self.__cost is None:
+            self.__cost = len(self.all_premises)
+        return self.__cost
 
     @property
     def all_premises(self):

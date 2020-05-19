@@ -198,9 +198,9 @@ class LineSet:
         if not candidates:
             return None
         best = candidates[0]
-        cost = len(best.reason.all_premises)
+        cost = best.reason.cost
         for cand in candidates[1:]:
-            cand_cost = len(cand.reason.all_premises)
+            cand_cost = cand.reason.cost
             if cand_cost < cost:
                 best = cand
                 cost = cand_cost
