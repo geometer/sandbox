@@ -231,6 +231,19 @@ class Scene(CoreScene):
         pts[2].segment(pts[3]).perpendicular_constraint(pts[0].segment(pts[3]), **kwargs)
         pts[2].segment(pts[3]).perpendicular_constraint(pts[1].segment(pts[2]), **kwargs)
 
+        pts[0].angle(pts[1], pts[3]).value_constraint(90, guaranteed=True, **kwargs)
+        pts[0].angle(pts[1], pts[2]).value_constraint(45, guaranteed=True, **kwargs)
+        pts[0].angle(pts[3], pts[2]).value_constraint(45, guaranteed=True, **kwargs)
+        pts[1].angle(pts[2], pts[0]).value_constraint(90, guaranteed=True, **kwargs)
+        pts[1].angle(pts[2], pts[3]).value_constraint(45, guaranteed=True, **kwargs)
+        pts[1].angle(pts[3], pts[0]).value_constraint(45, guaranteed=True, **kwargs)
+        pts[2].angle(pts[3], pts[1]).value_constraint(90, guaranteed=True, **kwargs)
+        pts[2].angle(pts[3], pts[0]).value_constraint(45, guaranteed=True, **kwargs)
+        pts[2].angle(pts[0], pts[1]).value_constraint(45, guaranteed=True, **kwargs)
+        pts[3].angle(pts[0], pts[2]).value_constraint(90, guaranteed=True, **kwargs)
+        pts[3].angle(pts[0], pts[1]).value_constraint(45, guaranteed=True, **kwargs)
+        pts[3].angle(pts[1], pts[2]).value_constraint(45, guaranteed=True, **kwargs)
+
         self.convex_quadrilateral_constraint(*pts, **kwargs)
 
         #TODO: this is a hack for sketches

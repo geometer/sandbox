@@ -714,6 +714,9 @@ class CoreScene:
             self.scene.assert_angle(angle)
             self.scene.constraint(Constraint.Kind.angles_ratio, self, angle, ratio, **kwargs)
 
+        def value_constraint(self, degree, **kwargs):
+            self.scene.constraint(Constraint.Kind.angle_value, self, degree, **kwargs)
+
         def is_acute_constraint(self, **kwargs):
             self.scene.constraint(Constraint.Kind.acute_angle, self, **kwargs)
 
@@ -977,6 +980,7 @@ class Constraint:
         perpendicular             = ('perpendicular', Stage.adjustment, CoreScene.Segment, CoreScene.Segment)
         acute_angle               = ('acute_angle', Stage.validation, CoreScene.Angle)
         obtuse_angle              = ('obtuse_angle', Stage.validation, CoreScene.Angle)
+        angle_value               = ('angle_value', Stage.adjustment, CoreScene.Angle, int)
 
         def __init__(self, name, stage, *params):
             self.stage = stage

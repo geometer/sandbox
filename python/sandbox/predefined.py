@@ -77,6 +77,14 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
                 cnstr.comment
             )
 
+    for cnstr in scene.constraints(Constraint.Kind.angle_value):
+        angle = cnstr.params[0]
+        if all_visible(angle.point_set):
+            yield (
+                AngleValueProperty(angle, cnstr.params[1]),
+                cnstr.comment
+            )
+
     for cnstr in scene.constraints(Constraint.Kind.parallel_vectors):
         if all(all_visible(param.points) for param in cnstr.params):
             yield (ParallelVectorsProperty(*cnstr.params), cnstr.comment)
