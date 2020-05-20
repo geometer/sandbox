@@ -497,6 +497,8 @@ class AngleRatioPropertySet:
         return fam.value_properties() if fam else []
 
     def value_properties_for_degree(self, degree):
+        if degree == 0:
+            return [prop for prop in self.list(AngleValueProperty) if prop.degree == 0]
         fam = self.family_with_degree
         return fam.value_properties_for_degree(degree) if fam else []
 

@@ -283,8 +283,35 @@ class SumOfThreeAnglesInTriangleRule(Rule):
         triangle = Scene.Triangle(pt0, pt1, pt2)
         yield (
             SumOfThreeAnglesProperty(*triangle.angles, 180),
-            LazyComment('Three angles of %s', triangle),
+            LazyComment('three angles of %s', triangle),
             [ne0, ne1, ne2]
+        )
+
+class SumOfThreeAnglesOnLineRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        avs0 = [p for p in self.context.angle_value_properties_for_degree(0) if p.angle.vertex]
+        avs180 = [p for p in self.context.angle_value_properties_for_degree(180) if p.angle.vertex]
+        for av0, av1 in itertools.product(avs0, avs0 + avs180):
+            if av0 != av1 and av0.angle.point_set == av1.angle.point_set:
+                yield (av0, av1)
+
+    def apply(self, src):
+        key = frozenset(src)
+        if key in self.processed:
+            return
+        self.processed.add(key)
+
+        av0, av1 = src
+        third = next(pt for pt in av0.angle.point_set if pt not in (av0.angle.vertex, av1.angle.vertex))
+        angle = third.angle(av0.angle.vertex, av1.angle.vertex)
+        yield (
+            AngleValueProperty(angle, 180 - av0.degree - av1.degree),
+            LazyComment('%s = %sº and %s = %sº', av0.angle, av0.degree, av1.angle, av1.degree),
+            [av0, av1]
         )
 
 class LengthRatioRule(SingleSourceRule):

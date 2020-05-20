@@ -31,6 +31,7 @@ class Explainer:
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),
             LengthRatiosWithCommonDenominatorRule(self.context),
+            SumOfThreeAnglesOnLineRule(self.context),
             SumOfThreeAnglesInTriangleRule(self.context),
             SumOfTwoAnglesByThreeRule(self.context),
             SumAndRatioOfTwoAnglesRule(self.context),
