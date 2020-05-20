@@ -586,6 +586,14 @@ class EqualAnglesToCollinearityRule(SingleSourceRule):
             if ca.value != 1:
                 continue
             yield (
+                AngleValueProperty(p0.angle(*prop.points), 0),
+                LazyComment(
+                    '%s = %s, and points %s and %s are on the same side of %s',
+                    *angles, *prop.points, prop.segment.as_line
+                ),
+                [ca, prop]
+            )
+            yield (
                 PointsCollinearityProperty(p0, *prop.points, True),
                 LazyComment(
                     '%s = %s, and points %s and %s are on the same side of %s',
@@ -818,13 +826,13 @@ class AngleTypeByDegreeRule(Rule):
         if prop.degree < 90:
             yield (
                 AngleKindProperty(prop.angle, AngleKindProperty.Kind.acute),
-                LazyComment('0º < %sº < 90º', prop.degree),
+                LazyComment('0º < %s = %sº < 90º', prop.angle, prop.degree),
                 [prop]
             )
         elif prop.degree > 90:
             yield (
                 AngleKindProperty(prop.angle, AngleKindProperty.Kind.obtuse),
-                LazyComment('90º < %sº < 180º', prop.degree),
+                LazyComment('90º < %s = %sº < 180º', prop.angle, prop.degree),
                 [prop]
             )
         else:

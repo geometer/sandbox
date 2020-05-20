@@ -58,6 +58,47 @@ class SumOfTwoAnglesByThreeRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
+class AngleBySumOfThreeRule(SingleSourceRule):
+    property_type = SumOfThreeAnglesProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
+    def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0x7:
+            return
+
+        avs = []
+        miss_count = 0
+        for angle in prop.angles:
+            av = self.context.angle_value_property(angle)
+            if av is None:
+                miss_count += 1
+                if miss_count == 2:
+                    return
+            avs.append(av)
+
+        original = mask
+        for (av0, av1), bit in zip(itertools.combinations(avs, 2), (1, 2, 4)):
+            if mask & bit:
+                continue
+            if av0 is None or av1 is None:
+                continue
+            mask |= bit
+            third = next(angle for angle in prop.angles if angle not in (av0.angle, av1.angle))
+            yield (
+                AngleValueProperty(third, prop.degree - av0.degree - av1.degree),
+                LazyComment(
+                    '%sº = %s + %s + %s = %s + %sº + %sº',
+                    prop.degree, third, av0.angle, av1.angle, third, av0.degree, av1.degree
+                ),
+                [prop, av0, av1]
+            )
+        if mask != original:
+            self.processed[prop] = mask
+
 class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
     """
     If the sum and the ratio of two angles are known, we can find the values
