@@ -53,6 +53,14 @@ createScene: function(json) {
 		});
 	});
 
+	scene.circles.forEach(circle => {
+		this.board.create('circle', [this.board.elementsByName[circle.centre], circle.radius], {
+			fillOpacity: 0,
+			strokeWidth: 0.7,
+			color: this.options.color
+		});
+	});
+
 	setTimeout(function() {
 		console.debug('labels layout hack');
 		sandbox$.board.update();
