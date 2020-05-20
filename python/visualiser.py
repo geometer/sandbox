@@ -99,7 +99,7 @@ def load_args():
     return parser.parse_args()
 
 #def visualise(scene, prop=None, arguments=load_args()):
-def visualise(scene, prop=None, arguments=None, extra_points=()):
+def visualise(scene, prop=None, arguments=None, extra_points=(), title=None, description=None):
     args = arguments if arguments else load_args()
     with open('../html/pattern.html') as f:
         for line in f.readlines():
@@ -109,5 +109,11 @@ def visualise(scene, prop=None, arguments=None, extra_points=()):
             elif line == '$$TREE$$':
                 if prop:
                     drawTree(scene, prop, args)
+            elif '$$TITLE$$' in line:
+                if title:
+                    print(line.replace('$$TITLE$$', title))
+            elif '$$DESCRIPTION$$' in line:
+                if description:
+                    print(line.replace('$$DESCRIPTION$$', description))
             else:
                 print(line)

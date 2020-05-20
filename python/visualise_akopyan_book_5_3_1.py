@@ -20,4 +20,4 @@ N.line_through(F)
 
 prop = PointsCollinearityProperty(D, N, F, True)
 
-visualise(scene, prop)
+visualise(scene, prop, title='Problem 5.3.1', description='<a href="http://vivacognita.org/555geometry.html/_/5/5-3/53-1-r371">Problem 5.3.1</a> from the <a href="https://www.amazon.com/Geometry-Figures-Second-Arseniy-Akopyan/dp/1548710784">Akopyan\'s book</a>')

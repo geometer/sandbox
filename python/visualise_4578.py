@@ -13,4 +13,4 @@ G = C.line_through(D).intersection_point(A.line_through(B), label='G')
 A.line_through(C)
 A.segment(B).congruent_constraint(C.segment(D), comment='given: |AB| = |CD|')
 
-visualise(scene, C.angle(A, B))
+visualise(scene, C.angle(A, B), description='<a href="https://www.facebook.com/groups/parmenides52/permalink/2779763428804012/">Problem 4578</a> from <a href="https://www.facebook.com/groups/parmenides52/">“Romantics of geometry”</a> facebook group', title='Problem 4578')

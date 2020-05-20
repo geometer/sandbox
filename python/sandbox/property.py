@@ -306,7 +306,7 @@ class SameOrOppositeSideProperty(Property):
 
 class PointInsideAngleProperty(Property):
     """
-    Point is inside an angle
+    A point is inside an angle
     """
     def __init__(self, point, angle):
         super().__init__()
