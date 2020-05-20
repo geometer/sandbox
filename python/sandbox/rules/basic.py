@@ -458,12 +458,12 @@ class PerpendicularTransitivityRule(Rule):
         pt1 = next(pt for pt in seg1.points if pt != common_point)
         yield (
             PerpendicularSegmentsProperty(common, pt0.segment(pt1)),
-            LazyComment('%s and %s are perpendiculars to non-zero %s', seg0, seg1, common),
+            LazyComment('%s and %s are perpendiculars to line %s', seg0, seg1, common.as_line),
             [perp0, perp1, ne]
         )
         yield (
             PointsCollinearityProperty(common_point, pt0, pt1, True),
-            LazyComment('%s and %s are perpendiculars to non-zero %s', seg0, seg1, common),
+            LazyComment('%s and %s are perpendiculars to line %s', seg0, seg1, common.as_line),
             [perp0, perp1, ne]
         )
 
