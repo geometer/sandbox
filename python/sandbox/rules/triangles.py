@@ -355,6 +355,10 @@ class IsoscelesTriangleByConrguentLegsRule(Rule):
             )
 
 class IsoscelesTriangleByConrguentBaseAnglesRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
     def sources(self):
         return self.context.congruent_angles_with_vertex()
 
@@ -362,16 +366,22 @@ class IsoscelesTriangleByConrguentBaseAnglesRule(Rule):
         ang0, ang1 = src
         if ang0.point_set != ang1.point_set:
             return
+
+        key = frozenset(src)
+        if key in self.processed:
+            return
         nc = self.context.collinearity_property(*ang0.point_set)
-        if nc is None or nc.collinear:
+        if nc is None:
+            return
+        self.processed.add(key)
+
+        if nc.collinear:
             return
         ca = self.context.angle_ratio_property(ang0, ang1)
-        if ca.reason.obsolete and nc.reason.obsolete:
-            return
         base = ang0.vertex.segment(ang1.vertex)
         apex = next(pt for pt in ang0.point_set if pt not in base.point_set)
         yield (
             IsoscelesTriangleProperty(apex, base),
-            LazyComment('congruent base angles'),
+            LazyComment('congruent base angles %s and %s', ang0, ang1),
             [ca, nc]
         )
