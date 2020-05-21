@@ -68,9 +68,11 @@ createScene: function(json) {
 },
 
 createTree: function(json) {
+	var desc = $('#sandbox-description');
 	var root = $('#sandbox-tree');
 	beautified = function(text) {
-		return text.replace(/\|/g, '<span style=\'font-size:130%;vertical-align:-2px;\'>|</span>');
+		var vert = '<span style=\'font-size:130%;vertical-align:-2px;\'>|</span>';
+		return text.replace(/\|([^|]*)\|/g, '<span style=\'white-space:nowrap\'>' + vert + '$1' + vert + '</span>');
 	}
 
 	var data = JSON.parse(json);
@@ -78,7 +80,7 @@ createTree: function(json) {
 		var obj = data[index];
 		var item = $('<li/>');
 		item.addClass(obj.priority);
-		item.append('<span class="handler"/>');
+		item.append('<span class="handler far"/>');
 		item.append(beautified(obj.property));
 		item.append('<span class="implication">⇐</span>');
 		item.append(beautified(obj.comment));
@@ -93,7 +95,7 @@ createTree: function(json) {
 	buildTree(tree, 0);
 	root.append(tree);
 
-	root.find('.figure').each(function() {
+	$('.sandbox-text').find('.figure').each(function() {
 		var clazz = null;
 		var points = null;
 		var lines = [];
@@ -159,6 +161,7 @@ createTree: function(json) {
 					});
 					sandbox$.selectedSegments[clazz].forEach(obj => {sandbox$.board.removeObject(obj);});
 					delete sandbox$.selectedSegments[clazz];
+					desc.find('.' + clazz).each(function() { $(this).removeClass('selected'); });
 					root.find('.' + clazz).each(function() { $(this).removeClass('selected'); });
 				};
 				if ($(this).hasClass('selected')) {
@@ -186,6 +189,7 @@ createTree: function(json) {
 						);
 					});
 					sandbox$.selectedSegments[clazz] = selected;
+					desc.find('.' + clazz).each(function() { $(this).addClass('selected'); });
 					root.find('.' + clazz).each(function() { $(this).addClass('selected'); });
 					sandbox$.board.update();
 					sandbox$.board.update();
@@ -212,7 +216,7 @@ createTree: function(json) {
 		}
 	});
 
-	root.find('.figure').each(function() {
+	$('.sandbox-text').find('.figure').each(function() {
 		var element = $(this);
 		beautified = function(point) {
 			return '<span class=\'point\'>' + point.replace(/_(\d*)/, '<sub>$1</sub>') + '</span>';

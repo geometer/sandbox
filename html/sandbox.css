@@ -5,14 +5,37 @@
   padding-left: 20px;
 }
 
-.description {
-  padding-bottom: 20px;
+.main h2 {
+  padding-left: 50px;
+  padding-bottom: 15px;
+  padding-top: 25px;
+}
+
+.collapsible .chevron {
+  min-width: 24px;
+}
+
+.collapsible .chevron::before {
+  content: "\f078";
+}
+
+.collapsible[aria-expanded="false"] .chevron::before {
+  content: "\f054";
+}
+
+.jxgbox {
+  border: none !important;
+}
+
+.sandbox-description {
+  line-height: 1.15rem;
 }
 
 .sandbox-selections {
   padding-top: 20px;
   padding-right: 12px;
   padding-left: 12px;
+  padding-bottom: 12px;
   line-height: 1.6em;
 }
 
@@ -41,12 +64,8 @@
 }
 
 .sandbox-tree li > span.handler::before {
-  content: "⊡";
+  content: "\f0c8";
   color: #888888;
-  display: inline-block;
-  font-size: 16pt;
-  width: 16px;
-  height: 16px;
   margin-right: 6px;
   pointer-events: auto;
 }
@@ -56,15 +75,15 @@
 }
 
 .sandbox-tree li.closed > span.handler::before {
-  content: "⊞";
+  content: "\f0fe";
 }
 
 .sandbox-tree li.open > span.handler::before {
-  content: "⊟";
+  content: "\f146";
 }
 
 .sandbox-tree li.empty.closed > span.handler::before, .sandbox-tree li.empty.open > span.handler::before {
-  content: "⊡";
+  content: "\f0c8";
 }
 
 .sandbox-tree .implication {
@@ -85,7 +104,10 @@
   cursor: pointer;
   border-style: solid;
   border-width: 0.3px;
-  padding-bottom: 0.1em;
+  line-height: 1.25em;
+  padding-bottom: 0.15em;
+  padding-left: 0.1em;
+  padding-right: 0.1em;
   border-color: #4FC3F7;
   background-color: #E1F5FE;
 }

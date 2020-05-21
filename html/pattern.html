@@ -7,23 +7,75 @@
 	<meta charset='utf-8'/>
 	<title>$$TITLE$$</title>
 	<script type='text/javascript' charset='utf-8' src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
 	<script type='text/javascript' charset='utf-8' src='../html/third-party/jsxgraphcore.js'></script>
 	<script type='text/javascript' charset='utf-8' src='../html/sandbox.js'></script>
+	<script src="https://kit.fontawesome.com/b79c1abc82.js" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
 	<link rel='stylesheet' type='text/css' href='../html/third-party/jsxgraph.css'/>
 	<link rel='stylesheet' type='text/css' href='../html/sandbox.css'/>
 </head>
 <body>
 <div id='main' class='main'>
 <h2>$$TITLE$$</h2>
-<div class='description'>$$DESCRIPTION$$</div>
 <div style='display:inline-block;vertical-align:top;width:5in;'>
-<div id='sandbox-scene' class='jxgbox' style='width:5in;height:5in;'></div>
-<div id='sandbox-selections' class='sandbox-text sandbox-selections'></div>
+<div id="sketchAccordion">
+  <div class="card">
+    <div class="card-header" id="sketchHeading">
+      <h5 class="mb-0">
+				<button class="btn collapsible" data-toggle="collapse" data-target="#sketchBlock" aria-expanded="true" aria-controls="sketchBlock"><i class="fas chevron"></i>
+					Sketch
+        </button>
+      </h5>
+    </div>
+
+    <div id="sketchBlock" class="collapse show" aria-labelledby="sketchHeading" data-parent="#sketchAccordion">
+      <div class="card-body" style='padding:0.05in;'>
+				<div id='sandbox-scene' class='jxgbox' style='width:4.9in;height:4.9in;'></div>
+				<div id='sandbox-selections' class='sandbox-text sandbox-selections'></div>
+      </div>
+    </div>
+  </div>
 </div>
-<div id='sandbox-tree' class='sandbox-text sandbox-tree' style='margin-left:36px;width:50%;display:inline-block;vertical-align:top;'>
-<div style='margin-bottom:16px;'>
-	<input type='checkbox' id='checkbox' checked='1' onclick='sandbox$.toggleNonEssential()'>
-Show essential steps only
+</div>
+<div style='margin-left:36px;width:50%;display:inline-block;vertical-align:top;'>
+<div id="descriptionAccordion">
+  <div class="card">
+    <div class="card-header" id="descriptionHeading">
+      <h5 class="mb-0">
+        <button class="btn collapsible" data-toggle="collapse" data-target="#descriptionBlock" aria-expanded="true" aria-controls="descriptionBlock"><i class="fas chevron"></i>
+          Description
+        </button>
+      </h5>
+    </div>
+
+    <div id="descriptionBlock" class="collapse show" aria-labelledby="descriptionHeading" data-parent="#descriptionAccordion">
+      <div class="card-body sandbox-text sandbox-description" id='sandbox-description'>
+				$$DESCRIPTION$$
+      </div>
+    </div>
+  </div>
+</div>
+<div id="solutionAccordion" style='margin-top:2em;'>
+  <div class="card">
+    <div class="card-header" id="solutionHeading">
+      <h5 class="mb-0">
+        <button class="btn collapsible" data-toggle="collapse" data-target="#solutionBlock" aria-expanded="true" aria-controls="solutionBlock"><i class="fas chevron"></i>
+          Generated proof
+        </button>
+      </h5>
+    </div>
+
+    <div id="solutionBlock" class="collapse show" aria-labelledby="solutionHeading" data-parent="#solutionAccordion">
+      <div class="card-body">
+				<div style='margin-bottom:16px;'>
+					<input type='checkbox' id='checkbox' checked='1' onclick='sandbox$.toggleNonEssential()'>
+				Show essential steps only
+				</div>
+				<div id='sandbox-tree' class='sandbox-text sandbox-tree'/>
+      </div>
+    </div>
+  </div>
 </div>
 </div>
 </div>
