@@ -3,7 +3,7 @@ import itertools
 
 from .figure import Figure
 from .scene import Scene
-from .util import LazyComment, divide, good_angles, normalize_number, keys_for_triangle
+from .util import LazyComment, divide, good_angles, normalize_number, keys_for_triangle, degree_to_string
 
 class Property:
     def __init__(self):
@@ -415,13 +415,17 @@ class AngleValueProperty(LinearAngleProperty):
         return [self.angle]
 
     @property
+    def degree_str(self):
+        return degree_to_string(self.degree)
+
+    @property
     def description(self):
         if self.angle.vertex:
             if self.degree == 0:
                 return LazyComment('%s, %s in the same direction from %s', self.angle.vector0.end, self.angle.vector1.end, self.angle.vertex)
             if self.degree == 180:
                 return LazyComment('%s lies inside segment %s', self.angle.vertex, self.angle.vector0.end.segment(self.angle.vector1.end))
-        return LazyComment('%s = %dº', self.angle, self.degree)
+        return LazyComment('%s = %s', self.angle, self.degree_str)
 
     def compare_values(self, other):
         return self.degree == other.degree
@@ -501,8 +505,12 @@ class SumOfThreeAnglesProperty(LinearAngleProperty):
         return angle_to_expression(self.angles[0]) + angle_to_expression(self.angles[1]) + angle_to_expression(self.angles[2]) - self.degree
 
     @property
+    def degree_str(self):
+        return degree_to_string(self.degree)
+
+    @property
     def description(self):
-        return LazyComment('%s + %s + %s = %sº', *self.angles, self.degree)
+        return LazyComment('%s + %s + %s = %s', *self.angles, self.degree_str)
 
     def compare_values(self, other):
         return self.degree == other.degree
@@ -530,8 +538,12 @@ class SumOfTwoAnglesProperty(LinearAngleProperty):
         return angle_to_expression(self.angles[0]) + angle_to_expression(self.angles[1]) - self.degree
 
     @property
+    def degree_str(self):
+        return degree_to_string(self.degree)
+
+    @property
     def description(self):
-        return LazyComment('%s + %s = %sº', *self.angles, self.degree)
+        return LazyComment('%s + %s = %s', *self.angles, self.degree_str)
 
     def compare_values(self, other):
         return self.degree == other.degree

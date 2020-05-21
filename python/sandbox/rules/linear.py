@@ -23,7 +23,7 @@ class AngleFromSumOfTwoAnglesRule(SingleSourceRule):
             self.processed.add(prop)
             yield (
                 AngleValueProperty(a1, prop.degree - av.degree),
-                LazyComment('%s + %sº = %s + %s = %sº', a1, av.degree, a1, a0, prop.degree),
+                LazyComment('%s + %s = %s + %s = %s', a1, av.degree_str, a1, a0, prop.degree_str),
                 [prop, av]
             )
             return
@@ -52,7 +52,7 @@ class SumOfTwoAnglesByThreeRule(SingleSourceRule):
             others = [ang for ang in prop.angles if ang != angle]
             yield (
                 SumOfTwoAnglesProperty(*others, prop.degree - av.degree),
-                LazyComment('%sº = %s + %s + %s = %s + %s + %sº', prop.degree, *others, angle, *others, av.degree),
+                LazyComment('%s = %s + %s + %s = %s + %s + %s', prop.degree_str, *others, angle, *others, av.degree_str),
                 [prop, av]
             )
         if mask != original:
@@ -79,11 +79,11 @@ class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
         value1 = divide(prop.degree, 1 + ar.value)
         value0 = prop.degree - value1
         if ar.value == 1:
-            comment0 = LazyComment('2 %s = %s + %s = %sº', ar.angle0, ar.angle0, ar.angle1, prop.degree)
-            comment1 = LazyComment('2 %s = %s + %s = %sº', ar.angle1, ar.angle1, ar.angle0, prop.degree)
+            comment0 = LazyComment('2 %s = %s + %s = %s', ar.angle0, ar.angle0, ar.angle1, prop.degree_str)
+            comment1 = LazyComment('2 %s = %s + %s = %s', ar.angle1, ar.angle1, ar.angle0, prop.degree_str)
         else:
-            comment0 = LazyComment('%s + %s / %s = %s + %s = %sº', ar.angle0, ar.angle0, ar.value, ar.angle0, ar.angle1, prop.degree)
-            comment1 = LazyComment('%s + %s %s = %s + %s = %sº', ar.angle1, ar.value, ar.angle1, ar.angle1, ar.angle0, prop.degree)
+            comment0 = LazyComment('%s + %s / %s = %s + %s = %s', ar.angle0, ar.angle0, ar.value, ar.angle0, ar.angle1, prop.degree_str)
+            comment1 = LazyComment('%s + %s %s = %s + %s = %s', ar.angle1, ar.value, ar.angle1, ar.angle1, ar.angle0, prop.degree_str)
         yield (AngleValueProperty(ar.angle0, value0), comment0, [prop, ar])
         yield (AngleValueProperty(ar.angle1, value1), comment1, [prop, ar])
 
@@ -117,7 +117,7 @@ class EqualSumsOfAnglesRule(Rule):
                 mask |= bit
                 yield (
                     AngleRatioProperty(other0, other1, 1),
-                    LazyComment('%s + %s = %sº = %s + %s', other0, eq0, sum0.degree, other1, eq1),
+                    LazyComment('%s + %s = %s = %s + %s', other0, eq0, sum0.degree_str, other1, eq1),
                     [sum0, sum1]
                 )
             else:
@@ -131,8 +131,8 @@ class EqualSumsOfAnglesRule(Rule):
                 yield (
                     AngleRatioProperty(other0, other1, 1),
                     LazyComment(
-                        '%s + %s = %sº = %s + %s and %s',
-                        other0, eq0, sum0.degree, other1, eq1, ca
+                        '%s + %s = %s = %s + %s and %s',
+                        other0, eq0, sum0.degree_str, other1, eq1, ca
                     ),
                     [sum0, sum1, ca]
                 )

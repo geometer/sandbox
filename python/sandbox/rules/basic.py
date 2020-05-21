@@ -751,13 +751,13 @@ class AngleTypeByDegreeRule(Rule):
         if prop.degree < 90:
             yield (
                 AngleKindProperty(prop.angle, AngleKindProperty.Kind.acute),
-                LazyComment('0º < %sº < 90º', prop.degree),
+                LazyComment('0º < %s = %s < 90º', prop.angle, prop.degree_str),
                 [prop]
             )
         elif prop.degree > 90:
             yield (
                 AngleKindProperty(prop.angle, AngleKindProperty.Kind.obtuse),
-                LazyComment('90º < %sº < 180º', prop.degree),
+                LazyComment('90º < %s = %s < 180º', prop.angle, prop.degree_str),
                 [prop]
             )
         else:
@@ -1145,7 +1145,7 @@ class TwoAnglesWithCommonSideRule(SingleSourceRule):
         angle1 = prop.angle.vertex.angle(prop.angle.vector1.end, prop.point)
         yield (
             SumOfTwoAnglesProperty(angle0, angle1, av.degree),
-            LazyComment('%s + %s = %s = %sº', angle0, angle1, prop.angle, av.degree),
+            LazyComment('%s + %s = %s = %s', angle0, angle1, prop.angle, av.degree_str),
             [prop, av]
         )
 
