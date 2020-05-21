@@ -84,7 +84,8 @@ class PointOnLineProperty(Property):
     @property
     def description(self):
         return LazyComment(
-            '%s lies on line %s', self.point, self.segment.as_line
+            '%s lies on line %s' if self.on_line else '%s does not lie on line %s',
+            self.point, self.segment.as_line
         )
 
     def compare_values(self, other):
