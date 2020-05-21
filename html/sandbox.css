@@ -65,8 +65,8 @@
 
 .sandbox-tree li > span.handler::before {
   content: "\f0c8";
-  color: #888888;
-  padding-right: 7px;
+  color: #ccc;
+  padding-right: 8px;
   vertical-align: middle;
   pointer-events: auto;
 }
@@ -76,14 +76,21 @@
 }
 
 .sandbox-tree li.closed > span.handler::before {
+  color: #888;
   content: "\f0fe";
 }
 
 .sandbox-tree li.open > span.handler::before {
+  color: #888;
   content: "\f146";
 }
 
+.sandbox-tree li.empty.closed > span.handler, .sandbox-tree li.empty.open > span.handler {
+  cursor: initial;
+}
+
 .sandbox-tree li.empty.closed > span.handler::before, .sandbox-tree li.empty.open > span.handler::before {
+  color: #ccc;
   content: "\f0c8";
 }
 
