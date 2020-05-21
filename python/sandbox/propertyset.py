@@ -6,7 +6,7 @@ from .core import CoreScene
 from .property import *
 from .reason import Reason
 from .stats import Stats
-from .util import LazyComment, divide
+from .util import LazyComment, divide, degree_to_string
 
 class ContradictionError(Exception):
     pass
@@ -360,8 +360,7 @@ class AngleRatioPropertySet:
                         params.append(coef)
                         params.append(vertex)
                 else:
-                    pattern.append('%sº')
-                    params.append(self.multiplier * vertex)
+                    pattern.append(degree_to_string(self.multiplier * vertex))
             return LazyComment(''.join(pattern), *params)
 
         def __str__(self):
@@ -383,8 +382,7 @@ class AngleRatioPropertySet:
                         params.append(coef)
                         params.append(vertex)
                 else:
-                    pattern.append('%sº')
-                    params.append(self.multiplier * vertex)
+                    pattern.append(degree_to_string(self.multiplier * vertex))
             return str(LazyComment(''.join(pattern), *params))
 
     class Family:

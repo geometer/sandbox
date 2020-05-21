@@ -306,8 +306,8 @@ class Explainer:
                                 continue
                             if ka.degree >= 90:
                                 comment = LazyComment(
-                                    '%s, %s, %s are collinear, %s is acute, and %s = %sº',
-                                    pt, *vec0.points, base, angle, ka.degree
+                                    '%s, %s, %s are collinear, %s is acute, and %s = %s',
+                                    pt, *vec0.points, base, angle, ka.degree_str
                                 )
                                 zero = base.vertex.angle(vec0.end, pt)
                                 yield (AngleValueProperty(zero, 0), comment, [col, aa, ka])
@@ -403,8 +403,8 @@ class Explainer:
 #                                continue
 #                            if ka.degree <= 90:
 #                                comment = LazyComment(
-#                                    '%s, %s, %s are collinear, %s is obtuse, and %s = %sº',
-#                                    pt, *vec0.points, base, angle, ka.degree
+#                                    '%s, %s, %s are collinear, %s is obtuse, and %s = %s',
+#                                    pt, *vec0.points, base, angle, ka.degree_str
 #                                )
 #                                zero = base.vertex.angle(vec0.end, pt)
 #                                yield (AngleValueProperty(zero, 180), comment, [col, oa, ka])
