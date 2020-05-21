@@ -72,6 +72,9 @@ class LazyComment:
         def htmlize(obj):
             if isinstance(obj, Figure):
                 return '<span class="figure %s"></span>' % obj.css_class()
+            if isinstance(obj, sp.Number):
+                if not obj.is_integer and (2 * obj).is_integer:
+                    return '%.1f' % obj
             while hasattr(obj, 'html'):
                 obj = obj.html()
             return obj
