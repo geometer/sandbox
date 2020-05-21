@@ -934,6 +934,8 @@ class PropertySet:
                 existing = self.angle_value_property(prop.angle)
             elif isinstance(prop, SameCyclicOrderProperty):
                 existing = self.same_cyclic_order_property(prop.cycle0, prop.cycle1)
+            elif isinstance(prop, PointsCollinearityProperty):
+                existing = self.collinearity_property(*prop.points)
         #TODO: LengthRatioProperty
         #TODO: EqualLengthRatiosProperty
         if existing and not existing.compare_values(prop):
