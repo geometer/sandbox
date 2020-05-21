@@ -17,6 +17,7 @@
 
 .collapsible .chevron::before {
   content: "\f078";
+  vertical-align: middle;
 }
 
 .collapsible[aria-expanded="false"] .chevron::before {
