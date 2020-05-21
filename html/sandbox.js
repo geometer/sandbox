@@ -288,6 +288,13 @@ toggleNonEssential: function() {
 			$(this).addClass('empty');
 		}
 	});
+	$('.chevron').each(function() {
+		var chevron = $(this);
+		chevron.addClass('chevron-animated')
+		chevron.parent().click(function() {
+			chevron.toggleClass('fa-rotate-90');
+		});
+	});
 }
 
 };
