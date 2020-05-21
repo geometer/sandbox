@@ -380,7 +380,7 @@ class IsoscelesTriangleByConrguentBaseAnglesRule(Rule):
             av1 = self.context.angle_value_property(ang1)
             yield (
                 IsoscelesTriangleProperty(apex, base),
-                LazyComment('congruent base angles %s and %s (both = %s)', ang0, ang1, av0.degree_str),
+                LazyComment('congruent base angles %s = %s and %s = %s', ang0, av0.degree_str, ang1, av1.degree_str),
                 [av0, av1]
             )
 
