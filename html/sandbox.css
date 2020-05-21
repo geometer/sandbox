@@ -66,8 +66,8 @@
 .sandbox-tree li > span.handler::before {
   content: "\f0c8";
   color: #888888;
-  margin-right: 8px;
-  vertical-align: -8%;
+  padding-right: 7px;
+  vertical-align: middle;
   pointer-events: auto;
 }
 
