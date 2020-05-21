@@ -53,8 +53,36 @@ class LineSet:
             prop.reason.obsolete = all(p.reason.obsolete for p in premises)
             return prop
 
+        def non_coincidence_property(self, pt_on, pt_not_on):
+            candidates = []
+            for prop_not_on in self.points_not_on.get(pt_not_on):
+                seg0 = prop_not_on.segment
+                if pt_on in seg0.points:
+                    prop = PointsCoincidenceProperty(pt_on, pt_not_on, False)
+                    comment = LazyComment('points %s, %s, and %s are not collinear', pt_not_on, *seg0.points)
+                    premises = [prop_not_on]
+                    prop.rule = 'synthetic'
+                    prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+                    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+                    candidates.append(prop)
+                for prop_on in self.points_on.get(pt_on):
+                    seg1 = prop_on.segment
+                    comment = LazyComment('point %s lies on line %s, %s does not', pt_on, seg0.as_line, pt_not_on)
+                    if seg0 == seg1:
+                        premises = [*prop_not_on.reason.premises, *prop_on.reason.premises]
+                    else:
+                        premises = [prop_not_on, self.same_line_property(seg0, seg1), prop_on]
+                    prop = PointsCoincidenceProperty(pt_on, pt_not_on, False)
+                    prop.rule = 'synthetic'
+                    prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+                    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+                    candidates.append(prop)
+
+            return LineSet.best_candidate(candidates)
+
     def __init__(self):
         self.__segment_to_line = {}
+        self.__all_lines = []
         self.__different_lines_graph = nx.Graph()
         self.__collinearity = {} # {point, point, point} => prop
 
@@ -66,6 +94,7 @@ class LineSet:
                 for segment in line1.segments:
                     self.__segment_to_line[segment] = line0
                 line0.premises_graph.add_edges_from(line1.premises_graph.edges(data=True))
+                self.__all_lines.remove(line1)
             line0.add(prop)
         elif line0:
             line0.add(prop)
@@ -78,6 +107,7 @@ class LineSet:
             line.add(prop)
             self.__segment_to_line[prop.segments[0]] = line
             self.__segment_to_line[prop.segments[1]] = line
+            self.__all_lines.append(line)
 
     def __line_by_segment(self, segment):
         line = self.__segment_to_line.get(segment)
@@ -85,6 +115,7 @@ class LineSet:
             line = LineSet.Line()
             line.premises_graph.add_node(segment)
             self.__segment_to_line[segment] = line
+            self.__all_lines.append(line)
         return line
 
     def __add_different_lines_property(self, prop):
@@ -189,6 +220,10 @@ class LineSet:
                     prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                     candidates.append(prop)
 
+        return LineSet.best_candidate(candidates)
+
+    @staticmethod
+    def best_candidate(candidates):
         if not candidates:
             return None
         best = candidates[0]
@@ -217,6 +252,9 @@ class LineSet:
         if pt not in segment1.points:
             premises.append(self.collinearity_property(pt, *segment1.points))
         return (pt, premises)
+
+    def lines(self):
+        return list(self.__all_lines)
 
     def collinear_points(self, segment):
         line = self.__segment_to_line.get(segment)
@@ -1068,6 +1106,9 @@ class PropertySet:
             if col and col.collinear:
                 return (candidate, [prop, col])
         return (None, [])
+
+    def lines(self):
+        return self.__line_set.lines()
 
     def collinear_points(self, segment):
         return self.__line_set.collinear_points(segment)
