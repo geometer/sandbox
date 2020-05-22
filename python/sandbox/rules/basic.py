@@ -1068,59 +1068,62 @@ class TransversalRule(Rule):
 
     def apply(self, prop):
         ang = prop.angle
-        for ne in self.context.list(PointsCoincidenceProperty):
-            if ne.coincident or prop.reason.obsolete and ne.reason.obsolete:
-                continue
-            common0 = next((pt for pt in ne.points if pt in ang.vector0.points), None)
-            if common0 is None:
-                continue
-            common1 = next((pt for pt in ne.points if pt in ang.vector1.points), None)
-            if common1 is None:
-                continue
-            vec = common0.vector(next(pt for pt in ne.points if pt != common0))
-            if vec.as_segment in (ang.vector0.as_segment, ang.vector1.as_segment):
-                continue
+        for point in ang.point_set:
+            for nep in self.context.non_coincident_points(point):
+                common0 = next((pt for pt in (point, nep) if pt in ang.vector0.points), None)
+                if common0 is None:
+                    continue
+                common1 = next((pt for pt in (point, nep) if pt in ang.vector1.points), None)
+                if common1 is None:
+                    continue
+                vec = common0.vector(next(pt for pt in (point, nep) if pt != common0))
+                if vec.as_segment in (ang.vector0.as_segment, ang.vector1.as_segment):
+                    continue
 
-            rev = prop.degree == 180
-            if ang.vector0.start == common0:
-                vec0 = ang.vector0
-            else:
-                vec0 = ang.vector0.reversed
-                rev = not rev
-            ngl0 = vec.angle(vec0)
+                ne = self.context.coincidence_property(point, nep)
+                if prop.reason.obsolete and ne.reason.obsolete:
+                    continue
 
-            if common0 == common1:
-                if ang.vector1.start == common1:
-                    vec1 = ang.vector1
+                rev = prop.degree == 180
+                if ang.vector0.start == common0:
+                    vec0 = ang.vector0
                 else:
-                    vec1 = ang.vector1.reversed
+                    vec0 = ang.vector0.reversed
                     rev = not rev
-                ngl1 = vec.angle(vec1)
-            else:
-                if ang.vector1.start == common1:
-                    vec1 = ang.vector1
-                    rev = not rev
-                else:
-                    vec1 = ang.vector1.reversed
-                ngl1 = vec.reversed.angle(vec1)
+                ngl0 = vec.angle(vec0)
 
-            if ang.vertex is None and (vec0 == ang.vector0) != (vec1 == ang.vector1):
-                continue
+                if common0 == common1:
+                    if ang.vector1.start == common1:
+                        vec1 = ang.vector1
+                    else:
+                        vec1 = ang.vector1.reversed
+                        rev = not rev
+                    ngl1 = vec.angle(vec1)
+                else:
+                    if ang.vector1.start == common1:
+                        vec1 = ang.vector1
+                        rev = not rev
+                    else:
+                        vec1 = ang.vector1.reversed
+                    ngl1 = vec.reversed.angle(vec1)
 
-            if rev:
-                new_prop = SumOfTwoAnglesProperty(ngl0, ngl1, 180)
-                if common0 == common1:
-                    comment = LazyComment('supplementary angles: common side %s, and %s ↑↓ %s', vec.as_ray, vec0.as_ray, vec1.as_ray)
+                if ang.vertex is None and (vec0 == ang.vector0) != (vec1 == ang.vector1):
+                    continue
+
+                if rev:
+                    new_prop = SumOfTwoAnglesProperty(ngl0, ngl1, 180)
+                    if common0 == common1:
+                        comment = LazyComment('supplementary angles: common side %s, and %s ↑↓ %s', vec.as_ray, vec0.as_ray, vec1.as_ray)
+                    else:
+                        comment = LazyComment('consecutive angles: common line %s, and %s ↑↑ %s', vec.as_line, vec0.as_ray, vec1.as_ray)
                 else:
-                    comment = LazyComment('consecutive angles: common line %s, and %s ↑↑ %s', vec.as_line, vec0.as_ray, vec1.as_ray)
-            else:
-                if common0 == common1:
-                    new_prop = AngleRatioProperty(ngl0, ngl1, 1, same=True)
-                    comment = LazyComment('same angle: common ray %s, and %s coincides with %s', vec.as_ray, vec0.as_ray, vec1.as_ray)
-                else:
-                    new_prop = AngleRatioProperty(ngl0, ngl1, 1)
-                    comment = LazyComment('alternate angles: common line %s, and %s ↑↓ %s', vec.as_line, vec0.as_ray, vec1.as_ray)
-            yield (new_prop, comment, [prop, ne])
+                    if common0 == common1:
+                        new_prop = AngleRatioProperty(ngl0, ngl1, 1, same=True)
+                        comment = LazyComment('same angle: common ray %s, and %s coincides with %s', vec.as_ray, vec0.as_ray, vec1.as_ray)
+                    else:
+                        new_prop = AngleRatioProperty(ngl0, ngl1, 1)
+                        comment = LazyComment('alternate angles: common line %s, and %s ↑↓ %s', vec.as_line, vec0.as_ray, vec1.as_ray)
+                yield (new_prop, comment, [prop, ne])
 
 class SameAngleRule(Rule):
     def sources(self):
