@@ -6,6 +6,36 @@ from sandbox.util import LazyComment, divide
 
 from .abstract import Rule, SingleSourceRule
 
+class SegmentWithEndpointsOnAngleSidesRule(SingleSourceRule):
+    property_type = PointInsideAngleProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
+    def apply(self, prop):
+        A = prop.angle.vertex
+        B = prop.angle.vector0.end
+        C = prop.angle.vector1.end
+        D = prop.point
+        AD = A.segment(D)
+        BC = B.segment(C)
+        X, reasons = self.context.intersection_of_lines(AD, BC)
+        if X is None:
+            return
+        self.processed.add(prop)
+        if X in (A, B, C, D):
+            return
+
+        comment = LazyComment('%s is the intersection of ray [%s) and segment [%s]', X, A.vector(D).as_ray, B.segment(C))
+        yield (AngleValueProperty(A.angle(D, X), 0), comment, [prop] + reasons)
+        yield (AngleValueProperty(B.angle(C, X), 0), comment, [prop] + reasons)
+        yield (AngleValueProperty(C.angle(B, X), 0), comment, [prop] + reasons)
+        yield (AngleValueProperty(X.angle(B, C), 180), comment, [prop] + reasons)
+
 class SumOfAngles180DegreeRule(Rule):
     def __init__(self, context):
         super().__init__(context)

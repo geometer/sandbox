@@ -27,6 +27,7 @@ class Explainer:
         self.__explanation_time = None
         self.__iteration_step_count = -1
         self.__rules = [
+            SegmentWithEndpointsOnAngleSidesRule(self.context),
             CyclicQuadrilateralRule(self.context),
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),
@@ -171,25 +172,6 @@ class Explainer:
                 for prop, comment, premises in rule.generate():
                     prop.rule = rule
                     yield (prop, comment, premises)
-
-            for pia in self.context.list(PointInsideAngleProperty):
-                A = pia.angle.vertex
-                B = pia.angle.vector0.end
-                C = pia.angle.vector1.end
-                D = pia.point
-                AD = A.segment(D)
-                BC = B.segment(C)
-                X, reasons = self.context.intersection_of_lines(AD, BC)
-                if X is None or X in (A, B, C, D):
-                    continue
-                if pia.reason.obsolete and all(p.reason.obsolete for p in reasons):
-                    continue
-
-                comment = LazyComment('%s is the intersection of ray [%s) and segment [%s]', X, A.vector(D).as_ray, B.segment(C))
-                yield (AngleValueProperty(A.angle(D, X), 0), comment, [pia] + reasons)
-                yield (AngleValueProperty(B.angle(C, X), 0), comment, [pia] + reasons)
-                yield (AngleValueProperty(C.angle(B, X), 0), comment, [pia] + reasons)
-                yield (AngleValueProperty(X.angle(B, C), 180), comment, [pia] + reasons)
 
             for pia in self.context.list(PointInsideAngleProperty):
                 if pia.reason.obsolete:
