@@ -258,28 +258,24 @@ class SumOfThreeAnglesInTriangleRule(Rule):
         self.processed = set()
 
     def sources(self):
-        return itertools.combinations([p for p in self.context.list(PointsCoincidenceProperty) if not p.coincident], 2)
+        for pt in self.context.points:
+            for pair in itertools.combinations(self.context.non_coincident_points(pt), 2):
+                yield (pt, *pair)
 
     def apply(self, src):
         key = frozenset(src)
         if key in self.processed:
             return
 
-        ne0, ne1 = src
-        pt0 = next((pt for pt in ne0.points if pt in ne1.points), None)
-        if pt0 is None:
-            self.processed.add(key)
-            return
-        pt1 = next(pt for pt in ne0.points if pt != pt0)
-        pt2 = next(pt for pt in ne1.points if pt != pt0)
-        ne2 = self.context.not_equal_property(pt1, pt2)
+        pt0, pt1, pt2 = src
+        ne2 = self.context.coincidence_property(pt1, pt2)
         if ne2 is None:
             return
         self.processed.add(key)
         if ne2.coincident:
             return
-        self.processed.add(frozenset([ne0, ne2]))
-        self.processed.add(frozenset([ne1, ne2]))
+        ne0 = self.context.coincidence_property(pt0, pt1)
+        ne1 = self.context.coincidence_property(pt0, pt2)
         triangle = Scene.Triangle(pt0, pt1, pt2)
         yield (
             SumOfThreeAnglesProperty(*triangle.angles, 180),
