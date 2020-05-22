@@ -11,6 +11,11 @@
   padding-top: 25px;
 }
 
+.btn:focus {
+  outline:0 !important;
+  box-shadow: none !important;
+}
+
 .collapsible .chevron {
   min-width: 24px;
 }
@@ -141,7 +146,7 @@
 
 .sandbox-text .figure.selected {
   border-color: #EF5350;
-  background-color: #FFCDD2; 
+  background-color: #FFCDD2;
 }
 
 .jxgbox .JXGText {
