@@ -544,7 +544,7 @@ class Explainer:
             for prop, comment, premises in iteration():
                 self.__reason(prop, comment, premises)
             for prop in self.context.all:
-                prop.reason.obsolete = prop.reason.generation < self.__iteration_step_count
+                prop.reason.obsolete = prop.reason.generation < self.__iteration_step_count - 1
             self.__iteration_step_count += 1
             if len(self.context) == explained_size:
                 break
