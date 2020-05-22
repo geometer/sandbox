@@ -123,14 +123,20 @@ class LengthRatioTransitivityRule(Rule):
         |seg1| = B |seg2|
     we conclude that |seg0| = A B |seg2|
     """
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
     def sources(self):
         return itertools.combinations(self.context.length_ratio_properties(allow_zeroes=True), 2)
 
     def apply(self, src):
-        lr0, lr1 = src
-
-        if lr0.reason.obsolete and lr1.reason.obsolete:
+        key = frozenset(src)
+        if key in self.processed:
             return
+        self.processed.add(key)
+
+        lr0, lr1 = src
 
         def _cs(coef):
             return '' if coef == 1 else ('%s ' % coef)
@@ -165,14 +171,22 @@ class LengthRatioTransitivityRule(Rule):
             )
 
 class CoincidenceTransitivityRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
     def sources(self):
+        #TODO: use self.context.non_coincident_points()
         return itertools.combinations(self.context.list(PointsCoincidenceProperty), 2)
 
     def apply(self, src):
+        key = frozenset(src)
+        if key in self.processed:
+            return
+        self.processed.add(key)
+
         co0, co1 = src
         if not co0.coincident and not co1.coincident:
-            return
-        if co0.reason.obsolete and co1.reason.obsolete:
             return
         common = next((pt for pt in co0.points if pt in co1.points), None)
         if common is None:
@@ -241,12 +255,15 @@ class NonCollinearPointsAreDifferentRule(SingleSourceRule):
     """
     property_type = PointsCollinearityProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
     def accepts(self, prop):
-        return not prop.collinear
+        return not prop.collinear and prop not in self.processed
 
     def apply(self, prop):
-        if prop.reason.obsolete:
-            return
+        self.processed.add(prop)
         for pt0, pt1 in itertools.combinations(prop.points, 2):
             yield (
                 PointsCoincidenceProperty(pt0, pt1, False),
