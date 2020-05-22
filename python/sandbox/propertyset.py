@@ -65,13 +65,21 @@ class LineSet:
                     prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
                     prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                     candidates.append(prop)
+                for seg1 in [seg for seg in self.segments if seg != seg0 and pt_on in seg.points]:
+                    comment = LazyComment('point %s lies on line %s, %s does not', pt_on, seg0.as_line, pt_not_on)
+                    premises = [self.same_line_property(seg0, seg1), prop_not_on]
+                    prop = PointsCoincidenceProperty(pt_on, pt_not_on, False)
+                    prop.rule = 'synthetic'
+                    prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
+                    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+                    candidates.append(prop)
                 for prop_on in self.points_on.get(pt_on):
                     seg1 = prop_on.segment
                     comment = LazyComment('point %s lies on line %s, %s does not', pt_on, seg0.as_line, pt_not_on)
                     if seg0 == seg1:
-                        premises = [*prop_not_on.reason.premises, *prop_on.reason.premises]
+                        premises = [*prop_on.reason.premises, *prop_not_on.reason.premises]
                     else:
-                        premises = [prop_not_on, self.same_line_property(seg0, seg1), prop_on]
+                        premises = [prop_on, self.same_line_property(seg0, seg1), prop_not_on]
                     prop = PointsCoincidenceProperty(pt_on, pt_not_on, False)
                     prop.rule = 'synthetic'
                     prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
