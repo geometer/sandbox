@@ -95,6 +95,18 @@ class LineSet:
                 for segment in line1.segments:
                     self.__segment_to_line[segment] = line0
                 line0.premises_graph.add_edges_from(line1.premises_graph.edges(data=True))
+                for pt, data in line1.points_on.items():
+                    known = line0.points_on.get(pt)
+                    if known:
+                        known.update(data)
+                    else:
+                        line0.points_on[pt] = data
+                for pt, data in line1.points_not_on.items():
+                    known = line0.points_not_on.get(pt)
+                    if known:
+                        known.update(data)
+                    else:
+                        line0.points_not_on[pt] = data
                 self.__all_lines.remove(line1)
             line0.add(prop)
         elif line0:
@@ -151,7 +163,16 @@ class LineSet:
             self.__coincidence[prop.property_key] = prop
 
     def coincidence_property(self, pt0, pt1):
-        return self.__coincidence.get(frozenset([pt0, pt1]))
+        cached = self.__coincidence.get(frozenset([pt0, pt1]))
+        if cached:
+            return cached
+        candidates = []
+        for line in self.__all_lines:
+            if pt0 in line.points_on and pt1 in line.points_not_on:
+                candidates.append(line.non_coincidence_property(pt0, pt1))
+            elif pt1 in line.points_on and pt0 in line.points_not_on:
+                candidates.append(line.non_coincidence_property(pt1, pt0))
+        return LineSet.best_candidate(candidates)
 
     def collinearity_property(self, pt0, pt1, pt2):
         cached = self.__collinearity.get(frozenset([pt0, pt1, pt2]))
