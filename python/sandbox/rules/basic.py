@@ -361,14 +361,22 @@ class ParallelVectorsRule(SingleSourceRule):
 class PerpendicularSegmentsRule(SingleSourceRule):
     property_type = PerpendicularSegmentsProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
     def apply(self, pv):
         seg0 = pv.segments[0]
         seg1 = pv.segments[1]
-        ne0 = self.context.not_equal_property(*seg0.points)
-        ne1 = self.context.not_equal_property(*seg1.points)
+        ne0 = self.context.coincidence_property(*seg0.points)
+        ne1 = self.context.coincidence_property(*seg1.points)
         if ne0 is None or ne1 is None:
             return
-        if pv.reason.obsolete and ne0.reason.obsolete and ne1.reason.obsolete:
+        self.processed.add(pv)
+        if ne0.coincident or ne1.coincident:
             return
         vec0 = seg0.points[0].vector(seg0.points[1])
         vec1 = seg1.points[0].vector(seg1.points[1])
