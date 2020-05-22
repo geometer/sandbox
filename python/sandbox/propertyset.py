@@ -49,7 +49,7 @@ class LineSet:
                 return premises[0]
             prop = LineCoincidenceProperty(segment0, segment1, True)
             prop.rule = 'synthetic'
-            prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+            prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
             prop.reason.obsolete = all(p.reason.obsolete for p in premises)
             return prop
 
@@ -62,7 +62,7 @@ class LineSet:
                     comment = LazyComment('points %s, %s, and %s are not collinear', pt_not_on, *seg0.points)
                     premises = [prop_not_on]
                     prop.rule = 'synthetic'
-                    prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+                    prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
                     prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                     candidates.append(prop)
                 for seg1 in [seg for seg in self.segments if seg != seg0 and pt_on in seg.points]:
@@ -82,7 +82,7 @@ class LineSet:
                         premises = [prop_on, self.same_line_property(seg0, seg1), prop_not_on]
                     prop = PointsCoincidenceProperty(pt_on, pt_not_on, False)
                     prop.rule = 'synthetic'
-                    prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+                    prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
                     prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                     candidates.append(prop)
 
@@ -217,7 +217,7 @@ class LineSet:
                 )
                 premises = [known, line.same_line_property(known.segment, segment)]
                 prop.rule = 'synthetic'
-                prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+                prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
                 prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                 candidates.append(prop)
 
@@ -226,7 +226,7 @@ class LineSet:
                 comment, premises = line0.same_line_explanation(segment0, segment1)
                 prop = PointsCollinearityProperty(pt0, pt1, pt2, True)
                 prop.rule = 'synthetic'
-                prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+                prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
                 prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                 candidates.append(prop)
                 continue
@@ -251,7 +251,7 @@ class LineSet:
                         premises.append(line1.same_line_property(seg1, segment1))
                     prop = PointsCollinearityProperty(pt0, pt1, pt2, False)
                     prop.rule = 'synthetic'
-                    prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+                    prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
                     prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                     candidates.append(prop)
 
@@ -453,7 +453,7 @@ class AngleRatioPropertySet:
             comment, premises = self.explanation_from_path(path, ratio)
             prop = AngleValueProperty(angle, self.degree * ratio)
             prop.rule = 'synthetic'
-            prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+            prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
             prop.reason.obsolete = all(p.reason.obsolete for p in premises)
             return prop
 
@@ -468,7 +468,7 @@ class AngleRatioPropertySet:
                 comment, premises = self.explanation_from_path(path, ratio)
                 prop = AngleValueProperty(angle, self.degree * ratio)
                 prop.rule = 'synthetic'
-                prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+                prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
                 prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                 properties.append(prop)
             return properties
@@ -486,7 +486,7 @@ class AngleRatioPropertySet:
                 comment, premises = self.explanation_from_path(path, ratio)
                 prop = AngleValueProperty(angle, degree)
                 prop.rule = 'synthetic'
-                prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+                prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
                 prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                 properties.append(prop)
             return properties
@@ -526,7 +526,7 @@ class AngleRatioPropertySet:
                     comment, premises = self.explanation_from_path(path, ratio0)
                     prop = AngleRatioProperty(angle0, angle1, divide(ratio0, ratio1))
                     prop.rule = 'synthetic'
-                    prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+                    prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
                     prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                     yield prop
 
@@ -609,7 +609,7 @@ class AngleRatioPropertySet:
         same = value == 1 and all(isinstance(prop, AngleRatioProperty) and prop.same for prop in [fam.premises_graph.get_edge_data(i, j)['prop'] for i, j in zip(path[:-1], path[1:])])
         prop = AngleRatioProperty(angle0, angle1, value, same=same)
         prop.rule = 'synthetic'
-        prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+        prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
         prop.reason.obsolete = all(p.reason.obsolete for p in premises)
         return prop
 
@@ -871,7 +871,7 @@ class LengthRatioPropertySet:
                 else:
                     prop = LengthRatioProperty(*ratio, fam.ratio_value)
                     prop.rule = 'synthetic'
-                    prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+                    prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
                     prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                     yield prop
 
@@ -893,7 +893,7 @@ class LengthRatioPropertySet:
         comment, premises = fam.value_explanation(ratio)
         prop = LengthRatioProperty(*ratio, fam.ratio_value)
         prop.rule = 'synthetic'
-        prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+        prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
         prop.reason.obsolete = all(p.reason.obsolete for p in premises)
         pair = (prop, value)
         self.__cache[key] = pair
@@ -1119,7 +1119,7 @@ class PropertySet:
             return premises[0]
         prop = EqualLengthRatiosProperty(segment0, segment1, segment2, segment3)
         prop.rule = 'synthetic'
-        prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+        prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
         prop.reason.obsolete = all(p.reason.obsolete for p in premises)
         return prop
 
@@ -1131,7 +1131,7 @@ class PropertySet:
         comment, premises = self.__cyclic_orders.explanation(cycle0, cycle1)
         if comment:
             prop.rule = 'synthetic'
-            prop.reason = Reason(max(p.reason.generation for p in premises), comment, premises)
+            prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
             prop.reason.obsolete = all(p.reason.obsolete for p in premises)
             return prop
         return None
