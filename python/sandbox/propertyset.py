@@ -283,6 +283,18 @@ class LineSet:
     def lines(self):
         return list(self.__all_lines)
 
+    def non_coincident_points(self, point):
+        collection = set()
+        for key in self.__coincidence:
+            if point in key:
+                collection.add(next(pt for pt in key if pt != point))
+        for line in self.__all_lines:
+            if point in line.points_on:
+                collection.update(line.points_not_on)
+            elif point in line.points_not_on:
+                collection.update(line.points_on)
+        return list(collection)
+
     def collinear_points(self, segment):
         line = self.__segment_to_line.get(segment)
         if line is None:
@@ -1131,6 +1143,9 @@ class PropertySet:
 
     def lines(self):
         return self.__line_set.lines()
+
+    def non_coincident_points(self, point):
+        return self.__line_set.non_coincident_points(point)
 
     def collinear_points(self, segment):
         return self.__line_set.collinear_points(segment)

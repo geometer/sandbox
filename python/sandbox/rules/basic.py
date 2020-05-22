@@ -1042,11 +1042,11 @@ class SupplementaryAnglesRule(SingleSourceRule):
 
     def apply(self, prop):
         ang = prop.angle
-        for ne in self.context.list(PointsCoincidenceProperty, [ang.vertex]):
-            if ne.coincident or prop.reason.obsolete and ne.reason.obsolete:
+        for pt in self.context.non_coincident_points(ang.vertex):
+            if pt in ang.endpoints:
                 continue
-            pt = ne.points[0] if ang.vertex == ne.points[1] else ne.points[1]
-            if pt in ang.point_set:
+            ne = self.context.coincidence_property(pt, ang.vertex)
+            if prop.reason.obsolete and ne.reason.obsolete:
                 continue
             yield (
                 SumOfTwoAnglesProperty(
