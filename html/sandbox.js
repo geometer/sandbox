@@ -80,7 +80,7 @@ createTree: function(json) {
 		var obj = data[index];
 		var item = $('<li/>');
 		item.addClass(obj.priority);
-		item.append('<span class="handler far"/>');
+		item.append('<span class="handler material-icons-outlined"/>');
 		item.append(beautified(obj.property));
 		item.append('<span class="implication">⇐</span>');
 		item.append(beautified(obj.comment));
@@ -292,7 +292,7 @@ toggleNonEssential: function() {
 		var chevron = $(this);
 		chevron.addClass('chevron-animated')
 		chevron.parent().click(function() {
-			chevron.toggleClass('fa-rotate-90');
+			chevron.toggleClass('chevron-rotated');
 		});
 	});
 }

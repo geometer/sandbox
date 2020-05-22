@@ -20,9 +20,24 @@
   -webkit-transition: transform .3s;
 }
 
+.chevron-rotated {
+  -webkit-filter: none;
+  filter: none;
+  -ms-filter: "progid:DXImageTransform.Microsoft.BasicImage(rotation=1)";
+  -webkit-transform: rotate(90deg);
+  transform: rotate(90deg);
+}
+
+.collapsible .chevron {
+  margin-left: -16px;
+  margin-right: 4px;
+}
+
 .collapsible .chevron::before {
-  content: "\f054";
-  vertical-align: middle;
+  content: "\e5cc"; /* chevron_right */
+  vertical-align: -55%;
+  font-size: 120%;
+  line-height: 1rem;
 }
 
 .jxgbox {
@@ -66,11 +81,13 @@
 }
 
 .sandbox-tree li > span.handler::before {
-  content: "\f0c8";
+  content: "\e835"; /* check_box_outline_blank */
   color: #ccc;
-  padding-right: 8px;
-  vertical-align: middle;
+  font-size: 80%;
+  margin-left: -2px;
+  margin-right: 7px;
   pointer-events: auto;
+  vertical-align: -23%;
 }
 
 .sandbox-tree li.closed > span.handler, .sandbox-tree li.open > span.handler {
@@ -79,12 +96,12 @@
 
 .sandbox-tree li.closed > span.handler::before {
   color: #888;
-  content: "\f0fe";
+  content: "\e146"; /* add_box */
 }
 
 .sandbox-tree li.open > span.handler::before {
   color: #888;
-  content: "\f146";
+  content: "\e909"; /* indeterminate_check_box */
 }
 
 .sandbox-tree li.empty.closed > span.handler, .sandbox-tree li.empty.open > span.handler {
@@ -93,7 +110,7 @@
 
 .sandbox-tree li.empty.closed > span.handler::before, .sandbox-tree li.empty.open > span.handler::before {
   color: #ccc;
-  content: "\f0c8";
+  content: "\e835"; /* check_box_outline_blank */
 }
 
 .sandbox-tree .implication {
