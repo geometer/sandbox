@@ -28,6 +28,10 @@ class Explainer:
         self.__iteration_step_count = -1
         self.__rules = [
             SegmentWithEndpointsOnAngleSidesRule(self.context),
+            CollinearityToSameLineRule(self.context),
+            NonCollinearityToDifferentLinesRule(self.context),
+            CollinearityToPointOnLineRule(self.context),
+            NonCollinearityToPointNotOnLineRule(self.context),
             CyclicQuadrilateralRule(self.context),
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),
@@ -42,7 +46,7 @@ class Explainer:
             #SumOfAngles180DegreeRule(self.context),
             NonCollinearPointsAreDifferentRule(self.context),
             CoincidenceTransitivityRule(self.context),
-            CollinearityCollisionRule(self.context),
+            #CollinearityCollisionRule(self.context),
             TwoPointsBelongsToTwoLinesRule(self.context),
             TwoPointsBelongsToTwoPerpendicularsRule(self.context),
             LengthRatioRule(self.context),
@@ -88,10 +92,6 @@ class Explainer:
             TwoAnglesWithCommonSideRule(self.context),
             TwoPointsRelativelyToLineTransitivityRule(self.context),
             CongruentAnglesDegeneracyRule(self.context),
-            CollinearityToSameLineRule(self.context),
-            NonCollinearityToDifferentLinesRule(self.context),
-            CollinearityToPointOnLineRule(self.context),
-            NonCollinearityToPointNotOnLineRule(self.context),
 
             EquilateralTriangleByThreeSidesRule(self.context),
             IsoscelesTriangleByConrguentLegsRule(self.context),
