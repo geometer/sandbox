@@ -1,5 +1,5 @@
 from sandbox import Scene
-from sandbox.property import PointsCollinearityProperty, PointOnLineProperty
+from sandbox.property import PointsCollinearityProperty, PointOnLineProperty, SameOrOppositeSideProperty
 from sandbox.propertyset import ContradictionError
 
 from .base import ExplainerTest
