@@ -116,3 +116,40 @@ class LinesTest3(ExplainerTest):
         D = self.scene.get('D')
         prop = PointsCollinearityProperty(B, C, D, True)
         self.assertIn(prop, self.explainer.context)
+
+class LineSidesTest(ExplainerTest):
+    def createScene(self):
+        scene = Scene()
+
+        A = scene.free_point(label='A')
+        B = scene.free_point(label='B')
+        C = scene.free_point(label='C')
+        D = scene.free_point(label='D')
+        E = scene.free_point(label='E')
+        F = scene.free_point(label='F')
+        A.not_equal_constraint(B)
+        A.not_equal_constraint(C)
+        A.collinear_constraint(B, C)
+        E.opposite_side_constraint(D, A.line_through(B))
+        F.same_side_constraint(D, A.line_through(B))
+
+        return scene
+
+    def test(self):
+        A = self.scene.get('A')
+        B = self.scene.get('B')
+        C = self.scene.get('C')
+        D = self.scene.get('D')
+        E = self.scene.get('E')
+        F = self.scene.get('F')
+
+        props = (
+            SameOrOppositeSideProperty(A.segment(B), D, E, False),
+            SameOrOppositeSideProperty(A.segment(C), D, E, False),
+            SameOrOppositeSideProperty(A.segment(B), D, F, True),
+            SameOrOppositeSideProperty(A.segment(C), D, F, True),
+            SameOrOppositeSideProperty(A.segment(B), F, E, False),
+            SameOrOppositeSideProperty(A.segment(C), F, E, False),
+        )
+        for prop in props:
+            self.assertIn(prop, self.explainer.context)
