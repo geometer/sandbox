@@ -27,6 +27,11 @@ class Explainer:
         self.__explanation_time = None
         self.__iteration_step_count = -1
         self.__rules = [
+            TwoPointsRelativelyToLineTransitivityRule(self.context),
+            CongruentAnglesDegeneracyRule(self.context),
+            CollinearityToSameLineRule(self.context),
+            NonCollinearityToDifferentLinesRule(self.context),
+
             #ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule(self.context),
             CyclicQuadrilateralRule(self.context),
             PointsOnCircleRule(self.context),
@@ -88,10 +93,6 @@ class Explainer:
             CeviansIntersectionRule(self.context),
             SameSideToInsideAngleRule(self.context),
             TwoAnglesWithCommonSideRule(self.context),
-            TwoPointsRelativelyToLineTransitivityRule(self.context),
-            CongruentAnglesDegeneracyRule(self.context),
-            CollinearityToSameLineRule(self.context),
-            CollinearityToDifferentLinesRule(self.context),
 
             EquilateralTriangleByThreeSidesRule(self.context),
             IsoscelesTriangleByConrguentLegsRule(self.context),

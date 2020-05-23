@@ -119,7 +119,7 @@ class LegsOfIsoscelesRule(SingleSourceRule):
                 prop.apex.segment(prop.base.points[1]),
                 1
             ),
-            LazyComment('Legs of isosceles %s', prop.triangle),
+            LazyComment('legs of isosceles %s', prop.triangle),
             [prop]
         )
 
