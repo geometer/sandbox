@@ -4,7 +4,7 @@ from sandbox import Scene
 from sandbox.property import *
 from sandbox.util import LazyComment
 
-from .abstract import SingleSourceRule
+from .abstract import Rule, SingleSourceRule
 
 class CollinearityToSameLineRule(SingleSourceRule):
     property_type = PointsCollinearityProperty
@@ -118,3 +118,28 @@ class NonCollinearityToPointNotOnLineRule(SingleSourceRule):
                 LazyComment('points %s, %s, and %s are not collinear', vertex, *side.points),
                 [prop]
             )
+
+class MissingLineKeysRule(Rule):
+    def sources(self):
+        return self.context.lines
+
+    def apply(self, line):
+        segments = set(line.segments)
+        for pt0, pt1 in itertools.combinations(line.points_on, 2):
+            key = pt0.segment(pt1)
+            if key in segments:
+                continue
+            ne = self.context.coincidence_property(pt0, pt1)
+            if ne is None or ne.coincident:
+                continue
+            for seg in segments:
+                premises = []
+                if pt0 not in seg.points:
+                    premises.append(self.context.point_on_line_property(seg, pt0))
+                if pt1 not in seg.points:
+                    premises.append(self.context.point_on_line_property(seg, pt1))
+                yield (
+                    LineCoincidenceProperty(key, seg, True),
+                    LazyComment('non-coincident points %s and %s belong to %s', pt0, pt1, seg.as_line),
+                    premises + [ne]
+                )

@@ -66,6 +66,17 @@ class LineSet:
                 return None
 
             candidates = []
+
+            for seg in self.segments:
+                if point in seg.points:
+                    prop = PointOnLineProperty(segment, point, on)
+                    comment = LazyComment(template, point, seg.as_line, segment.as_line)
+                    premises = [self.same_line_property(seg, segment)]
+                    prop.rule = 'synthetic'
+                    prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
+                    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+                    candidates.append(prop)
+
             for known in prop_set:
                 seg = known.segment
                 if seg == segment:
@@ -1200,6 +1211,7 @@ class PropertySet:
                 return (candidate, [prop, col])
         return (None, [])
 
+    @property
     def lines(self):
         return self.__line_set.lines()
 

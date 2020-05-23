@@ -1,6 +1,6 @@
 from runner import run_sample
 from sandbox import Scene
-from sandbox.property import PointsCollinearityProperty
+from sandbox.property import PointsCollinearityProperty, PointOnLineProperty
 
 scene = Scene()
 
@@ -17,6 +17,10 @@ F = scene.free_point(label='F')
 F.collinear_constraint(C, D)
 
 props = (
+    PointOnLineProperty(A.segment(B), E, False),
+    PointOnLineProperty(A.segment(B), F, True),
+    PointOnLineProperty(C.segment(D), E, False),
+    PointOnLineProperty(C.segment(D), F, True),
     PointsCollinearityProperty(A, C, D, True),
     PointsCollinearityProperty(B, D, F, True),
     PointsCollinearityProperty(A, B, E, False),
