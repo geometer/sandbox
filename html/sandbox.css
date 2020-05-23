@@ -72,6 +72,7 @@
 .sandbox-tree ul {
   list-style-type: none;
   padding-left: 20px;
+  line-height: 2em;
   display: none;
 }
 
