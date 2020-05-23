@@ -14,6 +14,7 @@ from tests.explainer.rightangled import *
 from tests.explainer.geo0324 import *
 from tests.explainer.geo0369 import *
 from tests.explainer.geo0374 import *
+from tests.explainer.lines import *
 
 from tests.meta.contradiction import *
 
