@@ -53,6 +53,33 @@ class LineSet:
             prop.reason.obsolete = all(p.reason.obsolete for p in premises)
             return prop
 
+        def point_on_line_property(self, segment, point):
+            if point in self.points_on:
+                on = True
+                prop_set = self.points_on[point]
+                template = '%s lies on line %s, that coincides with %s'
+            elif point in self.points_not_on:
+                on = False
+                prop_set = self.points_not_on[point]
+                template = '%s does not lie on line %s, that coincides with %s'
+            else:
+                return None
+
+            candidates = []
+            for known in prop_set:
+                seg = known.segment
+                if seg == segment:
+                    return known
+                prop = PointOnLineProperty(segment, point, on)
+                comment = LazyComment(template, point, seg.as_line, segment.as_line)
+                premises = [known, self.same_line_property(seg, segment)]
+                prop.rule = 'synthetic'
+                prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
+                prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+                candidates.append(prop)
+
+            return LineSet.best_candidate(candidates)
+
         def non_coincidence_property(self, pt_on, pt_not_on):
             candidates = []
             for prop_not_on in self.points_not_on.get(pt_not_on):
@@ -135,6 +162,8 @@ class LineSet:
         if line is None:
             line = LineSet.Line()
             line.premises_graph.add_node(segment)
+            for pt in segment.points:
+                line.points_on[pt] = set()
             self.__segment_to_line[segment] = line
             self.__all_lines.append(line)
         return line
@@ -183,45 +212,57 @@ class LineSet:
         return LineSet.best_candidate(candidates)
 
     def collinearity_property(self, pt0, pt1, pt2):
-        cached = self.__collinearity.get(frozenset([pt0, pt1, pt2]))
+        pts = (pt0, pt1, pt2)
+        cached = self.__collinearity.get(frozenset(pts))
         if cached:
             return cached
 
         candidates = []
-        triangle = Scene.Triangle(pt0, pt1, pt2)
-        sides_and_vertices = zip(triangle.sides, triangle.points)
-
-        lines = [(side, self.__segment_to_line.get(side), vertex) for (side, vertex) in sides_and_vertices]
-        lines = [lw for lw in lines if lw[1]]
-
-        for (segment, line, vertex) in lines:
-            prop_set = line.points_on.get(vertex)
-            if prop_set is not None:
-                on_line = True
-            else:
-                prop_set = line.points_not_on.get(vertex)
-                on_line = False
-            if not prop_set:
-                continue
-            for known in prop_set:
-                if known.segment == segment:
-                    candidates.append(known)
+        for line in self.__all_lines:
+            pt_not_on = None
+            for p in pts:
+                if p in line.points_on:
                     continue
-                prop = PointsCollinearityProperty(vertex, *segment.points, on_line)
-                if on_line:
-                    pattern = '%s lies on %s, and %s is the same line as %s'
+                if p in line.points_not_on:
+                    if pt_not_on:
+                        pt_not_on = False
+                        break
+                    pt_not_on = p
                 else:
-                    pattern = '%s does not lie on %s, and %s is the same line as %s'
-                comment = LazyComment(
-                    pattern, vertex, known.segment.as_line, known.segment.as_line, segment.as_line
-                )
-                premises = [known, line.same_line_property(known.segment, segment)]
+                    pt_not_on = False
+                    break
+
+            if pt_not_on:
+                on = False
+                others = [p for p in pts if p != pt_not_on]
+                all_pts = [pt_not_on] + others
+                def comment(seg):
+                    return LazyComment('%s belong to %s, %s and %s do not', pt_not_on, seg.as_line, *others)
+            elif pt_not_on is None:
+                on = True
+                all_pts = pts
+                def comment(seg):
+                    return LazyComment('%s, %s, and %s belong to %s', *pts, seg.as_line)
+            else:
+                continue
+
+            for seg in line.segments:
+                premises = []
+                for pt in all_pts:
+                    if pt in seg.points:
+                        continue
+                    premises.append(line.point_on_line_property(seg, pt))
+                prop = PointsCollinearityProperty(*all_pts, on)
                 prop.rule = 'synthetic'
-                prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
+                prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment(seg), premises)
                 prop.reason.obsolete = all(p.reason.obsolete for p in premises)
                 candidates.append(prop)
 
-        for (segment0, line0, _), (segment1, line1, _) in itertools.combinations(lines, 2):
+        triangle = Scene.Triangle(pt0, pt1, pt2)
+        lines = [(side, self.__segment_to_line.get(side)) for side in triangle.sides]
+        lines = [lw for lw in lines if lw[1]]
+
+        for (segment0, line0), (segment1, line1) in itertools.combinations(lines, 2):
             if line0 == line1:
                 comment, premises = line0.same_line_explanation(segment0, segment1)
                 prop = PointsCollinearityProperty(pt0, pt1, pt2, True)
