@@ -8,6 +8,12 @@ from .reason import Reason
 from .stats import Stats
 from .util import LazyComment, divide, degree_to_string
 
+def _synthetic_property(prop, comment, premises):
+    prop.rule = 'synthetic'
+    prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
+    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+    return prop
+
 class ContradictionError(Exception):
     pass
 
@@ -47,11 +53,9 @@ class LineSet:
             comment, premises = self.same_line_explanation(segment0, segment1)
             if len(premises) == 1:
                 return premises[0]
-            prop = LineCoincidenceProperty(segment0, segment1, True)
-            prop.rule = 'synthetic'
-            prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
-            prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-            return prop
+            return _synthetic_property(
+                LineCoincidenceProperty(segment0, segment1, True), comment, premises
+            )
 
         def point_on_line_property(self, segment, point):
             if point in self.points_on:
@@ -72,10 +76,7 @@ class LineSet:
                     prop = PointOnLineProperty(segment, point, on)
                     comment = LazyComment(template, point, seg.as_line, segment.as_line)
                     premises = [self.same_line_property(seg, segment)]
-                    prop.rule = 'synthetic'
-                    prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
-                    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-                    candidates.append(prop)
+                    candidates.append(_synthetic_property(prop, comment, premises))
 
             for known in prop_set:
                 seg = known.segment
@@ -84,10 +85,7 @@ class LineSet:
                 prop = PointOnLineProperty(segment, point, on)
                 comment = LazyComment(template, point, seg.as_line, segment.as_line)
                 premises = [known, self.same_line_property(seg, segment)]
-                prop.rule = 'synthetic'
-                prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
-                prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-                candidates.append(prop)
+                candidates.append(_synthetic_property(prop, comment, premises))
 
             return LineSet.best_candidate(candidates)
 
@@ -99,30 +97,21 @@ class LineSet:
                     prop = PointsCoincidenceProperty(pt_on, pt_not_on, False)
                     comment = LazyComment('points %s, %s, and %s are not collinear', pt_not_on, *seg0.points)
                     premises = [prop_not_on]
-                    prop.rule = 'synthetic'
-                    prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
-                    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-                    candidates.append(prop)
+                    candidates.append(_synthetic_property(prop, comment, premises))
                 for seg1 in [seg for seg in self.segments if seg != seg0 and pt_on in seg.points]:
+                    prop = PointsCoincidenceProperty(pt_on, pt_not_on, False)
                     comment = LazyComment('point %s lies on line %s, %s does not', pt_on, seg0.as_line, pt_not_on)
                     premises = [self.same_line_property(seg0, seg1), prop_not_on]
-                    prop = PointsCoincidenceProperty(pt_on, pt_not_on, False)
-                    prop.rule = 'synthetic'
-                    prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
-                    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-                    candidates.append(prop)
+                    candidates.append(_synthetic_property(prop, comment, premises))
                 for prop_on in self.points_on.get(pt_on):
                     seg1 = prop_on.segment
+                    prop = PointsCoincidenceProperty(pt_on, pt_not_on, False)
                     comment = LazyComment('point %s lies on line %s, %s does not', pt_on, seg0.as_line, pt_not_on)
                     if seg0 == seg1:
                         premises = [*prop_on.reason.premises, *prop_not_on.reason.premises]
                     else:
                         premises = [prop_on, self.same_line_property(seg0, seg1), prop_not_on]
-                    prop = PointsCoincidenceProperty(pt_on, pt_not_on, False)
-                    prop.rule = 'synthetic'
-                    prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
-                    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-                    candidates.append(prop)
+                    candidates.append(_synthetic_property(prop, comment, premises))
 
             return LineSet.best_candidate(candidates)
 
@@ -268,10 +257,7 @@ class LineSet:
                         continue
                     premises.append(line.point_on_line_property(seg, pt))
                 prop = PointsCollinearityProperty(*all_pts, on)
-                prop.rule = 'synthetic'
-                prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment(seg), premises)
-                prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-                candidates.append(prop)
+                candidates.append(_synthetic_property(prop, comment, premises))
 
         triangle = Scene.Triangle(pt0, pt1, pt2)
         lines = [(side, self.__segment_to_line.get(side)) for side in triangle.sides]
@@ -281,10 +267,7 @@ class LineSet:
             if line0 == line1:
                 comment, premises = line0.same_line_explanation(segment0, segment1)
                 prop = PointsCollinearityProperty(pt0, pt1, pt2, True)
-                prop.rule = 'synthetic'
-                prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
-                prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-                candidates.append(prop)
+                candidates.append(_synthetic_property(prop, comment, premises))
                 continue
             data = self.__different_lines_graph.get_edge_data(line0, line1)
             if data:
@@ -306,10 +289,7 @@ class LineSet:
                         premises.append(line0.same_line_property(seg0, segment0))
                         premises.append(line1.same_line_property(seg1, segment1))
                     prop = PointsCollinearityProperty(pt0, pt1, pt2, False)
-                    prop.rule = 'synthetic'
-                    prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
-                    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-                    candidates.append(prop)
+                    candidates.append(_synthetic_property(prop, comment, premises))
 
         return LineSet.best_candidate(candidates)
 
@@ -508,10 +488,7 @@ class AngleRatioPropertySet:
             path = nx.algorithms.shortest_path(self.premises_graph, angle, self.degree)
             comment, premises = self.explanation_from_path(path, ratio)
             prop = AngleValueProperty(angle, self.degree * ratio)
-            prop.rule = 'synthetic'
-            prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
-            prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-            return prop
+            return _synthetic_property(prop, comment, premises)
 
         def value_properties(self):
             properties = []
@@ -523,10 +500,7 @@ class AngleRatioPropertySet:
                 path = nx.algorithms.shortest_path(self.premises_graph, angle, self.degree)
                 comment, premises = self.explanation_from_path(path, ratio)
                 prop = AngleValueProperty(angle, self.degree * ratio)
-                prop.rule = 'synthetic'
-                prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
-                prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-                properties.append(prop)
+                properties.append(_synthetic_property(prop, comment, premises))
             return properties
 
         def value_properties_for_degree(self, degree):
@@ -541,10 +515,7 @@ class AngleRatioPropertySet:
                 path = nx.algorithms.shortest_path(self.premises_graph, angle, self.degree)
                 comment, premises = self.explanation_from_path(path, ratio)
                 prop = AngleValueProperty(angle, degree)
-                prop.rule = 'synthetic'
-                prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
-                prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-                properties.append(prop)
+                properties.append(_synthetic_property(prop, comment, premises))
             return properties
 
         def congruent_angles_with_vertex(self):
@@ -581,10 +552,7 @@ class AngleRatioPropertySet:
                     path = nx.algorithms.shortest_path(self.premises_graph, angle0, angle1)
                     comment, premises = self.explanation_from_path(path, ratio0)
                     prop = AngleRatioProperty(angle0, angle1, divide(ratio0, ratio1))
-                    prop.rule = 'synthetic'
-                    prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
-                    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-                    yield prop
+                    yield _synthetic_property(prop, comment, premises)
 
         def add_value_property(self, prop):
             ratio = self.angle_to_ratio.get(prop.angle)
@@ -664,10 +632,7 @@ class AngleRatioPropertySet:
         value = divide(coef, fam.angle_to_ratio[angle1])
         same = value == 1 and all(isinstance(prop, AngleRatioProperty) and prop.same for prop in [fam.premises_graph.get_edge_data(i, j)['prop'] for i, j in zip(path[:-1], path[1:])])
         prop = AngleRatioProperty(angle0, angle1, value, same=same)
-        prop.rule = 'synthetic'
-        prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
-        prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-        return prop
+        return _synthetic_property(prop, comment, premises)
 
     def same_triple_ratio_properties(self):
         for fam in set(self.angle_to_family.values()):
@@ -926,10 +891,7 @@ class LengthRatioPropertySet:
                     yield premises[0]
                 else:
                     prop = LengthRatioProperty(*ratio, fam.ratio_value)
-                    prop.rule = 'synthetic'
-                    prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
-                    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-                    yield prop
+                    yield _synthetic_property(prop, comment, premises)
 
     def property_and_value(self, segment0, segment1):
         ratio = (segment0, segment1)
@@ -948,9 +910,7 @@ class LengthRatioPropertySet:
             value = divide(1, fam.ratio_value)
         comment, premises = fam.value_explanation(ratio)
         prop = LengthRatioProperty(*ratio, fam.ratio_value)
-        prop.rule = 'synthetic'
-        prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
-        prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+        prop = _synthetic_property(prop, comment, premises)
         pair = (prop, value)
         self.__cache[key] = pair
         return pair
@@ -1179,10 +1139,7 @@ class PropertySet:
         if len(premises) == 1:
             return premises[0]
         prop = EqualLengthRatiosProperty(segment0, segment1, segment2, segment3)
-        prop.rule = 'synthetic'
-        prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
-        prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-        return prop
+        return _synthetic_property(prop, comment, premises)
 
     def same_cyclic_order_property(self, cycle0, cycle1):
         prop = SameCyclicOrderProperty(cycle0, cycle1)
@@ -1191,10 +1148,7 @@ class PropertySet:
             return existing
         comment, premises = self.__cyclic_orders.explanation(cycle0, cycle1)
         if comment:
-            prop.rule = 'synthetic'
-            prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
-            prop.reason.obsolete = all(p.reason.obsolete for p in premises)
-            return prop
+            return _synthetic_property(prop, comment, premises)
         return None
 
     def foot_of_perpendicular(self, point, segment):
