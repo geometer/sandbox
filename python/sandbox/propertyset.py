@@ -211,6 +211,10 @@ class LineSet:
                 candidates.append(line.non_coincidence_property(pt1, pt0))
         return LineSet.best_candidate(candidates)
 
+    def point_on_line_property(self, segment, point):
+        line = self.__segment_to_line.get(segment)
+        return line.point_on_line_property(segment, point) if line else None
+
     def collinearity_property(self, pt0, pt1, pt2):
         pts = (pt0, pt1, pt2)
         cached = self.__collinearity.get(frozenset(pts))
@@ -1058,6 +1062,8 @@ class PropertySet:
                 existing = self.same_cyclic_order_property(prop.cycle0, prop.cycle1)
             elif isinstance(prop, PointsCollinearityProperty):
                 existing = self.collinearity_property(*prop.points)
+            elif isinstance(prop, PointOnLineProperty):
+                existing = self.point_on_line_property(prop.segment, prop.point)
         #TODO: LengthRatioProperty
         #TODO: EqualLengthRatiosProperty
         if existing and not existing.compare_values(prop):
@@ -1066,6 +1072,9 @@ class PropertySet:
 
     def collinearity_property(self, pt0, pt1, pt2):
         return self.__line_set.collinearity_property(pt0, pt1, pt2)
+
+    def point_on_line_property(self, segment, pt):
+        return self.__line_set.point_on_line_property(segment, pt)
 
     def coincidence_property(self, pt0, pt1):
         return self.__line_set.coincidence_property(pt0, pt1)
