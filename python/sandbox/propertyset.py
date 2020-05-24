@@ -1241,6 +1241,8 @@ class PropertySet:
                 existing = self.point_and_circle_property(prop.point, prop.circle)
             elif isinstance(prop, PointsCollinearityProperty):
                 existing = self.collinearity_property(*prop.points)
+            elif isinstance(prop, PointOnLineProperty):
+                existing = self.point_on_line_property(prop.segment, prop.point)
         #TODO: LengthRatioProperty
         #TODO: EqualLengthRatiosProperty
         if existing and not existing.compare_values(prop):
@@ -1253,6 +1255,9 @@ class PropertySet:
     def not_collinear_property(self, pt0, pt1, pt2):
         prop = self.collinearity_property(pt0, pt1, pt2)
         return prop if prop and not prop.collinear else None
+
+    def point_on_line_property(self, segment, pt):
+        return self.__line_set.point_on_line_property(segment, pt)
 
     def coincidence_property(self, pt0, pt1):
         return self.__line_set.coincidence_property(pt0, pt1)
@@ -1371,6 +1376,10 @@ class PropertySet:
             if col and col.collinear:
                 return (candidate, [prop, col])
         return (None, [])
+
+    @property
+    def lines(self):
+        return self.__line_set.lines()
 
     def n_concyclic_points(self, n):
         return self.circles.n_concyclic_points(n)

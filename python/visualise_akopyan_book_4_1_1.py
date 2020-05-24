@@ -2,6 +2,7 @@ from sandbox import Scene
 from sandbox.property import ProportionalLengthsProperty
 
 from visualiser import visualise
+from runner import run_sample
 
 scene = Scene()
 
@@ -31,4 +32,6 @@ C.angle(B, A).is_acute_constraint()
 
 prop = ProportionalLengthsProperty(B1.segment(H), B1.segment(B2), 1)
 
-visualise(scene, prop)
+#run_sample(scene, prop)
+visualise(scene, prop, title='Problem 4.1.1', task=[
+], reference='<a href="http://vivacognita.org/555geometry.html/_/4/4-1/41-1-r93">Problem 4.1.1</a> from the <a href="https://www.amazon.com/Geometry-Figures-Second-Arseniy-Akopyan/dp/1548710784">Akopyan\\\'s book</a>')

@@ -1,23 +1,84 @@
 @charset "UTF-8";
 
+.main {
+  min-width: 13in;
+  padding-top: 25px;
+  padding-left: 20px;
+}
+
+.main h2 {
+  padding-left: 50px;
+}
+
+.sandbox-column {
+  padding-top: 15px;
+  padding-bottom: 15px;
+  display:inline-block;
+  vertical-align:top;
+}
+
+.btn:focus {
+  outline:0 !important;
+  box-shadow: none !important;
+}
+
+.collapsible .chevron {
+  min-width: 24px;
+}
+
+.chevron-animated {
+  transition: transform .3s;
+  -webkit-transition: transform .3s;
+}
+
+.chevron-rotated {
+  -webkit-filter: none;
+  filter: none;
+  -ms-filter: "progid:DXImageTransform.Microsoft.BasicImage(rotation=1)";
+  -webkit-transform: rotate(90deg);
+  transform: rotate(90deg);
+}
+
+.collapsible .chevron {
+  margin-left: -16px;
+  margin-right: 4px;
+}
+
+.collapsible .chevron::before {
+  content: "\e5cc"; /* chevron_right */
+  vertical-align: -55%;
+  font-size: 120%;
+  line-height: 1rem;
+}
+
+.jxgbox {
+  border: none !important;
+}
+
+.sandbox-description {
+  line-height: 1.15rem;
+}
+
 .sandbox-selections {
-	padding-top: 20px;
-	padding-right: 12px;
-	padding-left: 12px;
-	line-height: 1.6em;
+  padding-top: 20px;
+  padding-right: 12px;
+  padding-left: 12px;
+  padding-bottom: 12px;
+  line-height: 1.6em;
 }
 
 .sandbox-selections > span.figure {
-	margin-right: 0.6em;
+  margin-right: 0.6em;
 }
 
 .sandbox-selections > span.space {
-	display: inline-block;
+  display: inline-block;
 }
 
 .sandbox-tree ul {
   list-style-type: none;
   padding-left: 20px;
+  line-height: 2em;
   display: none;
 }
 
@@ -32,14 +93,13 @@
 }
 
 .sandbox-tree li > span.handler::before {
-  content: "⊡";
-  color: #888888;
-  display: inline-block;
-	font-size: 16pt;
-	width: 16px;
-	height: 16px;
-  margin-right: 6px;
-	pointer-events: auto;
+  content: "\e835"; /* check_box_outline_blank */
+  color: #ccc;
+  font-size: 80%;
+  margin-left: -2px;
+  margin-right: 7px;
+  pointer-events: auto;
+  vertical-align: -23%;
 }
 
 .sandbox-tree li.closed > span.handler, .sandbox-tree li.open > span.handler {
@@ -47,45 +107,59 @@
 }
 
 .sandbox-tree li.closed > span.handler::before {
-  content: "⊞";
+  color: #888;
+  content: "\e146"; /* add_box */
 }
 
 .sandbox-tree li.open > span.handler::before {
-  content: "⊟";
+  color: #888;
+  content: "\e909"; /* indeterminate_check_box */
+}
+
+.sandbox-tree li.empty.closed > span.handler, .sandbox-tree li.empty.open > span.handler {
+  cursor: initial;
 }
 
 .sandbox-tree li.empty.closed > span.handler::before, .sandbox-tree li.empty.open > span.handler::before {
-  content: "⊡";
+  color: #ccc;
+  content: "\e835"; /* check_box_outline_blank */
 }
 
 .sandbox-tree .implication {
-	padding-left: 0.5em;
-	padding-right: 0.5em;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+
+.sandbox-reference {
+  font-size: 80%;
 }
 
 .sandbox-text .point {
-	padding-left: 0.1em;
-	padding-right: 0.1em;
+  padding-left: 0.1em;
+  padding-right: 0.1em;
 }
 
 .sandbox-text .angle-comma {
-	padding-right: 0.2em;
+  padding-right: 0.2em;
 }
 
 .sandbox-text .figure {
-	cursor: pointer;
-	border-style: solid;
-	border-width: 0.3px;
-	padding-bottom: 0.1em;
-	border-color: #4FC3F7;
-	background-color: #E1F5FE;
+  cursor: pointer;
+  border-style: solid;
+  border-width: 0.3px;
+  line-height: 1.25em;
+  padding-bottom: 0.15em;
+  padding-left: 0.1em;
+  padding-right: 0.1em;
+  border-color: #4FC3F7;
+  background-color: #E1F5FE;
 }
 
 .sandbox-text .figure.selected {
-	border-color: #EF5350;
-	background-color: #FFCDD2; 
+  border-color: #EF5350;
+  background-color: #FFCDD2;
 }
 
 .jxgbox .JXGText {
-	font-size: 16px !important;
+  font-size: 16px !important;
 }

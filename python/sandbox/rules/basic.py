@@ -6,6 +6,36 @@ from sandbox.util import LazyComment, divide
 
 from .abstract import Rule, SingleSourceRule
 
+class SegmentWithEndpointsOnAngleSidesRule(SingleSourceRule):
+    property_type = PointInsideAngleProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
+    def apply(self, prop):
+        A = prop.angle.vertex
+        B = prop.angle.vector0.end
+        C = prop.angle.vector1.end
+        D = prop.point
+        AD = A.segment(D)
+        BC = B.segment(C)
+        X, reasons = self.context.intersection_of_lines(AD, BC)
+        if X is None:
+            return
+        self.processed.add(prop)
+        if X in (A, B, C, D):
+            return
+
+        comment = LazyComment('%s is the intersection of ray [%s) and segment [%s]', X, A.vector(D).as_ray, B.segment(C))
+        yield (AngleValueProperty(A.angle(D, X), 0), comment, [prop] + reasons)
+        yield (AngleValueProperty(B.angle(C, X), 0), comment, [prop] + reasons)
+        yield (AngleValueProperty(C.angle(B, X), 0), comment, [prop] + reasons)
+        yield (AngleValueProperty(X.angle(B, C), 180), comment, [prop] + reasons)
+
 class SumOfAngles180DegreeRule(Rule):
     def __init__(self, context):
         super().__init__(context)
@@ -188,47 +218,6 @@ class TwoPointsBelongsToTwoLinesRule(SingleSourceRule):
                             cls + [ncl]
                         )
                         break
-
-class CollinearityCollisionRule(Rule):
-    """
-    If a point belongs to some line, and another one does not,
-    then the points are different.
-    Moreover, if a third point belongs to the line and does not coincide to the first,
-    then the three points are not collinear.
-    """
-    def sources(self):
-        return itertools.product( \
-            [p for p in self.context.list(PointsCollinearityProperty) if not p.collinear], \
-            [p for p in self.context.list(PointsCollinearityProperty) if p.collinear] \
-        )
-
-    def apply(self, src):
-        ncl, col = src
-
-        common_points = [pt for pt in ncl.points if pt in col.points]
-        if len(common_points) != 2:
-            return
-        pt_ncl = next(pt for pt in ncl.points if pt not in common_points)
-        pt_col = next(pt for pt in col.points if pt not in common_points)
-
-        reasons_are_too_old = ncl.reason.obsolete and col.reason.obsolete
-        if not reasons_are_too_old:
-            yield (
-                PointsCoincidenceProperty(pt_col, pt_ncl, False),
-                LazyComment('%s lies on the line %s %s, %s does not', pt_col, *common_points, pt_ncl),
-                [ncl, col]
-            )
-        for common in common_points:
-            ne = self.context.not_equal_property(common, pt_col)
-            if ne is not None and not (reasons_are_too_old and ne.reason.obsolete):
-                yield (
-                    PointsCollinearityProperty(common, pt_col, pt_ncl, False),
-                    LazyComment(
-                        '%s and %s lie on the line %s %s, %s does not',
-                        common, pt_col, *common_points, pt_ncl
-                    ),
-                    [ncl, col, ne]
-                )
 
 class NonCollinearPointsAreDifferentRule(SingleSourceRule):
     """

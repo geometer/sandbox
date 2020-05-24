@@ -27,11 +27,13 @@ class Explainer:
         self.__explanation_time = None
         self.__iteration_step_count = -1
         self.__rules = [
-            TwoPointsRelativelyToLineTransitivityRule(self.context),
-            CongruentAnglesDegeneracyRule(self.context),
+            SegmentWithEndpointsOnAngleSidesRule(self.context),
             CollinearityToSameLineRule(self.context),
             NonCollinearityToDifferentLinesRule(self.context),
+            CollinearityToPointOnLineRule(self.context),
+            MissingLineKeysRule(self.context),
 
+            NonCollinearityToPointNotOnLineRule(self.context),
             #ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule(self.context),
             CyclicQuadrilateralRule(self.context),
             PointsOnCircleRule(self.context),
@@ -44,13 +46,13 @@ class Explainer:
             LengthRatiosWithCommonDenominatorRule(self.context),
             SumOfThreeAnglesInTriangleRule(self.context),
             SumOfTwoAnglesByThreeRule(self.context),
+            AngleBySumOfThreeRule(self.context),
             SumAndRatioOfTwoAnglesRule(self.context),
             #EqualSumsOfAnglesRule(self.context),
             AngleFromSumOfTwoAnglesRule(self.context),
             #SumOfAngles180DegreeRule(self.context),
             NonCollinearPointsAreDifferentRule(self.context),
             CoincidenceTransitivityRule(self.context),
-            CollinearityCollisionRule(self.context),
             TwoPointsBelongsToTwoLinesRule(self.context),
             TwoPointsBelongsToTwoPerpendicularsRule(self.context),
             LengthRatioRule(self.context),
@@ -93,6 +95,8 @@ class Explainer:
             CeviansIntersectionRule(self.context),
             SameSideToInsideAngleRule(self.context),
             TwoAnglesWithCommonSideRule(self.context),
+            TwoPointsRelativelyToLineTransitivityRule(self.context),
+            CongruentAnglesDegeneracyRule(self.context),
 
             EquilateralTriangleByThreeSidesRule(self.context),
             IsoscelesTriangleByConrguentLegsRule(self.context),
@@ -171,25 +175,6 @@ class Explainer:
                 for prop, comment, premises in rule.generate():
                     prop.rule = rule
                     yield (prop, comment, premises)
-
-            for pia in self.context.list(PointInsideAngleProperty):
-                A = pia.angle.vertex
-                B = pia.angle.vector0.end
-                C = pia.angle.vector1.end
-                D = pia.point
-                AD = A.segment(D)
-                BC = B.segment(C)
-                X, reasons = self.context.intersection_of_lines(AD, BC)
-                if X is None or X in (A, B, C, D):
-                    continue
-                if pia.reason.obsolete and all(p.reason.obsolete for p in reasons):
-                    continue
-
-                comment = LazyComment('%s is the intersection of ray [%s) and segment [%s]', X, A.vector(D).as_ray, B.segment(C))
-                yield (AngleValueProperty(A.angle(D, X), 0), comment, [pia] + reasons)
-                yield (AngleValueProperty(B.angle(C, X), 0), comment, [pia] + reasons)
-                yield (AngleValueProperty(C.angle(B, X), 0), comment, [pia] + reasons)
-                yield (AngleValueProperty(X.angle(B, C), 180), comment, [pia] + reasons)
 
             for pia in self.context.list(PointInsideAngleProperty):
                 if pia.reason.obsolete:
@@ -575,7 +560,6 @@ class Explainer:
 
     def stats(self, properties_to_explain=[]):
         self.context.circles.dump()
-        self.context.lines.dump()
         def type_presentation(kind):
             return kind.__doc__.strip() if kind.__doc__ else kind.__name__
 

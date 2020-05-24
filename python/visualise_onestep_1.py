@@ -1,5 +1,6 @@
 from sandbox import Scene
 from sandbox.property import ProportionalLengthsProperty
+from sandbox.util import LazyComment
 
 from visualiser import visualise
 
@@ -17,4 +18,8 @@ I.circle_through(foot)
 
 prop = ProportionalLengthsProperty(B.segment(C), D.segment(I), 1)
 
-visualise(scene, prop, title='Onestep Problem 1', description='Problem 1 from <a href="http://www.stanleyrabinowitz.com/download/onestepresults.pdf">onestep results list</a> by <a href="https://www.facebook.com/stanley.rabinowitz">Stanley Rabinowitz</a>')
+visualise(scene, prop, title='Onestep Problem 1', task=[
+    LazyComment('%s is a square', Scene.Polygon(A, B, C, D)),
+    LazyComment('%s is the incentre of %s', I, Scene.Triangle(A, B, C)),
+    LazyComment('Prove, that |%s| = |%s|', D.segment(I), B.segment(C))
+], reference='Problem 1 from <a href="http://www.stanleyrabinowitz.com/download/onestepresults.pdf">onestep results list</a> by <a href="https://www.facebook.com/stanley.rabinowitz">Stanley Rabinowitz</a>');

@@ -19,8 +19,8 @@ class RightAngledTriangleMedianRule(SingleSourceRule):
         pt0 = next(pt for pt in prop.segments[0].points if pt != vertex)
         pt1 = next(pt for pt in prop.segments[1].points if pt != vertex)
         hypot = pt0.segment(pt1)
-        for col in [p for p in self.context.list(PointsCollinearityProperty, [hypot]) if p.collinear]:
-            med = next(pt for pt in col.points if pt not in hypot.points)
+        for med in self.context.collinear_points(hypot):
+            col = self.context.collinearity_property(med, *hypot.points)
             half0, value = self.context.length_ratio_property_and_value(hypot, med.segment(hypot.points[0]), True)
             if value != 2:
                 continue

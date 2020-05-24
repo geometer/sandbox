@@ -8,7 +8,7 @@ from sandbox.core import CoreScene
 from sandbox.explainer import Explainer
 from sandbox.placement import iterative_placement
 
-def drawScene(scene, args, attempts=10, extra_points=()):
+def sceneData(scene, args, attempts=10, extra_points=()):
     points = scene.points(max_layer=args.max_layer) + list(extra_points)
     lines = scene.lines(max_layer=args.max_layer)
     circles = scene.circles(max_layer=args.max_layer)
@@ -57,13 +57,10 @@ def drawScene(scene, args, attempts=10, extra_points=()):
         scene_lines.append({'pt0': pts[0].name, 'pt1': pts[-1].name})
     scene_circles = []
     for circle in circles:
-        if circle.centre in circle.radius.points:
-            second = next(pt for pt in circle.radius.points if pt != circle.centre)
-            if circle.centre in coords and second in coords:
-                scene_circles.append({'centre': circle.centre.name, 'pt': second.name})
-    print('sandbox$.createScene(\'%s\');' % json.dumps({'points': scene_points, 'lines': scene_lines, 'circles': scene_circles}));
+        scene_circles.append({'centre': circle.centre.name, 'radius': float(placement.radius(circle))})
+    return {'points': scene_points, 'lines': scene_lines, 'circles': scene_circles}
 
-def drawTree(scene, prop, args):
+def treeData(scene, prop, args):
     options = { 'max_layer': args.max_layer }
     for extra in args.extra_rules:
         options[extra] = True
@@ -71,7 +68,7 @@ def drawTree(scene, prop, args):
     explainer.explain()
     explanation = explainer.explanation(prop)
     if not explanation:
-        return
+        raise Exception('Explanation not generated')
 
     all_props = [explanation] + list(explanation.reason.all_premises)
     indexes = {}
@@ -90,30 +87,29 @@ def drawTree(scene, prop, args):
         'priority': 'essential' if p.essential else 'normal'
     } for p in all_props]
     
-    print('sandbox$.createTree(\'%s\');' % re.sub('\\\\"', '\\\\\\\\"', json.dumps(data)))
+    return data;
 
-def load_args():
+def visualise(scene, prop, title=None, task=None, reference=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--max-layer', default='user', choices=CoreScene.layers)
     parser.add_argument('--extra-rules', nargs='+', choices=('advanced', 'trigonometric'), default=())
-    return parser.parse_args()
+    args = parser.parse_args()
 
-#def visualise(scene, prop=None, arguments=load_args()):
-def visualise(scene, prop=None, arguments=None, extra_points=(), title=None, description=None):
-    args = arguments if arguments else load_args()
     with open('../html/pattern.html') as f:
         for line in f.readlines():
             line = line.strip()
-            if line == '$$SCENE$$':
-                drawScene(scene, args, extra_points=extra_points)
-            elif line == '$$TREE$$':
-                if prop:
-                    drawTree(scene, prop, args)
+            if '$$SCENE$$' in line:
+                print(line.replace('$$SCENE$$', json.dumps(sceneData(scene, args))));
+            elif '$$TREE$$' in line:
+                print(line.replace('$$TREE$$', re.sub('\\\\"', '\\\\\\\\"', json.dumps(treeData(scene, prop, args)))));
             elif '$$TITLE$$' in line:
                 if title:
                     print(line.replace('$$TITLE$$', title))
-            elif '$$DESCRIPTION$$' in line:
-                if description:
-                    print(line.replace('$$DESCRIPTION$$', description))
+            elif '$$TASK$$' in line:
+                if task:
+                    print(line.replace('$$TASK$$', re.sub('\\\\"', '\\\\\\\\"', json.dumps([item.html() for item in task]))))
+            elif '$$REFERENCE$$' in line:
+                if reference:
+                    print(line.replace('$$REFERENCE$$', reference))
             else:
                 print(line)

@@ -25,10 +25,7 @@ class Reason:
     @property
     def all_premises(self):
         if self.__all_premises is None:
-            self.__all_premises = set()
-            if self.premises is not None:
-                for p in self.premises:
-                    if not p in self.__all_premises:
-                        self.__all_premises.add(p)
-                        self.__all_premises.update(p.reason.all_premises)
+            self.__all_premises = set(self.premises)
+            for p in self.premises:
+                self.__all_premises.update(p.reason.all_premises)
         return self.__all_premises

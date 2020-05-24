@@ -1,88 +1,94 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<meta name='viewport' content='width=device-width, initial-scale=1'/>
 	<meta charset='utf-8'/>
+	<title>Geometer's Sandbox</title>
 	<script type='text/javascript' charset='utf-8' src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
 	<script type='text/javascript' charset='utf-8' src='../html/third-party/jsxgraphcore.js'></script>
 	<script type='text/javascript' charset='utf-8' src='../html/sandbox.js'></script>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
 	<link rel='stylesheet' type='text/css' href='../html/third-party/jsxgraph.css'/>
 	<link rel='stylesheet' type='text/css' href='../html/sandbox.css'/>
-<style>
-body {
-	background-color: #dddddd;
-  margin: 5px;
-}
-.main {
-  background-color: #ffffff;
-  display: flex;
-}
-.box {
-  background-color: #ffffff;
-  color: #000000;
-  border-radius: 5px;
-  padding: 20px;
-
-  box-sizing: border-box;
-
-  flex: 0 0 auto;
-}
-.divider {
-  width: 5px;
-  padding: 0;
-  cursor: ew-resize;
-  flex: 0 0 auto;
-  background: #dddddd;
-}
-</style>
 </head>
 <body>
-<div class='main'>
-<div class='box' id='boxA'>
-<div style='display:inline-block;vertical-align:top;'>
-<div id='sandbox-scene' class='jxgbox' style='width:5in;height:5in;'></div>
-<div id='sandbox-selections' class='sandbox-text sandbox-selections'></div>
+<div id='main' class='main'>
+<h2 id='page-title'></h2>
+<div style='width:5in;' class='sticky-top sandbox-column'>
+<div id="sketchAccordion">
+  <div class="card">
+    <div class="card-header" id="sketchHeading">
+      <h5 class="mb-0">
+				<button class="btn collapsible" data-toggle="collapse" data-target="#sketchBlock" aria-expanded="true" aria-controls="sketchBlock"><i class="material-icons-outlined chevron chevron-rotated"></i>
+					Sketch
+        </button>
+      </h5>
+    </div>
+
+    <div id="sketchBlock" class="collapse show" aria-labelledby="sketchHeading" data-parent="#sketchAccordion">
+      <div class="card-body" style='padding:0.05in;'>
+				<div id='sandbox-scene' class='jxgbox' style='width:4.9in;height:4.9in;'></div>
+				<div id='sandbox-selections' class='sandbox-text sandbox-selections'></div>
+      </div>
+    </div>
+  </div>
 </div>
 </div>
-<div class="divider"></div>
-<div class='box' id='boxB'>
-<div id='sandbox-tree' class='sandbox-text sandbox-tree' style='margin-left:36px;display:inline-block;vertical-align:top;'>
-<div style='margin-bottom:16px;'>
-	<input type='checkbox' id='checkbox' checked='1' onclick='sandbox$.toggleNonEssential()'>
-Show essential steps only
+<div style='margin-left:36px;width:50%;' class='sandbox-column'>
+<div id="descriptionAccordion">
+  <div class="card">
+    <div class="card-header" id="descriptionHeading">
+      <h5 class="mb-0">
+        <button class="btn collapsible" data-toggle="collapse" data-target="#descriptionBlock" aria-expanded="true" aria-controls="descriptionBlock"><i class="material-icons-outlined chevron chevron-rotated"></i>
+          Description
+        </button>
+      </h5>
+    </div>
+
+    <div id="descriptionBlock" class="collapse show" aria-labelledby="descriptionHeading" data-parent="#descriptionAccordion">
+      <div class="card-body sandbox-description" id='sandbox-description'>
+				<div id='sandbox-task' class='sandbox-text'></div>
+				<div id='sandbox-reference' class='sandbox-reference'></div>
+			</div>
+    </div>
+  </div>
 </div>
+<div id="solutionAccordion" style='margin-top:2em;'>
+  <div class="card">
+    <div class="card-header" id="solutionHeading">
+      <h5 class="mb-0">
+        <button class="btn collapsible" data-toggle="collapse" data-target="#solutionBlock" aria-expanded="true" aria-controls="solutionBlock"><i class="material-icons-outlined chevron chevron-rotated"></i>
+          Generated proof
+        </button>
+      </h5>
+    </div>
+
+    <div id="solutionBlock" class="collapse show" aria-labelledby="solutionHeading" data-parent="#solutionAccordion">
+      <div class="card-body">
+				<div id='sandbox-tree' class='sandbox-text sandbox-tree'>
+					<div style='margin-bottom:16px;'>
+						<input type='checkbox' id='checkbox' checked='1' onclick='sandbox$.toggleNonEssential()'>
+					Show essential steps only
+					</div>
+				</div>
+      </div>
+    </div>
+  </div>
 </div>
 </div>
 </div>
 </body>
 <script type='text/javascript'>
-$$SCENE$$
-$$TREE$$
+sandbox$.createScene('$$SCENE$$');
+sandbox$.createTree('$$TREE$$');
+sandbox$.setTitle('$$TITLE$$');
+sandbox$.setTask('$$TASK$$');
+sandbox$.setReference('$$REFERENCE$$');
+sandbox$.createFigureReferences();
 sandbox$.toggleNonEssential();
-</script>
-<script type='text/javascript'>
-var resizeInProgress = false;
-
-$('.divider').mousedown(function(e) {
-	e.preventDefault();
-	resizeInProgress = true;
-});
-$(document).mouseup(function() {
-	resizeInProgress = false;
-});
-
-$(document).mousemove(function(e) {
-  if (resizeInProgress) {
-		var decorWidthA = $('#boxA').outerWidth() - $('#boxA').width();
-		var decorWidthB = $('#boxB').outerWidth() - $('#boxB').width();
-		var dividerWidth = $('.divider').width();
-		var minWidthA = 200;
-		var maxWidthA = $(window).width() - dividerWidth - 200 - decorWidthB;
-		var newWidth = Math.max(minWidthA, Math.min(maxWidthA, e.clientX - decorWidthA - dividerWidth / 2));
-
-		$('#boxA').width(newWidth);
-  }
-});
 </script>
 </html>
