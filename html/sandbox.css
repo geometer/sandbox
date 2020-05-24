@@ -2,13 +2,19 @@
 
 .main {
   min-width: 13in;
+  padding-top: 25px;
   padding-left: 20px;
 }
 
 .main h2 {
   padding-left: 50px;
+}
+
+.sandbox-column {
+  padding-top: 15px;
   padding-bottom: 15px;
-  padding-top: 25px;
+  display:inline-block;
+  vertical-align:top;
 }
 
 .btn:focus {
