@@ -92,14 +92,15 @@ class Scene(CoreScene):
         bisector2 = angles[2].bisector_line(layer='auxiliary')
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
-            kwargs['comment'] = LazyComment('Incentre of %s', triangle)
+            kwargs['comment'] = LazyComment('The incentre of %s', triangle)
         centre = bisector0.intersection_point(bisector1, **kwargs)
         centre.belongs_to(bisector2)
-        comment=LazyComment('%s is the incentre of %s', centre, triangle)
-        angles[0].point_on_bisector_constraint(centre, comment=comment)
-        angles[1].point_on_bisector_constraint(centre, comment=comment)
-        angles[2].point_on_bisector_constraint(centre, comment=comment)
-        centre.inside_triangle_constraint(triangle, comment=comment)
+        for angle in angles:
+            angle.point_on_bisector_constraint(
+                centre,
+                comment=LazyComment('the incentre %s of %s lies on the biscetor of %s', centre, triangle, angle)
+            )
+        centre.inside_triangle_constraint(triangle, comment=LazyComment('the incentre %s lies inside %s', centre, triangle))
         return centre
 
     def incircle(self, triangle, **kwargs):
