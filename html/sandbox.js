@@ -67,33 +67,13 @@ createScene: function(json) {
 	}, 0);
 },
 
-createTree: function(json) {
-	var desc = $('#sandbox-description');
-	var root = $('#sandbox-tree');
-	beautified = function(text) {
-		var vert = '<span style=\'font-size:130%;vertical-align:-2px;\'>|</span>';
-		return text.replace(/\|([^|]*)\|/g, '<span style=\'white-space:nowrap\'>' + vert + '$1' + vert + '</span>');
-	}
+beautifiedLine: function(line) {
+	var vert = '<span style=\'font-size:130%;vertical-align:-2px;\'>|</span>';
+	return line.replace(/\|([^|]*)\|/g, '<span style=\'white-space:nowrap\'>' + vert + '$1' + vert + '</span>');
+},
 
-	var data = JSON.parse(json);
-	var buildTree = function(root, index) {
-		var obj = data[index];
-		var item = $('<li/>');
-		item.addClass(obj.priority);
-		item.append('<span class="handler material-icons-outlined"/>');
-		item.append(beautified(obj.property));
-		item.append('<span class="implication">⇐</span>');
-		item.append(beautified(obj.comment));
-		if (obj.premises.length > 0) {
-			var list = $('<ul/>');
-			obj.premises.forEach(ind => { buildTree(list, ind); });
-			item.append(list);
-		}
-		root.append(item);
-	};
-	var tree = $('<ul/>');
-	buildTree(tree, 0);
-	root.append(tree);
+createFigureReferences: function() {
+	var desc = $('#sandbox-description');
 
 	$('.sandbox-text').find('.figure').each(function() {
 		var clazz = null;
@@ -162,7 +142,7 @@ createTree: function(json) {
 					sandbox$.selectedSegments[clazz].forEach(obj => {sandbox$.board.removeObject(obj);});
 					delete sandbox$.selectedSegments[clazz];
 					desc.find('.' + clazz).each(function() { $(this).removeClass('selected'); });
-					root.find('.' + clazz).each(function() { $(this).removeClass('selected'); });
+					$('.sandbox-text .' + clazz).each(function() { $(this).removeClass('selected'); });
 				};
 				if ($(this).hasClass('selected')) {
 					deselect();
@@ -190,33 +170,15 @@ createTree: function(json) {
 					});
 					sandbox$.selectedSegments[clazz] = selected;
 					desc.find('.' + clazz).each(function() { $(this).addClass('selected'); });
-					root.find('.' + clazz).each(function() { $(this).addClass('selected'); });
+					$('.sandbox-text .' + clazz).each(function() { $(this).addClass('selected'); });
 					sandbox$.board.update();
 					sandbox$.board.update();
 				}
-			});
-		}
-	});
-	root.find('li').each(function() {
-		var element = $(this);
-		if (element.find('ul')) {
-			element.addClass('closed');
-			element.removeClass('open');
-			element.find('span.handler').first().click(function(e) {
-				if (e.shiftKey) {
-					if (element.hasClass('closed')) {
-						element.find('.closed').removeClass('closed').addClass('open');
-					} else if (element.hasClass('open')) {
-						element.find('.open').removeClass('open').addClass('closed');
-					}
-				}
-				element.toggleClass('open');
-				element.toggleClass('closed');
 			});
 		}
 	});
 
-	$('.sandbox-text').find('.figure').each(function() {
+	$('.sandbox-text .figure').each(function() {
 		var element = $(this);
 		beautified = function(point) {
 			return '<span class=\'point\'>' + point.replace(/_(\d*)/, '<sub>$1</sub>') + '</span>';
@@ -260,6 +222,68 @@ createTree: function(json) {
 			}
 		});
 	});
+},
+
+createTree: function(json) {
+	var root = $('#sandbox-tree');
+
+	var data = JSON.parse(json);
+	var buildTree = function(root, index) {
+		var obj = data[index];
+		var item = $('<li/>');
+		item.addClass(obj.priority);
+		item.append('<span class="handler material-icons-outlined"/>');
+		item.append(sandbox$.beautifiedLine(obj.property));
+		item.append('<span class="implication">⇐</span>');
+		item.append(sandbox$.beautifiedLine(obj.comment));
+		if (obj.premises.length > 0) {
+			var list = $('<ul/>');
+			obj.premises.forEach(ind => { buildTree(list, ind); });
+			item.append(list);
+		}
+		root.append(item);
+	};
+	var tree = $('<ul/>');
+	buildTree(tree, 0);
+	root.append(tree);
+
+	root.find('li').each(function() {
+		var element = $(this);
+		if (element.find('ul')) {
+			element.addClass('closed');
+			element.removeClass('open');
+			element.find('span.handler').first().click(function(e) {
+				if (e.shiftKey) {
+					if (element.hasClass('closed')) {
+						element.find('.closed').removeClass('closed').addClass('open');
+					} else if (element.hasClass('open')) {
+						element.find('.open').removeClass('open').addClass('closed');
+					}
+				}
+				element.toggleClass('open');
+				element.toggleClass('closed');
+			});
+		}
+	});
+},
+
+setTitle: function(title) {
+	window.document.title = title;
+	$('#page-title').text(title);
+},
+
+setTask: function(json) {
+	task = $('#sandbox-task');
+	var data = JSON.parse(json);
+	data.forEach(item => {
+		line = $('<p/>');
+		line.append(sandbox$.beautifiedLine(item));
+		task.append(line);
+	});
+},
+
+setReference: function(reference) {
+	$('#sandbox-reference').append(reference);
 },
 
 toggleNonEssential: function() {

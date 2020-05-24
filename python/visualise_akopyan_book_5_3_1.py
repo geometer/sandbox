@@ -21,12 +21,11 @@ N.line_through(F)
 
 prop = PointsCollinearityProperty(D, N, F, True)
 
-visualise(scene, prop, title='Problem 5.3.1', description=LazyComment('''
-<p>%s is a square.</p>
-<p>%s is a point inside segment %s.</p>
-<p>%s is a square.</p>
-<p>%s lies inside segment %s.</p>
-<p>%s is the intersection point of %s and %s.</p>
-<p>Prove, that %s, %s, and %s are collinear.</p>
-<p style="font-size:80%%"><a href="http://vivacognita.org/555geometry.html/_/5/5-3/53-1-r371">Problem 5.3.1</a> from the <a href="https://www.amazon.com/Geometry-Figures-Second-Arseniy-Akopyan/dp/1548710784">Akopyan\'s book</a></p>
-''', Scene.Polygon(A, B, C, D), E, B.segment(C), Scene.Polygon(B, E, F, K), B, A.segment(K), N, A.segment(C).as_line, E.segment(K).as_line, D, N, F).html())
+visualise(scene, prop, title='Problem 5.3.1', task=[
+    LazyComment('%s is a square', Scene.Polygon(A, B, C, D)),
+    LazyComment('%s is a point inside segment %s', E, B.segment(C)),
+    LazyComment('%s is a square', Scene.Polygon(B, E, F, K)),
+    LazyComment('%s lies inside segment %s', B, A.segment(K)),
+    LazyComment('%s is the intersection point of %s and %s', N, A.segment(C).as_line, E.segment(K).as_line),
+    LazyComment('Prove, that %s, %s, and %s are collinear', D, N, F)
+], reference='<a href="http://vivacognita.org/555geometry.html/_/5/5-3/53-1-r371">Problem 5.3.1</a> from the <a href="https://www.amazon.com/Geometry-Figures-Second-Arseniy-Akopyan/dp/1548710784">Akopyan\\\'s book</a>')

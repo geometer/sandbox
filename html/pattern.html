@@ -5,7 +5,7 @@
 <head>
 	<meta name='viewport' content='width=device-width, initial-scale=1'/>
 	<meta charset='utf-8'/>
-	<title>$$TITLE$$</title>
+	<title>Geometer's Sandbox</title>
 	<script type='text/javascript' charset='utf-8' src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
 	<script type='text/javascript' charset='utf-8' src='../html/third-party/jsxgraphcore.js'></script>
@@ -17,7 +17,7 @@
 </head>
 <body>
 <div id='main' class='main'>
-<h2>$$TITLE$$</h2>
+<h2 id='page-title'></h2>
 <div style='width:5in;' class='sticky-top sandbox-column'>
 <div id="sketchAccordion">
   <div class="card">
@@ -50,9 +50,10 @@
     </div>
 
     <div id="descriptionBlock" class="collapse show" aria-labelledby="descriptionHeading" data-parent="#descriptionAccordion">
-      <div class="card-body sandbox-text sandbox-description" id='sandbox-description'>
-				$$DESCRIPTION$$
-      </div>
+      <div class="card-body sandbox-description" id='sandbox-description'>
+				<div id='sandbox-task' class='sandbox-text'></div>
+				<div id='sandbox-reference' class='sandbox-reference'></div>
+			</div>
     </div>
   </div>
 </div>
@@ -84,6 +85,10 @@
 <script type='text/javascript'>
 sandbox$.createScene('$$SCENE$$');
 sandbox$.createTree('$$TREE$$');
+sandbox$.setTitle('$$TITLE$$');
+sandbox$.setTask('$$TASK$$');
+sandbox$.setReference('$$REFERENCE$$');
+sandbox$.createFigureReferences();
 sandbox$.toggleNonEssential();
 </script>
 </html>

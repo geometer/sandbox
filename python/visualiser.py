@@ -89,7 +89,7 @@ def treeData(scene, prop, args):
     
     return data;
 
-def visualise(scene, prop, title=None, description=None):
+def visualise(scene, prop, title=None, task=None, reference=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--max-layer', default='user', choices=CoreScene.layers)
     parser.add_argument('--extra-rules', nargs='+', choices=('advanced', 'trigonometric'), default=())
@@ -105,8 +105,11 @@ def visualise(scene, prop, title=None, description=None):
             elif '$$TITLE$$' in line:
                 if title:
                     print(line.replace('$$TITLE$$', title))
-            elif '$$DESCRIPTION$$' in line:
-                if description:
-                    print(line.replace('$$DESCRIPTION$$', description))
+            elif '$$TASK$$' in line:
+                if task:
+                    print(line.replace('$$TASK$$', re.sub('\\\\"', '\\\\\\\\"', json.dumps([item.html() for item in task]))))
+            elif '$$REFERENCE$$' in line:
+                if reference:
+                    print(line.replace('$$REFERENCE$$', reference))
             else:
                 print(line)

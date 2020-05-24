@@ -32,4 +32,4 @@ C2 = scene.get('C_2')
 #B2.line_through(C2)
 prop = EquilateralTriangleProperty((A2, B2, C2))
 
-visualise(scene, prop, title='Napoleon\'s theorem', description='<a href="https://en.wikipedia.org/wiki/Napoleon%27s_theorem">Napoleon\'s theorem on Wikipedia</a>')
+visualise(scene, prop, title='Napoleon\\\'s theorem', reference='<a href="https://en.wikipedia.org/wiki/Napoleon%27s_theorem">Napoleon\\\'s theorem on Wikipedia</a>')
