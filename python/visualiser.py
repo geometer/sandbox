@@ -68,7 +68,7 @@ def drawTree(scene, prop, args):
     explainer.explain()
     explanation = explainer.explanation(prop)
     if not explanation:
-        return
+        raise Exception('Explanation not generated')
 
     all_props = [explanation] + list(explanation.reason.all_premises)
     indexes = {}
