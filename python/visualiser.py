@@ -8,7 +8,7 @@ from sandbox.core import CoreScene
 from sandbox.explainer import Explainer
 from sandbox.placement import iterative_placement
 
-def drawScene(scene, args, attempts=10, extra_points=()):
+def sceneData(scene, args, attempts=10, extra_points=()):
     points = scene.points(max_layer=args.max_layer) + list(extra_points)
     lines = scene.lines(max_layer=args.max_layer)
     circles = scene.circles(max_layer=args.max_layer)
@@ -58,9 +58,9 @@ def drawScene(scene, args, attempts=10, extra_points=()):
     scene_circles = []
     for circle in circles:
         scene_circles.append({'centre': circle.centre.name, 'radius': float(placement.radius(circle))})
-    print('sandbox$.createScene(\'%s\');' % json.dumps({'points': scene_points, 'lines': scene_lines, 'circles': scene_circles}));
+    return {'points': scene_points, 'lines': scene_lines, 'circles': scene_circles}
 
-def drawTree(scene, prop, args):
+def treeData(scene, prop, args):
     options = { 'max_layer': args.max_layer }
     for extra in args.extra_rules:
         options[extra] = True
@@ -87,7 +87,7 @@ def drawTree(scene, prop, args):
         'priority': 'essential' if p.essential else 'normal'
     } for p in all_props]
     
-    print('sandbox$.createTree(\'%s\');' % re.sub('\\\\"', '\\\\\\\\"', json.dumps(data)))
+    return data;
 
 def visualise(scene, prop, title=None, description=None):
     parser = argparse.ArgumentParser()
@@ -98,10 +98,10 @@ def visualise(scene, prop, title=None, description=None):
     with open('../html/pattern.html') as f:
         for line in f.readlines():
             line = line.strip()
-            if line == '$$SCENE$$':
-                drawScene(scene, args)
-            elif line == '$$TREE$$':
-                drawTree(scene, prop, args)
+            if '$$SCENE$$' in line:
+                print(line.replace('$$SCENE$$', json.dumps(sceneData(scene, args))));
+            elif '$$TREE$$' in line:
+                print(line.replace('$$TREE$$', re.sub('\\\\"', '\\\\\\\\"', json.dumps(treeData(scene, prop, args)))));
             elif '$$TITLE$$' in line:
                 if title:
                     print(line.replace('$$TITLE$$', title))
