@@ -121,8 +121,6 @@ class Explainer:
 
     def __reason(self, prop, comment, premises=None):
         reason = Reason(self.__iteration_step_count, comment, premises)
-        if prop in reason.all_premises:
-            return
         def insert(pro):
             for pre in pro.reason.premises:
                 pre.implications.add(pro)
@@ -136,7 +134,7 @@ class Explainer:
             prop.reason = reason
             prop.reason.obsolete = False
             insert(prop)
-        elif len(reason.all_premises) < len(existing.reason.all_premises):
+        elif reason.cost < existing.reason.cost:
             #### +++ HACK +++
             # TODO: move this hack outside of explainer
             if isinstance(prop, AngleRatioProperty) and prop.same:
