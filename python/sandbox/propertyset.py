@@ -320,6 +320,12 @@ class LineSet:
         return best
 
     def intersection_of_lines(self, segment0, segment1):
+        if segment0 == segment1:
+            return (None, [])
+        common = next((pt for pt in segment0.points if pt in segment1.points), None)
+        if common:
+            return (common, [])
+
         line0 = self.__segment_to_line.get(segment0)
         if line0 is None:
             return (None, [])
@@ -337,6 +343,7 @@ class LineSet:
             premises.append(self.collinearity_property(pt, *segment1.points))
         return (pt, premises)
 
+    @property
     def lines(self):
         return list(self.__all_lines)
 
@@ -1125,12 +1132,12 @@ class LengthRatioPropertySet:
         self.__cache[key] = pair
         return pair
 
-class PropertySet:
+class PropertySet(LineSet):
     def __init__(self):
+        super().__init__()
         self.__combined = {} # (type, key) => [prop] and type => prop
         self.__full_set = {} # prop => prop
         self.__indexes = {} # prop => number
-        self.__line_set = LineSet()
         self.circles = CircleSet(self)
         self.__angle_kinds = {} # angle => prop
         self.__linear_angles = LinearAngleSet()
@@ -1167,7 +1174,7 @@ class PropertySet:
         elif type_key == LengthRatioProperty:
             self.__length_ratios.add(prop)
         elif type_key == PointsCollinearityProperty:
-            self.__line_set.add(prop)
+            super().add(prop)
             self.circles.add(prop)
         elif type_key == PointAndCircleProperty:
             self.circles.add(prop)
@@ -1176,7 +1183,7 @@ class PropertySet:
         elif type_key == SameCyclicOrderProperty:
             self.__cyclic_orders.add(prop)
         elif type_key in (PointsCoincidenceProperty, LineCoincidenceProperty, PointOnLineProperty):
-            self.__line_set.add(prop)
+            super().add(prop)
         elif type_key == SameOrOppositeSideProperty:
             self.__two_points_relatively_to_line[prop.property_key] = prop
         elif type_key in (SimilarTrianglesProperty, CongruentTrianglesProperty):
@@ -1260,15 +1267,6 @@ class PropertySet:
         if existing and not existing.compare_values(prop):
             raise ContradictionError('different values: `%s` vs `%s`' % (prop, existing))
         return existing
-
-    def collinearity_property(self, pt0, pt1, pt2):
-        return self.__line_set.collinearity_property(pt0, pt1, pt2)
-
-    def point_on_line_property(self, segment, pt):
-        return self.__line_set.point_on_line_property(segment, pt)
-
-    def coincidence_property(self, pt0, pt1):
-        return self.__line_set.coincidence_property(pt0, pt1)
 
     def not_equal_property(self, pt0, pt1):
         prop = self.coincidence_property(pt0, pt1)
@@ -1385,10 +1383,6 @@ class PropertySet:
                 return (candidate, [prop, col])
         return (None, [])
 
-    @property
-    def lines(self):
-        return self.__line_set.lines()
-
     def n_concyclic_points(self, n):
         return self.circles.n_concyclic_points(n)
 
@@ -1409,11 +1403,6 @@ class PropertySet:
         for prop in [p for p in self.list(PointsCollinearityProperty, [segment]) if not p.collinear]:
             points.append(next(pt for pt in prop.points if pt not in segment.points))
         return points
-
-    def intersection_of_lines(self, segment0, segment1):
-        if segment0 == segment1:
-            return (None, [])
-        return self.__line_set.intersection_of_lines(segment0, segment1)
 
     def stats(self):
         def type_presentation(kind):
