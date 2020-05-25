@@ -16,12 +16,18 @@
 	<link rel='stylesheet' type='text/css' href='../html/sandbox.css'/>
 </head>
 <body>
+<nav class="navbar navbar-light sandbox-header fixed-top">
+  <a class="navbar-brand" href="#">
+		<span class="sandbox-logo"></span>
+		Geometer's Sandbox
+  </a>
+</nav>
 <div id='main' class='main'>
 <h2 id='page-title'></h2>
 <div style='width:5in;' class='sticky-top sandbox-column'>
 <div id="sketchAccordion">
   <div class="card">
-    <div class="card-header" id="sketchHeading">
+    <div class="card-header sandbox-header" id="sketchHeading">
       <h5 class="mb-0">
 				<button class="btn collapsible" data-toggle="collapse" data-target="#sketchBlock" aria-expanded="true" aria-controls="sketchBlock"><i class="material-icons-outlined chevron chevron-rotated"></i>
 					Sketch
@@ -41,7 +47,7 @@
 <div style='margin-left:36px;width:50%;' class='sandbox-column'>
 <div id="descriptionAccordion">
   <div class="card">
-    <div class="card-header" id="descriptionHeading">
+    <div class="card-header sandbox-header" id="descriptionHeading">
       <h5 class="mb-0">
         <button class="btn collapsible" data-toggle="collapse" data-target="#descriptionBlock" aria-expanded="true" aria-controls="descriptionBlock"><i class="material-icons-outlined chevron chevron-rotated"></i>
           Description
@@ -59,7 +65,7 @@
 </div>
 <div id="solutionAccordion" style='margin-top:2em;'>
   <div class="card">
-    <div class="card-header" id="solutionHeading">
+    <div class="card-header sandbox-header" id="solutionHeading">
       <h5 class="mb-0">
         <button class="btn collapsible" data-toggle="collapse" data-target="#solutionBlock" aria-expanded="true" aria-controls="solutionBlock"><i class="material-icons-outlined chevron chevron-rotated"></i>
           Generated proof

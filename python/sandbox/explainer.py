@@ -559,7 +559,6 @@ class Explainer:
                     print('\t%s' % prop)
 
     def stats(self, properties_to_explain=[]):
-        self.context.circles.dump()
         def type_presentation(kind):
             return kind.__doc__.strip() if kind.__doc__ else kind.__name__
 

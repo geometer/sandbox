@@ -1408,8 +1408,6 @@ class PropertySet:
         return self.__line_set.intersection_of_lines(segment0, segment1)
 
     def stats(self):
-        self.__linear_angles.dump()
-
         def type_presentation(kind):
             return kind.__doc__.strip() if kind.__doc__ else kind.__name__
 
