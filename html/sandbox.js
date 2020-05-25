@@ -14,8 +14,10 @@ createScene: function(json) {
 	var xs = [];
 	var ys = [];
 	scene.points.forEach(pt => {
-		xs.push(pt.x);
-		ys.push(pt.y);
+		if (pt.visible) {
+			xs.push(pt.x);
+			ys.push(pt.y);
+		}
 	});
 	var max_x = Math.max(... xs);
 	var min_x = Math.min(... xs);
@@ -33,15 +35,17 @@ createScene: function(json) {
 	});
 
 	scene.points.forEach(pt => {
-		this.board.create('point', [pt.x, pt.y], {
-			name: pt.name,
-			id: pt.name,
-			color: this.options.color,
-			highlightFillColor: this.options.hl_color,
-			highlightStrokeColor: this.options.hl_color,
-			size: 3,
-			label: {color: this.options.color, autoPosition: true}
-		});
+		if (pt.visible) {
+			this.board.create('point', [pt.x, pt.y], {
+				name: pt.name,
+				id: pt.name,
+				color: this.options.color,
+				highlightFillColor: this.options.hl_color,
+				highlightStrokeColor: this.options.hl_color,
+				size: 3,
+				label: {color: this.options.color, autoPosition: true}
+			});
+		}
 	});
 
 	scene.lines.forEach(line => {
@@ -54,7 +58,13 @@ createScene: function(json) {
 	});
 
 	scene.circles.forEach(circle => {
-		this.board.create('circle', [circle.centre, circle.radius], {
+		centre = null;
+		scene.points.forEach(pt => {
+			if (circle.centre == pt.name) {
+				centre = pt;
+			}
+		});
+		this.board.create('circle', [[centre.x, centre.y], circle.radius], {
 			fillOpacity: 0,
 			strokeWidth: 0.7,
 			color: this.options.color

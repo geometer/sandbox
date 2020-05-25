@@ -9,6 +9,7 @@ from sandbox.explainer import Explainer
 from sandbox.placement import iterative_placement
 
 def sceneData(scene, args, attempts=10, extra_points=()):
+    all_points = scene.points(max_layer='invisible')
     points = scene.points(max_layer=args.max_layer) + list(extra_points)
     lines = scene.lines(max_layer=args.max_layer)
     circles = scene.circles(max_layer=args.max_layer)
@@ -41,15 +42,15 @@ def sceneData(scene, args, attempts=10, extra_points=()):
     placement = placements[-1]
 
     coords = {}
-    for pt in points:
+    for pt in all_points:
         coords[pt] = placement.location(pt)
 
     scene_points = []
     for pt, coo in coords.items():
-        scene_points.append({'name': pt.name, 'x': float(coo.x), 'y': float(coo.y)})
+        scene_points.append({'name': pt.name, 'x': float(coo.x), 'y': float(coo.y), 'visible': pt in points})
     scene_lines = []
     for line in lines:
-        pts = [pt for pt in line.all_points if pt in coords]
+        pts = [pt for pt in line.all_points if pt in points]
         if len(pts) < 2:
             continue
         pts.sort(key=lambda pt: coords[pt].x)
