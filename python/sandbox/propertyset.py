@@ -223,7 +223,8 @@ class LineSet:
 
     def collinearity_property(self, pt0, pt1, pt2):
         pts = (pt0, pt1, pt2)
-        cached = self.__collinearity.get(frozenset(pts))
+        key = frozenset(pts)
+        cached = self.__collinearity.get(key)
         if cached:
             return cached
 
@@ -300,7 +301,10 @@ class LineSet:
                     prop = PointsCollinearityProperty(pt0, pt1, pt2, False)
                     candidates.append(_synthetic_property(prop, comment, premises))
 
-        return LineSet.best_candidate(candidates)
+        prop = LineSet.best_candidate(candidates)
+        if prop:
+            self.__collinearity[key] = prop
+        return prop
 
     @staticmethod
     def best_candidate(candidates):
