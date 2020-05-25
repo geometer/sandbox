@@ -31,9 +31,9 @@ class Explainer:
             CollinearityToSameLineRule(self.context),
             NonCollinearityToDifferentLinesRule(self.context),
             CollinearityToPointOnLineRule(self.context),
+            NonCollinearityToPointNotOnLineRule(self.context),
             MissingLineKeysRule(self.context),
 
-            NonCollinearityToPointNotOnLineRule(self.context),
             CyclicQuadrilateralRule(self.context),
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),
