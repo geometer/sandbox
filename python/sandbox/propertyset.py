@@ -119,8 +119,9 @@ class LineSet:
         self.__segment_to_line = {}
         self.__all_lines = []
         self.__different_lines_graph = nx.Graph()
-        self.__coincidence = {} # {point, point} => prop
-        self.__collinearity = {} # {point, point, point} => prop
+        self.__coincidence = {}   # {point, point} => prop
+        self.__collinearity = {}  # {point, point, point} => prop
+        self.__point_on_line = {} # (point, segment) => prop
 
     def __add_same_line_property(self, prop):
         line0 = self.__segment_to_line.get(prop.segments[0])
@@ -178,6 +179,7 @@ class LineSet:
             edge['props'].add(prop)
 
     def __add_point_on_line_property(self, prop):
+        self.__point_on_line[(prop.point, prop.segment)] = prop
         line = self.__line_by_segment(prop.segment)
         storage = line.points_on if prop.on_line else line.points_not_on
         prop_set = storage.get(prop.point)
@@ -212,6 +214,9 @@ class LineSet:
         return LineSet.best_candidate(candidates)
 
     def point_on_line_property(self, segment, point):
+        prop = self.__point_on_line.get((point, segment))
+        if prop:
+            return prop
         line = self.__segment_to_line.get(segment)
         return line.point_on_line_property(segment, point) if line else None
 
@@ -255,7 +260,10 @@ class LineSet:
                 for pt in all_pts:
                     if pt in seg.points:
                         continue
-                    premises.append(line.point_on_line_property(seg, pt))
+                    pol = self.__point_on_line.get((pt, seg))
+                    if pol is None:
+                        pol = line.point_on_line_property(seg, pt)
+                    premises.append(pol)
                 prop = PointsCollinearityProperty(*all_pts, on)
                 candidates.append(_synthetic_property(prop, comment, premises))
 
