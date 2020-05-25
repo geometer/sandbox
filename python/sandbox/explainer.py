@@ -22,8 +22,8 @@ from .util import LazyComment
 class Explainer:
     def __init__(self, scene, options={}):
         self.scene = scene
-        self.context = PropertySet()
         self.__options = options
+        self.context = PropertySet(self.scene.points(max_layer=self.__max_layer))
         self.__explanation_time = None
         self.__iteration_step_count = -1
         self.__rules = [
@@ -118,6 +118,10 @@ class Explainer:
             self.__rules += [
                 LawOfSinesRule(self.context),
             ]
+
+    @property
+    def __max_layer(self):
+        return self.__options.get('max_layer', 'user')
 
     def __reason(self, prop, comment, premises=None):
         reason = Reason(self.__iteration_step_count, comment, premises)
@@ -530,7 +534,7 @@ class Explainer:
             for prop, comment, premises in iteration():
                 self.__reason(prop, comment, premises)
             for prop in self.context.all:
-                prop.reason.obsolete = prop.reason.generation < self.__iteration_step_count
+                prop.reason.obsolete = prop.reason.generation < self.__iteration_step_count - 1
             self.__iteration_step_count += 1
             if len(self.context) == explained_size:
                 break

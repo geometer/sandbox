@@ -1133,8 +1133,9 @@ class LengthRatioPropertySet:
         return pair
 
 class PropertySet(LineSet):
-    def __init__(self):
+    def __init__(self, points):
         super().__init__()
+        self.points = list(points)
         self.__combined = {} # (type, key) => [prop] and type => prop
         self.__full_set = {} # prop => prop
         self.__indexes = {} # prop => number

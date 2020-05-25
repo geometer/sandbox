@@ -10,6 +10,20 @@ class Property:
         self.implications = set()
         self.property_key = property_key
         self.__hash = None
+        self.__reason = None
+
+    @property
+    def reason(self):
+        return self.__reason
+
+    @reason.setter
+    def reason(self, value):
+        while self in value.all_premises:
+            # TODO: select the best variant
+            for prop in value.all_premises:
+                if prop == self:
+                    value = prop.reason
+        self.__reason = value
 
     @property
     def essential(self):
