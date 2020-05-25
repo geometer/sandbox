@@ -283,7 +283,7 @@ setTask: function(json) {
 },
 
 setReference: function(reference) {
-	$('#sandbox-reference').append(reference);
+	$('#sandbox-reference').html(reference);
 },
 
 toggleNonEssential: function() {
