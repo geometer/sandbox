@@ -1252,10 +1252,6 @@ class PropertySet:
     def collinearity_property(self, pt0, pt1, pt2):
         return self.__line_set.collinearity_property(pt0, pt1, pt2)
 
-    def not_collinear_property(self, pt0, pt1, pt2):
-        prop = self.collinearity_property(pt0, pt1, pt2)
-        return prop if prop and not prop.collinear else None
-
     def point_on_line_property(self, segment, pt):
         return self.__line_set.point_on_line_property(segment, pt)
 

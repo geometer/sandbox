@@ -203,10 +203,12 @@ class Explainer:
                 for pts in itertools.combinations(ss0.segment.points + ss1.segment.points, 3):
                     if len(set(pts)) < 3:
                         continue
-                    ncl = self.context.not_collinear_property(*pts)
+                    ncl = self.context.collinearity_property(*pts)
                     if ncl:
                         break
                 else:
+                    continue
+                if ncl.collinear:
                     continue
 
                 if ss0.points[0] in ss1.points:
