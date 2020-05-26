@@ -54,7 +54,7 @@ createScene: function(json) {
 	});
 
 	scene.circles.forEach(circle => {
-		this.board.create('circle', [circle.centre, circle.radius], {
+		this.board.create('circle', [[circle.x, circle.y], circle.radius], {
 			fillOpacity: 0,
 			strokeWidth: 0.7,
 			color: this.options.color

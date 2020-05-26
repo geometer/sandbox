@@ -57,7 +57,8 @@ def sceneData(scene, args, attempts=10, extra_points=()):
         scene_lines.append({'pt0': pts[0].name, 'pt1': pts[-1].name})
     scene_circles = []
     for circle in circles:
-        scene_circles.append({'centre': circle.centre.name, 'radius': float(placement.radius(circle))})
+        xy = placement.location(circle.centre)
+        scene_circles.append({'x': float(xy.x), 'y': float(xy.y), 'radius': float(placement.radius(circle))})
     return {'points': scene_points, 'lines': scene_lines, 'circles': scene_circles}
 
 def treeData(scene, prop, args):
