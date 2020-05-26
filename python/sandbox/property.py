@@ -18,12 +18,18 @@ class Property:
 
     @reason.setter
     def reason(self, value):
+        if self.__reason:
+            for pre in self.__reason.premises:
+                pre.implications.remove(self)
         while self in value.all_premises:
             # TODO: select the best variant
             for prop in value.all_premises:
                 if prop == self:
                     value = prop.reason
         self.__reason = value
+        for pre in self.__reason.premises:
+            pre.implications.add(self)
+        self.fire_premises_change()
 
     @property
     def essential(self):
