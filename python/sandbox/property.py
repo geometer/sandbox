@@ -7,7 +7,7 @@ from .util import LazyComment, divide, good_angles, normalize_number, keys_for_t
 
 class Property:
     def __init__(self, property_key):
-        self.implications = set()
+        self.implications = []
         self.property_key = property_key
         self.__hash = None
         self.__reason = None
@@ -20,7 +20,7 @@ class Property:
     def reason(self, value):
         if self.__reason:
             for pre in self.__reason.premises:
-                pre.implications.remove(self)
+                pre.implications = [p for p in pre.implications if p is not self]
         while self in value.all_premises:
             # TODO: select the best variant
             for prop in value.all_premises:
@@ -28,7 +28,7 @@ class Property:
                     value = prop.reason
         self.__reason = value
         for pre in self.__reason.premises:
-            pre.implications.add(self)
+            pre.implications.append(self)
         self.fire_premises_change()
 
     @property
