@@ -202,9 +202,7 @@ class Explainer:
                 )
 
             for ss0, ss1 in itertools.combinations([p for p in self.context.list(SameOrOppositeSideProperty) if p.same], 2):
-                for pts in itertools.combinations(ss0.segment.points + ss1.segment.points, 3):
-                    if len(set(pts)) < 3:
-                        continue
+                for pts in itertools.combinations(set(ss0.segment.points + ss1.segment.points), 3):
                     ncl = self.context.collinearity_property(*pts)
                     if ncl:
                         break
@@ -255,12 +253,11 @@ class Explainer:
                 pt0 = av.angle.vector0.end
                 pt1 = av.angle.vector1.end
                 for vec in (av.angle.vector0, av.angle.vector1):
-                    for nc in self.context.list(PointsCollinearityProperty, [vec.as_segment]):
-                        if nc.collinear or av_is_too_old and nc.reason.obsolete:
+                    for pt2 in self.context.not_collinear_points(vec.as_segment):
+                        nc = self.context.collinearity_property(pt2, *vec.points)
+                        if av_is_too_old and nc.reason.obsolete:
                             continue
-                        segment = vertex.segment(
-                            next(pt for pt in nc.points if pt not in vec.points)
-                        )
+                        segment = vertex.segment(pt2)
                         yield (
                             SameOrOppositeSideProperty(segment, pt0, pt1, True),
                             LazyComment('%s, %s', av, nc), #TODO: better comment
@@ -270,10 +267,10 @@ class Explainer:
             for av in [av for av in angle_values if av.degree == 180]:
                 av_is_too_old = av.reason.obsolete
                 segment = av.angle.vector0.end.segment(av.angle.vector1.end)
-                for ncl in self.context.list(PointsCollinearityProperty, [segment]):
-                    if ncl.collinear or av_is_too_old and ncl.reason.obsolete:
+                for vertex in self.context.not_collinear_points(segment):
+                    ncl = self.context.collinearity_property(vertex, *segment.points)
+                    if av_is_too_old and ncl.reason.obsolete:
                         continue
-                    vertex = next(pt for pt in ncl.points if pt not in segment.points)
                     angle = vertex.angle(*segment.points)
                     yield (
                         PointInsideAngleProperty(av.angle.vertex, angle),
@@ -291,9 +288,9 @@ class Explainer:
                 if base.vertex is None:
                     continue
                 for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
-                    for col in [p for p in self.context.list(PointsCollinearityProperty, [vec0.as_segment]) if p.collinear]:
+                    for pt in self.context.collinear_points(vec0.as_segment):
+                        col = self.context.collinearity_property(pt, *vec0.points)
                         reasons_are_too_old = aa.reason.obsolete and col.reason.obsolete
-                        pt = next(pt for pt in col.points if pt not in vec0.points)
                         for angle in [pt.angle(vec1.end, p) for p in vec0.points]:
                             ka = self.context.angle_value_property(angle)
                             if ka is None or reasons_are_too_old and ka.reason.obsolete:
@@ -388,9 +385,9 @@ class Explainer:
 #                if base.vertex is None:
 #                    continue
 #                for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
-#                    for col in [p for p in self.context.list(PointsCollinearityProperty, [vec0.as_segment]) if p.collinear]:
+#                    for pt in self.context.collinear_points(vec0.as_segment):
+#                        col = self.context.collinearity_property(pt, *vec0.points)
 #                        reasons_are_too_old = oa.reason.obsolete and col.reason.obsolete
-#                        pt = next(pt for pt in col.points if pt not in vec0.points)
 #                        for angle in [pt.angle(vec1.end, p) for p in vec0.points]:
 #                            ka = self.context.angle_value_property(angle)
 #                            if ka is None or reasons_are_too_old and ka.reason.obsolete:
@@ -410,9 +407,9 @@ class Explainer:
                     continue
                 ka_is_too_old = ka.reason.obsolete
                 for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
-                    for col in [p for p in self.context.list(PointsCollinearityProperty, [vec0.as_segment]) if p.collinear]:
+                    for pt in self.context.collinear_points(vec0.as_segment):
+                        col = self.context.collinearity_property(pt, *vec0.points)
                         reasons_are_too_old = ka_is_too_old and col.reason.obsolete
-                        pt = next(pt for pt in col.points if pt not in vec0.points)
                         for angle in [pt.angle(vec1.end, p) for p in vec0.points]:
                             ka2 = self.context.angle_value_property(angle)
                             if ka2 is None or reasons_are_too_old and ka2.reason.obsolete:
@@ -452,8 +449,8 @@ class Explainer:
 #
 #                for vec0, vec1 in [(ang.vector0, ang.vector1), (ang.vector1, ang.vector0)]:
 #                    for i, j in [(0, 1), (1, 0)]:
-#                        ncl = self.context.not_collinear_property(*vec0.points, vec1.points[i])
-#                        if ncl is None:
+#                        ncl = self.context.collinearity(*vec0.points, vec1.points[i])
+#                        if ncl is None or ncl.collinear:
 #                            continue
 #                        ne = self.context.not_equal_property(*vec1.points)
 #                        if ne is None:
@@ -512,9 +509,9 @@ class Explainer:
                 )
 
             for sos in self.context.list(SameOrOppositeSideProperty):
-                for col in [p for p in self.context.list(PointsCollinearityProperty, [sos.segment]) if p.collinear]:
+                for other in self.context.collinear_points(sos.segment):
+                    col = self.context.collinearity_property(other, *sos.segment.points)
                     too_old = sos.reason.obsolete and col.reason.obsolete
-                    other = next(pt for pt in col.points if pt not in sos.segment.points)
                     for pt in sos.segment.points:
                         ne = self.context.not_equal_property(other, pt)
                         if ne is None or too_old and ne.reason.obsolete:
@@ -525,7 +522,7 @@ class Explainer:
                             [sos, col, ne]
                         )
 
-        for prop, comment in enumerate_predefined_properties(self.scene, max_layer=self.__options.get('max_layer', 'user')):
+        for prop, comment in enumerate_predefined_properties(self.scene, max_layer=self.__max_layer):
             self.__reason(prop, comment, [])
 
         self.__iteration_step_count = 0

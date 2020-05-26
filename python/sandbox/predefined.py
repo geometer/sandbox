@@ -77,6 +77,14 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
                 cnstr.comment
             )
 
+    for cnstr in scene.constraints(Constraint.Kind.angle_value):
+        angle = cnstr.params[0]
+        if all_visible(angle.point_set):
+            yield (
+                AngleValueProperty(angle, cnstr.params[1]),
+                cnstr.comment
+            )
+
     for cnstr in scene.constraints(Constraint.Kind.parallel_vectors):
         if all(all_visible(param.points) for param in cnstr.params):
             yield (ParallelVectorsProperty(*cnstr.params), cnstr.comment)
@@ -140,17 +148,19 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
 
     for cnstr in scene.constraints(Constraint.Kind.opposite_side):
         line = cnstr.params[2]
-        yield (
-            SameOrOppositeSideProperty(line.point0.segment(line.point1), cnstr.params[0], cnstr.params[1], False),
-            cnstr.comment
-        )
+        if all_visible((line.point0, line.point1, *cnstr.params[0:1])):
+            yield (
+                SameOrOppositeSideProperty(line.point0.segment(line.point1), cnstr.params[0], cnstr.params[1], False),
+                cnstr.comment
+            )
 
     for cnstr in scene.constraints(Constraint.Kind.same_side):
         line = cnstr.params[2]
-        yield (
-            SameOrOppositeSideProperty(line.point0.segment(line.point1), cnstr.params[0], cnstr.params[1], True),
-            cnstr.comment
-        )
+        if all_visible((line.point0, line.point1, *cnstr.params[0:1])):
+            yield (
+                SameOrOppositeSideProperty(line.point0.segment(line.point1), cnstr.params[0], cnstr.params[1], True),
+                cnstr.comment
+            )
 
     for cnstr in scene.constraints(Constraint.Kind.angles_ratio):
         angle0 = cnstr.params[0]

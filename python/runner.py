@@ -67,7 +67,7 @@ def run_sample(scene, *props):
             return 0
 
         def all_premises(prop):
-            premises = PropertySet()
+            premises = PropertySet(explainer.context.points)
             for p in prop.reason.all_premises:
                 premises.add(p)
             return premises

@@ -605,15 +605,19 @@ class CoreScene:
             assert isinstance(segment, CoreScene.Segment)
             assert self.scene == segment.scene
             assert coef != 0
-            args = dict(kwargs)
-            comment = args.get('comment')
+            for cnstr in self.scene.constraints(Constraint.Kind.length_ratio):
+                if set(cnstr.params) == {self, segment, coef}:
+                    cnstr.update(kwargs)
+                    return
+            comment = kwargs.get('comment')
             if not comment:
+                kwargs = dict(kwargs)
                 if coef == 1:
                     comment = LazyComment('given: |%s| == |%s|', self, segment)
                 else:
                     comment = LazyComment('given: |%s| == %s |%s|', self, coef, segment)
-                args['comment'] = comment
-            return self.scene.constraint(Constraint.Kind.length_ratio, self, segment, coef, **args)
+                kwargs['comment'] = comment
+            return self.scene.constraint(Constraint.Kind.length_ratio, self, segment, coef, **kwargs)
 
         def congruent_constraint(self, segment, **kwargs):
             """
@@ -709,6 +713,9 @@ class CoreScene:
             # self = angle * ratio
             self.scene.assert_angle(angle)
             self.scene.constraint(Constraint.Kind.angles_ratio, self, angle, ratio, **kwargs)
+
+        def value_constraint(self, degree, **kwargs):
+            self.scene.constraint(Constraint.Kind.angle_value, self, degree, **kwargs)
 
         def is_acute_constraint(self, **kwargs):
             self.scene.constraint(Constraint.Kind.acute_angle, self, **kwargs)
@@ -973,6 +980,7 @@ class Constraint:
         perpendicular             = ('perpendicular', Stage.adjustment, CoreScene.Segment, CoreScene.Segment)
         acute_angle               = ('acute_angle', Stage.validation, CoreScene.Angle)
         obtuse_angle              = ('obtuse_angle', Stage.validation, CoreScene.Angle)
+        angle_value               = ('angle_value', Stage.adjustment, CoreScene.Angle, int)
 
         def __init__(self, name, stage, *params):
             self.stage = stage
@@ -1001,11 +1009,6 @@ class Constraint:
         self.update(kwargs)
 
     def update(self, kwargs):
-        if 'comment' in kwargs:
-            kwargs = dict(kwargs)
-            if not self.comment:
-                self.comment = kwargs['comment']
-            del kwargs['comment']
         self.__dict__.update(kwargs)
 
     def __str__(self):
