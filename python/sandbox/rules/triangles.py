@@ -62,6 +62,30 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
             tr1 = [ca0.angle1.vertex, ca1.angle0.vertex]
         tr0.append(next(p for p in ca0.angle0.point_set if p not in tr0))
         tr1.append(next(p for p in ca0.angle1.point_set if p not in tr1))
+
+        for i, j in [(0, 1), (0, 2), (1, 2)]:
+            seg0 = tr0[i].segment(tr0[j])
+            seg1 = tr1[i].segment(tr1[j])
+            if seg0 == seg1:
+                yield (
+                    CongruentTrianglesProperty(tr0, tr1),
+                    LazyComment('congruent angles %s and %s and common side %s', ca0, ca1, seg0),
+                    [ca0, ca1, ncl]
+                )
+                return
+        for i, j in [(0, 1), (0, 2), (1, 2)]:
+            rat, val = self.context.length_ratio_property_and_value(seg0, seg1, True)
+            if rat is None:
+                continue
+            if val == 1:
+                yield (
+                    CongruentTrianglesProperty(tr0, tr1),
+                    LazyComment('congruent angles %s and %s and congruent sides %s and %s', ca0, ca1, seg0, seg1),
+                    [ca0, ca1, ncl]
+                )
+                return
+            break
+
         yield (
             SimilarTrianglesProperty(tr0, tr1),
             LazyComment('congruent angles %s and %s', ca0, ca1),
