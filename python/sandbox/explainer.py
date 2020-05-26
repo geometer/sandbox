@@ -39,6 +39,7 @@ class Explainer:
             ProportionalLengthsToLengthsRatioRule(self.context),
             LengthRatiosWithCommonDenominatorRule(self.context),
             SumOfThreeAnglesOnLineRule(self.context),
+            SumOfThreeAnglesOnLineRule2(self.context),
             SumOfThreeAnglesInTriangleRule(self.context),
             AngleBySumOfThreeRule(self.context),
             SumOfTwoAnglesByThreeRule(self.context),
@@ -180,12 +181,12 @@ class Explainer:
                         [pia]
                     )
                 yield (
-                    SameOrOppositeSideProperty(pia.angle.vector0.as_segment, pia.point, pia.angle.vector1.end, True),
+                    SameOrOppositeSideProperty(pia.angle.vectors[0].as_segment, pia.point, pia.angle.vectors[1].end, True),
                     '', #TODO: write comment
                     [pia]
                 )
                 yield (
-                    SameOrOppositeSideProperty(pia.angle.vector1.as_segment, pia.point, pia.angle.vector0.end, True),
+                    SameOrOppositeSideProperty(pia.angle.vectors[1].as_segment, pia.point, pia.angle.vectors[0].end, True),
                     '', #TODO: write comment
                     [pia]
                 )
@@ -239,9 +240,9 @@ class Explainer:
             for av in [av for av in angle_values if av.degree == 0]:
                 av_is_too_old = av.reason.obsolete
                 vertex = av.angle.vertex
-                pt0 = av.angle.vector0.end
-                pt1 = av.angle.vector1.end
-                for vec in (av.angle.vector0, av.angle.vector1):
+                pt0 = av.angle.vectors[0].end
+                pt1 = av.angle.vectors[1].end
+                for vec in av.angle.vectors:
                     for pt2 in self.context.not_collinear_points(vec.as_segment):
                         nc = self.context.collinearity_property(pt2, *vec.points)
                         if av_is_too_old and nc.reason.obsolete:
@@ -255,7 +256,7 @@ class Explainer:
 
             for av in [av for av in angle_values if av.degree == 180]:
                 av_is_too_old = av.reason.obsolete
-                segment = av.angle.vector0.end.segment(av.angle.vector1.end)
+                segment = av.angle.vectors[0].end.segment(av.angle.vectors[1].end)
                 for vertex in self.context.not_collinear_points(segment):
                     ncl = self.context.collinearity_property(vertex, *segment.points)
                     if av_is_too_old and ncl.reason.obsolete:
@@ -276,7 +277,7 @@ class Explainer:
                 base = aa.angle
                 if base.vertex is None:
                     continue
-                for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
+                for vec0, vec1 in [base.vectors, reversed(base.vectors)]:
                     for pt in self.context.collinear_points(vec0.as_segment):
                         col = self.context.collinearity_property(pt, *vec0.points)
                         reasons_are_too_old = aa.reason.obsolete and col.reason.obsolete
@@ -297,7 +298,7 @@ class Explainer:
                 base = aa.angle
                 if base.vertex is None:
                     continue
-                for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
+                for vec0, vec1 in [base.vectors, reversed(base.vectors)]:
                     for perp in self.context.list(PerpendicularSegmentsProperty, [vec0.as_segment]):
                         other = perp.segments[0] if vec0.as_segment == perp.segments[1] else perp.segments[1]
                         if vec1.end not in other.points:
@@ -323,7 +324,7 @@ class Explainer:
                 base = aa.angle
                 if base.vertex is None:
                     continue
-                for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
+                for vec0, vec1 in [base.vectors, reversed(base.vectors)]:
                     for perp in self.context.list(PerpendicularSegmentsProperty, [vec0.as_segment]):
                         other = perp.segments[0] if vec0.as_segment == perp.segments[1] else perp.segments[1]
                         if vec1.end not in other.points:
@@ -347,7 +348,7 @@ class Explainer:
                 base = aa.angle
                 if base.vertex is None:
                     continue
-                for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
+                for vec0, vec1 in [base.vectors, reversed(base.vectors)]:
                     for perp in self.context.list(PerpendicularSegmentsProperty, [vec0.as_segment]):
                         other = perp.segments[0] if vec0.as_segment == perp.segments[1] else perp.segments[1]
                         if vec1.end not in other.points:
@@ -373,7 +374,7 @@ class Explainer:
 #                base = oa.angle
 #                if base.vertex is None:
 #                    continue
-#                for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
+#                for vec0, vec1 in [base.vectors, reversed(base.vectors)]:
 #                    for pt in self.context.collinear_points(vec0.as_segment):
 #                        col = self.context.collinearity_property(pt, *vec0.points)
 #                        reasons_are_too_old = oa.reason.obsolete and col.reason.obsolete
@@ -395,7 +396,7 @@ class Explainer:
                 if ka.degree >= 90 or base.vertex is None:
                     continue
                 ka_is_too_old = ka.reason.obsolete
-                for vec0, vec1 in [(base.vector0, base.vector1), (base.vector1, base.vector0)]:
+                for vec0, vec1 in [base.vectors, reversed(base.vectors)]:
                     for pt in self.context.collinear_points(vec0.as_segment):
                         col = self.context.collinearity_property(pt, *vec0.points)
                         reasons_are_too_old = ka_is_too_old and col.reason.obsolete
@@ -416,8 +417,8 @@ class Explainer:
                 vertex = aa0.angle.vertex
                 if vertex != aa1.angle.vertex:
                     continue
-                vectors0 = [aa0.angle.vector0, aa0.angle.vector1]
-                vectors1 = [aa1.angle.vector0, aa1.angle.vector1]
+                vectors0 = aa0.angle.vectors
+                vectors1 = aa1.angle.vectors
                 common = next((v for v in vectors0 if v in vectors1), None)
                 if common is None:
                     continue
@@ -436,7 +437,7 @@ class Explainer:
 #                zero_is_too_old = zero.reason.obsolete
 #                ang = zero.angle
 #
-#                for vec0, vec1 in [(ang.vector0, ang.vector1), (ang.vector1, ang.vector0)]:
+#                for vec0, vec1 in [ang.vectors, reversed(ang.vectors)]:
 #                    for i, j in [(0, 1), (1, 0)]:
 #                        ncl = self.context.collinearity(*vec0.points, vec1.points[i])
 #                        if ncl is None or ncl.collinear:
@@ -464,35 +465,35 @@ class Explainer:
 
             for zero in [p for p in self.context.list(AngleValueProperty) if p.angle.vertex is None and p.degree == 0]:
                 ang = zero.angle
-                ncl = self.context.collinearity_property(*ang.vector0.points, ang.vector1.points[0])
+                ncl = self.context.collinearity_property(*ang.vectors[0].points, ang.vectors[1].points[0])
                 if ncl is None or ncl.collinear:
                     continue
-                ne = self.context.not_equal_property(*ang.vector1.points)
+                ne = self.context.not_equal_property(*ang.vectors[1].points)
                 if ne is None:
                     continue
                 if zero.reason.obsolete and ncl.reason.obsolete and ne.reason.obsolete:
                     continue
-                comment = LazyComment('%s ↑↑ %s', ang.vector0, ang.vector1)
+                comment = LazyComment('%s ↑↑ %s', *ang.vectors)
                 premises = [zero, ncl, ne]
                 yield (
-                    SameOrOppositeSideProperty(ang.vector0.as_segment, *ang.vector1.points, True),
+                    SameOrOppositeSideProperty(ang.vectors[0].as_segment, *ang.vectors[1].points, True),
                     comment, premises
                 )
                 yield (
-                    SameOrOppositeSideProperty(ang.vector1.as_segment, *ang.vector0.points, True),
+                    SameOrOppositeSideProperty(ang.vectors[1].as_segment, *ang.vectors[0].points, True),
                     comment, premises
                 )
                 yield (
                     SameOrOppositeSideProperty(
-                        ang.vector0.start.segment(ang.vector1.end),
-                        ang.vector0.end, ang.vector1.start, False
+                        ang.vectors[0].start.segment(ang.vectors[1].end),
+                        ang.vectors[0].end, ang.vectors[1].start, False
                     ),
                     comment, premises
                 )
                 yield (
                     SameOrOppositeSideProperty(
-                        ang.vector1.start.segment(ang.vector0.end),
-                        ang.vector1.end, ang.vector0.start, False
+                        ang.vectors[1].start.segment(ang.vectors[0].end),
+                        ang.vectors[1].end, ang.vectors[0].start, False
                     ),
                     comment, premises
                 )

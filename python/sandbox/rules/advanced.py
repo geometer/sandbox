@@ -44,8 +44,8 @@ class Triangle30_60_90SidesRule(SingleSourceRule):
 
     def apply(self, prop):
         vertex = prop.angle.vertex
-        pt0 = prop.angle.vector0.end
-        pt1 = prop.angle.vector1.end
+        pt0 = prop.angle.vectors[0].end
+        pt1 = prop.angle.vectors[1].end
         value = self.context.angle_value_property(pt0.angle(vertex, pt1))
         if value is None or value.degree not in (30, 60) or prop.reason.obsolete and value.reason.obsolete:
             return

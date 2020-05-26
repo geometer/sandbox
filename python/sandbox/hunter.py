@@ -194,7 +194,7 @@ class Hunter:
                 continue
             arc = self.placement.angle(angle)
             if angle.vertex is None and arc > np.pi / 2:
-                angle = angle.vector1.angle(angle.vector0.reversed)
+                angle = angle.vectors[1].angle(angle.vectors[0].reversed)
                 arc = np.pi - arc
             yield AngleWrapper(angle, arc)
 

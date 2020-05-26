@@ -72,8 +72,7 @@ class BasePlacement:
         return (end0.x - start0.x) * (end1.y - start1.y) - (end0.y - start0.y) * (end1.x - start1.x)
 
     def angle(self, angle):
-        vec0 = angle.vector0
-        vec1 = angle.vector1
+        vec0, vec1 = angle.vectors
         cos = self.scalar_product(vec0, vec1) / self.length(vec0) / self.length(vec1)
         if cos >= 1:
             return 0
@@ -134,8 +133,8 @@ class Placement(BasePlacement):
                 pt = self.location(constraint.params[0])
                 angle = constraint.params[1]
                 vertex = self.location(angle.vertex)
-                side_pt0 = self.location(angle.vector0.end)
-                side_pt1 = self.location(angle.vector1.end)
+                side_pt0 = self.location(angle.vectors[0].end)
+                side_pt1 = self.location(angle.vectors[1].end)
                 clo0 = self.clockwise(vertex, side_pt0, pt)
                 clo1 = self.clockwise(vertex, pt, side_pt1)
                 clo2 = self.clockwise(vertex, side_pt0, side_pt1)
@@ -172,10 +171,10 @@ class Placement(BasePlacement):
                 return self.scalar_product(vec0, vec1) < 0
             if constraint.kind == Constraint.Kind.acute_angle:
                 angle = constraint.params[0]
-                return self.scalar_product(angle.vector0, angle.vector1) > 0
+                return self.scalar_product(*angle.vectors) > 0
             if constraint.kind == Constraint.Kind.obtuse_angle:
                 angle = constraint.params[0]
-                return self.scalar_product(angle.vector0, angle.vector1) < 0
+                return self.scalar_product(*angle.vectors) < 0
 
             assert False, 'Constraint `%s` not supported in placement' % constraint.kind
 
