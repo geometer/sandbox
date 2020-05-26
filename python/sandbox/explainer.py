@@ -123,7 +123,6 @@ class Explainer:
         reason = Reason(self.__iteration_step_count, comment, premises)
         def insert(pro):
             for pre in pro.reason.premises:
-                pre.implications.add(pro)
                 if self.context.index_of(pre) is None:
                     insert(pre)
             self.context.add(pro)
@@ -141,13 +140,7 @@ class Explainer:
                 existing.same = True
             #### --- HACK ---
             reason.obsolete = existing.reason.obsolete
-            if self.context.index_of(existing) is not None:
-                for pre in existing.reason.premises:
-                    pre.implications.remove(existing)
             existing.reason = reason
-            for pre in existing.reason.premises:
-                pre.implications.add(existing)
-            existing.fire_premises_change()
             if hasattr(prop, 'rule'):
                 existing.rule = prop.rule
             elif hasattr(existing, 'rule'):
