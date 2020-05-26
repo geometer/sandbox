@@ -194,16 +194,15 @@ class ParallelVectorsProperty(Property):
     Two vectors are parallel (or at least one of them has zero length)
     """
     def __init__(self, vector0, vector1):
-        self.vector0 = vector0
-        self.vector1 = vector1
-        super().__init__(frozenset([vector0, vector1]))
+        self.vectors = (vector0, vector1)
+        super().__init__(frozenset(self.vectors))
 
     def keys(self):
-        return [self.vector0.as_segment, self.vector1.as_segment]
+        return [self.vectors[0].as_segment, self.vectors[1].as_segment]
 
     @property
     def description(self):
-        return LazyComment('%s ↑↑ %s', self.vector0, self.vector1)
+        return LazyComment('%s ↑↑ %s', *self.vectors)
 
 class ParallelSegmentsProperty(Property):
     """
@@ -390,9 +389,9 @@ class AngleValueProperty(LinearAngleProperty):
     def description(self):
         if self.angle.vertex:
             if self.degree == 0:
-                return LazyComment('%s, %s in the same direction from %s', self.angle.vector0.end, self.angle.vector1.end, self.angle.vertex)
+                return LazyComment('%s, %s in the same direction from %s', self.angle.vectors[0].end, self.angle.vectors[1].end, self.angle.vertex)
             if self.degree == 180:
-                return LazyComment('%s lies inside segment %s', self.angle.vertex, self.angle.vector0.end.segment(self.angle.vector1.end))
+                return LazyComment('%s lies inside segment %s', self.angle.vertex, self.angle.vectors[0].end.segment(self.angle.vectors[1].end))
         return LazyComment('%s = %s', self.angle, self.degree_str)
 
     def compare_values(self, other):

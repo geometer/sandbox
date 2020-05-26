@@ -18,8 +18,8 @@ class SegmentWithEndpointsOnAngleSidesRule(SingleSourceRule):
 
     def apply(self, prop):
         A = prop.angle.vertex
-        B = prop.angle.vector0.end
-        C = prop.angle.vector1.end
+        B = prop.angle.vectors[0].end
+        C = prop.angle.vectors[1].end
         D = prop.point
         AD = A.segment(D)
         BC = B.segment(C)
@@ -302,6 +302,50 @@ class SumOfThreeAnglesInTriangleRule(Rule):
             [ne0, ne1, ne2]
         )
 
+class SumOfThreeAnglesOnLineRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        avs = [p for p in self.context.angle_value_properties_for_degree(0) if p.angle.vertex]
+        for av0, av1 in itertools.combinations(avs, 2):
+            if av0.angle.point_set == av1.angle.point_set:
+                yield (av0, av1)
+
+    def apply(self, src):
+        key = frozenset(src)
+        if key in self.processed:
+            return
+        self.processed.add(key)
+
+        av0, av1 = src
+        third = next(pt for pt in av0.angle.point_set if pt not in (av0.angle.vertex, av1.angle.vertex))
+        angle = third.angle(av0.angle.vertex, av1.angle.vertex)
+        yield (
+            AngleValueProperty(angle, 180),
+            LazyComment('%s = %s and %s = %s', av0.angle, av0.degree_str, av1.angle, av1.degree_str),
+            [av0, av1]
+        )
+
+class SumOfThreeAnglesOnLineRule2(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        return [p for p in self.context.angle_value_properties_for_degree(180) if p.angle.vertex and p not in self.processed]
+
+    def apply(self, prop):
+        self.processed.add(prop)
+
+        for vec0, vec1 in (prop.angle.vectors, reversed(prop.angle.vectors)):
+            yield (
+                AngleValueProperty(vec0.end.angle(vec0.start, vec1.end), 0),
+                LazyComment('%s lies between %s and %s', vec0.start, vec0.end, vec1.end),
+                [prop]
+            )
+
 class LengthRatioRule(SingleSourceRule):
     property_type = ProportionalLengthsProperty
 
@@ -335,8 +379,8 @@ class ParallelVectorsRule(SingleSourceRule):
     property_type = ParallelVectorsProperty
 
     def apply(self, para):
-        vec0 = para.vector0
-        vec1 = para.vector1
+        vec0 = para.vectors[0]
+        vec1 = para.vectors[1]
         ne0 = self.context.not_equal_property(*vec0.points)
         ne1 = self.context.not_equal_property(*vec1.points)
         if ne0 is None or ne1 is None:
@@ -386,7 +430,7 @@ class Degree90ToPerpendicularSegmentsRule(Rule):
     def apply(self, prop):
         if not prop.reason.obsolete:
             yield (
-                PerpendicularSegmentsProperty(prop.angle.vector0.as_segment, prop.angle.vector1.as_segment),
+                PerpendicularSegmentsProperty(prop.angle.vectors[0].as_segment, prop.angle.vectors[1].as_segment),
                 prop.reason.comment,
                 prop.reason.premises
             )
@@ -398,7 +442,7 @@ class CommonPerpendicularRule(SingleSourceRule):
         return prop.degree == 0
 
     def apply(self, prop):
-        segments = (prop.angle.vector0.as_segment, prop.angle.vector1.as_segment)
+        segments = (prop.angle.vectors[0].as_segment, prop.angle.vectors[1].as_segment)
         for seg0, seg1 in (segments, reversed(segments)):
             for perp in self.context.list(PerpendicularSegmentsProperty, [seg0]):
                 if prop.reason.obsolete and perp.reason.obsolete:
@@ -775,7 +819,7 @@ class PartOfAcuteAngleIsAcuteRule(SingleSourceRule):
         kind = self.context.angle_kind_property(prop.angle)
         if kind is None or kind.kind == AngleKindProperty.Kind.obtuse or prop.reason.obsolete and kind.reason.obsolete:
             return
-        for vec in prop.angle.vector0, prop.angle.vector1:
+        for vec in prop.angle.vectors:
             angle = prop.angle.vertex.angle(vec.end, prop.point)
             yield (
                 AngleKindProperty(angle, AngleKindProperty.Kind.acute),
@@ -850,12 +894,12 @@ class AngleTypesInObtuseangledTriangleRule(SingleSourceRule):
             return
         ang = prop.angle
         yield (
-            AngleKindProperty(ang.vector0.end.angle(ang.vertex, ang.vector1.end), AngleKindProperty.Kind.acute),
+            AngleKindProperty(ang.vectors[0].end.angle(ang.vertex, ang.vectors[1].end), AngleKindProperty.Kind.acute),
             LazyComment('An angle of %s, another angle is %s', Scene.Triangle(*ang.point_set), prop.kind),
             [prop]
         )
         yield (
-            AngleKindProperty(ang.vector1.end.angle(ang.vertex, ang.vector0.end), AngleKindProperty.Kind.acute),
+            AngleKindProperty(ang.vectors[1].end.angle(ang.vertex, ang.vectors[0].end), AngleKindProperty.Kind.acute),
             LazyComment('An angle of %s, another angle is %s', Scene.Triangle(*ang.point_set), prop.kind),
             [prop]
         )
@@ -876,8 +920,8 @@ class VerticalAnglesRule(Rule):
             return
         yield (
             AngleRatioProperty(
-                ng0.vertex.angle(ng0.vector0.end, ng1.vector0.end),
-                ng0.vertex.angle(ng0.vector1.end, ng1.vector1.end),
+                ng0.vertex.angle(ng0.vectors[0].end, ng1.vectors[0].end),
+                ng0.vertex.angle(ng0.vectors[1].end, ng1.vectors[1].end),
                 1
             ),
             LazyComment('vertical angles'),
@@ -885,8 +929,8 @@ class VerticalAnglesRule(Rule):
         )
         yield (
             AngleRatioProperty(
-                ng0.vertex.angle(ng0.vector0.end, ng1.vector1.end),
-                ng0.vertex.angle(ng0.vector1.end, ng1.vector0.end),
+                ng0.vertex.angle(ng0.vectors[0].end, ng1.vectors[1].end),
+                ng0.vertex.angle(ng0.vectors[1].end, ng1.vectors[0].end),
                 1
             ),
             LazyComment('vertical angles'),
@@ -903,7 +947,7 @@ class ReversedVerticalAnglesRule(Rule):
 
     def apply(self, prop):
         angle = prop.angle
-        line = angle.vector0.end.segment(angle.vector1.end)
+        line = angle.vectors[0].end.segment(angle.vectors[1].end)
         for oppo in self.context.list(SameOrOppositeSideProperty, [line]):
             if oppo.same:
                 continue
@@ -915,8 +959,8 @@ class ReversedVerticalAnglesRule(Rule):
             for pt0, pt1, bit in ((*oppo.points, 0x1), (*reversed(oppo.points), 0x2)):
                 if mask & bit:
                     continue
-                ang0 = angle.vertex.angle(angle.vector0.end, pt0)
-                ang1 = angle.vertex.angle(angle.vector1.end, pt1)
+                ang0 = angle.vertex.angle(angle.vectors[0].end, pt0)
+                ang1 = angle.vertex.angle(angle.vectors[1].end, pt1)
                 ar = self.context.angle_ratio_property(ang0, ang1)
                 if ar is None:
                     continue
@@ -925,7 +969,7 @@ class ReversedVerticalAnglesRule(Rule):
                     continue
                 yield (
                     AngleValueProperty(angle.vertex.angle(pt0, pt1), 180),
-                    LazyComment('%s = %s and %s lies on segment %s', ang0, ang1, angle.vertex, angle.vector0.end.segment(angle.vector1.end)),
+                    LazyComment('%s = %s and %s lies on segment %s', ang0, ang1, angle.vertex, angle.vectors[0].end.segment(angle.vectors[1].end)),
                     [ar, prop, oppo]
                 )
             if mask != original:
@@ -1019,8 +1063,8 @@ class SupplementaryAnglesRule(SingleSourceRule):
                 continue
             yield (
                 SumOfTwoAnglesProperty(
-                    ang.vertex.angle(ang.vector0.end, pt),
-                    ang.vertex.angle(pt, ang.vector1.end),
+                    ang.vertex.angle(ang.vectors[0].end, pt),
+                    ang.vertex.angle(pt, ang.vectors[1].end),
                     180
                 ),
                 LazyComment('supplementary angles'),
@@ -1035,14 +1079,14 @@ class TransversalRule(Rule):
         ang = prop.angle
         for point in ang.point_set:
             for nep in self.context.non_coincident_points(point):
-                common0 = next((pt for pt in (point, nep) if pt in ang.vector0.points), None)
+                common0 = next((pt for pt in (point, nep) if pt in ang.vectors[0].points), None)
                 if common0 is None:
                     continue
-                common1 = next((pt for pt in (point, nep) if pt in ang.vector1.points), None)
+                common1 = next((pt for pt in (point, nep) if pt in ang.vectors[1].points), None)
                 if common1 is None:
                     continue
                 vec = common0.vector(next(pt for pt in (point, nep) if pt != common0))
-                if vec.as_segment in (ang.vector0.as_segment, ang.vector1.as_segment):
+                if vec.as_segment in (ang.vectors[0].as_segment, ang.vectors[1].as_segment):
                     continue
 
                 ne = self.context.coincidence_property(point, nep)
@@ -1050,29 +1094,29 @@ class TransversalRule(Rule):
                     continue
 
                 rev = prop.degree == 180
-                if ang.vector0.start == common0:
-                    vec0 = ang.vector0
+                if ang.vectors[0].start == common0:
+                    vec0 = ang.vectors[0]
                 else:
-                    vec0 = ang.vector0.reversed
+                    vec0 = ang.vectors[0].reversed
                     rev = not rev
                 ngl0 = vec.angle(vec0)
 
                 if common0 == common1:
-                    if ang.vector1.start == common1:
-                        vec1 = ang.vector1
+                    if ang.vectors[1].start == common1:
+                        vec1 = ang.vectors[1]
                     else:
-                        vec1 = ang.vector1.reversed
+                        vec1 = ang.vectors[1].reversed
                         rev = not rev
                     ngl1 = vec.angle(vec1)
                 else:
-                    if ang.vector1.start == common1:
-                        vec1 = ang.vector1
+                    if ang.vectors[1].start == common1:
+                        vec1 = ang.vectors[1]
                         rev = not rev
                     else:
-                        vec1 = ang.vector1.reversed
+                        vec1 = ang.vectors[1].reversed
                     ngl1 = vec.reversed.angle(vec1)
 
-                if ang.vertex is None and (vec0 == ang.vector0) != (vec1 == ang.vector1):
+                if ang.vertex is None and (vec0 == ang.vectors[0]) != (vec1 == ang.vectors[1]):
                     continue
 
                 if rev:
@@ -1106,12 +1150,12 @@ class SameAngleRule(Rule):
             return
         yield (
             AngleRatioProperty(
-                ng0.vertex.angle(ng0.vector0.end, ng1.vector0.end),
-                ng0.vertex.angle(ng0.vector1.end, ng1.vector1.end),
+                ng0.vertex.angle(ng0.vectors[0].end, ng1.vectors[0].end),
+                ng0.vertex.angle(ng0.vectors[1].end, ng1.vectors[1].end),
                 1,
                 same=True
             ),
-            LazyComment('%s ↑↑ %s and %s ↑↑ %s', ng0.vector0, ng0.vector1, ng1.vector0, ng1.vector1),
+            LazyComment('%s ↑↑ %s and %s ↑↑ %s', *ng0.vectors, *ng1.vectors),
             [av0, av1]
         )
 
@@ -1145,8 +1189,8 @@ class CeviansIntersectionRule(Rule):
 
     def apply(self, src):
         av0, av1 = src
-        ends0 = (av0.angle.vector0.end, av0.angle.vector1.end)
-        ends1 = (av1.angle.vector0.end, av1.angle.vector1.end)
+        ends0 = (av0.angle.vectors[0].end, av0.angle.vectors[1].end)
+        ends1 = (av1.angle.vectors[0].end, av1.angle.vectors[1].end)
         vertex = next((pt for pt in ends0 if pt in ends1), None)
         if vertex is None:
             return
@@ -1188,8 +1232,8 @@ class TwoAnglesWithCommonSideRule(SingleSourceRule):
         av = self.context.angle_value_property(prop.angle)
         if av is None or prop.reason.obsolete and av.reason.obsolete:
             return
-        angle0 = prop.angle.vertex.angle(prop.angle.vector0.end, prop.point)
-        angle1 = prop.angle.vertex.angle(prop.angle.vector1.end, prop.point)
+        angle0 = prop.angle.vertex.angle(prop.angle.vectors[0].end, prop.point)
+        angle1 = prop.angle.vertex.angle(prop.angle.vectors[1].end, prop.point)
         yield (
             SumOfTwoAnglesProperty(angle0, angle1, av.degree),
             LazyComment('%s + %s = %s = %s', angle0, angle1, prop.angle, av.degree_str),

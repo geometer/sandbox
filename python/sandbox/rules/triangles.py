@@ -115,10 +115,10 @@ class CongruentTrianglesByAngleAndTwoSidesRule(Rule):
             return self.context.length_ratio_property_and_value(seg0, seg1, True)
 
         original = mask
-        for vec0, vec1, bit in [(ang0.vector0, ang0.vector1, 1), (ang0.vector1, ang0.vector0, 2)]:
+        for vec0, vec1, bit in [(*ang0.vectors, 1), (ang0.vectors[1], ang0.vectors[0], 2)]:
             if bit & mask:
                 continue
-            rsn0 = congruent_segments(vec0.as_segment, ang1.vector0.as_segment)
+            rsn0 = congruent_segments(vec0.as_segment, ang1.vectors[0].as_segment)
             if rsn0 is None:
                 continue
             if isinstance(rsn0, tuple):
@@ -126,7 +126,7 @@ class CongruentTrianglesByAngleAndTwoSidesRule(Rule):
                     mask |= bit
                     continue
                 rsn0 = rsn0[0]
-            rsn1 = congruent_segments(vec1.as_segment, ang1.vector1.as_segment)
+            rsn1 = congruent_segments(vec1.as_segment, ang1.vectors[1].as_segment)
             if rsn1 is None:
                 continue
             mask |= bit
@@ -148,7 +148,7 @@ class CongruentTrianglesByAngleAndTwoSidesRule(Rule):
             yield (
                 CongruentTrianglesProperty(
                     (ang0.vertex, vec0.points[1], vec1.points[1]),
-                    (ang1.vertex, ang1.vector0.end, ang1.vector1.end)
+                    (ang1.vertex, ang1.vectors[0].end, ang1.vectors[1].end)
                 ), comment, premises
             )
 
@@ -166,10 +166,10 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
     def apply(self, src):
         ang0, ang1 = src
         ca = None
-        for vec0, vec1 in [(ang0.vector0, ang0.vector1), (ang0.vector1, ang0.vector0)]:
+        for vec0, vec1 in [ang0.vectors, reversed(ang0.vectors)]:
             segments = (
                 vec0.as_segment, vec1.as_segment,
-                ang1.vector0.as_segment, ang1.vector1.as_segment
+                ang1.vectors[0].as_segment, ang1.vectors[1].as_segment
             )
             for inds in [(0, 1, 2, 3), (0, 2, 1, 3), (1, 0, 3, 2), (2, 0, 3, 1)]:
                 elr = self.context.equal_length_ratios_property(*[segments[i] for i in inds])
@@ -183,7 +183,7 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
             yield (
                 SimilarTrianglesProperty(
                     (ang0.vertex, vec0.end, vec1.end),
-                    (ang1.vertex, ang1.vector0.end, ang1.vector1.end)
+                    (ang1.vertex, ang1.vectors[0].end, ang1.vectors[1].end)
                 ),
                 LazyComment('%s and %s', elr, ca),
                 [elr, ca]

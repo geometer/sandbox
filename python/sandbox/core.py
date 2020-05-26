@@ -669,27 +669,26 @@ class CoreScene:
     class Angle(Figure):
         def __init__(self, vector0, vector1):
             assert vector0 != vector1 and vector0 != vector1.reversed
-            self.vector0 = vector0
-            self.vector1 = vector1
-            self.vertex = self.vector0.start if self.vector0.start == self.vector1.start else None
+            self.vectors = (vector0, vector1)
+            self.vertex = vector0.start if vector0.start == vector1.start else None
             self.point_set = frozenset([*vector0.points, *vector1.points])
 
         @property
         def scene(self):
-            return self.vector0.scene
+            return self.vectors[0].scene
 
         @property
         def endpoints(self):
             assert self.vertex, 'Cannot locate endpoints of angle with no vertex'
-            return (self.vector0.end, self.vector1.end)
+            return (self.vectors[0].end, self.vectors[1].end)
 
         def bisector_line(self, **kwargs):
             assert self.vertex, 'Cannot construct bisector of angle %s with no vertex' % self
-            circle = self.vertex.circle_through(self.vector0.end, layer='invisible')
-            line = self.vertex.line_through(self.vector1.end, layer='invisible')
+            circle = self.vertex.circle_through(self.vectors[0].end, layer='invisible')
+            line = self.vertex.line_through(self.vectors[1].end, layer='invisible')
             X = circle.intersection_point(line, layer='invisible')
-            self.vertex.same_direction_constraint(X, self.vector1.end)
-            Y = X.translated_point(self.vector0, layer='invisible')
+            self.vertex.same_direction_constraint(X, self.vectors[1].end)
+            Y = X.translated_point(self.vectors[0], layer='invisible')
             self.point_on_bisector_constraint(Y, guaranteed=True)
             if kwargs.get('comment') is None:
                 kwargs = dict(kwargs)
@@ -702,8 +701,8 @@ class CoreScene:
                 kwargs['comment'] = LazyComment(
                     '%s is the bisector of %s', self.vertex.vector(point).as_ray, self
                 )
-            angle0 = self.vertex.angle(self.vector0.end, point)
-            angle1 = self.vertex.angle(self.vector1.end, point)
+            angle0 = self.vertex.angle(self.vectors[0].end, point)
+            angle1 = self.vertex.angle(self.vectors[1].end, point)
             point.inside_constraint(self, **kwargs)
             self.ratio_constraint(angle0, 2, **kwargs)
             self.ratio_constraint(angle1, 2, **kwargs)
@@ -724,8 +723,8 @@ class CoreScene:
             self.scene.constraint(Constraint.Kind.obtuse_angle, self, **kwargs)
 
         def is_right_constraint(self, **kwargs):
-            self.vector0.as_segment.line_through().perpendicular_constraint(
-                self.vector1.as_segment.line_through(),
+            self.vectors[0].as_segment.line_through().perpendicular_constraint(
+                self.vectors[1].as_segment.line_through(),
                 **kwargs
             )
 
@@ -733,22 +732,22 @@ class CoreScene:
             if self.vertex:
                 return LazyComment(
                     'ang__%s__%s__%s',
-                    LazyString(self.vector0.end),
+                    LazyString(self.vectors[0].end),
                     LazyString(self.vertex),
-                    LazyString(self.vector1.end)
+                    LazyString(self.vectors[1].end)
                 )
             return LazyComment(
                 'ang4__%s__%s__%s__%s',
-                LazyString(self.vector0.start),
-                LazyString(self.vector0.end),
-                LazyString(self.vector1.start),
-                LazyString(self.vector1.end)
+                LazyString(self.vectors[0].start),
+                LazyString(self.vectors[0].end),
+                LazyString(self.vectors[1].start),
+                LazyString(self.vectors[1].end)
             )
 
         def __str__(self):
             if self.vertex:
-                return str(LazyComment('∠ %s %s %s', self.vector0.end, self.vertex, self.vector1.end))
-            return '∠(%s, %s)' % (self.vector0, self.vector1)
+                return str(LazyComment('∠ %s %s %s', self.vectors[0].end, self.vertex, self.vectors[1].end))
+            return '∠(%s, %s)' % self.vectors
 
     class Ray(Figure):
         def __init__(self, start, point):
