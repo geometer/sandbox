@@ -613,9 +613,9 @@ class CoreScene:
             if not comment:
                 kwargs = dict(kwargs)
                 if coef == 1:
-                    comment = LazyComment('given: |%s| == |%s|', self, segment)
+                    comment = LazyComment('given: |%s| = |%s|', self, segment)
                 else:
-                    comment = LazyComment('given: |%s| == %s |%s|', self, coef, segment)
+                    comment = LazyComment('given: |%s| = %s |%s|', self, coef, segment)
                 kwargs['comment'] = comment
             return self.scene.constraint(Constraint.Kind.length_ratio, self, segment, coef, **kwargs)
 
