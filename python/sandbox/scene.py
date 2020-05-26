@@ -92,13 +92,15 @@ class Scene(CoreScene):
         bisector2 = angles[2].bisector_line(layer='auxiliary')
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
-            kwargs['comment'] = LazyComment('Incentre of %s', triangle)
+            kwargs['comment'] = LazyComment('The incentre of %s', triangle)
         centre = bisector0.intersection_point(bisector1, **kwargs)
         centre.belongs_to(bisector2)
-        angles[0].point_on_bisector_constraint(centre)
-        angles[1].point_on_bisector_constraint(centre)
-        angles[2].point_on_bisector_constraint(centre)
-        centre.inside_triangle_constraint(triangle, comment=LazyComment('%s is incentre of %s', centre, triangle))
+        for angle in angles:
+            angle.point_on_bisector_constraint(
+                centre,
+                comment=LazyComment('the incentre %s of %s lies on the biscetor of %s', centre, triangle, angle)
+            )
+        centre.inside_triangle_constraint(triangle, comment=LazyComment('the incentre %s lies inside %s', centre, triangle))
         return centre
 
     def incircle(self, triangle, **kwargs):
@@ -230,6 +232,19 @@ class Scene(CoreScene):
         pts[0].segment(pts[1]).perpendicular_constraint(pts[1].segment(pts[2]), **kwargs)
         pts[2].segment(pts[3]).perpendicular_constraint(pts[0].segment(pts[3]), **kwargs)
         pts[2].segment(pts[3]).perpendicular_constraint(pts[1].segment(pts[2]), **kwargs)
+
+        pts[0].angle(pts[1], pts[3]).value_constraint(90, guaranteed=True, **kwargs)
+        pts[0].angle(pts[1], pts[2]).value_constraint(45, guaranteed=True, **kwargs)
+        pts[0].angle(pts[3], pts[2]).value_constraint(45, guaranteed=True, **kwargs)
+        pts[1].angle(pts[2], pts[0]).value_constraint(90, guaranteed=True, **kwargs)
+        pts[1].angle(pts[2], pts[3]).value_constraint(45, guaranteed=True, **kwargs)
+        pts[1].angle(pts[3], pts[0]).value_constraint(45, guaranteed=True, **kwargs)
+        pts[2].angle(pts[3], pts[1]).value_constraint(90, guaranteed=True, **kwargs)
+        pts[2].angle(pts[3], pts[0]).value_constraint(45, guaranteed=True, **kwargs)
+        pts[2].angle(pts[0], pts[1]).value_constraint(45, guaranteed=True, **kwargs)
+        pts[3].angle(pts[0], pts[2]).value_constraint(90, guaranteed=True, **kwargs)
+        pts[3].angle(pts[0], pts[1]).value_constraint(45, guaranteed=True, **kwargs)
+        pts[3].angle(pts[1], pts[2]).value_constraint(45, guaranteed=True, **kwargs)
 
         self.convex_quadrilateral_constraint(*pts, **kwargs)
 
