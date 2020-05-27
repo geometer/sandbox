@@ -1225,7 +1225,7 @@ class PlanePositionsToLinePositionsRule(SingleSourceRule):
         else:
             yield (
                 AngleValueProperty(crossing.angle(pt0, pt1), 180),
-                LazyComment('%s is the intersection point of segment %s and line %s', crossing, pt0.segment(pt1), prop.segment),
+                LazyComment('%s is the intersection point of segment %s and line %s', crossing, pt0.segment(pt1), prop.segment.as_line),
                 [prop] + reasons
             )
 
