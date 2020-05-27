@@ -116,13 +116,23 @@ class LineSet:
 
             return LineSet.best_candidate(candidates)
 
+    class Circle:
+        def __init__(self):
+            self.premises_graph = nx.Graph()
+            self.points_on = {} # point => set of props
+            self.points_inside = {} # point => set of props
+            self.points_outside = {} # point => set of props
+
     def __init__(self):
         self.__segment_to_line = {}
+        self.__key_to_circle = {}
         self.__all_lines = []
+        self.__all_circles = []
         self.__different_lines_graph = nx.Graph()
         self.__coincidence = {}   # {point, point} => prop
         self.__collinearity = {}  # {point, point, point} => prop
         self.__point_on_line = {} # (point, segment) => prop
+        self.__point_and_circle = {} # (point, set of three points) => prop
 
     def __add_same_line_property(self, prop):
         line0 = self.__segment_to_line.get(prop.segments[0])
@@ -170,6 +180,17 @@ class LineSet:
             self.__all_lines.append(line)
         return line
 
+    def __circle_by_key(self, key):
+        circle = self.__key_to_circle.get(key)
+        if circle is None:
+            circle = LineSet.Circle()
+            circle.premises_graph.add_node(key)
+            for pt in key:
+                circle.points_on[pt] = set()
+            self.__key_to_circle[key] = circle
+            self.__all_circles.append(circle)
+        return circle
+
     def __add_different_lines_property(self, prop):
         line0 = self.__line_by_segment(prop.segments[0])
         line1 = self.__line_by_segment(prop.segments[1])
@@ -189,6 +210,21 @@ class LineSet:
         else:
             storage[prop.point] = {prop}
 
+    def __add_point_and_circle_property(self, prop):
+        self.__point_and_circle[(prop.point, prop.circle_key)] = prop
+        circle = self.__circle_by_key(prop.circle_key)
+        if prop.location == PointAndCircleProperty.Kind.on:
+            storage = circle.points_on
+        elif prop.location == PointAndCircleProperty.Kind.inside:
+            storage = circle.points_inside
+        elif prop.location == PointAndCircleProperty.Kind.outside:
+            storage = circle.points_outside
+        prop_set = storage.get(prop.point)
+        if prop_set:
+            prop_set.add(prop)
+        else:
+            storage[prop.point] = {prop}
+
     def add(self, prop):
         if isinstance(prop, LineCoincidenceProperty):
             if prop.coincident:
@@ -201,6 +237,10 @@ class LineSet:
             self.__collinearity[prop.property_key] = prop
         elif isinstance(prop, PointsCoincidenceProperty):
             self.__coincidence[prop.property_key] = prop
+        elif isinstance(prop, CircleCoincidenceProperty):
+            pass
+        elif isinstance(prop, PointAndCircleProperty):
+            self.__add_point_and_circle_property(prop)
 
     def coincidence_property(self, pt0, pt1):
         cached = self.__coincidence.get(frozenset([pt0, pt1]))
@@ -427,7 +467,7 @@ class CircleSet:
             if not prop.collinear:
                 self.by_three_points(*prop.points, True)
         elif isinstance(prop, PointAndCircleProperty):
-            circle = self.by_three_points(*prop.circle, True)
+            circle = self.by_three_points(*prop.circle_key, True)
             if prop.location == PointAndCircleProperty.Kind.on:
                 self.add_point_to_circle(prop.point, circle)
             elif prop.location == PointAndCircleProperty.Kind.inside:
@@ -1180,6 +1220,7 @@ class PropertySet(LineSet):
             super().add(prop)
             self.circles.add(prop)
         elif type_key == PointAndCircleProperty:
+            super().add(prop)
             self.circles.add(prop)
         elif type_key == EqualLengthRatiosProperty:
             self.__length_ratios.add(prop)
@@ -1260,7 +1301,7 @@ class PropertySet(LineSet):
             elif isinstance(prop, SameCyclicOrderProperty):
                 existing = self.same_cyclic_order_property(prop.cycle0, prop.cycle1)
             elif isinstance(prop, PointAndCircleProperty):
-                existing = self.point_and_circle_property(prop.point, prop.circle)
+                existing = self.point_and_circle_property(prop.point, prop.circle_key)
             elif isinstance(prop, PointsCollinearityProperty):
                 existing = self.collinearity_property(*prop.points)
             elif isinstance(prop, PointOnLineProperty):

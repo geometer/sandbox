@@ -73,31 +73,60 @@ class PointAndCircleProperty(Property):
             return self.name
 
     @staticmethod
-    def unique_key(point, cpoints):
-        return (point, frozenset(cpoints))
+    def unique_key(point, cpoints_set):
+        return (point, cpoints_set)
 
     def __init__(self, point, cpoint0, cpoint1, cpoint2, location):
         self.point = point
-        self.circle = (cpoint0, cpoint1, cpoint2)
+        self.circle_key = frozenset((cpoint0, cpoint1, cpoint2))
         self.location = location
-        super().__init__(PointAndCircleProperty.unique_key(self.point, self.circle))
+        super().__init__(PointAndCircleProperty.unique_key(self.point, self.circle_key))
 
     def keys(self):
         return self.property_key
 
     @property
     def description(self):
+        # TODO: single circle identifier in comment
         if self.location == PointAndCircleProperty.Kind.inside:
-            return LazyComment('%s lies inside the circle through %s, %s, and %s', self.point, *self.circle)
+            return LazyComment('%s lies inside the circle through %s, %s, and %s', self.point, *self.circle_key)
         elif self.location == PointAndCircleProperty.Kind.outside:
-            return LazyComment('%s lies outside of the circle through %s, %s, and %s', self.point, *self.circle)
+            return LazyComment('%s lies outside of the circle through %s, %s, and %s', self.point, *self.circle_key)
         elif self.location == PointAndCircleProperty.Kind.on:
-            return LazyComment('%s lies on the circle through %s, %s, and %s', self.point, *self.circle)
+            return LazyComment('%s lies on the circle through %s, %s, and %s', self.point, *self.circle_key)
         else:
             raise Exception('location %s is not of type PointAndCircleProperty.Kind' % self.location)
 
     def compare_values(self, other):
         return self.location == other.location
+
+class CircleCoincidenceProperty(Property):
+    """
+    Two circles (defined by triples of points) are [not] coincident
+    """
+    def __init__(self, triple0, triple1, coincident):
+        self.circle_keys = (frozenset(triple0), frozenset(triple1))
+        super().__init__(frozenset(self.circle_keys))
+        self.coincident = coincident
+
+    @property
+    def essential(self):
+        return False
+
+    @property
+    def description(self):
+        # TODO: single circle identifier in comment
+        if self.coincident:
+            return LazyComment(
+                '%s %s %s is the same circle as %s %s %s', *self.circle_keys[0], *self.circle_keys[1]
+            )
+        else:
+            return LazyComment(
+                '%s %s %s and %s %s %s are different circles', *self.circle_keys[0], self.circle_keys[1]
+            )
+
+    def compare_values(self, other):
+        return self.coincident == other.coincident
 
 class ConcyclicPointsProperty(Property):
     """
