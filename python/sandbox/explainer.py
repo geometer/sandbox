@@ -192,6 +192,18 @@ class Explainer:
                 )
 
             for ss0, ss1 in itertools.combinations([p for p in self.context.list(SameOrOppositeSideProperty) if p.same], 2):
+                if ss0.points[0] in ss1.points:
+                    common = ss0.points[0]
+                    other0 = ss0.points[1]
+                elif ss0.points[1] in ss1.points:
+                    common = ss0.points[1]
+                    other0 = ss0.points[0]
+                else:
+                    continue
+                other1 = ss1.points[1] if ss1.points[0] == common else ss1.points[0]
+                if other0 not in ss1.segment.points or other1 not in ss0.segment.points:
+                    continue
+
                 for pts in itertools.combinations(set(ss0.segment.points + ss1.segment.points), 3):
                     ncl = self.context.collinearity_property(*pts)
                     if ncl:
@@ -199,25 +211,6 @@ class Explainer:
                 else:
                     continue
                 if ncl.collinear:
-                    continue
-
-                if ss0.points[0] in ss1.points:
-                    if ss0.points[1] in ss1.points:
-                        continue
-                    common = ss0.points[0]
-                    other0 = ss0.points[1]
-                    other1 = ss1.points[0] if ss1.points[1] == common else ss1.points[1]
-                else:
-                    common = ss0.points[1]
-                    other0 = ss0.points[0]
-                    if ss1.points[0] == common:
-                        other1 = ss1.points[1]
-                    elif ss1.points[1] == common:
-                        other1 = ss1.points[0]
-                    else:
-                        continue
-
-                if other0 not in ss1.segment.points or other1 not in ss0.segment.points:
                     continue
 
                 vertex, reasons = self.context.intersection_of_lines(ss0.segment, ss1.segment)
