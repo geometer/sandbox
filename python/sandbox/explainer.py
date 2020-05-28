@@ -35,10 +35,10 @@ class Explainer:
             MissingLineKeysRule(self.context),
 
             #ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule(self.context),
-            CyclicQuadrilateralRule(self.context),
+            #CyclicQuadrilateralRule(self.context),
             PointsOnCircleRule(self.context),
-            InscribedAnglesWithCommonCircularArcRule(self.context),
-            PointsOnChordRule(self.context),
+            #InscribedAnglesWithCommonCircularArcRule(self.context),
+            #PointsOnChordRule(self.context),
             #TwoChordsIntersectionRule(self.context),
             ThreeCollinearPointsOnCircleRule(self.context),
             LengthRatioTransitivityRule(self.context),

@@ -92,28 +92,31 @@ class PointsOnCircleRule(SingleSourceRule):
 
     def __init__(self, context):
         super().__init__(context)
-        self.processed = set()
-
-    def accepts(self, prop):
-        return prop not in self.processed
+        self.processed = {}
 
     def apply(self, prop):
-        for triple in itertools.combinations(prop.points, 3):
-            ncl = self.context.collinearity_property(*triple)
-            if ncl:
-                # TODO: better way to report contadiction
-                assert not ncl.collinear
-                break
-        else:
+        mask = self.processed.get(prop, 0)
+        if mask == 0xF:
             return
 
-        self.processed.add(prop)
-        for pt in [pt for pt in prop.points if pt not in triple]:
+        original = mask
+        for triple, bit in zip(itertools.combinations(prop.points, 3), (1, 2, 4, 8)):
+            if mask & bit:
+                continue
+            ncl = self.context.collinearity_property(*triple)
+            if ncl is None:
+                continue
+            mask |= bit
+            if ncl.collinear:
+                continue
+            pt = next(pt for pt in prop.points if pt not in triple)
             yield (
                 PointAndCircleProperty(pt, *triple, PointAndCircleProperty.Kind.on),
                 LazyComment('%s, %s, %s, and %s are concyclic', pt, *triple),
                 [prop, ncl]
             )
+        if mask != original:
+            self.processed[prop] = mask
 
 class ThreeCollinearPointsOnCircleRule(Rule):
     def __init__(self, context):

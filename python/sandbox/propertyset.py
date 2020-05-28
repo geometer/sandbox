@@ -123,6 +123,10 @@ class LineSet:
             self.points_inside = {} # point => set of props
             self.points_outside = {} # point => set of props
 
+        @property
+        def keys(self):
+            return self.premises_graph.nodes
+
     def __init__(self):
         self.__segment_to_line = {}
         self.__key_to_circle = {}
@@ -386,6 +390,10 @@ class LineSet:
     @property
     def lines(self):
         return list(self.__all_lines)
+
+    @property
+    def circles(self):
+        return list(self.__all_circles)
 
     def non_coincident_points(self, point):
         collection = set()
@@ -1181,7 +1189,7 @@ class PropertySet(LineSet):
         self.__combined = {} # (type, key) => [prop] and type => prop
         self.__full_set = {} # prop => prop
         self.__indexes = {} # prop => number
-        self.circles = CircleSet(self)
+        self.__circles = CircleSet(self)
         self.__angle_kinds = {} # angle => prop
         self.__linear_angles = LinearAngleSet()
         self.__angle_ratios = AngleRatioPropertySet()
@@ -1218,10 +1226,10 @@ class PropertySet(LineSet):
             self.__length_ratios.add(prop)
         elif type_key == PointsCollinearityProperty:
             super().add(prop)
-            self.circles.add(prop)
+            self.__circles.add(prop)
         elif type_key == PointAndCircleProperty:
             super().add(prop)
-            self.circles.add(prop)
+            #self.__circles.add(prop)
         elif type_key == EqualLengthRatiosProperty:
             self.__length_ratios.add(prop)
         elif type_key == SameCyclicOrderProperty:
@@ -1428,13 +1436,13 @@ class PropertySet(LineSet):
         return (None, [])
 
     def n_concyclic_points(self, n):
-        return self.circles.n_concyclic_points(n)
+        return self.__circles.n_concyclic_points(n)
 
     def point_and_circle_property(self, pt, cpoints):
         prop = self.__full_set.get(PointAndCircleProperty.unique_key(pt, cpoints))
         if prop:
             return prop
-        return self.circles.point_and_circle_property(pt, cpoints)
+        return self.__circles.point_and_circle_property(pt, cpoints)
 
     def collinear_points(self, segment):
         points = []
@@ -1449,6 +1457,17 @@ class PropertySet(LineSet):
         return points
 
     def stats(self):
+        for circle in self.circles:
+            print('CIRCLE')
+            for key in circle.keys:
+                print('KEY %s %s %s' % tuple(key))
+            for pt in circle.points_on:
+                print('ON %s' % pt)
+            for pt in circle.points_inside:
+                print('INSIDE %s' % pt)
+            for pt in circle.points_outside:
+                print('OUTSIDE %s' % pt)
+
         def type_presentation(kind):
             return kind.__doc__.strip() if kind.__doc__ else kind.__name__
 
