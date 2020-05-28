@@ -38,7 +38,7 @@ class Explainer:
             #CyclicQuadrilateralRule(self.context),
             PointsOnCircleRule(self.context),
             ConcyclicToSameCircleRule(self.context),
-            #InscribedAnglesWithCommonCircularArcRule(self.context),
+            InscribedAnglesWithCommonCircularArcRule(self.context),
             #PointsOnChordRule(self.context),
             #TwoChordsIntersectionRule(self.context),
             ThreeCollinearPointsOnCircleRule(self.context),

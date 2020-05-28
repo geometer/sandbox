@@ -263,11 +263,19 @@ class PointsOnChordRule(Rule):
                 )
 
 class InscribedAnglesWithCommonCircularArcRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
     def sources(self):
-        return [triple[0] for triple in self.context.n_concyclic_points(4)]
+        for circle in self.context.circles:
+            for four in itertools.combinations(circle.points_on, 4):
+                yield four
 
     def apply(self, points):
-        # TODO: implement duplicate protection
+        prop = None
+
+        # TODO: use processed cache
         for inds0, inds1 in [((0, 1), (2, 3)), ((0, 2), (1, 3)), ((0, 3), (1, 2))]:
             pair0 = [points[i] for i in inds0]
             pair1 = [points[i] for i in inds1]
@@ -277,6 +285,8 @@ class InscribedAnglesWithCommonCircularArcRule(Rule):
                 )
                 if sos is None:
                     continue
+                if prop is None:
+                    prop = self.context.concyclicity_property(*points)
                 for pp0, pp1 in ((p0, p1), (p1, p0)):
                     ang0 = pp0[0].angle(*pp1)
                     ang1 = pp0[1].angle(*pp1)
@@ -284,13 +294,11 @@ class InscribedAnglesWithCommonCircularArcRule(Rule):
                         yield (
                             AngleRatioProperty(ang0, ang1, 1),
                             LazyComment('%s and %s are inscribed and subtend the same arc', ang0, ang1),
-                            # TODO: add concyclic points reasons
-                            [sos]
+                            [prop, sos]
                         )
                     else:
                         yield (
                             SumOfTwoAnglesProperty(ang0, ang1, 180),
                             LazyComment('%s and %s are inscribed and subtend complementary arcs', ang0, ang1),
-                            # TODO: add concyclic points reasons
-                            [sos]
+                            [prop, sos]
                         )

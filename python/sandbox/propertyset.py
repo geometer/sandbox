@@ -141,6 +141,7 @@ class LineSet:
         self.__different_lines_graph = nx.Graph()
         self.__coincidence = {}   # {point, point} => prop
         self.__collinearity = {}  # {point, point, point} => prop
+        self.__concyclicity = {}  # {point, point, point, point} => prop
         self.__point_on_line = {} # (point, segment) => prop
         self.__point_and_circle = {} # (point, set of three points) => prop
 
@@ -296,6 +297,8 @@ class LineSet:
                 pass
         elif isinstance(prop, PointAndCircleProperty):
             self.__add_point_and_circle_property(prop)
+        elif isinstance(prop, ConcyclicPointsProperty):
+            self.__concyclicity[frozenset(prop.points)] = prop
 
     def coincidence_property(self, pt0, pt1):
         cached = self.__coincidence.get(frozenset([pt0, pt1]))
@@ -315,6 +318,15 @@ class LineSet:
             return prop
         line = self.__segment_to_line.get(segment)
         return line.point_on_line_property(segment, point) if line else None
+
+    def concyclicity_property(self, pt0, pt1, pt2, pt3):
+        pts = (pt0, pt1, pt2, pt3)
+        key = frozenset(pts)
+        cached = self.__concyclicity.get(key)
+        if cached:
+            return cached
+        # TODO: implement
+        return None
 
     def collinearity_property(self, pt0, pt1, pt2):
         pts = (pt0, pt1, pt2)
@@ -362,7 +374,7 @@ class LineSet:
                         pol = line.point_on_line_property(seg, pt)
                     premises.append(pol)
                 prop = PointsCollinearityProperty(*all_pts, on)
-                candidates.append(_synthetic_property(prop, comment, premises))
+                candidates.append(_synthetic_property(prop, comment(seg), premises))
 
         triangle = Scene.Triangle(pt0, pt1, pt2)
         lines = [(side, self.__segment_to_line.get(side)) for side in triangle.sides]
@@ -1285,7 +1297,7 @@ class PropertySet(LineSet):
             self.__length_ratios.add(prop)
         elif type_key == SameCyclicOrderProperty:
             self.__cyclic_orders.add(prop)
-        elif type_key in (PointsCoincidenceProperty, LineCoincidenceProperty, PointOnLineProperty, CircleCoincidenceProperty):
+        elif type_key in (PointsCoincidenceProperty, LineCoincidenceProperty, PointOnLineProperty, CircleCoincidenceProperty, ConcyclicPointsProperty):
             super().add(prop)
         elif type_key == SameOrOppositeSideProperty:
             self.__two_points_relatively_to_line[prop.property_key] = prop
