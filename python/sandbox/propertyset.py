@@ -127,6 +127,12 @@ class LineSet:
         def keys(self):
             return self.premises_graph.nodes
 
+        def add(self, prop):
+            self.premises_graph.add_edge(*prop.circle_keys, prop=prop)
+            for pt in (*prop.circle_keys[0], *prop.circle_keys[1]):
+                if pt not in self.points_on:
+                    self.points_on[pt] = set()
+
     def __init__(self):
         self.__segment_to_line = {}
         self.__key_to_circle = {}
@@ -172,6 +178,47 @@ class LineSet:
             self.__segment_to_line[prop.segments[0]] = line
             self.__segment_to_line[prop.segments[1]] = line
             self.__all_lines.append(line)
+
+    def __add_same_circle_property(self, prop):
+        circle0 = self.__key_to_circle.get(prop.circle_keys[0])
+        circle1 = self.__key_to_circle.get(prop.circle_keys[1])
+        if circle0 and circle1:
+            if circle0 != circle1:
+                for key in circle1.keys:
+                    self.__key_to_circle[key] = circle0
+                circle0.premises_graph.add_edges_from(circle1.premises_graph.edges(data=True))
+                for pt, data in circle1.points_on.items():
+                    known = circle0.points_on.get(pt)
+                    if known:
+                        known.update(data)
+                    else:
+                        circle0.points_on[pt] = data
+                for pt, data in circle1.points_inside.items():
+                    known = circle0.points_inside.get(pt)
+                    if known:
+                        known.update(data)
+                    else:
+                        circle0.points_inside[pt] = data
+                for pt, data in circle1.points_outside.items():
+                    known = circle0.points_outside.get(pt)
+                    if known:
+                        known.update(data)
+                    else:
+                        circle0.points_outside[pt] = data
+                self.__all_circles.remove(circle1)
+            circle0.add(prop)
+        elif circle0:
+            circle0.add(prop)
+            self.__key_to_circle[prop.circle_keys[1]] = circle0
+        elif circle1:
+            circle1.add(prop)
+            self.__key_to_circle[prop.circle_keys[0]] = circle1
+        else:
+            circle = LineSet.Circle()
+            circle.add(prop)
+            self.__key_to_circle[prop.circle_keys[0]] = circle
+            self.__key_to_circle[prop.circle_keys[1]] = circle
+            self.__all_circles.append(circle)
 
     def __line_by_segment(self, segment):
         line = self.__segment_to_line.get(segment)
@@ -242,7 +289,11 @@ class LineSet:
         elif isinstance(prop, PointsCoincidenceProperty):
             self.__coincidence[prop.property_key] = prop
         elif isinstance(prop, CircleCoincidenceProperty):
-            pass
+            if prop.coincident:
+                self.__add_same_circle_property(prop)
+            else:
+                #TODO: implement
+                pass
         elif isinstance(prop, PointAndCircleProperty):
             self.__add_point_and_circle_property(prop)
 
@@ -1234,7 +1285,7 @@ class PropertySet(LineSet):
             self.__length_ratios.add(prop)
         elif type_key == SameCyclicOrderProperty:
             self.__cyclic_orders.add(prop)
-        elif type_key in (PointsCoincidenceProperty, LineCoincidenceProperty, PointOnLineProperty):
+        elif type_key in (PointsCoincidenceProperty, LineCoincidenceProperty, PointOnLineProperty, CircleCoincidenceProperty):
             super().add(prop)
         elif type_key == SameOrOppositeSideProperty:
             self.__two_points_relatively_to_line[prop.property_key] = prop

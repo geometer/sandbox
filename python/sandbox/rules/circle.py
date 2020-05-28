@@ -118,6 +118,45 @@ class PointsOnCircleRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
+class ConcyclicToSameCircleRule(SingleSourceRule):
+    property_type = ConcyclicPointsProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
+    def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0x3F:
+            return
+
+        original = mask
+        for pair, bit in zip(itertools.combinations(prop.points, 2), (1, 2, 4, 8, 16, 32)):
+            if mask & bit:
+                continue
+            others = [pt for pt in prop.points if pt not in pair]
+            triple0 = (*pair, others[0])
+            ncl0 = self.context.collinearity_property(*triple0)
+            if ncl0 is None:
+                continue
+            if ncl0.collinear:
+                mask |= bit
+                continue
+            triple1 = (*pair, others[1])
+            ncl1 = self.context.collinearity_property(*triple1)
+            if ncl1 is None:
+                continue
+            mask |= bit
+            if ncl1.collinear:
+                continue
+            yield (
+                CircleCoincidenceProperty(triple0, triple1, True),
+                LazyComment('%s, %s, %s, and %s are concyclic', *pair, *others),
+                [prop, ncl0, ncl1]
+            )
+        if mask != original:
+            self.processed[prop] = mask
+
 class ThreeCollinearPointsOnCircleRule(Rule):
     def __init__(self, context):
         super().__init__(context)
