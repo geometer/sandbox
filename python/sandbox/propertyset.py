@@ -247,7 +247,7 @@ class LineSet:
                 others = [p for p in pts if p != pt_not_on]
                 all_pts = [pt_not_on] + others
                 def comment(seg):
-                    return LazyComment('%s belong to %s, %s and %s do not', pt_not_on, seg.as_line, *others)
+                    return LazyComment('%s and %s belong to %s, %s does not', *others, seg.as_line, pt_not_on)
             elif pt_not_on is None:
                 on = True
                 all_pts = pts
@@ -266,7 +266,7 @@ class LineSet:
                         pol = line.point_on_line_property(seg, pt)
                     premises.append(pol)
                 prop = PointsCollinearityProperty(*all_pts, on)
-                candidates.append(_synthetic_property(prop, comment, premises))
+                candidates.append(_synthetic_property(prop, comment(seg), premises))
 
         triangle = Scene.Triangle(pt0, pt1, pt2)
         lines = [(side, self.__segment_to_line.get(side)) for side in triangle.sides]
