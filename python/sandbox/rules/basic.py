@@ -1240,29 +1240,46 @@ class TwoAnglesWithCommonSideRule(SingleSourceRule):
             [prop, av]
         )
 
-class SameSideToInsideAngleRule(Rule):
-    def sources(self):
-        return itertools.combinations([op for op in self.context.list(SameOrOppositeSideProperty) if not op.same], 2)
+class SameSideToInsideAngleRule(SingleSourceRule):
+    property_type = SameOrOppositeSideProperty
 
-    def apply(self, src):
-        op0, op1 = src
-        if op0.reason.obsolete and op1.reason.obsolete:
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
+    def accepts(self, prop):
+        return not prop.same
+
+    def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0xF:
             return
-        set0 = {*op0.points, *op0.segment.points}
-        if set0 != {*op1.points, *op1.segment.points}:
-            return
-        centre = next((pt for pt in op0.segment.points if pt in op1.segment.points), None)
-        if centre is None:
-            return
-        triangle = Scene.Triangle(*[pt for pt in set0 if pt != centre])
-        comment = LazyComment('Line %s separates %s and %s, line %s separates %s and %s => the intersection %s lies inside %s', op0.segment.as_line, *op0.points, op1.segment.as_line, *op1.points, centre, triangle)
-        angles = triangle.angles
-        for i in range(0, 3):
-            yield (
-                PointInsideAngleProperty(centre, angles[i]),
-                comment,
-                [op0, op1]
-            )
+
+        original = mask
+        index = 0
+        for (centre, pt1) in (prop.segment.points, reversed(prop.segment.points)):
+            for (pt0, pt2) in (prop.points, reversed(prop.points)):
+                index += 1
+                bit = 1 << index
+                if mask & bit:
+                    continue
+                prop1 = self.context.two_points_relatively_to_line_property(centre.segment(pt0), pt1, pt2)
+                if prop1 is None:
+                    continue
+                mask |= bit
+                if prop1.same:
+                    continue
+                triangle = Scene.Triangle(pt0, pt1, pt2)
+                comment = LazyComment('Line %s separates %s and %s, line %s separates %s and %s => the intersection %s lies inside %s', prop.segment.as_line, *prop.points, prop1.segment.as_line, *prop1.points, centre, triangle)
+                angles = triangle.angles
+                for i in range(0, 3):
+                    yield (
+                        PointInsideAngleProperty(centre, angles[i]),
+                        comment,
+                        [prop, prop1]
+                    )
+        if mask != original:
+            self.processed[prop] = mask
 
 class TwoPointsRelativelyToLineTransitivityRule(Rule):
     def __init__(self, context):
