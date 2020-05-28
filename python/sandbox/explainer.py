@@ -40,7 +40,7 @@ class Explainer:
             ConcyclicToSameCircleRule(self.context),
             InscribedAnglesWithCommonCircularArcRule(self.context),
             #PointsOnChordRule(self.context),
-            #TwoChordsIntersectionRule(self.context),
+            TwoChordsIntersectionRule(self.context),
             ThreeCollinearPointsOnCircleRule(self.context),
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),

@@ -355,7 +355,7 @@ class LineSet:
                 others = [p for p in pts if p != pt_not_on]
                 all_pts = [pt_not_on] + others
                 def comment(seg):
-                    return LazyComment('%s belong to %s, %s and %s do not', pt_not_on, seg.as_line, *others)
+                    return LazyComment('%s and %s belong to %s, %s does not', *others, seg.as_line, pt_not_on)
             elif pt_not_on is None:
                 on = True
                 all_pts = pts

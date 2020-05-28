@@ -189,10 +189,17 @@ class ThreeCollinearPointsOnCircleRule(Rule):
                 )
 
 class TwoChordsIntersectionRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
     def sources(self):
-        return [triple[0] for triple in self.context.n_concyclic_points(4)]
+        for circle in self.context.circles:
+            for four in itertools.combinations(circle.points_on, 4):
+                yield four
 
     def apply(self, points):
+        prop = None
         # TODO: implement duplicate protection
         for inds0, inds1 in [((0, 1), (2, 3)), ((0, 2), (1, 3)), ((0, 3), (1, 2))]:
             pair0 = [points[i] for i in inds0]
@@ -219,11 +226,13 @@ class TwoChordsIntersectionRule(Rule):
                     comment = LazyComment('%s lies inside circle XXX', crossing),
                 else:
                     assert False, 'Contradiction'
+                if prop is None:
+                    prop = self.context.concyclicity_property(*points)
                 yield (
                     AngleValueProperty(angle, av.degree),
                     comment,
                     # TODO: concyclic property
-                    premises
+                    [prop] + premises
                 )
 
 class PointsOnChordRule(Rule):
