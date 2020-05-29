@@ -268,6 +268,7 @@ createTree: function(json) {
 				}
 				element.toggleClass('open');
 				element.toggleClass('closed');
+				e.stopPropagation();
 			});
 		}
 	});
