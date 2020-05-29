@@ -13,7 +13,7 @@ D.inside_triangle_constraint(triangle)
 A, B, C = triangle.points
 H = A.line_through(D).intersection_point(B.line_through(C), label='H')
 G = C.line_through(D).intersection_point(A.line_through(B), label='G')
-A.segment(B).congruent_constraint(C.segment(D), comment='given: |AB| = |CD|')
+A.segment(B).congruent_constraint(C.segment(D), comment='given')
 
 #Proof
 # +* 1* |AB| = |CD|                                *given
