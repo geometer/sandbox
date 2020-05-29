@@ -112,6 +112,7 @@ class CoreScene:
             assert isinstance(origin, CoreScene.Point.Origin), 'origin must be a Point.Origin, not %s' % type(origin)
             CoreScene.Object.__init__(self, scene, origin=origin, **kwargs)
             self.__vectors = {}
+            self.__perpendiculars = {}
 
         def css_class(self):
             return LazyComment('pt__%s', LazyString(self))
@@ -149,6 +150,10 @@ class CoreScene:
             Constructs a line through the point, perpendicular to the given line.
             """
             self.scene.assert_line(line)
+            existing = self.__perpendiculars.get(line)
+            if existing:
+                return existing.with_extra_args(**kwargs)
+
             new_point = CoreScene.Point(
                 self.scene,
                 CoreScene.Point.Origin.perp,
@@ -162,6 +167,7 @@ class CoreScene:
             if self not in line:
                 crossing = new_line.intersection_point(line, layer='auxiliary', comment=LazyComment('foot of the perpendicular from %s to %s', self, line.label))
             line.perpendicular_constraint(new_line, guaranteed=True)
+            self.__perpendiculars[line] = new_line
             return new_line
 
         def line_through(self, point, **kwargs):
