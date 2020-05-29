@@ -17,6 +17,12 @@ createScene: function(json) {
 		xs.push(pt.x);
 		ys.push(pt.y);
 	});
+	scene.circles.forEach(circ => {
+		xs.push(circ.x + circ.radius);
+		xs.push(circ.x - circ.radius);
+		ys.push(circ.y + circ.radius);
+		ys.push(circ.y - circ.radius);
+	});
 	var max_x = Math.max(... xs);
 	var min_x = Math.min(... xs);
 	var max_y = Math.max(... ys);
