@@ -191,7 +191,7 @@ class ThreeCollinearPointsOnCircleRule(Rule):
 class TwoChordsIntersectionRule(Rule):
     def __init__(self, context):
         super().__init__(context)
-        self.processed = {}
+        self.processed = set()
 
     def sources(self):
         for circle in self.context.circles:
@@ -200,40 +200,37 @@ class TwoChordsIntersectionRule(Rule):
 
     def apply(self, points):
         prop = None
-        # TODO: implement duplicate protection
-        for inds0, inds1 in [((0, 1), (2, 3)), ((0, 2), (1, 3)), ((0, 3), (1, 2))]:
-            pair0 = [points[i] for i in inds0]
-            pair1 = [points[i] for i in inds1]
-            segment0 = pair0[0].segment(pair0[1])
-            segment1 = pair1[0].segment(pair1[1])
-            crossing, premises = self.context.intersection_of_lines(segment0, segment1)
+        for pt0, pt1 in itertools.combinations(points, 2):
+            pt2, pt3 = [pt for pt in points if pt not in (pt0, pt1)]
+            chord0 = pt0.segment(pt1)
+            chord1 = pt2.segment(pt3)
+            key = frozenset([chord0, chord1])
+            if key in self.processed:
+                return
+            crossing, premises = self.context.intersection_of_lines(chord0, chord1)
             if crossing is None:
                 continue
-            if crossing in pair0 or crossing in pair1:
+            if crossing in points:
+                self.processed.add(key)
                 continue
-            angle0 = crossing.angle(*pair0)
-            angle1 = crossing.angle(*pair1)
-            av0 = self.context.angle_value_property(angle0)
-            av1 = self.context.angle_value_property(angle1)
-            for av, angle in ((av0, angle1), (av1, angle0)):
-                if av is None:
-                    continue
-                if av.degree == 0:
-                    # TODO: circle name
-                    comment = LazyComment('%s lies outside of circle XXX', crossing),
-                elif av.degree == 180:
-                    # TODO: circle name
-                    comment = LazyComment('%s lies inside circle XXX', crossing),
-                else:
-                    assert False, 'Contradiction'
-                if prop is None:
-                    prop = self.context.concyclicity_property(*points)
-                yield (
-                    AngleValueProperty(angle, av.degree),
-                    comment,
-                    # TODO: concyclic property
-                    [prop] + premises
-                )
+            av = self.context.angle_value_property(crossing.angle(pt0, pt1))
+            if av is None:
+                continue
+            self.processed.add(key)
+
+            if av.degree == 0:
+                comment = LazyComment('%s is the intersection of lines %s and %s, and lies outside of segment %s', crossing, chord1.as_line, chord0.as_line, chord0)
+            elif av.degree == 180:
+                comment = LazyComment('%s is the intersection of chords %s and %s, and lies inside %s', crossing, chord1, chord0, chord0)
+            else:
+                assert False, 'Contradiction'
+            if prop is None:
+                prop = self.context.concyclicity_property(*points)
+            yield (
+                AngleValueProperty(crossing.angle(pt2, pt3), av.degree),
+                comment,
+                [prop, av] + premises
+            )
 
 class PointsOnChordRule(Rule):
     def sources(self):
