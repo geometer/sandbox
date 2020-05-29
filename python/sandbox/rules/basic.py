@@ -1287,7 +1287,10 @@ class TwoPointsRelativelyToLineTransitivityRule(Rule):
         self.processed = set()
 
     def sources(self):
-        return [(p0, p1) for p0, p1 in itertools.combinations(self.context.list(SameOrOppositeSideProperty), 2) if p0.segment == p1.segment]
+        for p0 in self.context.list(SameOrOppositeSideProperty):
+            for p1 in self.context.list(SameOrOppositeSideProperty, [p0.segment]):
+                if p0 != p1:
+                    yield (p0, p1)
 
     def apply(self, src):
         key = frozenset(src)
