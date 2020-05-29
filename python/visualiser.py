@@ -85,7 +85,7 @@ def treeData(scene, prop, args):
         'property': htmlize(p),
         'comment': htmlize(p.reason.comment),
         'premises': [indexes[r] for r in p.reason.premises],
-        'priority': 'essential' if p.essential else 'normal'
+        'priority': p.priority
     } for p in all_props]
     
     return data;

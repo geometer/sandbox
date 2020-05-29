@@ -32,8 +32,15 @@ class Property:
         self.fire_premises_change()
 
     @property
-    def essential(self):
-        return True
+    def priority(self):
+        if not hasattr(self, 'rule') or self.rule == 'synthetic':
+            return self.__priority__
+        else:
+            return min(self.__priority__, self.rule.priority())
+
+    @property
+    def __priority__(self):
+        return 1
 
     def fire_premises_change(self):
         self.reason.reset_premises()
@@ -110,8 +117,8 @@ class CircleCoincidenceProperty(Property):
         self.coincident = coincident
 
     @property
-    def essential(self):
-        return False
+    def __priority__(self):
+        return 0
 
     @property
     def description(self):
@@ -138,8 +145,8 @@ class ConcyclicPointsProperty(Property):
         super().__init__(frozenset(self.points))
 
     @property
-    def essential(self):
-        return False
+    def __priority__(self):
+        return 0
 
     @property
     def description(self):
@@ -156,8 +163,8 @@ class PointOnLineProperty(Property):
         self.on_line = on_line
 
     @property
-    def essential(self):
-        return False
+    def __priority__(self):
+        return 0
 
     @property
     def description(self):
@@ -179,8 +186,8 @@ class LineCoincidenceProperty(Property):
         self.coincident = coincident
 
     @property
-    def essential(self):
-        return False
+    def __priority__(self):
+        return 0
 
     @property
     def description(self):
@@ -206,8 +213,8 @@ class PointsCollinearityProperty(Property):
         self.collinear = collinear
 
     @property
-    def essential(self):
-        return False
+    def __priority__(self):
+        return 0
 
     def keys(self, lengths=None):
         return keys_for_triangle(Scene.Triangle(*self.points), lengths)
@@ -234,8 +241,8 @@ class ParallelVectorsProperty(Property):
         return [self.vectors[0].as_segment, self.vectors[1].as_segment]
 
     @property
-    def essential(self):
-        return False
+    def __priority__(self):
+        return 0
 
     @property
     def description(self):
@@ -268,8 +275,8 @@ class PerpendicularSegmentsProperty(Property):
         return self.segments
 
     @property
-    def essential(self):
-        return False
+    def __priority__(self):
+        return 0
 
     @property
     def description(self):
@@ -285,8 +292,8 @@ class PointsCoincidenceProperty(Property):
         self.coincident = coincident
 
     @property
-    def essential(self):
-        return self.coincident
+    def __priority__(self):
+        return 1 if self.coincident else 0
 
     def keys(self):
         return [self.points[0].segment(self.points[1]), *self.points]
@@ -316,8 +323,8 @@ class SameOrOppositeSideProperty(Property):
         super().__init__(SameOrOppositeSideProperty.unique_key(segment, point0, point1))
 
     @property
-    def essential(self):
-        return False
+    def __priority__(self):
+        return 0
 
     def keys(self):
         return [self.segment]
@@ -342,8 +349,8 @@ class PointInsideAngleProperty(Property):
         super().__init__((point, angle))
 
     @property
-    def essential(self):
-        return False
+    def __priority__(self):
+        return 0
 
     @property
     def description(self):
@@ -388,8 +395,8 @@ class AngleKindProperty(Property):
         return [self.angle]
 
     @property
-    def essential(self):
-        return False
+    def __priority__(self):
+        return 0
 
     @property
     def description(self):
@@ -420,8 +427,8 @@ class AngleValueProperty(LinearAngleProperty):
         return angle_to_expression(self.angle) - self.degree
 
     @property
-    def essential(self):
-        return self.degree not in (0, 90, 180)
+    def __priority__(self):
+        return 0 if self.degree in (0, 90, 180) else 1
 
     def keys(self):
         return [self.angle]
@@ -467,8 +474,8 @@ class AngleRatioProperty(LinearAngleProperty):
         return angle_to_expression(self.angle0) - self.value * angle_to_expression(self.angle1)
 
     @property
-    def essential(self):
-        return not self.same
+    def __priority__(self):
+        return 0 if self.same else 1
 
     @property
     def description(self):
@@ -528,8 +535,8 @@ class SumOfTwoAnglesProperty(LinearAngleProperty):
         return degree_to_string(self.degree)
 
     @property
-    def essential(self):
-        return self.degree != 180
+    def __priority__(self):
+        return 0 if self.degree == 180 else 1
 
     @property
     def description(self):
@@ -724,8 +731,8 @@ class SameCyclicOrderProperty(Property):
         ]))
 
     @property
-    def essential(self):
-        return False
+    def __priority__(self):
+        return 0
 
     @property
     def description(self):

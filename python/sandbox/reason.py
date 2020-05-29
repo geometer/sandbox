@@ -14,7 +14,7 @@ class Reason:
         
     @property
     def essential_premises_count(self):
-        return sum(1 if prop.essential else 0 for prop in self.all_premises)
+        return sum(prop.priority for prop in self.all_premises)
 
     @property
     def cost(self):

@@ -237,7 +237,7 @@ createTree: function(json) {
 	var buildTree = function(root, index) {
 		var obj = data[index];
 		var item = $('<li/>');
-		item.addClass(obj.priority);
+		item.attr('priority', obj.priority);
 		item.append('<span class="handler material-icons-outlined"/>');
 		item.append(sandbox$.beautifiedLine(obj.property));
 		item.append('<span class="implication">⇐</span>');
@@ -296,8 +296,8 @@ setReference: function(reference) {
 toggleNonEssential: function() {
 	var root = $('#sandbox-tree');
 	var hideNonEssential = root.find('#checkbox').is(':checked');
-	root.find('.normal').each(function() {
-		var hide = $(this).find('.essential').length == 0 && hideNonEssential;
+	root.find('[priority*="0"]').each(function() {
+		var hide = $(this).find('[priority*="1"').length == 0 && hideNonEssential;
 		$(this).css('display', hide ? 'none' : 'block');
 	});
 	root.find('li').each(function() {

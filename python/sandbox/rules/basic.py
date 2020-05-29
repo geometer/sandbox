@@ -908,6 +908,10 @@ class VerticalAnglesRule(Rule):
     def sources(self):
         return itertools.combinations([av for av in self.context.angle_value_properties_for_degree(180) if av.angle.vertex], 2)
 
+    @classmethod
+    def priority(clazz):
+        return 0
+
     def apply(self, src):
         av0, av1 = src
         if av0.reason.obsolete and av1.reason.obsolete:
