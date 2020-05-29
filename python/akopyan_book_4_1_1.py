@@ -26,9 +26,9 @@ C2.not_equal_constraint(C)
 
 #A.angle(B, C).is_obtuse_constraint()
 #A.angle(B, C).is_right_constraint()
-A.angle(B, C).is_acute_constraint()
-B.angle(A, C).is_acute_constraint()
-C.angle(B, A).is_acute_constraint()
+A.angle(B, C).is_acute_constraint(comment='assumption')
+B.angle(A, C).is_acute_constraint(comment='assumption')
+C.angle(B, A).is_acute_constraint(comment='assumption')
 
 props = (
     AngleRatioProperty(B.angle(B1, C), A.angle(B1, B2), 1),

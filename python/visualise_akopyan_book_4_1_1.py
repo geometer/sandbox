@@ -25,9 +25,9 @@ C1 = altitudeC.intersection_point(B.line_through(A), label='C_1')
 C2 = altitudeC.intersection_point(circ, label='C_2')
 C2.not_equal_constraint(C)
 
-A.angle(B, C).is_acute_constraint()
-B.angle(A, C).is_acute_constraint()
-C.angle(B, A).is_acute_constraint()
+A.angle(B, C).is_acute_constraint(comment='assumption')
+B.angle(A, C).is_acute_constraint(comment='assumption')
+C.angle(B, A).is_acute_constraint(comment='assumption')
 
 prop = ProportionalLengthsProperty(B1.segment(H), B1.segment(B2), 1)
 
