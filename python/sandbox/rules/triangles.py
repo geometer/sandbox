@@ -55,32 +55,36 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
 
         #this code ensures that vertices are listed in corresponding orders
         if ca0.angle0.point_set == ca1.angle0.point_set:
-            tr0 = [ca0.angle0.vertex, ca1.angle0.vertex]
-            tr1 = [ca0.angle1.vertex, ca1.angle1.vertex]
+            verts0 = [ca0.angle0.vertex, ca1.angle0.vertex]
+            verts1 = [ca0.angle1.vertex, ca1.angle1.vertex]
         else:
-            tr0 = [ca0.angle0.vertex, ca1.angle1.vertex]
-            tr1 = [ca0.angle1.vertex, ca1.angle0.vertex]
-        tr0.append(next(p for p in ca0.angle0.point_set if p not in tr0))
-        tr1.append(next(p for p in ca0.angle1.point_set if p not in tr1))
+            verts0 = [ca0.angle0.vertex, ca1.angle1.vertex]
+            verts1 = [ca0.angle1.vertex, ca1.angle0.vertex]
+        verts0.append(next(p for p in ca0.angle0.point_set if p not in verts0))
+        verts1.append(next(p for p in ca0.angle1.point_set if p not in verts1))
+        tr0 = Scene.Triangle(*verts0)
+        tr1 = Scene.Triangle(*verts1)
 
-        for i, j in [(0, 1), (0, 2), (1, 2)]:
-            seg0 = tr0[i].segment(tr0[j])
-            seg1 = tr1[i].segment(tr1[j])
-            if seg0 == seg1:
+        for i in range(0, 3):
+            side0 = tr0.sides[i]
+            side1 = tr1.sides[i]
+            if side0 == side1:
                 yield (
                     CongruentTrianglesProperty(tr0, tr1),
-                    LazyComment('congruent angles %s and %s and common side %s', ca0, ca1, seg0),
+                    LazyComment('congruent angles %s and %s and common side %s', ca0, ca1, side0),
                     [ca0, ca1, ncl]
                 )
                 return
-        for i, j in [(0, 1), (0, 2), (1, 2)]:
-            rat, val = self.context.length_ratio_property_and_value(seg0, seg1, True)
+        for i in range(0, 3):
+            side0 = tr0.sides[i]
+            side1 = tr1.sides[i]
+            rat, val = self.context.length_ratio_property_and_value(side0, side1, True)
             if rat is None:
                 continue
             if val == 1:
                 yield (
                     CongruentTrianglesProperty(tr0, tr1),
-                    LazyComment('congruent angles %s and %s and congruent sides %s and %s', ca0, ca1, seg0, seg1),
+                    LazyComment('congruent angles %s and %s and congruent sides %s and %s', ca0, ca1, side0, side1),
                     [ca0, ca1, rat, ncl]
                 )
                 return
