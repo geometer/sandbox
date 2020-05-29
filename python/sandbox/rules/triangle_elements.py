@@ -94,9 +94,15 @@ class CorrespondingAnglesInSimilarTrianglesRule(SingleSourceRule):
 class BaseAnglesOfIsoscelesRule(SingleSourceRule):
     property_type = IsoscelesTriangleProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
     def apply(self, prop):
-        if prop.reason.obsolete:
-            return
+        self.processed.add(prop)
         yield (
             AngleRatioProperty(
                 prop.base.points[0].angle(prop.apex, prop.base.points[1]),
@@ -106,6 +112,32 @@ class BaseAnglesOfIsoscelesRule(SingleSourceRule):
             LazyComment('base angles of isosceles %s', prop.triangle),
             [prop]
         )
+
+class BaseAnglesOfIsoscelesWithKnownApexAngleRule(SingleSourceRule):
+    property_type = IsoscelesTriangleProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
+    def apply(self, prop):
+        av = self.context.angle_value_property(prop.apex.angle(*prop.base.points))
+        if av is None:
+            return
+        self.processed.add(prop)
+
+        for angle in (
+            prop.base.points[0].angle(prop.apex, prop.base.points[1]),
+            prop.base.points[1].angle(prop.apex, prop.base.points[0])
+        ):
+            yield (
+                AngleValueProperty(angle, divide(180 - av.degree, 2)),
+                LazyComment('base angles of isosceles %s with apex angle %s = %s', prop.triangle, av.angle, av.degree_str),
+                [prop, av]
+            )
 
 class LegsOfIsoscelesRule(SingleSourceRule):
     property_type = IsoscelesTriangleProperty
