@@ -7,6 +7,10 @@ class Rule:
             for reason in self.apply(src):
                 yield reason
 
+    @classmethod
+    def priority(clazz):
+        return 1
+
 class SingleSourceRule(Rule):
     def accepts(self, prop):
         return True
