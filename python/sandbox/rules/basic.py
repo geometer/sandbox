@@ -964,22 +964,24 @@ class VerticalAnglesRule(Rule):
             return
         if len(ng0.point_set.union(ng1.point_set)) != 5:
             return
-        yield (
-            AngleRatioProperty(
-                ng0.vertex.angle(ng0.vectors[0].end, ng1.vectors[0].end),
-                ng0.vertex.angle(ng0.vectors[1].end, ng1.vectors[1].end),
-                1
-            ),
-            LazyComment('vertical angles'),
-            [av0, av1]
+        new_prop = AngleRatioProperty(
+            ng0.vertex.angle(ng0.vectors[0].end, ng1.vectors[0].end),
+            ng0.vertex.angle(ng0.vectors[1].end, ng1.vectors[1].end),
+            1
         )
         yield (
-            AngleRatioProperty(
-                ng0.vertex.angle(ng0.vectors[0].end, ng1.vectors[1].end),
-                ng0.vertex.angle(ng0.vectors[1].end, ng1.vectors[0].end),
-                1
-            ),
-            LazyComment('vertical angles'),
+            new_prop,
+            LazyComment('%s and %s are vertical angles', new_prop.angle0, new_prop.angle1),
+            [av0, av1]
+        )
+        new_prop = AngleRatioProperty(
+            ng0.vertex.angle(ng0.vectors[0].end, ng1.vectors[1].end),
+            ng0.vertex.angle(ng0.vectors[1].end, ng1.vectors[0].end),
+            1
+        )
+        yield (
+            new_prop,
+            LazyComment('%s and %s are vertical angles', new_prop.angle0, new_prop.angle1),
             [av0, av1]
         )
 
