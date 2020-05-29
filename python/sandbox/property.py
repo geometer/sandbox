@@ -70,6 +70,10 @@ class ConcyclicPointsProperty(Property):
         super().__init__(frozenset(self.points))
 
     @property
+    def essential(self):
+        return False
+
+    @property
     def description(self):
         return LazyComment('Points' + ' %s,' * (len(self.points) - 1) + ' and %s are concyclic', *self.points)
 
@@ -162,6 +166,10 @@ class ParallelVectorsProperty(Property):
         return [self.vectors[0].as_segment, self.vectors[1].as_segment]
 
     @property
+    def essential(self):
+        return False
+
+    @property
     def description(self):
         return LazyComment('%s ↑↑ %s', *self.vectors)
 
@@ -190,6 +198,10 @@ class PerpendicularSegmentsProperty(Property):
 
     def keys(self):
         return self.segments
+
+    @property
+    def essential(self):
+        return False
 
     @property
     def description(self):
@@ -308,6 +320,10 @@ class AngleKindProperty(Property):
         return [self.angle]
 
     @property
+    def essential(self):
+        return False
+
+    @property
     def description(self):
         return LazyComment('%s is %s', self.angle, self.kind)
 
@@ -333,7 +349,7 @@ class AngleValueProperty(LinearAngleProperty):
 
     @property
     def essential(self):
-        return self.degree not in (0, 180)
+        return self.degree not in (0, 90, 180)
 
     def keys(self):
         return [self.angle]
@@ -429,6 +445,10 @@ class SumOfTwoAnglesProperty(LinearAngleProperty):
     @property
     def degree_str(self):
         return degree_to_string(self.degree)
+
+    @property
+    def essential(self):
+        return self.degree != 180
 
     @property
     def description(self):
