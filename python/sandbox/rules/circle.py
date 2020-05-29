@@ -281,30 +281,29 @@ class InscribedAnglesWithCommonCircularArcRule(Rule):
     def apply(self, points):
         prop = None
 
-        # TODO: use processed cache
-        for inds0, inds1 in [((0, 1), (2, 3)), ((0, 2), (1, 3)), ((0, 3), (1, 2))]:
-            pair0 = [points[i] for i in inds0]
-            pair1 = [points[i] for i in inds1]
-            for p0, p1 in ((pair0, pair1), (pair1, pair0)):
-                sos = self.context.two_points_relatively_to_line_property(
-                    p0[0].segment(p0[1]), *p1
-                )
-                if sos is None:
-                    continue
-                if prop is None:
-                    prop = self.context.concyclicity_property(*points)
-                for pp0, pp1 in ((p0, p1), (p1, p0)):
-                    ang0 = pp0[0].angle(*pp1)
-                    ang1 = pp0[1].angle(*pp1)
-                    if sos.same:
-                        yield (
-                            AngleRatioProperty(ang0, ang1, 1),
-                            LazyComment('%s and %s are inscribed and subtend the same arc', ang0, ang1),
-                            [prop, sos]
-                        )
-                    else:
-                        yield (
-                            SumOfTwoAnglesProperty(ang0, ang1, 180),
-                            LazyComment('%s and %s are inscribed and subtend complementary arcs', ang0, ang1),
-                            [prop, sos]
-                        )
+        for pt0, pt1 in itertools.combinations(points, 2):
+            pt2, pt3 = [pt for pt in points if pt not in (pt0, pt1)]
+            sos = self.context.two_points_relatively_to_line_property(
+                pt0.segment(pt1), pt2, pt3
+            )
+            if sos is None:
+                continue
+            if prop is None:
+                prop = self.context.concyclicity_property(*points)
+            p0 = (pt0, pt1)
+            p1 = (pt2, pt3)
+            for pp0, pp1 in ((p0, p1), (p1, p0)):
+                ang0 = pp0[0].angle(*pp1)
+                ang1 = pp0[1].angle(*pp1)
+                if sos.same:
+                    yield (
+                        AngleRatioProperty(ang0, ang1, 1),
+                        LazyComment('%s and %s are inscribed and subtend the same arc', ang0, ang1),
+                        [prop, sos]
+                    )
+                else:
+                    yield (
+                        SumOfTwoAnglesProperty(ang0, ang1, 180),
+                        LazyComment('%s and %s are inscribed and subtend complementary arcs', ang0, ang1),
+                        [prop, sos]
+                    )
