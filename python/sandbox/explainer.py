@@ -386,7 +386,7 @@ class Explainer:
 
             for ka in self.context.nondegenerate_angle_value_properties():
                 base = ka.angle
-                if ka.degree >= 90 or base.vertex is None:
+                if ka.degree == 180 or base.vertex is None:
                     continue
                 ka_is_too_old = ka.reason.obsolete
                 for vec0, vec1 in [base.vectors, reversed(base.vectors)]:
@@ -399,11 +399,11 @@ class Explainer:
                                 continue
                             if ka2.degree > ka.degree:
                                 comment = LazyComment(
-                                    '%s, %s, %s are collinear, %s is acute, and %s > %s',
-                                    pt, *vec0.points, base, angle, base
+                                    '%s, %s, %s are collinear and %s > %s',
+                                    pt, *vec0.points, angle, base
                                 )
                                 zero = base.vertex.angle(vec0.end, pt)
-                                yield (AngleValueProperty(zero, 0), comment, [ka, col, ka2])
+                                yield (AngleValueProperty(zero, 0), comment, [col, ka2, ka])
                             break
 
             for aa0, aa1 in itertools.combinations([a for a in self.context.list(AngleKindProperty) if a.angle.vertex and a.kind == AngleKindProperty.Kind.acute], 2):
