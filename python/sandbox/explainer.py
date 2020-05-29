@@ -79,6 +79,7 @@ class Explainer:
             LengthProductEqualityToRatioRule(self.context),
             EquilateralTriangleAnglesRule(self.context),
             EquilateralTriangleSidesRule(self.context),
+            BaseAnglesOfIsoscelesWithKnownApexAngleRule(self.context),
             BaseAnglesOfIsoscelesRule(self.context),
             LegsOfIsoscelesRule(self.context),
             RotatedAngleRule(self.context),
