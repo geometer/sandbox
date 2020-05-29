@@ -81,7 +81,7 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
                 yield (
                     CongruentTrianglesProperty(tr0, tr1),
                     LazyComment('congruent angles %s and %s and congruent sides %s and %s', ca0, ca1, seg0, seg1),
-                    [ca0, ca1, ncl]
+                    [ca0, ca1, rat, ncl]
                 )
                 return
             break
@@ -230,7 +230,7 @@ class SimilarTrianglesWithCongruentSideRule(SingleSourceRule):
             self.processed.add(prop)
             yield (
                 CongruentTrianglesProperty(prop.triangle0, prop.triangle1),
-                LazyComment('similar triangles with congruent non-zero sides %s and %s', sides0[i], sides1[i]),
+                LazyComment('similar triangles with congruent sides %s and %s', sides0[i], sides1[i]),
                 [prop, cs, ne]
             )
             return
