@@ -35,7 +35,7 @@ class Explainer:
             MissingLineKeysRule(self.context),
 
             #ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule(self.context),
-            #CyclicQuadrilateralRule(self.context),
+            CyclicQuadrilateralRule(self.context),
             PointsOnCircleRule(self.context),
             ConcyclicToSameCircleRule(self.context),
             InscribedAnglesWithCommonCircularArcRule(self.context),

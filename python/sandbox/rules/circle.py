@@ -11,7 +11,7 @@ class CyclicQuadrilateralRule(Rule):
         self.processed = set()
 
     def sources(self):
-        right_angles = [prop for prop in self.context.angle_value_properties_for_degree(90) if prop.angle.vertex]
+        right_angles = [prop for prop in self.context.list(PerpendicularSegmentsProperty) if len(set((*prop.segments[0].points, *prop.segments[1].points))) == 3]
         return itertools.combinations(right_angles, 2)
 
     def apply(self, src):
@@ -19,25 +19,42 @@ class CyclicQuadrilateralRule(Rule):
         if key in self.processed:
             return
 
-        av0, av1 = src
-        endpoints = av0.angle.endpoints
-        if set(endpoints) != set(av1.angle.endpoints):
+        perp0, perp1 = src
+        vertex0 = next(pt for pt in perp0.segments[0].points if pt in perp0.segments[1].points)
+        vertex1 = next(pt for pt in perp1.segments[0].points if pt in perp1.segments[1].points)
+        if vertex0 == vertex1:
             self.processed.add(key)
             return
 
-        oppo0 = self.context.two_points_relatively_to_line_property(endpoints[0].segment(endpoints[1]), av0.angle.vertex, av1.angle.vertex)
-        oppo1 = self.context.two_points_relatively_to_line_property(av0.angle.vertex.segment(av1.angle.vertex), *endpoints)
-        if oppo0 is None and oppo1 is None:
+        pts0 = [
+            next(pt for pt in perp0.segments[0].points if pt != vertex0),
+            next(pt for pt in perp0.segments[1].points if pt != vertex0)
+        ]
+        pts1 = [
+            next(pt for pt in perp1.segments[0].points if pt != vertex1),
+            next(pt for pt in perp1.segments[1].points if pt != vertex1)
+        ]
+        if set(pts0) != set(pts1):
+            self.processed.add(key)
+            return
+
+        points = [vertex0, vertex1, *pts0]
+        for pt0, pt1 in itertools.combinations(points, 2):
+            ne = self.context.coincidence_property(pt0, pt1)
+            if ne is not None:
+                # TODO: select best candidate instead
+                break
+        if ne is None:
             return
         self.processed.add(key)
-        for oppo in filter(None, (oppo0, oppo1)):
-            if oppo.same:
-                return
-            yield (
-                ConcyclicPointsProperty(av0.angle.vertex, av1.angle.vertex, *endpoints),
-                LazyComment('convex quadrilateral %s with two right angles %s and %s is cyclic', Scene.Polygon(av0.angle.vertex, endpoints[0], av1.angle.vertex, endpoints[1]), av0.angle, av1.angle),
-                [av0, av1, oppo]
-            )
+        if ne.coincident:
+            return
+
+        yield (
+            ConcyclicPointsProperty(*points),
+            LazyComment('quadrilateral %s with two right angles %s and %s is cyclic', Scene.Polygon(vertex0, pts0[0], vertex1, pts0[1]), vertex0.angle(*pts0), vertex1.angle(*pts1)),
+            [perp0, perp1, ne]
+        )
 
 class ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule(SingleSourceRule):
     property_type = ConcyclicPointsProperty
