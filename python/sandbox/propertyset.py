@@ -337,50 +337,41 @@ class LineSet:
 
         candidates = []
         for line in self.__all_lines:
-            pt_not_on = None
-            for p in pts:
-                if p in line.points_on:
-                    continue
-                if p in line.points_not_on:
-                    if pt_not_on:
-                        pt_not_on = False
-                        break
-                    pt_not_on = p
-                else:
-                    pt_not_on = False
-                    break
-
-            if pt_not_on:
-                on = False
-                others = [p for p in pts if p != pt_not_on]
-                all_pts = [pt_not_on] + others
-                def comment(seg):
-                    return LazyComment('%s and %s belong to %s, %s does not', *others, seg.as_line, pt_not_on)
-            elif pt_not_on is None:
-                on = True
-                all_pts = pts
-                def comment(seg):
-                    return LazyComment('%s, %s, and %s belong to %s', *pts, seg.as_line)
-            else:
+            if any(pt not in line.points_on for pt in pts):
                 continue
-
             for seg in line.segments:
                 premises = []
-                for pt in all_pts:
+                for pt in pts:
                     if pt in seg.points:
                         continue
                     pol = self.__point_on_line.get((pt, seg))
                     if pol is None:
                         pol = line.point_on_line_property(seg, pt)
                     premises.append(pol)
-                prop = PointsCollinearityProperty(*all_pts, on)
-                candidates.append(_synthetic_property(prop, comment(seg), premises))
+                candidates.append(_synthetic_property(
+                    PointsCollinearityProperty(*pts, True),
+                    LazyComment('%s, %s, and %s belong to %s', *pts, seg.as_line),
+                    premises
+                ))
 
         triangle = Scene.Triangle(pt0, pt1, pt2)
-        lines = [(side, self.__segment_to_line.get(side)) for side in triangle.sides]
+        lines = [(triangle.sides[i], self.__segment_to_line.get(triangle.sides[i]), triangle.points[i]) for i in range(0, 3)]
         lines = [lw for lw in lines if lw[1]]
+        for (side, line, vertex) in lines:
+            pnol_set = line.points_not_on.get(vertex)
+            if not pnol_set:
+                continue
+            for pnol in pnol_set:
+                premises = [pnol]
+                if pnol.segment != side:
+                    premises.append(line.same_line_property(pnol.segment, side))
+                candidates.append(_synthetic_property(
+                    PointsCollinearityProperty(*pts, False),
+                    LazyComment('%s does not lie on %s', vertex, side.as_line),
+                    premises
+                ))
 
-        for (segment0, line0), (segment1, line1) in itertools.combinations(lines, 2):
+        for (segment0, line0, _), (segment1, line1, _) in itertools.combinations(lines, 2):
             if line0 == line1:
                 comment, premises = line0.same_line_explanation(segment0, segment1)
                 prop = PointsCollinearityProperty(pt0, pt1, pt2, True)
