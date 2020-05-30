@@ -168,7 +168,7 @@ class Scene(CoreScene):
             kwargs = dict(kwargs)
             kwargs['comment'] = LazyComment('Altitude of %s from vertex %s', triangle, vertex)
         altitude = vertex.perpendicular_line(base, **kwargs)
-        altitude.perpendicular_constraint(base, comment=LazyComment('altitude %s is perpendicular to the base %s', altitude, base), guaranteed=True)
+        altitude.perpendicular_constraint(base, comment=LazyComment('altitude from vertex %s is perpendicular to the base %s', vertex, points[0].segment(points[1]).as_line), guaranteed=True)
         return altitude
 
     def equilateral_triangle(self, *points_or_labels, **kwargs):
