@@ -599,6 +599,52 @@ class EquidistantToPerpendicularRule(Rule):
             [cs0, cs1, ne0, ne1]
         )
 
+class EqualAnglesToCollinearityRule(SingleSourceRule):
+    property_type = SameOrOppositeSideProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
+    def accepts(self, prop):
+        return prop.same
+
+    def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0x3:
+            return
+
+        original = mask
+        for (p0, p1), bit in ((prop.segment.points, 1), (reversed(prop.segment.points), 2)):
+            if mask & bit:
+                continue
+            angles = [p0.angle(p1, pt) for pt in prop.points]
+            ca = self.context.angle_ratio_property(*angles)
+            if ca is None:
+                continue
+            mask |= bit
+            if ca.value != 1:
+                continue
+            yield (
+                AngleValueProperty(p0.angle(*prop.points), 0),
+                LazyComment(
+                    '%s = %s, and points %s and %s are on the same side of %s',
+                    *angles, *prop.points, prop.segment.as_line
+                ),
+                [ca, prop]
+            )
+            yield (
+                PointsCollinearityProperty(p0, *prop.points, True),
+                LazyComment(
+                    '%s = %s, and points %s and %s are on the same side of %s',
+                    *angles, *prop.points, prop.segment.as_line
+                ),
+                [ca, prop]
+            )
+
+        if mask != original:
+            self.processed[prop] = mask
+
 class PointsSeparatedByLineAreNotCoincidentRule(SingleSourceRule):
     """
     If two points are separated by a line, the points are not coincident
