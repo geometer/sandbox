@@ -2,11 +2,11 @@ sandbox$ = {
 
 selectedObjects: {},
 board: null,
-index_usages: [0, 0, 0, 0],
+index_usages: [0, 0, 0, 0, 0],
 
 options: {
 	color: '#212121',
-	hl_colors: ['#F4433680', '#4CAF5080', '#FF980080', '#3F51B580']
+	hl_colors: ['#F4433680', '#4CAF5080', '#FF980080', '#2196F380', '#00968880']
 },
 
 createScene: function(json) {
@@ -310,9 +310,21 @@ setReference: function(reference) {
 
 toggleNonEssential: function() {
 	var root = $('#sandbox-tree');
+	var max_priority = 0;
+	root.find('[priority]').each(function() {
+		max_priority = Math.max(max_priority, $(this).attr('priority'));
+	});
 	var hideNonEssential = root.find('#checkbox').is(':checked');
-	root.find('[priority*="0"]').each(function() {
-		var hide = $(this).find('[priority*="1"').length == 0 && hideNonEssential;
+	root.find('[priority]').each(function() {
+		var hide = hideNonEssential && $(this).attr('priority') < max_priority;
+		if (hide) {
+			$(this).find('[priority]').each(function() {
+				if ($(this).attr('priority') >= max_priority) {
+					hide = false;
+					return false;
+				}
+			});
+		}
 		$(this).css('display', hide ? 'none' : 'block');
 	});
 	root.find('li').each(function() {

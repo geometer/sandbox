@@ -33,14 +33,14 @@ class Property:
 
     @property
     def priority(self):
-        if not hasattr(self, 'rule') or self.rule == 'synthetic':
-            return self.__priority__
+        if not hasattr(self, 'rule'):
+            return self.__priority__ * 2
         else:
-            return min(self.__priority__, self.rule.priority())
+            return self.__priority__ * self.rule.priority()
 
     @property
     def __priority__(self):
-        return 1
+        return 3
 
     def fire_premises_change(self):
         self.reason.reset_premises()
@@ -118,7 +118,7 @@ class CircleCoincidenceProperty(Property):
 
     @property
     def __priority__(self):
-        return 0
+        return 1
 
     @property
     def description(self):
@@ -146,7 +146,7 @@ class ConcyclicPointsProperty(Property):
 
     @property
     def __priority__(self):
-        return 0
+        return 1
 
     @property
     def description(self):
@@ -164,7 +164,7 @@ class PointOnLineProperty(Property):
 
     @property
     def __priority__(self):
-        return 0
+        return 1
 
     @property
     def description(self):
@@ -187,7 +187,7 @@ class LineCoincidenceProperty(Property):
 
     @property
     def __priority__(self):
-        return 0
+        return 1
 
     @property
     def description(self):
@@ -214,7 +214,7 @@ class PointsCollinearityProperty(Property):
 
     @property
     def __priority__(self):
-        return 0
+        return 1
 
     def keys(self, lengths=None):
         return keys_for_triangle(Scene.Triangle(*self.points), lengths)
@@ -242,7 +242,7 @@ class ParallelVectorsProperty(Property):
 
     @property
     def __priority__(self):
-        return 0
+        return 1
 
     @property
     def description(self):
@@ -261,7 +261,7 @@ class ParallelSegmentsProperty(Property):
 
     @property
     def __priority__(self):
-        return 0
+        return 1
 
     @property
     def description(self):
@@ -280,7 +280,7 @@ class PerpendicularSegmentsProperty(Property):
 
     @property
     def __priority__(self):
-        return 0
+        return 1
 
     @property
     def description(self):
@@ -297,7 +297,7 @@ class PointsCoincidenceProperty(Property):
 
     @property
     def __priority__(self):
-        return 1 if self.coincident else 0
+        return 3 if self.coincident else 1
 
     def keys(self):
         return [self.points[0].segment(self.points[1]), *self.points]
@@ -328,7 +328,7 @@ class SameOrOppositeSideProperty(Property):
 
     @property
     def __priority__(self):
-        return 0
+        return 1
 
     def keys(self):
         return [self.segment]
@@ -354,7 +354,7 @@ class PointInsideAngleProperty(Property):
 
     @property
     def __priority__(self):
-        return 0
+        return 1
 
     @property
     def description(self):
@@ -373,6 +373,10 @@ class EquilateralTriangleProperty(Property):
 
     def keys(self, lengths=None):
         return keys_for_triangle(self.triangle, lengths)
+
+    @property
+    def __priority__(self):
+        return 4
 
     @property
     def description(self):
@@ -400,7 +404,7 @@ class AngleKindProperty(Property):
 
     @property
     def __priority__(self):
-        return 0
+        return 1
 
     @property
     def description(self):
@@ -432,7 +436,7 @@ class AngleValueProperty(LinearAngleProperty):
 
     @property
     def __priority__(self):
-        return 0 if self.degree in (0, 90, 180) else 1
+        return 1 if self.degree in (0, 90, 180) else 3
 
     def keys(self):
         return [self.angle]
@@ -479,7 +483,7 @@ class AngleRatioProperty(LinearAngleProperty):
 
     @property
     def __priority__(self):
-        return 0 if self.same else 1
+        return 1 if self.same else 3
 
     @property
     def description(self):
@@ -540,7 +544,7 @@ class SumOfTwoAnglesProperty(LinearAngleProperty):
 
     @property
     def __priority__(self):
-        return 0 if self.degree == 180 else 1
+        return 1 if self.degree == 180 else 3
 
     @property
     def description(self):
@@ -661,6 +665,10 @@ class SimilarTrianglesProperty(Property):
         return keys_for_triangle(self.triangle0, lengths) + keys_for_triangle(self.triangle1, lengths)
 
     @property
+    def __priority__(self):
+        return 5
+
+    @property
     def description(self):
         return LazyComment('%s ~ %s', self.triangle0, self.triangle1)
 
@@ -678,6 +686,10 @@ class CongruentTrianglesProperty(Property):
         return keys_for_triangle(self.triangle0, lengths) + keys_for_triangle(self.triangle1, lengths)
 
     @property
+    def __priority__(self):
+        return 5
+
+    @property
     def description(self):
         return LazyComment('%s = %s', self.triangle0, self.triangle1)
 
@@ -693,6 +705,10 @@ class IsoscelesTriangleProperty(Property):
 
     def keys(self, lengths=None):
         return keys_for_triangle(self.triangle, lengths)
+
+    @property
+    def __priority__(self):
+        return 4
 
     @property
     def description(self):
@@ -736,7 +752,7 @@ class SameCyclicOrderProperty(Property):
 
     @property
     def __priority__(self):
-        return 0
+        return 1
 
     @property
     def description(self):
