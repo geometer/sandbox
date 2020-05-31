@@ -1,12 +1,12 @@
 sandbox$ = {
 
-selectedPoints: {},
-selectedSegments: {},
+selectedObjects: {},
 board: null,
+index_usages: [0, 0, 0, 0],
 
 options: {
 	color: '#212121',
-	hl_color: '#F44336',
+	hl_colors: ['#F4433680', '#4CAF5080', '#FF980080', '#3F51B580']
 },
 
 createScene: function(json) {
@@ -43,8 +43,6 @@ createScene: function(json) {
 			name: pt.name,
 			id: pt.name,
 			color: this.options.color,
-			highlightFillColor: this.options.hl_color,
-			highlightStrokeColor: this.options.hl_color,
 			size: 3,
 			label: {color: this.options.color, autoPosition: true}
 		});
@@ -138,45 +136,62 @@ createFigureReferences: function() {
 						$(this).next().remove();
 						$(this).remove();
 					});
-					points.forEach(id => {
-						var count = sandbox$.selectedPoints[id] - 1;
-						if (count == 0) {
-							sandbox$.board.elementsByName[id].noHighlight();
-						}
-						sandbox$.selectedPoints[id] = count;
+					var index = sandbox$.selectedObjects[clazz].index;
+					sandbox$.index_usages[index] -= 1;
+					sandbox$.selectedObjects[clazz].set.forEach(obj => {sandbox$.board.removeObject(obj);});
+					delete sandbox$.selectedObjects[clazz];
+					desc.find('.' + clazz).each(function() {
+						$(this).removeClass('selected');
+						$(this).removeClass('selected' + index);
 					});
-					sandbox$.selectedSegments[clazz].forEach(obj => {sandbox$.board.removeObject(obj);});
-					delete sandbox$.selectedSegments[clazz];
-					desc.find('.' + clazz).each(function() { $(this).removeClass('selected'); });
-					$('.sandbox-text .' + clazz).each(function() { $(this).removeClass('selected'); });
+					$('.sandbox-text .' + clazz).each(function() {
+						$(this).removeClass('selected');
+						$(this).removeClass('selected' + index);
+					});
 				};
 				if ($(this).hasClass('selected')) {
 					deselect();
 				} else {
+					var index = sandbox$.index_usages.indexOf(Math.min(...sandbox$.index_usages));
+					var color = sandbox$.options.hl_colors[index];
+					sandbox$.index_usages[index] += 1;
 					var clone = $(this).clone();
 					clone.addClass('selected');
+					clone.addClass('selected' + index);
 					clone.click(deselect);
 					var area = $('#sandbox-selections');
 					area.append(clone);
 					area.append('<span class="space"/>');
-					points.forEach(id => {
-						sandbox$.selectedPoints[id] = (sandbox$.selectedPoints[id] || 0) + 1;
-						sandbox$.board.elementsByName[id].highlight(); }
-					);
 					var selected = [];
+					points.forEach(id => {
+						selected.push(sandbox$.board.create(
+							'point', ['X(' + id + ')', 'Y(' + id + ')'], {
+								color: color,
+								size: 5,
+								withLabel: false
+							})
+						);
+					});
 					lines.forEach(ln => {
 						selected.push(sandbox$.board.create(
 							'line', [ln['s'], ln['e']], {
 								straightFirst: ln['type'] == 'line',
 								straightLast: ln['type'] == 'ray' || ln['type'] == 'line',
-								color: sandbox$.options.hl_color,
-								strokeWidth: 1.0
+								color: color,
+								lineCap: 'round',
+								strokeWidth: 7.0
 							})
 						);
 					});
-					sandbox$.selectedSegments[clazz] = selected;
-					desc.find('.' + clazz).each(function() { $(this).addClass('selected'); });
-					$('.sandbox-text .' + clazz).each(function() { $(this).addClass('selected'); });
+					sandbox$.selectedObjects[clazz] = {'set': selected, 'index': index};
+					desc.find('.' + clazz).each(function() {
+						$(this).addClass('selected');
+						$(this).addClass('selected' + index);
+					});
+					$('.sandbox-text .' + clazz).each(function() {
+						$(this).addClass('selected');
+						$(this).addClass('selected' + index);
+					});
 					sandbox$.board.update();
 					sandbox$.board.update();
 				}

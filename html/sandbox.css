@@ -183,9 +183,21 @@ nav.sandbox-header, div.sandbox-header {
   background-color: #E1F5FE;
 }
 
-.sandbox-text .figure.selected {
-  border-color: #EF5350;
+.sandbox-text .figure.selected.selected0 {
+  border-color: #E57373;
   background-color: #FFCDD2;
+}
+.sandbox-text .figure.selected.selected1 {
+  border-color: #43A047;
+  background-color: #C8E6C9;
+}
+.sandbox-text .figure.selected.selected2 {
+  border-color: #FB8C00;
+  background-color: #FFE0B2;
+}
+.sandbox-text .figure.selected.selected3 {
+  border-color: #3949AB;
+  background-color: #C5CAE9;
 }
 
 .jxgbox .JXGText {
