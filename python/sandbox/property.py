@@ -260,6 +260,10 @@ class ParallelSegmentsProperty(Property):
         return self.segments
 
     @property
+    def __priority__(self):
+        return 0
+
+    @property
     def description(self):
         return LazyComment('%s ∥ %s', *self.segments)
 
