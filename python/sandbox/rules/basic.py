@@ -956,7 +956,7 @@ class VerticalAnglesRule(Rule):
 
     @classmethod
     def priority(clazz):
-        return 0
+        return 1
 
     def apply(self, src):
         av0, av1 = src

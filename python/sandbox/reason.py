@@ -11,10 +11,6 @@ class Reason:
     def reset_premises(self):
         self.__all_premises = None
         self.__cost = None
-        
-    @property
-    def essential_premises_count(self):
-        return sum(prop.priority for prop in self.all_premises)
 
     @property
     def cost(self):

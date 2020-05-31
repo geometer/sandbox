@@ -1,4 +1,17 @@
-class Rule:
+class AbstractRule:
+    @classmethod
+    def priority(clazz):
+        return 2
+
+class SyntheticPropertyRule(AbstractRule):
+    pass
+
+class PredefinedPropertyRule(AbstractRule):
+    @classmethod
+    def priority(clazz):
+        return 1
+
+class Rule(AbstractRule):
     def __init__(self, context):
         self.context = context
 
@@ -6,10 +19,6 @@ class Rule:
         for src in self.sources():
             for reason in self.apply(src):
                 yield reason
-
-    @classmethod
-    def priority(clazz):
-        return 1
 
 class SingleSourceRule(Rule):
     def accepts(self, prop):

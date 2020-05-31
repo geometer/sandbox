@@ -73,18 +73,18 @@ def run_sample(scene, *props):
             if explanation:
                 dump(explanation)
                 print('Depth = %s' % depth(explanation))
-                count_essentials = explanation.reason.essential_premises_count
+                priorities = {}
+                for p in explanation.reason.all_premises:
+                    priority = p.priority
+                    priorities[priority] = priorities.get(priority, 0) + 1
+                pairs = list(priorities.items())
+                pairs.sort(key=lambda pair: -pair[0])
                 count_all = len(explanation.reason.all_premises)
-                print('Props = %d (%d + %d)' % (count_all, count_essentials, count_all - count_essentials))
+                print('Props = %d (%s)' % (count_all, ', '.join(['%d: %d' % p for p in pairs])))
                 all_premises(explanation).stats().dump()
                 rules_map = {}
                 for prop in explanation.reason.all_premises:
-                    if prop.reason.generation == -1:
-                        key = 'Given'
-                    elif hasattr(prop, 'rule') and prop.rule == 'synthetic':
-                        key = 'Synthetic (transitivity)'
-                    else:
-                        key = type(prop.rule).__name__ if hasattr(prop, 'rule') else 'Unknown'
+                    key = type(prop.rule).__name__ if hasattr(prop, 'rule') else 'Unknown'
                     rules_map[key] = rules_map.get(key, 0) + 1
                 items = list(rules_map.items())
                 items.sort(key=lambda pair: -pair[1])

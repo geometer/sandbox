@@ -7,6 +7,7 @@ from .predefined import enumerate_predefined_properties
 from .property import *
 from .propertyset import PropertySet
 from .reason import Reason
+from .rules.abstract import PredefinedPropertyRule
 from .rules.advanced import *
 from .rules.basic import *
 from .rules.circle import *
@@ -507,6 +508,7 @@ class Explainer:
                         )
 
         for prop, comment in enumerate_predefined_properties(self.scene, max_layer=self.__max_layer):
+            prop.rule = PredefinedPropertyRule
             self.__reason(prop, comment, [])
 
         self.__iteration_step_count = 0

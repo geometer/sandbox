@@ -168,8 +168,12 @@
   background-color: #FFE0B2;
 }
 .sandbox-text .figure.selected.selected3 {
-  border-color: #3949AB;
-  background-color: #C5CAE9;
+  border-color: #1E88E5;
+  background-color: #BBDEFB;
+}
+.sandbox-text .figure.selected.selected4 {
+  border-color: #00897B;
+  background-color: #B2DFDB;
 }
 
 .jxgbox .JXGText {

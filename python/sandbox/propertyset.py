@@ -5,11 +5,12 @@ import re
 from .core import CoreScene
 from .property import *
 from .reason import Reason
+from .rules.abstract import SyntheticPropertyRule
 from .stats import Stats
 from .util import LazyComment, divide, degree_to_string
 
 def _synthetic_property(prop, comment, premises):
-    prop.rule = 'synthetic'
+    prop.rule = SyntheticPropertyRule
     prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
     prop.reason.obsolete = all(p.reason.obsolete for p in premises)
     return prop
@@ -387,7 +388,7 @@ class CyclicOrderPropertySet:
         return (None, None)
 
     def add(self, prop):
-        if hasattr(prop, 'rule') and prop.rule == 'synthetic':
+        if hasattr(prop, 'rule') and prop.rule == SyntheticPropertyRule:
             return
         fam0, order0 = self.__find_by_cycle(prop.cycle0)
         fam1, order1 = self.__find_by_cycle(prop.cycle1)
@@ -663,7 +664,7 @@ class AngleRatioPropertySet:
                     yield a
 
     def add(self, prop):
-        if hasattr(prop, 'rule') and prop.rule == 'synthetic':
+        if hasattr(prop, 'rule') and prop.rule == SyntheticPropertyRule:
             return
         if isinstance(prop, AngleRatioProperty):
             self.__add_ratio_property(prop)
@@ -838,7 +839,7 @@ class LengthRatioPropertySet:
             self.ratio_to_family[ratio1] = fam
 
     def add(self, prop):
-        if hasattr(prop, 'rule') and prop.rule == 'synthetic':
+        if hasattr(prop, 'rule') and prop.rule == SyntheticPropertyRule:
             return
         if isinstance(prop, EqualLengthRatiosProperty):
             self.__add_elr(prop)
