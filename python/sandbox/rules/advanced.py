@@ -1,8 +1,8 @@
 import sympy as sp
 
-from sandbox import Scene
-from sandbox.property import AngleValueProperty, IsoscelesTriangleProperty, LengthRatioProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, PointsCollinearityProperty
-from sandbox.util import LazyComment
+from .. import Scene
+from ..property import AngleValueProperty, IsoscelesTriangleProperty, LengthRatioProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, PointsCollinearityProperty
+from ..util import LazyComment
 
 from .abstract import SingleSourceRule
 

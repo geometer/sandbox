@@ -1,9 +1,9 @@
 import itertools
 import sympy as sp
 
-from sandbox.property import ProportionalLengthsProperty
-from sandbox.scene import Scene
-from sandbox.util import LazyComment
+from ..property import ProportionalLengthsProperty
+from ..scene import Scene
+from ..util import LazyComment
 
 from .abstract import Rule
 
