@@ -1,7 +1,7 @@
 import itertools
 
-from sandbox.property import *
-from sandbox.util import LazyComment
+from ..property import *
+from ..util import LazyComment
 
 from .abstract import SingleSourceRule
 

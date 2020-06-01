@@ -1,8 +1,8 @@
 import itertools
 
-from sandbox import Scene
-from sandbox.property import *
-from sandbox.util import LazyComment
+from .. import Scene
+from ..property import *
+from ..util import LazyComment
 
 from .abstract import Rule, SingleSourceRule
 

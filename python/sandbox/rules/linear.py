@@ -1,7 +1,7 @@
 import itertools
 
-from sandbox.property import *
-from sandbox.util import LazyComment, divide
+from ..property import *
+from ..util import LazyComment, divide
 
 from .abstract import Rule, SingleSourceRule
 
