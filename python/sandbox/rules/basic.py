@@ -271,6 +271,38 @@ class NonCollinearPointsAreDifferentRule(SingleSourceRule):
                 [prop]
             )
 
+class AngleInTriangleWithTwoKnownAnglesRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
+    def sources(self):
+        return [p for p in self.context.angle_value_properties() if p.angle.vertex and p.degree not in (0, 180)];
+
+    def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0x3:
+            return
+
+        angle0 = prop.angle
+        triangle = Scene.Triangle(angle0.vertex, *angle0.endpoints)
+        others = triangle.angles[1:]
+        original = mask
+        for (angle1, angle2), bit in ((others, 1), (reversed(others), 2)):
+            if mask & bit:
+                continue
+            av = self.context.angle_value_property(angle1)
+            if av is None:
+                continue
+            mask |= bit
+            yield (
+                AngleValueProperty(angle2, 180 - prop.degree - av.degree),
+                LazyComment('third angle in %s with %s = %s and %s = %s', triangle, angle0, prop.degree_str, angle1, av.degree_str),
+                [prop, av]
+            )
+        if mask != original:
+            self.processed[prop] = mask
+
 class SumOfTwoAnglesInTriangleRule(Rule):
     def __init__(self, context):
         super().__init__(context)
@@ -285,14 +317,15 @@ class SumOfTwoAnglesInTriangleRule(Rule):
         self.processed.add(prop)
 
         angle0 = prop.angle
-        angle1 = angle0.endpoints[0].angle(angle0.vertex, angle0.endpoints[1])
-        angle2 = angle0.endpoints[1].angle(angle0.vertex, angle0.endpoints[0])
+        triangle = Scene.Triangle(angle0.vertex, *angle0.endpoints)
+        angle1 = triangle.angles[1]
+        angle2 = triangle.angles[2]
 
-        yield (
-            SumOfTwoAnglesProperty(angle1, angle2, 180 - prop.degree),
-            LazyComment('sum of two angles of %s, the third %s = %s', Scene.Triangle(*angle0.point_set), angle0, prop.degree_str),
-            [prop]
-        )
+        if prop.degree == 90:
+            comment = LazyComment('sum of acute angles of right-angled %s', triangle)
+        else:
+            comment = LazyComment('sum of two angles of %s, the third %s = %s', triangle, angle0, prop.degree_str)
+        yield (SumOfTwoAnglesProperty(angle1, angle2, 180 - prop.degree), comment, [prop])
 
 class SumOfThreeAnglesInTriangleRule(Rule):
     def __init__(self, context):
