@@ -271,6 +271,29 @@ class NonCollinearPointsAreDifferentRule(SingleSourceRule):
                 [prop]
             )
 
+class SumOfTwoAnglesInTriangleRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        return [p for p in self.context.angle_value_properties() if p.angle.vertex and p.degree not in (0, 180)];
+
+    def apply(self, prop):
+        if prop in self.processed:
+            return
+        self.processed.add(prop)
+
+        angle0 = prop.angle
+        angle1 = angle0.endpoints[0].angle(angle0.vertex, angle0.endpoints[1])
+        angle2 = angle0.endpoints[1].angle(angle0.vertex, angle0.endpoints[0])
+
+        yield (
+            SumOfTwoAnglesProperty(angle1, angle2, 180 - prop.degree),
+            LazyComment('sum of two angles of %s, the third %s = %s', Scene.Triangle(*angle0.point_set), angle0, prop.degree_str),
+            [prop]
+        )
+
 class SumOfThreeAnglesInTriangleRule(Rule):
     def __init__(self, context):
         super().__init__(context)
