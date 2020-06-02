@@ -48,6 +48,7 @@ class Explainer:
             LengthRatiosWithCommonDenominatorRule(self.context),
             SumOfThreeAnglesOnLineRule(self.context),
             SumOfThreeAnglesOnLineRule2(self.context),
+            AngleInTriangleWithTwoKnownAnglesRule(self.context),
             SumOfTwoAnglesInTriangleRule(self.context),
             SumOfThreeAnglesInTriangleRule(self.context),
             AngleBySumOfThreeRule(self.context),
