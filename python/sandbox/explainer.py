@@ -42,7 +42,7 @@ class Explainer:
             InscribedAnglesWithCommonCircularArcRule(self.context),
             #PointsOnChordRule(self.context),
             TwoChordsIntersectionRule(self.context),
-            ThreeCollinearPointsOnCircleRule(self.context),
+            #ThreeCollinearPointsOnCircleRule(self.context),
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),
             LengthRatiosWithCommonDenominatorRule(self.context),

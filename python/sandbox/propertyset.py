@@ -527,117 +527,6 @@ class LineSet:
         line = self.__segment_to_line.get(segment)
         return list(line.points_not_on.keys()) if line else []
 
-class CircleSet:
-    class Circle:
-        def __init__(self, points_key):
-            self.main_key = points_key
-            self.keys = {points_key}
-            self.points_on = set(points_key)
-            self.points_inside = set()
-            self.points_outside = set()
-
-    def __init__(self, context):
-        self.context = context
-        self.__circle_by_key = {}
-        self.__all_circles = set()
-
-    def add_point_to_circle(self, point, circle):
-        if point in circle.points_on:
-            return
-
-        old = list(circle.points_on)
-        circle.points_on.add(point)
-        duplicates = set()
-        for pt0, pt1 in itertools.combinations(old, 2):
-            dup = self.by_three_points(point, pt0, pt1, False)
-            if dup and dup != circle:
-                duplicates.add(dup)
-        self.__merge(circle, duplicates)
-
-    def __merge(self, circle, duplicates):
-        for dup in duplicates:
-            circle.keys.update(dup.keys)
-            circle.points_on.update(dup.points_on)
-            self.__all_circles.remove(dup)
-            for key in dup.keys:
-                self.__circle_by_key[key] = circle
-
-    def by_three_points(self, pt0, pt1, pt2, create_if_not_exists):
-        key = frozenset([pt0, pt1, pt2])
-        circle = self.__circle_by_key.get(key)
-        if circle or not create_if_not_exists:
-            return circle
-
-        existing = [circ for circ in self.__all_circles if key.issubset(circ.points_on)]
-        if existing:
-            circle = existing[0]
-            if len(existing) > 1:
-                self.__merge(circle, existing[1:])
-            circle.keys.add(key)
-        else:
-            circle = CircleSet.Circle(key)
-            self.__all_circles.add(circle)
-        self.__circle_by_key[key] = circle
-        return circle
-
-    def add(self, prop):
-        if isinstance(prop, PointsCollinearityProperty):
-            if not prop.collinear:
-                self.by_three_points(*prop.points, True)
-        elif isinstance(prop, PointAndCircleProperty):
-            circle = self.by_three_points(*prop.circle_key, True)
-            if prop.location == PointAndCircleProperty.Kind.on:
-                self.add_point_to_circle(prop.point, circle)
-            elif prop.location == PointAndCircleProperty.Kind.inside:
-                circle.points_inside.add(prop.point)
-            elif prop.location == PointAndCircleProperty.Kind.outside:
-                circle.points_outside.add(prop.point)
-
-    def n_concyclic_points(self, n):
-        for circle in self.__all_circles:
-            for points in itertools.combinations(circle.points_on, n):
-                yield (points, circle, [])
-
-    def point_and_circle_property(self, pt, cpoints):
-        circle = self.by_three_points(*cpoints, False)
-        if not circle:
-            return None
-
-        if pt in circle.points_on:
-            prop = PointAndCircleProperty(pt, *cpoints, PointAndCircleProperty.Kind.on)
-            prop.rule = 'synthetic'
-            if pt in cpoints:
-                premise = self.context.not_collinear_property(*cpoints)
-                prop.reason = Reason(
-                    premise.reason.generation,
-                    LazyComment('%s, %s, and %s are not collinear', *cpoints),
-                    [premise]
-                )
-                prop.reason.obsolete = premise.reason.obsolete
-            else:
-                prop.reason = Reason(-2, LazyComment('Temp comment'), [])
-                prop.reason.obsolete = False
-            return prop
-        elif pt in circle.points_inside:
-            prop = PointAndCircleProperty(pt, *cpoints, PointAndCircleProperty.Kind.inside)
-            prop.rule = 'synthetic'
-            prop.reason = Reason(-2, LazyComment('Temp comment'), [])
-            prop.reason.obsolete = False
-            return prop
-        elif pt in circle.points_outside:
-            prop = PointAndCircleProperty(pt, *cpoints, PointAndCircleProperty.Kind.outside)
-            prop.rule = 'synthetic'
-            prop.reason = Reason(-2, LazyComment('Temp comment'), [])
-            prop.reason.obsolete = False
-            return prop
-
-        return None
-
-    def dump(self):
-        for circle in self.__all_circles:
-            print('circle ' + ', '.join([str(pt) for pt in circle.points_on]) + ' %d key(s)' % len(circle.keys))
-        print('%d circles by %d keys' % (len(self.__all_circles), len(self.__circle_by_key)))
-
 class CyclicOrderPropertySet:
     class Family:
         def __init__(self):
@@ -1299,7 +1188,6 @@ class PropertySet(LineSet):
         self.__combined = {} # (type, key) => [prop] and type => prop
         self.__full_set = {} # prop => prop
         self.__indexes = {} # prop => number
-        self.__circles = CircleSet(self)
         self.__angle_kinds = {} # angle => prop
         self.__linear_angles = LinearAngleSet()
         self.__angle_ratios = AngleRatioPropertySet()
@@ -1336,10 +1224,8 @@ class PropertySet(LineSet):
             self.__length_ratios.add(prop)
         elif type_key == PointsCollinearityProperty:
             super().add(prop)
-            self.__circles.add(prop)
         elif type_key == PointAndCircleProperty:
             super().add(prop)
-            #self.__circles.add(prop)
         elif type_key == EqualLengthRatiosProperty:
             self.__length_ratios.add(prop)
         elif type_key == SameCyclicOrderProperty:
@@ -1418,8 +1304,8 @@ class PropertySet(LineSet):
                 existing = self.angle_value_property(prop.angle)
             elif isinstance(prop, SameCyclicOrderProperty):
                 existing = self.same_cyclic_order_property(prop.cycle0, prop.cycle1)
-            elif isinstance(prop, PointAndCircleProperty):
-                existing = self.point_and_circle_property(prop.point, prop.circle_key)
+            #elif isinstance(prop, PointAndCircleProperty):
+            #    existing = self.point_and_circle_property(prop.point, prop.circle_key)
             elif isinstance(prop, PointsCollinearityProperty):
                 existing = self.collinearity_property(*prop.points)
             elif isinstance(prop, PointOnLineProperty):
@@ -1544,15 +1430,6 @@ class PropertySet(LineSet):
             if col and col.collinear:
                 return (candidate, [prop, col])
         return (None, [])
-
-    def n_concyclic_points(self, n):
-        return self.__circles.n_concyclic_points(n)
-
-    def point_and_circle_property(self, pt, cpoints):
-        prop = self.__full_set.get(PointAndCircleProperty.unique_key(pt, cpoints))
-        if prop:
-            return prop
-        return self.__circles.point_and_circle_property(pt, cpoints)
 
     def collinear_points(self, segment):
         points = []
