@@ -134,6 +134,59 @@ class LineSet:
                 if pt not in self.points_on:
                     self.points_on[pt] = set()
 
+        def same_circle_explanation(self, key0, key1):
+            edge = self.premises_graph.get_edge_data(key0, key1)
+            if edge:
+                prop = edge['prop']
+                return (
+                    LazyComment('%s and %s are the same circle', key0, key1),
+                    [prop]
+                )
+            path = nx.algorithms.shortest_path(self.premises_graph, key0, key1)
+            pattern = ' = '.join(['%s'] * len(path))
+            return (
+                LazyComment(pattern, *path),
+                [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
+            )
+
+        def same_circle_property(self, key0, key1):
+            comment, premises = self.same_circle_explanation(key0, key1)
+            if len(premises) == 1:
+                return premises[0]
+            return _synthetic_property(
+                CircleCoincidenceProperty(key0, key1, True), comment, premises
+            )
+
+        def point_on_circle_property(self, pt, key):
+            for prop in self.points_on[pt]:
+                if prop.circle_key == key:
+                    return prop
+            candidates = []
+            for prop in self.points_on[pt]:
+                premises = [prop, self.same_circle_property(prop.circle_key, key)]
+                candidates.append(_synthetic_property(
+                    PointAndCircleProperty(pt, *key, PointAndCircleProperty.Kind.on),
+                    LazyComment('%s lies on %s that coincides with %s', pt, prop.circle_key, key),
+                    premises
+                ))
+            return LineSet.best_candidate(candidates)
+
+        def concyclicity_property(self, pt0, pt1, pt2, pt3):
+            pts = (pt0, pt1, pt2, pt3)
+            candidates = []
+            for key in self.keys:
+                premises = []
+                for pt in pts:
+                    if pt in key:
+                        continue
+                    premises.append(self.point_on_circle_property(pt, key))
+                candidates.append(_synthetic_property(
+                    ConcyclicPointsProperty(*pts),
+                    LazyComment('%s, %s, %s, and %s lie on %s', *pts, key),
+                    premises
+                ))
+            return LineSet.best_candidate(candidates)
+
     def __init__(self):
         self.__segment_to_line = {}
         self.__key_to_circle = {}
@@ -326,7 +379,9 @@ class LineSet:
         cached = self.__concyclicity.get(key)
         if cached:
             return cached
-        # TODO: implement
+        for circle in self.circles:
+            if all(pt in circle.points_on for pt in pts):
+                return circle.concyclicity_property(*pts)
         return None
 
     def collinearity_property(self, pt0, pt1, pt2):
