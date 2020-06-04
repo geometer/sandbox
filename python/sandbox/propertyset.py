@@ -116,13 +116,87 @@ class LineSet:
 
             return LineSet.best_candidate(candidates)
 
+    class Circle:
+        def __init__(self):
+            self.premises_graph = nx.Graph()
+            self.points_on = {} # point => set of props
+            self.points_inside = {} # point => set of props
+            self.points_outside = {} # point => set of props
+
+        @property
+        def keys(self):
+            return self.premises_graph.nodes
+
+        def add(self, prop):
+            self.premises_graph.add_edge(*prop.circle_keys, prop=prop)
+            for pt in (*prop.circle_keys[0], *prop.circle_keys[1]):
+                if pt not in self.points_on:
+                    self.points_on[pt] = set()
+
+        def same_circle_explanation(self, key0, key1):
+            edge = self.premises_graph.get_edge_data(key0, key1)
+            if edge:
+                prop = edge['prop']
+                return (
+                    LazyComment('%s and %s are the same circle', key0, key1),
+                    [prop]
+                )
+            path = nx.algorithms.shortest_path(self.premises_graph, key0, key1)
+            pattern = ' = '.join(['%s'] * len(path))
+            return (
+                LazyComment(pattern, *path),
+                [self.premises_graph[i][j]['prop'] for i, j in zip(path[:-1], path[1:])]
+            )
+
+        def same_circle_property(self, key0, key1):
+            comment, premises = self.same_circle_explanation(key0, key1)
+            if len(premises) == 1:
+                return premises[0]
+            return _synthetic_property(
+                CircleCoincidenceProperty(key0, key1, True), comment, premises
+            )
+
+        def point_on_circle_property(self, pt, key):
+            for prop in self.points_on[pt]:
+                if prop.circle_key == key:
+                    return prop
+            candidates = []
+            for prop in self.points_on[pt]:
+                premises = [prop, self.same_circle_property(prop.circle_key, key)]
+                candidates.append(_synthetic_property(
+                    PointAndCircleProperty(pt, *key, PointAndCircleProperty.Kind.on),
+                    LazyComment('%s lies on %s that coincides with %s', pt, prop.circle_key, key),
+                    premises
+                ))
+            return LineSet.best_candidate(candidates)
+
+        def concyclicity_property(self, pt0, pt1, pt2, pt3):
+            pts = (pt0, pt1, pt2, pt3)
+            candidates = []
+            for key in self.keys:
+                premises = []
+                for pt in pts:
+                    if pt in key:
+                        continue
+                    premises.append(self.point_on_circle_property(pt, key))
+                candidates.append(_synthetic_property(
+                    ConcyclicPointsProperty(*pts),
+                    LazyComment('%s, %s, %s, and %s lie on %s', *pts, key),
+                    premises
+                ))
+            return LineSet.best_candidate(candidates)
+
     def __init__(self):
         self.__segment_to_line = {}
+        self.__key_to_circle = {}
         self.__all_lines = []
+        self.__all_circles = []
         self.__different_lines_graph = nx.Graph()
         self.__coincidence = {}   # {point, point} => prop
         self.__collinearity = {}  # {point, point, point} => prop
+        self.__concyclicity = {}  # {point, point, point, point} => prop
         self.__point_on_line = {} # (point, segment) => prop
+        self.__point_and_circle = {} # (point, set of three points) => prop
 
     def __add_same_line_property(self, prop):
         line0 = self.__segment_to_line.get(prop.segments[0])
@@ -159,6 +233,47 @@ class LineSet:
             self.__segment_to_line[prop.segments[1]] = line
             self.__all_lines.append(line)
 
+    def __add_same_circle_property(self, prop):
+        circle0 = self.__key_to_circle.get(prop.circle_keys[0])
+        circle1 = self.__key_to_circle.get(prop.circle_keys[1])
+        if circle0 and circle1:
+            if circle0 != circle1:
+                for key in circle1.keys:
+                    self.__key_to_circle[key] = circle0
+                circle0.premises_graph.add_edges_from(circle1.premises_graph.edges(data=True))
+                for pt, data in circle1.points_on.items():
+                    known = circle0.points_on.get(pt)
+                    if known:
+                        known.update(data)
+                    else:
+                        circle0.points_on[pt] = data
+                for pt, data in circle1.points_inside.items():
+                    known = circle0.points_inside.get(pt)
+                    if known:
+                        known.update(data)
+                    else:
+                        circle0.points_inside[pt] = data
+                for pt, data in circle1.points_outside.items():
+                    known = circle0.points_outside.get(pt)
+                    if known:
+                        known.update(data)
+                    else:
+                        circle0.points_outside[pt] = data
+                self.__all_circles.remove(circle1)
+            circle0.add(prop)
+        elif circle0:
+            circle0.add(prop)
+            self.__key_to_circle[prop.circle_keys[1]] = circle0
+        elif circle1:
+            circle1.add(prop)
+            self.__key_to_circle[prop.circle_keys[0]] = circle1
+        else:
+            circle = LineSet.Circle()
+            circle.add(prop)
+            self.__key_to_circle[prop.circle_keys[0]] = circle
+            self.__key_to_circle[prop.circle_keys[1]] = circle
+            self.__all_circles.append(circle)
+
     def __line_by_segment(self, segment):
         line = self.__segment_to_line.get(segment)
         if line is None:
@@ -169,6 +284,17 @@ class LineSet:
             self.__segment_to_line[segment] = line
             self.__all_lines.append(line)
         return line
+
+    def __circle_by_key(self, key):
+        circle = self.__key_to_circle.get(key)
+        if circle is None:
+            circle = LineSet.Circle()
+            circle.premises_graph.add_node(key)
+            for pt in key:
+                circle.points_on[pt] = set()
+            self.__key_to_circle[key] = circle
+            self.__all_circles.append(circle)
+        return circle
 
     def __add_different_lines_property(self, prop):
         line0 = self.__line_by_segment(prop.segments[0])
@@ -189,6 +315,21 @@ class LineSet:
         else:
             storage[prop.point] = {prop}
 
+    def __add_point_and_circle_property(self, prop):
+        self.__point_and_circle[(prop.point, prop.circle_key)] = prop
+        circle = self.__circle_by_key(prop.circle_key)
+        if prop.location == PointAndCircleProperty.Kind.on:
+            storage = circle.points_on
+        elif prop.location == PointAndCircleProperty.Kind.inside:
+            storage = circle.points_inside
+        elif prop.location == PointAndCircleProperty.Kind.outside:
+            storage = circle.points_outside
+        prop_set = storage.get(prop.point)
+        if prop_set:
+            prop_set.add(prop)
+        else:
+            storage[prop.point] = {prop}
+
     def add(self, prop):
         if isinstance(prop, LineCoincidenceProperty):
             if prop.coincident:
@@ -201,6 +342,16 @@ class LineSet:
             self.__collinearity[prop.property_key] = prop
         elif isinstance(prop, PointsCoincidenceProperty):
             self.__coincidence[prop.property_key] = prop
+        elif isinstance(prop, CircleCoincidenceProperty):
+            if prop.coincident:
+                self.__add_same_circle_property(prop)
+            else:
+                #TODO: implement
+                pass
+        elif isinstance(prop, PointAndCircleProperty):
+            self.__add_point_and_circle_property(prop)
+        elif isinstance(prop, ConcyclicPointsProperty):
+            self.__concyclicity[frozenset(prop.points)] = prop
 
     def coincidence_property(self, pt0, pt1):
         cached = self.__coincidence.get(frozenset([pt0, pt1]))
@@ -220,6 +371,17 @@ class LineSet:
             return prop
         line = self.__segment_to_line.get(segment)
         return line.point_on_line_property(segment, point) if line else None
+
+    def concyclicity_property(self, pt0, pt1, pt2, pt3):
+        pts = (pt0, pt1, pt2, pt3)
+        key = frozenset(pts)
+        cached = self.__concyclicity.get(key)
+        if cached:
+            return cached
+        for circle in self.circles:
+            if all(pt in circle.points_on for pt in pts):
+                return circle.concyclicity_property(*pts)
+        return None
 
     def collinearity_property(self, pt0, pt1, pt2):
         pts = (pt0, pt1, pt2)
@@ -337,6 +499,10 @@ class LineSet:
     @property
     def lines(self):
         return list(self.__all_lines)
+
+    @property
+    def circles(self):
+        return list(self.__all_circles)
 
     def non_coincident_points(self, point):
         collection = set()
@@ -968,7 +1134,7 @@ class PropertySet(LineSet):
             self.__length_ratios.add(prop)
         elif type_key == SameCyclicOrderProperty:
             self.__cyclic_orders.add(prop)
-        elif type_key in (PointsCoincidenceProperty, LineCoincidenceProperty, PointOnLineProperty, PointsCollinearityProperty):
+        elif type_key in (PointsCoincidenceProperty, LineCoincidenceProperty, PointOnLineProperty, PointsCollinearityProperty, CircleCoincidenceProperty, PointAndCircleProperty, ConcyclicPointsProperty):
             super().add(prop)
         elif type_key == SameOrOppositeSideProperty:
             self.__two_points_relatively_to_line[prop.property_key] = prop
