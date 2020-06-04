@@ -156,10 +156,10 @@ class PointOnLineProperty(Property):
     """
     A point lies [not] on a line
     """
-    def __init__(self, segment, point, on_line):
-        super().__init__((segment, point))
-        self.segment = segment
+    def __init__(self, point, segment, on_line):
+        super().__init__((point, segment))
         self.point = point
+        self.segment = segment
         self.on_line = on_line
 
     @property
