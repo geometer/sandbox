@@ -1222,15 +1222,11 @@ class PropertySet(LineSet):
             self.__length_ratios.add(prop)
         elif type_key == LengthRatioProperty:
             self.__length_ratios.add(prop)
-        elif type_key == PointsCollinearityProperty:
-            super().add(prop)
-        elif type_key == PointAndCircleProperty:
-            super().add(prop)
         elif type_key == EqualLengthRatiosProperty:
             self.__length_ratios.add(prop)
         elif type_key == SameCyclicOrderProperty:
             self.__cyclic_orders.add(prop)
-        elif type_key in (PointsCoincidenceProperty, LineCoincidenceProperty, PointOnLineProperty, CircleCoincidenceProperty, ConcyclicPointsProperty):
+        elif type_key in (PointsCoincidenceProperty, LineCoincidenceProperty, PointOnLineProperty, PointsCollinearityProperty, CircleCoincidenceProperty, PointAndCircleProperty, ConcyclicPointsProperty):
             super().add(prop)
         elif type_key == SameOrOppositeSideProperty:
             self.__two_points_relatively_to_line[prop.property_key] = prop
