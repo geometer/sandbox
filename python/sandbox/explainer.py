@@ -510,7 +510,7 @@ class Explainer:
                         )
 
         for prop, comment in enumerate_predefined_properties(self.scene, max_layer=self.__max_layer):
-            prop.rule = PredefinedPropertyRule
+            prop.rule = PredefinedPropertyRule.instance()
             self.__reason(prop, comment, [])
 
         self.__iteration_step_count = 0

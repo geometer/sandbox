@@ -4,9 +4,23 @@ class AbstractRule:
         return 2
 
 class SyntheticPropertyRule(AbstractRule):
-    pass
+    __instance = None
+
+    @staticmethod
+    def instance():
+        if SyntheticPropertyRule.__instance is None:
+            SyntheticPropertyRule.__instance = SyntheticPropertyRule()
+        return SyntheticPropertyRule.__instance
 
 class PredefinedPropertyRule(AbstractRule):
+    __instance = None
+
+    @staticmethod
+    def instance():
+        if PredefinedPropertyRule.__instance is None:
+            PredefinedPropertyRule.__instance = PredefinedPropertyRule()
+        return PredefinedPropertyRule.__instance
+
     @classmethod
     def priority(clazz):
         return 1
