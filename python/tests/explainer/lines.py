@@ -51,10 +51,10 @@ class LinesTest2(ExplainerTest):
         E = self.scene.get('E')
         F = self.scene.get('F')
         props = (
-            PointOnLineProperty(A.segment(B), E, False),
-            PointOnLineProperty(A.segment(B), F, True),
-            PointOnLineProperty(C.segment(D), E, False),
-            PointOnLineProperty(C.segment(D), F, True),
+            PointOnLineProperty(E, A.segment(B), False),
+            PointOnLineProperty(F, A.segment(B), True),
+            PointOnLineProperty(E, C.segment(D), False),
+            PointOnLineProperty(F, C.segment(D), True),
             PointsCollinearityProperty(A, C, D, True),
             PointsCollinearityProperty(B, D, F, True),
             PointsCollinearityProperty(A, B, E, False),
@@ -70,7 +70,7 @@ class LinesTest2(ExplainerTest):
         E = self.scene.get('E')
         F = self.scene.get('F')
         props = (
-            PointOnLineProperty(A.segment(C), B, False),
+            PointOnLineProperty(B, A.segment(C), False),
         )
         for prop in props:
             self.assertNotIn(prop, self.explainer.context)
@@ -83,8 +83,8 @@ class LinesTest2(ExplainerTest):
         E = self.scene.get('E')
         F = self.scene.get('F')
         props = (
-            PointOnLineProperty(A.segment(B), E, True),
-            PointOnLineProperty(A.segment(B), F, False),
+            PointOnLineProperty(E, A.segment(B), True),
+            PointOnLineProperty(F, A.segment(B), False),
             PointsCollinearityProperty(A, B, E, True),
         )
         for prop in props:

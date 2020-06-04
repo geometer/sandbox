@@ -74,7 +74,7 @@ class LineSet:
 
             for seg in self.segments:
                 if point in seg.points:
-                    prop = PointOnLineProperty(segment, point, on)
+                    prop = PointOnLineProperty(point, segment, on)
                     comment = LazyComment(template, point, seg.as_line, segment.as_line)
                     premises = [self.same_line_property(seg, segment)]
                     candidates.append(_synthetic_property(prop, comment, premises))
@@ -83,7 +83,7 @@ class LineSet:
                 seg = known.segment
                 if seg == segment:
                     return known
-                prop = PointOnLineProperty(segment, point, on)
+                prop = PointOnLineProperty(point, segment, on)
                 comment = LazyComment(template, point, seg.as_line, segment.as_line)
                 premises = [known, self.same_line_property(seg, segment)]
                 candidates.append(_synthetic_property(prop, comment, premises))

@@ -20,7 +20,7 @@ A.angle(B, C).is_acute_constraint(comment='assumption')
 B.angle(A, C).is_acute_constraint(comment='assumption')
 C.angle(A, B).is_acute_constraint(comment='assumption')
 
-prop = PointOnLineProperty(C.segment(H), F, True)
+prop = PointOnLineProperty(F, C.segment(H), True)
 
 visualise(scene, prop, title='Altitudes of (acute) triangle', task=[
     LazyComment('%s is a non-degenerate triangle', triangle),

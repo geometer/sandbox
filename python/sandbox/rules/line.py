@@ -69,7 +69,7 @@ class CollinearityToPointOnLineRule(SingleSourceRule):
                 continue
             third = next(pt for pt in prop.points if pt not in side.points)
             yield (
-                PointOnLineProperty(side, third, True),
+                PointOnLineProperty(third, side, True),
                 LazyComment('points %s, %s, and %s are collinear', third, *side.points),
                 [prop, eq]
             )
@@ -114,7 +114,7 @@ class NonCollinearityToPointNotOnLineRule(SingleSourceRule):
         triangle = Scene.Triangle(*prop.points)
         for side, vertex in zip(triangle.sides, triangle.points):
             yield (
-                PointOnLineProperty(side, vertex, False),
+                PointOnLineProperty(vertex, side, False),
                 LazyComment('points %s, %s, and %s are not collinear', vertex, *side.points),
                 [prop]
             )
