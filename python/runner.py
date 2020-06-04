@@ -77,14 +77,26 @@ def run_sample(scene, *props):
             if explanation:
                 dump(explanation)
                 print('Depth = %s' % depth(explanation))
+                cumulative_priorities = {}
+                def cumu(prop):
+                    cached = cumulative_priorities.get(prop)
+                    if cached is not None:
+                        return cached
+                    if prop.reason.premises:
+                        cu = 0.7 * prop.priority + 0.3 * max(cumu(p) for p in prop.reason.premises)
+                    else:
+                        cu = prop.priority
+                    cumulative_priorities[prop] = cu
+                    return cu
+
                 priorities = {}
                 for p in explanation.reason.all_premises:
-                    priority = p.priority
+                    priority = cumu(p)
                     priorities[priority] = priorities.get(priority, 0) + 1
                 pairs = list(priorities.items())
                 pairs.sort(key=lambda pair: -pair[0])
                 count_all = len(explanation.reason.all_premises)
-                print('Props = %d (%s)' % (count_all, ', '.join(['%d: %d' % p for p in pairs])))
+                print('Props = %d (%s)' % (count_all, ', '.join(['%.3f: %d' % p for p in pairs])))
                 all_premises(explanation).stats().dump()
                 rules_map = {}
                 for prop in explanation.reason.all_premises:
