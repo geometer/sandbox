@@ -1,7 +1,5 @@
 import sympy as sp
 
-from .figure import Figure
-
 def degree_to_string(degree):
     if isinstance(degree, sp.Number):
         if not degree.is_integer and (2 * degree).is_integer:
@@ -76,6 +74,7 @@ class LazyComment:
 
     def html(self):
         def htmlize(obj):
+            from .figure import Figure
             if isinstance(obj, Figure):
                 return '<span class="figure %s"></span>' % obj.css_class()
             while hasattr(obj, 'html'):
