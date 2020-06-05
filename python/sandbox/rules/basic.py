@@ -922,7 +922,6 @@ class RotatedAngleSimplifiedRule(Rule):
                 mask = 0x3
                 break
             mask |= bit
-            print('%s = %s => %s = %s' % (*angs0, *angs1))
             yield (
                 AngleRatioProperty(*angs1, 1),
                 LazyComment('TODO: write comment'),
