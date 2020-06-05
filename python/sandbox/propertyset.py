@@ -97,7 +97,7 @@ class LineSet:
                 seg0 = prop_not_on.segment
                 if pt_on in seg0.points:
                     prop = PointsCoincidenceProperty(pt_on, pt_not_on, False)
-                    comment = LazyComment('points %s, %s, and %s are not collinear', pt_not_on, *seg0.points)
+                    comment = LazyComment('two of three non-collinear points %s, %s, and %s', pt_not_on, *seg0.points)
                     premises = [prop_not_on]
                     candidates.append(_synthetic_property(prop, comment, premises))
                 for seg1 in [seg for seg in self.segments if seg != seg0 and pt_on in seg.points]:

@@ -57,7 +57,6 @@ class Explainer:
             EqualSumsOfAnglesRule(self.context),
             AngleFromSumOfTwoAnglesRule(self.context),
             #SumOfAngles180DegreeRule(self.context),
-            NonCollinearPointsAreDifferentRule(self.context),
             CoincidenceTransitivityRule(self.context),
             TwoPointsBelongsToTwoLinesRule(self.context),
             TwoPointsBelongsToTwoPerpendicularsRule(self.context),
