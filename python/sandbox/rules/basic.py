@@ -249,28 +249,6 @@ class TwoPointsBelongsToTwoLinesRule(SingleSourceRule):
                         )
                         break
 
-class NonCollinearPointsAreDifferentRule(SingleSourceRule):
-    """
-    If three points are collinear, any two of them are not coincident
-    """
-    property_type = PointsCollinearityProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
-    def accepts(self, prop):
-        return not prop.collinear and prop not in self.processed
-
-    def apply(self, prop):
-        self.processed.add(prop)
-        for pt0, pt1 in itertools.combinations(prop.points, 2):
-            yield (
-                PointsCoincidenceProperty(pt0, pt1, False),
-                LazyComment('two of three non-collinear points %s, %s, and %s', *prop.points),
-                [prop]
-            )
-
 class AngleInTriangleWithTwoKnownAnglesRule(Rule):
     def __init__(self, context):
         super().__init__(context)
