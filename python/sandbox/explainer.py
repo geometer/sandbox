@@ -85,6 +85,7 @@ class Explainer:
             BaseAnglesOfIsoscelesWithKnownApexAngleRule(self.context),
             BaseAnglesOfIsoscelesRule(self.context),
             LegsOfIsoscelesRule(self.context),
+            RotatedAngleSimplifiedRule(self.context),
             RotatedAngleRule(self.context),
             AngleTypeByDegreeRule(self.context),
             PointsCollinearityByAngleDegreeRule(self.context),

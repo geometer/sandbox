@@ -882,6 +882,56 @@ class LengthProductEqualityToRatioRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
+class RotatedAngleSimplifiedRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
+    def sources(self):
+        for prop in self.context.angle_value_properties_for_degree(180):
+            if prop.angle.vertex is None:
+                continue
+            segment = prop.angle.endpoints[0].segment(prop.angle.endpoints[1])
+            for oppo in self.context.list(SameOrOppositeSideProperty, [segment]):
+                if oppo.same:
+                    yield (prop, oppo)
+
+    def apply(self, src):
+        mask = self.processed.get(src, 0)
+        if mask == 0x3:
+            return
+        prop, oppo = src
+        ang = prop.angle
+        angles0 = (
+            ang.vertex.angle(ang.endpoints[0], oppo.points[0]),
+            ang.vertex.angle(ang.endpoints[1], oppo.points[1])
+        )
+        angles1 = (
+            ang.vertex.angle(ang.endpoints[0], oppo.points[1]),
+            ang.vertex.angle(ang.endpoints[1], oppo.points[0])
+        )
+
+        original = mask
+        for angs0, angs1, bit in [(angles0, angles1, 1), (angles1, angles0, 2)]:
+            if mask & bit:
+                continue
+            ar = self.context.angle_ratio_property(*angs0)
+            if ar is None:
+                continue
+            if ar.value != 1:
+                mask = 0x3
+                break
+            mask |= bit
+            print('%s = %s => %s = %s' % (*angs0, *angs1))
+            yield (
+                AngleRatioProperty(*angs1, 1),
+                LazyComment('TODO: write comment'),
+                [ar, prop, oppo]
+            )
+
+        if mask != original:
+            self.processed[src] = mask
+
 class RotatedAngleRule(Rule):
     def __init__(self, context):
         super().__init__(context)
