@@ -436,7 +436,7 @@ class AngleValueProperty(LinearAngleProperty):
 
     @property
     def __priority__(self):
-        return 1 if self.degree in (0, 90, 180) else 3
+        return 1 if self.degree in (0, 90, 180) else 3.5
 
     def keys(self):
         return [self.angle]
@@ -712,7 +712,7 @@ class IsoscelesTriangleProperty(Property):
 
     @property
     def description(self):
-        return LazyComment('%s is isosceles (with apex %s)', self.triangle, self.apex)
+        return LazyComment('%s is isosceles with apex %s', self.triangle, self.apex)
 
 class Cycle(Figure):
     def __init__(self, pt0, pt1, pt2):
