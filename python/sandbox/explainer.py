@@ -89,6 +89,7 @@ class Explainer:
             AngleTypeByDegreeRule(self.context),
             PointsCollinearityByAngleDegreeRule(self.context),
             EqualAnglesToCollinearityRule(self.context),
+            AngleInsideBiggerOneRule(self.context),
             RightAngleDegreeRule(self.context),
             AngleTypesInObtuseangledTriangleRule(self.context),
             PartOfAcuteAngleIsAcuteRule(self.context),

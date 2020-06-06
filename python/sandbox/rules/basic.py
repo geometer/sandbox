@@ -679,6 +679,72 @@ class EqualAnglesToCollinearityRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
+class AngleInsideBiggerOneRule(SingleSourceRule):
+    property_type = SameOrOppositeSideProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
+    def accepts(self, prop):
+        return prop.same
+
+    def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0x3:
+            return
+
+        original = mask
+        for (p0, p1), bit in ((prop.segment.points, 1), (reversed(prop.segment.points), 2)):
+            if mask & bit:
+                continue
+            angles = [p0.angle(p1, pt) for pt in prop.points]
+            av0 = self.context.angle_value_property(angles[0])
+            if av0 is None:
+                continue
+            av1 = self.context.angle_value_property(angles[1])
+            if av1 is None:
+                continue
+            mask |= bit
+            if av0.degree == av1.degree:
+                yield (
+                    AngleValueProperty(p0.angle(*prop.points), 0),
+                    LazyComment(
+                        '%s = %s, and points %s and %s are on the same side of %s',
+                        *angles, *prop.points, prop.segment.as_line
+                    ),
+                    [av0, av1, prop]
+                )
+                yield (
+                    PointsCollinearityProperty(p0, *prop.points, True),
+                    LazyComment(
+                        '%s = %s, and points %s and %s are on the same side of %s',
+                        *angles, *prop.points, prop.segment.as_line
+                    ),
+                    [av0, av1, prop]
+                )
+            elif av0.degree < av1.degree:
+                yield (
+                    PointInsideAngleProperty(prop.points[0], av1.angle),
+                    LazyComment(
+                        '%s and %s have common side and %s < %s',
+                        av0.angle, av1.angle, av0.angle, av1.angle
+                    ),
+                    [av0, av1, prop]
+                )
+            else:
+                yield (
+                    PointInsideAngleProperty(prop.points[1], av0.angle),
+                    LazyComment(
+                        '%s and %s have common side and %s < %s',
+                        av1.angle, av0.angle, av1.angle, av0.angle
+                    ),
+                    [av1, av0, prop]
+                )
+
+        if mask != original:
+            self.processed[prop] = mask
+
 class PointsSeparatedByLineAreNotCoincidentRule(SingleSourceRule):
     """
     If two points are separated by a line, the points are not coincident
