@@ -191,6 +191,12 @@ class Scene(CoreScene):
             kwargs = dict(kwargs)
             kwargs['comment'] = LazyComment('%s is equilateral', tri)
         self.equilateral_constraint(tri, **kwargs)
+
+        #TODO: this is a hack for sketches
+        pt0.line_through(pt1)
+        pt0.line_through(pt2)
+        pt1.line_through(pt2)
+
         return tri
 
     def square(self, *points_or_labels):
