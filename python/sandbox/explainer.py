@@ -97,6 +97,7 @@ class Explainer:
             TwoAnglesWithCommonSideRule(self.context),
             TwoPointsRelativelyToLineTransitivityRule(self.context),
             CongruentAnglesDegeneracyRule(self.context),
+            PointAndAngleRule(self.context),
 
             EquilateralTriangleByThreeSidesRule(self.context),
             IsoscelesTriangleByConrguentLegsRule(self.context),
@@ -192,42 +193,6 @@ class Explainer:
                     SameOrOppositeSideProperty(pia.angle.vectors[1].as_segment, pia.point, pia.angle.vectors[0].end, True),
                     '', #TODO: write comment
                     [pia]
-                )
-
-            for ss0, ss1 in itertools.combinations([p for p in self.context.list(SameOrOppositeSideProperty) if p.same], 2):
-                if ss0.points[0] in ss1.points:
-                    common = ss0.points[0]
-                    other0 = ss0.points[1]
-                elif ss0.points[1] in ss1.points:
-                    common = ss0.points[1]
-                    other0 = ss0.points[0]
-                else:
-                    continue
-                other1 = ss1.points[1] if ss1.points[0] == common else ss1.points[0]
-                if other0 not in ss1.segment.points or other1 not in ss0.segment.points:
-                    continue
-
-                for pts in itertools.combinations(set(ss0.segment.points + ss1.segment.points), 3):
-                    ncl = self.context.collinearity_property(*pts)
-                    if ncl:
-                        break
-                else:
-                    continue
-                if ncl.collinear:
-                    continue
-
-                vertex, reasons = self.context.intersection_of_lines(ss0.segment, ss1.segment)
-                if vertex is None or vertex in [common, other0, other1]:
-                    continue
-
-                reasons = [ss0, ss1, ncl] + reasons
-                if all(p.reason.obsolete for p in reasons):
-                    continue
-
-                yield (
-                    PointInsideAngleProperty(common, vertex.angle(other0, other1)),
-                    '', #TODO: write comment
-                    reasons
                 )
 
             angle_values = [prop for prop in self.context.angle_value_properties() \

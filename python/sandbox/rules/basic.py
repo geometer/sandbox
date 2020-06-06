@@ -1462,3 +1462,52 @@ class CongruentAnglesDegeneracyRule(Rule):
                 comment,
                 [ca, col]
             )
+
+class PointAndAngleRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        return itertools.combinations(self.context.list(SameOrOppositeSideProperty), 2)
+
+    def apply(self, src):
+        key = frozenset(src)
+        if key in self.processed:
+            return
+        self.processed.add(key)
+
+        prop0, prop1 = src
+        if prop0.segment == prop1.segment or not prop0.same and not prop1.same:
+            return
+        vertex = next((pt for pt in prop0.segment.points if pt in prop1.segment.points), None)
+        if vertex is None:
+            return
+        pt0 = next(pt for pt in prop0.segment.points if pt != vertex)
+        if pt0 not in prop1.points:
+            return
+        pt1 = next(pt for pt in prop1.segment.points if pt != vertex)
+        if pt1 not in prop0.points:
+            return
+        fourth = next(pt for pt in prop0.points if pt != pt1)
+        if fourth not in prop1.points:
+            return
+
+        if prop0.same and prop1.same:
+            yield (
+                PointInsideAngleProperty(fourth, vertex.angle(pt0, pt1)),
+                LazyComment('%s lies on the same side of %s as %s and on the same side of %s as %s', fourth, vertex.vector(pt0).as_ray, pt1, vertex.vector(pt1).as_ray, pt0),
+                [prop0, prop1]
+            )
+        elif prop0.same:
+            yield (
+                PointInsideAngleProperty(pt1, vertex.angle(pt0, fourth)),
+                LazyComment('%s lies on the same side of %s as %s and %s separates %s and %s', pt1, vertex.vector(pt0).as_ray, fourth, vertex.vector(pt1).as_ray, pt0, fourth),
+                [prop0, prop1]
+            )
+        else:
+            yield (
+                PointInsideAngleProperty(pt0, vertex.angle(fourth, pt1)),
+                LazyComment('%s lies on the same side of %s as %s and %s separates %s and %s', pt0, vertex.vector(pt1).as_ray, fourth, vertex.vector(pt0).as_ray, pt1, fourth),
+                [prop1, prop0]
+            )

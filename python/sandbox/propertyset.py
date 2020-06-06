@@ -726,7 +726,7 @@ class AngleRatioPropertySet:
                     if edge:
                         yield edge['prop']
                         continue
-                    path = nx.algorithms.shortest_path(self.premises_graph, angle0, angle1)
+                    path = nx.algorithms.shortest_path(self.premises_graph, angle0, angle1, weight='cost')
                     comment, premises = self.explanation_from_path(path, ratio0)
                     prop = AngleRatioProperty(angle0, angle1, divide(ratio0, ratio1))
                     yield _synthetic_property(prop, comment, premises)
@@ -743,7 +743,7 @@ class AngleRatioPropertySet:
             else:
                 self.angle_to_ratio[prop.angle] = 1
                 self.degree = prop.degree
-            self.premises_graph.add_edge(prop.angle, self.degree, prop=prop)
+            self.premises_graph.add_edge(prop.angle, self.degree, prop=prop, cost=prop.reason.cost)
 
         def add_ratio_property(self, prop):
             ratio0 = self.angle_to_ratio.get(prop.angle0)
@@ -758,7 +758,7 @@ class AngleRatioPropertySet:
             else:
                 self.angle_to_ratio[prop.angle0] = prop.value
                 self.angle_to_ratio[prop.angle1] = 1
-            self.premises_graph.add_edge(prop.angle0, prop.angle1, prop=prop)
+            self.premises_graph.add_edge(prop.angle0, prop.angle1, prop=prop, cost=prop.reason.cost)
 
     def __init__(self):
         self.angle_to_family = {}
