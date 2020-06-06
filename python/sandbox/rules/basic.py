@@ -1326,6 +1326,53 @@ class TwoAnglesWithCommonSideRule(SingleSourceRule):
             [prop, av]
         )
 
+class TwoAnglesWithCommonSideDegreeRule(SingleSourceRule):
+    property_type = PointInsideAngleProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
+    def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0x7:
+            return
+
+        angle0 = prop.angle.vertex.angle(prop.angle.vectors[0].end, prop.point)
+        angle1 = prop.angle.vertex.angle(prop.angle.vectors[1].end, prop.point)
+        av0 = self.context.angle_value_property(angle0)
+        av1 = self.context.angle_value_property(angle1)
+        if av0 is None and av1 is None:
+            return
+        av_sum = self.context.angle_value_property(prop.angle)
+
+        original = mask
+
+        if (mask & 0x1) == 0 and av0 and av1:
+            mask |= 0x1
+            yield (
+                AngleValueProperty(prop.angle, av0.degree + av1.degree),
+                LazyComment('%s = %s + %s = %s + %s', prop.angle, angle0, angle1, av0.degree_str, av1.degree_str),
+                [prop, av0, av1]
+            )
+        if (mask & 0x2) == 0 and av0 and av_sum:
+            mask |= 0x2
+            yield (
+                AngleValueProperty(angle1, av_sum.degree - av0.degree),
+                LazyComment('%s = %s - %s = %s - %s', angle1, prop.angle, angle0, av_sum.degree_str, av0.degree_str),
+                [prop, av_sum, av0]
+            )
+        if (mask & 0x4) == 0 and av1 and av_sum:
+            mask |= 0x4
+            yield (
+                AngleValueProperty(angle0, av_sum.degree - av1.degree),
+                LazyComment('%s = %s - %s = %s - %s', angle0, prop.angle, angle1, av_sum.degree_str, av1.degree_str),
+                [prop, av_sum, av1]
+            )
+
+        if mask != original:
+            self.processed[prop] = mask
+
 class SameSideToInsideAngleRule(SingleSourceRule):
     property_type = SameOrOppositeSideProperty
 
