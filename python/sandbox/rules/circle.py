@@ -1,5 +1,6 @@
 import itertools
 
+from ..figure import Circle
 from ..property import *
 from ..util import LazyComment
 
@@ -235,10 +236,11 @@ class TwoChordsIntersectionRule(Rule):
                 continue
             self.processed.add(key)
 
+            circle = Circle(*points)
             if av.degree == 0:
-                comment = LazyComment('%s is the intersection of lines %s and %s, and lies outside of segment %s', crossing, chord1.as_line, chord0.as_line, chord0)
+                comment = LazyComment('%s and %s are chords of %s, %s is the intersection of lines %s and %s, and lies outside of the chord %s', chord1, chord0, circle, crossing, chord1.as_line, chord0.as_line, chord0)
             elif av.degree == 180:
-                comment = LazyComment('%s is the intersection of chords %s and %s, and lies inside %s', crossing, chord1, chord0, chord0)
+                comment = LazyComment('%s is the intersection of chords %s and %s of %s, and lies inside %s', crossing, chord1, chord0, circle, chord0)
             else:
                 assert False, 'Contradiction'
             if prop is None:
@@ -312,15 +314,16 @@ class InscribedAnglesWithCommonCircularArcRule(Rule):
             for pp0, pp1 in ((p0, p1), (p1, p0)):
                 ang0 = pp0[0].angle(*pp1)
                 ang1 = pp0[1].angle(*pp1)
+                circle = Circle(*ang0.point_set)
                 if sos.same:
                     yield (
                         AngleRatioProperty(ang0, ang1, 1),
-                        LazyComment('%s and %s are inscribed and subtend the same arc', ang0, ang1),
+                        LazyComment('%s and %s are inscribed in %s and subtend the same arc', ang0, ang1, circle),
                         [prop, sos]
                     )
                 else:
                     yield (
                         SumOfTwoAnglesProperty(ang0, ang1, 180),
-                        LazyComment('%s and %s are inscribed and subtend complementary arcs', ang0, ang1),
+                        LazyComment('%s and %s are inscribed in %s and subtend complementary arcs', ang0, ang1, circle),
                         [prop, sos]
                     )
