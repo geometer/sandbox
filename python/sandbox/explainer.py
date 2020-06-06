@@ -103,6 +103,7 @@ class Explainer:
             CeviansIntersectionRule(self.context),
             SameSideToInsideAngleRule(self.context),
             TwoAnglesWithCommonSideRule(self.context),
+            TwoAnglesWithCommonSideDegreeRule(self.context),
             TwoPointsRelativelyToLineTransitivityRule(self.context),
             CongruentAnglesDegeneracyRule(self.context),
             PointAndAngleRule(self.context),
