@@ -116,6 +116,8 @@ class Explainer:
                 RightAngledTriangleMedianRule(self.context),
                 Triangle30_60_90SidesRule(self.context),
                 Triangle30_30_120SidesRule(self.context),
+                Triangle36_36_108SidesRule(self.context),
+                Triangle72_72_36SidesRule(self.context),
             ]
         if options.get('trigonometric'):
             self.__rules += [
@@ -135,7 +137,6 @@ class Explainer:
             self.context.add(pro)
 
         existing = self.context[prop]
-        #TODO: report contradiction between prop and existing
         if existing is None:
             prop.reason = reason
             prop.reason.obsolete = False
