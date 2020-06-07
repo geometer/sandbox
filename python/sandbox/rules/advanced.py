@@ -74,13 +74,77 @@ class Triangle30_30_120SidesRule(SingleSourceRule):
     """
     property_type = IsoscelesTriangleProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
     def apply(self, prop):
         value = self.context.angle_value_property(prop.apex.angle(*prop.base.points))
-        if value is None or value.degree != 120 or prop.reason.obsolete and value.reason.obsolete:
+        if value is None:
+            return
+        self.processed.add(prop)
+        if value.degree != 120:
             return
         for pt in prop.base.points:
             yield (
                 LengthRatioProperty(prop.base, prop.apex.segment(pt), sp.sqrt(3)),
                 LazyComment('Ratio of base and leg in isosceles %s with base angle = 30º', prop.triangle),
+                [prop, value]
+            )
+
+class Triangle72_72_36SidesRule(SingleSourceRule):
+    """
+    Sides ratios in an isosceles triangle with base angles 72º
+    """
+    property_type = IsoscelesTriangleProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
+    def apply(self, prop):
+        value = self.context.angle_value_property(prop.apex.angle(*prop.base.points))
+        if value is None:
+            return
+        self.processed.add(prop)
+        if value.degree != 36:
+            return
+        for pt in prop.base.points:
+            yield (
+                LengthRatioProperty(prop.apex.segment(pt), prop.base, (sp.sqrt(5) + 1) / 2),
+                LazyComment('Ratio of leg and base in isosceles %s with base angle = 72º', prop.triangle),
+                [prop, value]
+            )
+
+class Triangle36_36_108SidesRule(SingleSourceRule):
+    """
+    Sides ratios in an isosceles triangle with base angles 36º
+    """
+    property_type = IsoscelesTriangleProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
+    def apply(self, prop):
+        value = self.context.angle_value_property(prop.apex.angle(*prop.base.points))
+        if value is None:
+            return
+        self.processed.add(prop)
+        if value.degree != 108:
+            return
+        for pt in prop.base.points:
+            yield (
+                LengthRatioProperty(prop.base, prop.apex.segment(pt), (sp.sqrt(5) + 1) / 2),
+                LazyComment('Ratio of base and leg in isosceles %s with base angle = 36º', prop.triangle),
                 [prop, value]
             )
