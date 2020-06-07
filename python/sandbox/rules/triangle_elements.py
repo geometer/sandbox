@@ -217,11 +217,19 @@ class CorrespondingSidesInSimilarTrianglesRule(SingleSourceRule):
                 mask = 0x7
                 break
             for j in [j for j in range(0, 3) if j != i]:
-                yield (
-                    ProportionalLengthsProperty(sides0[j], sides1[j], ratio),
-                    'Ratios of sides in similar triangles',
-                    [prop, lr]
-                )
+                if sides0[j] == sides1[j]:
+                    if ratio != 1:
+                        yield (
+                            PointsCoincidenceProperty(*sides0[j].points, True),
+                            LazyComment('|%s| = %s * |%s| as %s is a side in similar but non-congruent %s and %s', sides0[j], ratio, sides0[j], sides0[j], prop.triangle0, prop.triangle1),
+                            [prop, lr]
+                        )
+                else:
+                    yield (
+                        ProportionalLengthsProperty(sides0[j], sides1[j], ratio),
+                        LazyComment('ratio of sides in similar %s and %s', prop.triangle0, prop.triangle1),
+                        [prop, lr]
+                    )
 
         if original != mask:
             self.processed[prop] = mask
