@@ -5,16 +5,9 @@ Solver/explainer of elementary planimetric problems.
 
 The goal of the project is to create an app that takes a human-readable description of a planimetry problem and generates a human-readable solution.
 
-## Web-based demos
+## Web demos
 
-Here is a short list of generated proofs/solutions.
-
-| Problem | Generated solution |
-| ------- | ------------------ |
-| [Problem 4578](https://www.facebook.com/groups/parmenides52/permalink/2779763428804012/) from [“Romantics of geometry”](https://www.facebook.com/groups/parmenides52/) facebook group | [The solution](http://demo.geometer.name/examples/4578.html) |
-| [Problem 5.3.1](http://vivacognita.org/555geometry.html/_/5/5-3/53-1-r371) from the [Akopyan's book](https://www.amazon.com/Geometry-Figures-Second-Arseniy-Akopyan/dp/1548710784) | [The proof](http://demo.geometer.name/examples/akopyan_book_5_3_1.html) |
-| Problem 1 from the [“one-step results list”](http://www.stanleyrabinowitz.com/download/onestepresults.pdf) by [Stanley Rabinowitz](https://www.facebook.com/stanley.rabinowitz) | [The proof](http://demo.geometer.name/examples/onestep_1.html) |
-| [Napoleon's theorem](https://en.wikipedia.org/wiki/Napoleon%27s_theorem) | [The proof](http://demo.geometer.name/examples/napoleon.html) |
+Live demos are available on [the project site](https://sandbox.geometer.name/). No way to enter your own problem at the moment, the site generates visualisations and solutions for a set of selected of problems.
 
 ## The concept
 
