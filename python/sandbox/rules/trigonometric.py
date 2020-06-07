@@ -23,16 +23,16 @@ class LawOfSinesRule(Rule):
         av1 = self.context.angle_value_property(triangle.angles[1])
         if av1 is None:
             return
-        self.processed.add(av0)
-        sines = (
-            sp.sin(sp.pi * av0.degree / 180),
-            sp.sin(sp.pi * av1.degree / 180),
-            sp.sin(sp.pi * (180 - av0.degree - av1.degree) / 180)
-        )
+        av2 = self.context.angle_value_property(triangle.angles[2])
+        if av2 is None:
+            return
+        avs = [av0, av1, av2]
+        self.processed.update(avs)
+        sines = [sp.sin(sp.pi * av.degree / 180) for av in avs]
         sides = triangle.sides
-        for (sine0, side0), (sine1, side1) in itertools.combinations(zip(sines, sides), 2):
+        for i, j in itertools.combinations(range(0, 3), 2):
             yield (
-                ProportionalLengthsProperty(side0, side1, sine0 / sine1),
-                LazyComment('Law of sines for %s', triangle),
-                [av0, av1]
+                ProportionalLengthsProperty(sides[i], sides[j], sines[i] / sines[j]),
+                LazyComment('law of sines for %s', triangle),
+                [avs[0], avs[1]]
             )
