@@ -23,7 +23,7 @@ class PredefinedPropertyRule(AbstractRule):
 
     @classmethod
     def priority(clazz):
-        return 1
+        return 0.5
 
 class Rule(AbstractRule):
     def __init__(self, context):
