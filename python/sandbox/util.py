@@ -19,12 +19,15 @@ def divide(num0, num1):
         quot = num0 // num1
         if quot * num1 == num0:
             return quot
-    ratio = sp.sympify(num0) / num1
+    ratio = sp.simplify(sp.sympify(num0) / num1)
     return int(ratio) if ratio.is_integer else ratio
 
 def normalize_number(num):
     if isinstance(num, int):
         return num
+    if num.is_integer:
+        return int(num)
+    num = sp.simplify(num)
     return int(num) if num.is_integer else num
 
 def good_angles(vector0, vector1, include_four_point=False):
