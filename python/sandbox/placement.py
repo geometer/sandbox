@@ -476,7 +476,7 @@ class Placement(BasePlacement):
             elif cnstr.kind == Constraint.Kind.angle_value:
                 angle = cnstr.params[0]
                 degree = cnstr.params[1]
-                numb_square = (self.angle(angle) - degree * np.pi / 180) ** 2
+                numb_square += (self.angle(angle) - degree * np.pi / 180) ** 2
             elif cnstr.kind == Constraint.Kind.angles_ratio:
                 angle0 = cnstr.params[0]
                 angle1 = cnstr.params[1]
