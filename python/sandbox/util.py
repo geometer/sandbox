@@ -14,12 +14,22 @@ def keys_for_triangle(triangle, lengths):
         collection += triangle.sides
     return collection
 
+__simplification_cache = {}
+def simplify(num):
+    cached = __simplification_cache.get(num)
+    if cached:
+        return cached
+    result = sp.simplify(num)
+    __simplification_cache[num] = result
+    __simplification_cache[result] = result
+    return result
+
 def divide(num0, num1):
     if isinstance(num0, int) and isinstance(num1, int):
         quot = num0 // num1
         if quot * num1 == num0:
             return quot
-    ratio = sp.simplify(sp.sympify(num0) / num1)
+    ratio = simplify(sp.sympify(num0) / num1)
     return int(ratio) if ratio.is_integer else ratio
 
 def normalize_number(num):
@@ -27,7 +37,7 @@ def normalize_number(num):
         return num
     if num.is_integer:
         return int(num)
-    num = sp.simplify(num)
+    num = simplify(num)
     return int(num) if num.is_integer else num
 
 def good_angles(vector0, vector1, include_four_point=False):
