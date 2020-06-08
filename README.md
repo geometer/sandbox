@@ -7,7 +7,7 @@ The goal of the project is to create an app that takes a human-readable descript
 
 ## Web demos
 
-Live demos are available on [the project site](https://sandbox.geometer.name/). No way to enter your own problem at the moment, the site generates visualisations and solutions for a set of selected of problems.
+Live demos are available on [the project site](https://sandbox.geometer.name/). No way to enter your own problem at the moment, the site generates visualisations and solutions for a set of selected problems.
 
 ## The concept
 
