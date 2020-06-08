@@ -4,38 +4,10 @@
   min-width: 13in;
   padding-top: 25px;
   padding-left: 20px;
-  margin-top: 65px;
-}
-
-html {
-  background-color: #f7f7f7;
-}
-
-body {
-  background-color: #ffffff;
 }
 
 .main h2 {
   padding-left: 50px;
-}
-
-.sandbox-logo {
-  display: inline-block;
-  background-image: url('/html/images/sandbox.svg');
-  height: 36px;
-  width: 36px;
-  background-size: 36px 36px;
-  margin-left: 6px;
-  margin-right: 6px;
-  margin-bottom: 2px;
-  vertical-align: middle;
-}
-
-nav.sandbox-header, div.sandbox-header {
-  background-color: #f7f7f7;
-  border-bottom: 1px solid rgba(0,0,0,.125);
-  padding-top: 10px;
-  padding-bottom: 6px;
 }
 
 .sandbox-column {
