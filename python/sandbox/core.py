@@ -577,6 +577,9 @@ class CoreScene:
             return middle
 
         def free_point(self, **kwargs):
+            if 'comment' not in kwargs:
+                kwargs = dict(kwargs)
+                kwargs['comment'] = LazyComment('point on segment %s', self)
             point = self.line_through(layer='auxiliary').free_point(**kwargs)
             point.inside_constraint(self)
             return point
