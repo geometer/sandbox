@@ -374,6 +374,23 @@ class IsoscelesTriangleByConrguentLegsRule(Rule):
         else:
             return
         base1 = prop.segment0.points[0] if apex == prop.segment0.points[1] else prop.segment0.points[1]
+        av = self.context.angle_value_property(apex.angle(base0, base1))
+        if av:
+            if av.degree in (0, 180):
+                return
+            if av.degree == 60:
+                yield (
+                    EquilateralTriangleProperty((apex, base0, base1)),
+                    LazyComment('congruent sides %s and %s, and %s = %s', prop.segment0, prop.segment1, av.angle, av.degree_str),
+                    [prop, av]
+                )
+                return
+            yield (
+                IsoscelesTriangleProperty(apex, base0.segment(base1)),
+                LazyComment('congruent legs %s and %s', prop.segment0, prop.segment1),
+                [prop, av]
+            )
+
         ne = self.context.not_equal_property(base0, base1)
         if ne and not (prop.reason.obsolete and ne.reason.obsolete):
             yield (
