@@ -376,7 +376,7 @@ class EquilateralTriangleProperty(Property):
 
     @property
     def __priority__(self):
-        return 4
+        return 4.5
 
     @property
     def description(self):

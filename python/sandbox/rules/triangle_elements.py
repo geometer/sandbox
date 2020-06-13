@@ -264,6 +264,6 @@ class EquilateralTriangleSidesRule(SingleSourceRule):
         for side0, side1 in itertools.combinations(prop.triangle.sides, 2):
             yield (
                 ProportionalLengthsProperty(side0, side1, 1),
-                LazyComment('Sides of equilateral %s', prop.triangle),
+                LazyComment('sides of equilateral %s', prop.triangle),
                 [prop]
             )
