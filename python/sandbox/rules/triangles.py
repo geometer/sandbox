@@ -406,11 +406,18 @@ class IsoscelesTriangleByConrguentBaseAnglesRule(Rule):
         if av0 and av0.degree != 0:
             self.processed.add(key)
             av1 = self.context.angle_value_property(ang1)
-            yield (
-                IsoscelesTriangleProperty(apex, base),
-                LazyComment('congruent base angles %s = %s and %s = %s', ang0, av0.degree_str, ang1, av1.degree_str),
-                [av0, av1]
-            )
+            if av0.degree == 60:
+                yield (
+                    EquilateralTriangleProperty(ang0.point_set),
+                    LazyComment('%s = %s and %s = %s', ang0, av0.degree_str, ang1, av1.degree_str),
+                    [av0, av1]
+                )
+            else:
+                yield (
+                    IsoscelesTriangleProperty(apex, base),
+                    LazyComment('congruent base angles %s = %s and %s = %s', ang0, av0.degree_str, ang1, av1.degree_str),
+                    [av0, av1]
+                )
 
         nc = self.context.collinearity_property(*ang0.point_set)
         if nc is None:
