@@ -360,44 +360,62 @@ class EquilateralTriangleByThreeSidesRule(Rule):
                 [prop, cs2]
             )
 
-class IsoscelesTriangleByConrguentLegsRule(Rule):
+class IsoscelesTriangleByConrguentLegsAndAngleRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
     def sources(self):
-        return [p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1]
+        return [p for p in self.context.nondegenerate_angle_value_properties() if p.angle.vertex and p not in self.processed]
 
     def apply(self, prop):
-        if prop.segment1.points[0] in prop.segment0.points:
-            apex = prop.segment1.points[0]
-            base0 = prop.segment1.points[1]
-        elif prop.segment1.points[1] in prop.segment0.points:
-            apex = prop.segment1.points[1]
-            base0 = prop.segment1.points[0]
-        else:
+        angle = prop.angle
+        ratio, value = self.context.length_ratio_property_and_value(angle.vectors[0].as_segment, angle.vectors[1].as_segment, allow_zeroes=True)
+        if ratio is None:
             return
-        base1 = prop.segment0.points[0] if apex == prop.segment0.points[1] else prop.segment0.points[1]
-        av = self.context.angle_value_property(apex.angle(base0, base1))
-        if av:
-            if av.degree in (0, 180):
-                return
-            if av.degree == 60:
-                yield (
-                    EquilateralTriangleProperty((apex, base0, base1)),
-                    LazyComment('congruent sides %s and %s, and %s = %s', prop.segment0, prop.segment1, av.angle, av.degree_str),
-                    [prop, av]
-                )
-                return
+
+        self.processed.add(prop)
+        if value != 1:
+            return
+        if prop.degree == 60:
             yield (
-                IsoscelesTriangleProperty(apex, base0.segment(base1)),
-                LazyComment('congruent legs %s and %s', prop.segment0, prop.segment1),
-                [prop, av]
+                EquilateralTriangleProperty(angle.point_set),
+                LazyComment('congruent sides %s and %s, and %s = %s', ratio.segment0, ratio.segment1, angle, prop.degree_str),
+                [ratio, prop]
+            )
+        else:
+            yield (
+                IsoscelesTriangleProperty(angle.vertex, angle.vectors[0].end.segment(angle.vectors[1].end)),
+                LazyComment('congruent legs %s and %s', ratio.segment0, ratio.segment1),
+                [ratio, prop]
             )
 
+class IsoscelesTriangleByConrguentLegsRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        return [p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1 and p not in self.processed]
+
+    def apply(self, prop):
+        apex = next((pt for pt in prop.segment0.points if pt in prop.segment1.points), None)
+        if apex is None:
+            self.processed.add(prop)
+            return
+        base0 = next(pt for pt in prop.segment0.points if pt != apex)
+        base1 = next(pt for pt in prop.segment1.points if pt != apex)
+
         ne = self.context.not_equal_property(base0, base1)
-        if ne and not (prop.reason.obsolete and ne.reason.obsolete):
-            yield (
-                IsoscelesTriangleProperty(apex, base0.segment(base1)),
-                LazyComment('congruent legs %s and %s', prop.segment0, prop.segment1),
-                [prop, ne]
-            )
+        if ne is None:
+            return
+
+        self.processed.add(prop)
+        yield (
+            IsoscelesTriangleProperty(apex, base0.segment(base1)),
+            LazyComment('congruent legs %s and %s', prop.segment0, prop.segment1),
+            [prop, ne]
+        )
 
 class IsoscelesTriangleByConrguentBaseAnglesRule(Rule):
     def __init__(self, context):
