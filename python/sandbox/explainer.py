@@ -102,6 +102,7 @@ class Explainer:
             PointAndAngleRule(self.context),
 
             EquilateralTriangleByThreeSidesRule(self.context),
+            IsoscelesTriangleByConrguentLegsAndAngleRule(self.context),
             IsoscelesTriangleByConrguentLegsRule(self.context),
             IsoscelesTriangleByConrguentBaseAnglesRule(self.context),
             CongruentTrianglesByAngleAndTwoSidesRule(self.context),
