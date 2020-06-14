@@ -9,12 +9,12 @@ triangle = scene.nondegenerate_triangle(labels=['A', 'B', 'C'])
 A, B, C = triangle.points
 
 def napoleonic(A, B, C):
-    label = '%s_1' % C.label
     equilateral = scene.equilateral_triangle(A, B, '%s_1' % C.label)
     _, _, C1 = equilateral.points
+    C1.comment = LazyComment('Third vertex of equilateral triangle with base %s', A.segment(B))
     line = A.line_through(B, layer='auxiliary')
-    C1.opposite_side_constraint(C, line, comment=LazyComment('given: %s is outward of %s', C1, triangle))
-    D = scene.incentre_point(equilateral, label='%s_2' % C.label, comment=LazyComment('Centre of %s', equilateral))
+    C1.opposite_side_constraint(C, line, comment=LazyComment('%s is outward of %s', C1, triangle))
+    D = scene.centre_point(equilateral, label='%s_2' % C.label)
 
 napoleonic(A, B, C)
 napoleonic(C, A, B)

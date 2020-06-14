@@ -801,6 +801,18 @@ class CoreScene:
             self.__permutations = None
 
         @property
+        def scene(self):
+            return self.points[0].scene
+
+        @property
+        def is_equilateral(self):
+            for cnstr in self.scene.constraints(Constraint.Kind.equilateral):
+                if set(cnstr.params[0].points) == set(self.points):
+                    return True
+            # TODO: check implicit equilateral constraints, e.g. congruency of sides
+            return False
+
+        @property
         def sides(self):
             if self.__sides is None:
                 self.__sides = (

@@ -3,6 +3,7 @@ This module is to be extended in the future to add more construction methods.
 """
 
 import itertools
+import sympy as sp
 
 from .core import CoreScene
 from .util import LazyComment
@@ -81,6 +82,37 @@ class Scene(CoreScene):
         extra.not_equal_constraint(point)
         return point.line_through(extra, **kwargs)
 
+    def centre_point(self, triangle, **kwargs):
+        """
+        Centre of equialteral triangle
+        """
+        assert triangle.is_equilateral
+        angles = triangle.angles
+        bisector0 = angles[0].bisector_line(layer='auxiliary')
+        bisector1 = angles[1].bisector_line(layer='auxiliary')
+        bisector2 = angles[2].bisector_line(layer='auxiliary')
+        if 'comment' not in kwargs:
+            kwargs = dict(kwargs)
+            kwargs['comment'] = LazyComment('The centre of %s', triangle)
+        centre = bisector0.intersection_point(bisector1, **kwargs)
+        comment = LazyComment('%s is the centre of %s', centre, triangle)
+        centre.belongs_to(bisector2)
+        for angle in angles:
+            angle.point_on_bisector_constraint(centre, comment=comment, guaranteed=True)
+        centre.inside_triangle_constraint(triangle, comment=comment, guaranteed=True)
+        for vertex0, vertex1 in itertools.combinations(triangle.points, 2):
+            centre.angle(vertex0, vertex1).value_constraint(120, comment=comment, guaranteed=True)
+            vertex0.angle(centre, vertex1).value_constraint(30, comment=comment, guaranteed=True)
+            vertex1.angle(centre, vertex0).value_constraint(30, comment=comment, guaranteed=True)
+        for v0, v1, v2 in itertools.permutations(triangle.points, 3):
+            centre.vector(v0).angle(v1.vector(v2)).value_constraint(90, comment=comment, guaranteed=True)
+        radiuses = [centre.segment(vertex) for vertex in triangle.points]
+        for rad0, rad1 in itertools.combinations(radiuses, 2):
+            rad0.congruent_constraint(rad1, comment=comment, guaranteed=True)
+        for radius, side in itertools.product(radiuses, triangle.sides):
+            side.ratio_constraint(radius, sp.sqrt(3), comment=comment, guaranteed=True)
+        return centre
+
     def incentre_point(self, triangle, **kwargs):
         """
         Centre of the inscribed circle of the triangle
@@ -98,7 +130,7 @@ class Scene(CoreScene):
         for angle in angles:
             angle.point_on_bisector_constraint(
                 centre,
-                comment=LazyComment('the incentre %s of %s lies on the biscetor of %s', centre, triangle, angle)
+                comment=LazyComment('the incentre %s of %s lies on the bisector of %s', centre, triangle, angle)
             )
         centre.inside_triangle_constraint(triangle, comment=LazyComment('the incentre %s lies inside %s', centre, triangle))
         return centre
@@ -156,7 +188,7 @@ class Scene(CoreScene):
 
     def altitude(self, triangle, vertex, **kwargs):
         """
-        Height from the vertex in the triangle
+        Altitude from the vertex in the triangle
         """
         if isinstance(triangle, CoreScene.Point):
             triangle, vertex = vertex, triangle

@@ -18,7 +18,7 @@ def napoleonic(A, B, C):
     A.scene.equilateral_constraint(equilateral, comment=LazyComment('Given: %s is equilateral', equilateral))
     line = A.line_through(B, layer='auxiliary')
     V.same_side_constraint(C, line, comment=LazyComment('Given: %s is inward of %s', V, triangle))
-    D = scene.incentre_point(equilateral, label=C.label + '2')
+    D = scene.centre_point(equilateral, label=C.label + '2')
 
 napoleonic(A, B, C)
 napoleonic(C, A, B)
