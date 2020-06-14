@@ -1,9 +1,9 @@
 Geometer's Sandbox
 ==================
 
-Solver/explainer of elementary planimetric problems.
+Solver/explainer of elementary plane geometry problems.
 
-The goal of the project is to create an app that takes a human-readable description of a planimetry problem and generates a human-readable solution.
+The goal of the project is to create an app that takes a human-readable description of a problem and generates a human-readable solution.
 
 ## Web demos
 
