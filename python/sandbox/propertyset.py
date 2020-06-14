@@ -996,7 +996,7 @@ class LengthRatioPropertySet:
         def merge(self, other):
             if self.ratio_value is not None:
                 # TODO: better way to report contradiction
-                assert other.ratio_value is None or self.ratio_value == other.ratio_value, 'Contradiction'
+                assert other.ratio_value is None or sp.N(self.ratio_value) == sp.N(other.ratio_value), 'Contradiction'
             elif other.ratio_value is not None:
                 self.ratio_value = other.ratio_value
 

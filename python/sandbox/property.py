@@ -1,5 +1,6 @@
 from enum import Enum, auto
 import itertools
+import sympy as sp
 
 from .figure import Figure
 from .scene import Scene
@@ -583,7 +584,7 @@ class ProportionalLengthsProperty(Property):
     Two segment lengths ratio
     """
     def __init__(self, segment0, segment1, ratio):
-        if ratio >= 1:
+        if sp.N(ratio) >= 1:
             self.segment0 = segment0
             self.segment1 = segment1
             self.value = normalize_number(ratio)
@@ -603,7 +604,9 @@ class ProportionalLengthsProperty(Property):
         return LazyComment('|%s| = %s |%s|', self.segment0, self.value, self.segment1)
 
     def compare_values(self, other):
-        return self.value == other.value
+        if self.value == other.value:
+            return True
+        return sp.N(self.value) == sp.N(other.value)
 
 class EqualLengthProductsProperty(Property):
     """
