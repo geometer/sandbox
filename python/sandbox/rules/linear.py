@@ -23,7 +23,10 @@ class AngleFromSumOfTwoAnglesRule(SingleSourceRule):
             self.processed.add(prop)
             yield (
                 AngleValueProperty(a1, prop.degree - av.degree),
-                LazyComment('%s + %s = %s + %s = %s', a1, av.degree_str, a1, a0, prop.degree_str),
+                Comment(
+                    '$%{anglemeasure:a1} + %{degree:degree0} = %{anglemeasure:a1} + %{anglemeasure:a0} = %{degree:sum}$',
+                    {'a0': a0, 'a1': a1, 'degree0': av.degree, 'sum': prop.degree}
+                ),
                 [prop, av]
             )
             return
@@ -52,7 +55,10 @@ class SumOfTwoAnglesByThreeRule(SingleSourceRule):
             others = [ang for ang in prop.angles if ang != angle]
             yield (
                 SumOfTwoAnglesProperty(*others, prop.degree - av.degree),
-                LazyComment('%s = %s + %s + %s = %s + %s + %s', prop.degree_str, *others, angle, *others, av.degree_str),
+                Comment(
+                    '$%{degree:sum} = %{anglemeasure:a0} + %{anglemeasure:a1} + %{anglemeasure:a2} = %{anglemeasure:a0} + %{anglemeasure:a1} + %{degree:degree2}$',
+                    {'a0': others[0], 'a1': others[1], 'a2': angle, 'sum': prop.degree, 'degree2': av.degree}
+                ),
                 [prop, av]
             )
         if mask != original:
@@ -158,7 +164,10 @@ class EqualSumsOfAnglesRule(Rule):
                 mask |= bit
                 yield (
                     AngleRatioProperty(other0, other1, 1),
-                    LazyComment('%s + %s = %s = %s + %s', other0, eq0, sum0.degree_str, other1, eq1),
+                    LazyComment(
+                        '%s + %s = %s = %s + %s',
+                        other0, eq0, sum0.degree_str, other1, eq1
+                    ),
                     [sum0, sum1]
                 )
             else:
@@ -169,11 +178,12 @@ class EqualSumsOfAnglesRule(Rule):
                 if ca.value != 1:
                     mask |= 8 // bit # 0x1 <=> 0x8, 0x2 <=> 0x4
                     continue
+                sign = '\\equiv' if ca.same else '='
                 yield (
                     AngleRatioProperty(other0, other1, 1),
-                    LazyComment(
-                        '%s + %s = %s = %s + %s and %s',
-                        other0, eq0, sum0.degree_str, other1, eq1, ca
+                    Comment(
+                        '$%{anglemeasure:other0} + %{anglemeasure:eq0} = %{degree:sum} = %{anglemeasure:other1} + %{anglemeasure:eq1}$ and $%{anglemeasure:eq0} ' + sign + ' %{anglemeasure:eq1}$',
+                        {'other0': other0, 'other1': other1, 'eq0': eq0, 'eq1': eq1, 'sum': sum0.degree}
                     ),
                     [sum0, sum1, ca]
                 )

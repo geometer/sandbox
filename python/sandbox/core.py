@@ -11,7 +11,7 @@ from typing import List
 
 from .figure import Figure
 from .reason import Reason
-from .util import LazyComment, LazyString, divide
+from .util import LazyComment, Comment, divide
 
 class CoreScene:
     layers = ('user', 'auxiliary', 'invisible')
@@ -114,9 +114,6 @@ class CoreScene:
             self.__vectors = {}
             self.__perpendiculars = {}
 
-        def css_class(self):
-            return LazyComment('pt__%s', LazyString(self))
-
         def translated_point(self, vector, coef=1, **kwargs):
             self.scene.assert_vector(vector)
             if coef == 0:
@@ -130,7 +127,14 @@ class CoreScene:
                     return pt
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment('translation of %s by vector %s %s', self, coef, vector)
+                if coef == 1:
+                    pattern = 'translation of $%{point:pt}$ by vector $%{vector:vector}$'
+                else:
+                    pattern = 'translation of $%{point:pt}$ by vector $%{multiplier:coef} %{vector:vector}$'
+                kwargs['comment'] = Comment(
+                    pattern,
+                    {'pt': self, 'coef': coef, 'vector': vector}
+                )
             new_point = CoreScene.Point(
                 self.scene,
                 CoreScene.Point.Origin.translated,
@@ -181,7 +185,10 @@ class CoreScene:
 
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment('line through %s and %s', self, point)
+                kwargs['comment'] = Comment(
+                    'Line through $%{point:pt0}$ and $%{point:pt1}$',
+                    {'pt0': self, 'pt1': point}
+                )
             line = CoreScene.Line(self.scene, point0=self, point1=point, **kwargs)
             if not self.scene.is_frozen:
                 for cnstr in self.scene.constraints(Constraint.Kind.collinear):
@@ -195,7 +202,10 @@ class CoreScene:
         def circle_through(self, point, **kwargs):
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment('circle with centre %s through %s', self, point)
+                kwargs['comment'] = Comment(
+                    'Circle with centre $%{point:centre}$ through $%{point:pt}$',
+                    {'centre': self, 'pt': point}
+                )
             return self.circle_with_radius(self.segment(point), **kwargs)
 
         def circle_with_radius(self, radius, **kwargs):
@@ -203,7 +213,10 @@ class CoreScene:
             assert radius.points[0] != radius.points[1], 'Cannot create a circle of zero radius'
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment('circle with centre %s with radius %s', self, radius)
+                kwargs['comment'] = Comment(
+                    'Circle with centre $%{point:centre}$ with radius $%{segment:radius}$',
+                    {'centre': self, 'radius': radius}
+                )
             return CoreScene.Circle(
                 self.scene, centre=self, radius=radius, **kwargs
             )
@@ -250,6 +263,9 @@ class CoreScene:
                     cnstr.update(kwargs)
                     return
             self.scene.constraint(Constraint.Kind.not_collinear, self, A, B, **kwargs)
+            self.not_equal_constraint(A, guaranteed=True, **kwargs)
+            self.not_equal_constraint(B, guaranteed=True, **kwargs)
+            A.not_equal_constraint(B, guaranteed=True, **kwargs)
 
         def collinear_constraint(self, A, B, **kwargs):
             """
@@ -333,7 +349,10 @@ class CoreScene:
             triangle.points[0].not_collinear_constraint(*triangle.points[1:])
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment('point %s is inside %s', self, triangle)
+                kwargs['comment'] = Comment(
+                    'point $%{point:pt}$ is inside $%{triangle:triangle}$',
+                    {'pt': self, 'triangle': triangle}
+                )
             for angle in triangle.angles:
                 self.inside_constraint(angle, **kwargs)
 
@@ -478,18 +497,21 @@ class CoreScene:
             return self.__segment
 
         @property
-        def as_ray(self):
-            return CoreScene.Ray(self.start, self.end)
-
-        @property
         def as_line(self):
             return CoreScene.StraightLine(self.start, self.end)
 
         def angle(self, other):
             angle = self.scene._get_angle(self, other)
             if not self.scene.is_frozen:
-                self.as_segment.non_zero_length_constraint(comment=LazyComment('%s is side of %s', self, angle))
-                other.as_segment.non_zero_length_constraint(comment=LazyComment('%s is side of %s', other, angle))
+                for vec in (self, other):
+                    for cnstr in vec.scene.constraints(Constraint.Kind.not_equal):
+                        if set(cnstr.params) == set(vec.points):
+                            break
+                    else:
+                        vec.as_segment.non_zero_length_constraint(comment=Comment(
+                            '$%{vector:side}$ is side of $%{angle:angle}$',
+                            {'side': vec, 'angle': angle}
+                        ))
             return angle
 
         @property
@@ -509,13 +531,8 @@ class CoreScene:
             assert self.scene == vector.scene
             return self.scene.constraint(Constraint.Kind.parallel_vectors, self, vector, **kwargs)
 
-        def css_class(self):
-            return LazyComment(
-                'vec__%s__%s', LazyString(self.start), LazyString(self.end)
-            )
-
         def __str__(self):
-            return str(LazyComment('%s %s', self.start, self.end))
+            return '%s %s' % (self.start, self.end)
 
     def _get_segment(self, point0, point1):
         assert isinstance(point0, CoreScene.Point)
@@ -568,7 +585,10 @@ class CoreScene:
                 )
             half0 = middle.segment(self.points[0])
             half1 = middle.segment(self.points[1])
-            comment = LazyComment('%s is the middle of segment %s', middle, self)
+            comment = Comment(
+                '$%{point:middle}$ is the middle of $%{segment:segment}$',
+                {'middle': middle, 'segment': self}
+            )
             middle.inside_constraint(self, comment=comment, guaranteed=True)
             self.ratio_constraint(half0, 2, comment=comment, guaranteed=True)
             self.ratio_constraint(half1, 2, comment=comment, guaranteed=True)
@@ -597,7 +617,7 @@ class CoreScene:
                 kwargs = dict(kwargs)
                 kwargs['comment'] = LazyComment('perpendicular bisector of %s', self)
             bisector = middle.perpendicular_line(line, **kwargs)
-            comment=LazyComment('%s is a perpendicular bisector of %s', bisector, self)
+            comment=LazyComment('%s is the perpendicular bisector of %s', bisector, self)
             bisector.perpendicular_constraint(line, comment=comment)
             return bisector
 
@@ -627,10 +647,12 @@ class CoreScene:
             if not comment:
                 kwargs = dict(kwargs)
                 if coef == 1:
-                    comment = LazyComment('given: |%s| = |%s|', self, segment)
+                    pattern = '$|%{segment:seg0}| = |%{segment:seg1}|$'
                 else:
-                    comment = LazyComment('given: |%s| = %s |%s|', self, coef, segment)
-                kwargs['comment'] = comment
+                    pattern = '$|%{segment:seg0}| = %{multiplier:coef} |%{segment:seg1}|$'
+                kwargs['comment'] = Comment(
+                    pattern, {'seg0': self, 'seg1': segment, 'coef': coef}
+                )
             return self.scene.constraint(Constraint.Kind.length_ratio, self, segment, coef, **kwargs)
 
         def congruent_constraint(self, segment, **kwargs):
@@ -654,13 +676,8 @@ class CoreScene:
             #TODO: equal_constraint otherwise?
             self.scene.constraint(Constraint.Kind.distance, self, length, **kwargs)
 
-        def css_class(self):
-            return LazyComment(
-                'seg__%s__%s', LazyString(self.points[0]), LazyString(self.points[1])
-            )
-
         def __str__(self):
-            return str(LazyComment('%s %s', *self.points))
+            return '%s %s' % self.points
 
     def _get_angle(self, vector0, vector1):
         assert isinstance(vector0, CoreScene.Vector)
@@ -716,8 +733,9 @@ class CoreScene:
         def point_on_bisector_constraint(self, point, **kwargs):
             if kwargs.get('comment') is None:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment(
-                    '%s is the bisector of %s', self.vertex.vector(point).as_ray, self
+                kwargs['comment'] = Comment(
+                    '$%{ray:bisector}$ is the bisector of $%{angle:angle}$',
+                    {'bisector': self.vertex.vector(point), 'angle': self}
                 )
             angle0 = self.vertex.angle(self.vectors[0].end, point)
             angle1 = self.vertex.angle(self.vectors[1].end, point)
@@ -732,6 +750,12 @@ class CoreScene:
             self.scene.constraint(Constraint.Kind.angles_ratio, self, angle, ratio, **kwargs)
 
         def value_constraint(self, degree, **kwargs):
+            if kwargs.get('comment') is None:
+                kwargs = dict(kwargs)
+                kwargs['comment'] = Comment(
+                    '$%{anglemeasure:angle} = %{degree:degree}$',
+                    {'angle': self, 'degree': degree}
+                )
             self.scene.constraint(Constraint.Kind.angle_value, self, degree, **kwargs)
 
         def is_acute_constraint(self, **kwargs):
@@ -746,52 +770,18 @@ class CoreScene:
                 **kwargs
             )
 
-        def css_class(self):
-            if self.vertex:
-                return LazyComment(
-                    'ang__%s__%s__%s',
-                    LazyString(self.vectors[0].end),
-                    LazyString(self.vertex),
-                    LazyString(self.vectors[1].end)
-                )
-            return LazyComment(
-                'ang4__%s__%s__%s__%s',
-                LazyString(self.vectors[0].start),
-                LazyString(self.vectors[0].end),
-                LazyString(self.vectors[1].start),
-                LazyString(self.vectors[1].end)
-            )
-
         def __str__(self):
             if self.vertex:
-                return str(LazyComment('∠ %s %s %s', self.vectors[0].end, self.vertex, self.vectors[1].end))
-            return '∠(%s, %s)' % self.vectors
-
-    class Ray(Figure):
-        def __init__(self, start, point):
-            self.start = start
-            self.point = point
-
-        def css_class(self):
-            return LazyComment(
-                'ray__%s__%s', LazyString(self.start), LazyString(self.point)
-            )
-
-        def __str__(self):
-            return str(LazyComment('%s %s', self.start, self.point))
+                return '\\angle %s %s %s' % (self.vectors[0].end, self.vertex, self.vectors[1].end)
+            return '\\angle(%s, %s)' % self.vectors
 
     class StraightLine(Figure):
         def __init__(self, point0, point1):
             self.point0 = point0
             self.point1 = point1
 
-        def css_class(self):
-            return LazyComment(
-                'ln__%s__%s', LazyString(self.point0), LazyString(self.point1)
-            )
-
         def __str__(self):
-            return str(LazyComment('%s %s', self.point0, self.point1))
+            return '%s %s' % (self.point0, self.point1)
 
     class Triangle(Figure):
         def __init__(self, pt0, pt1, pt2):
@@ -845,23 +835,12 @@ class CoreScene:
                 )
             return self.__permutations
 
-        def css_class(self):
-            return LazyComment(
-                'tr__%s__%s__%s', *[LazyString(p) for p in self.points]
-            )
-
         def __str__(self):
-            return '△ %s %s %s' % self.points
+            return '\\triangle %s %s %s' % self.points
 
     class Polygon(Figure):
         def __init__(self, *points):
             self.points = tuple(points)
-
-        def css_class(self):
-            length = len(self.points)
-            return LazyComment(
-                'plg' + ('__%s' * length), *[LazyString(p) for p in self.points]
-            )
 
         def __str__(self):
             return ' '.join(['%s'] * len(self.points)) % self.points
@@ -884,6 +863,12 @@ class CoreScene:
         return cns
 
     def equilateral_constraint(self, triangle, **kwargs):
+        if 'comment' not in kwargs:
+            kwargs = dict(kwargs)
+            kwargs['comment'] = Comment(
+                '$%{triangle:equilateral}$ is equilateral',
+                {'equilateral': triangle}
+            )
         self.constraint(Constraint.Kind.equilateral, triangle, **kwargs)
 
     def quadrilateral_constraint(self, A, B, C, D, **kwargs):

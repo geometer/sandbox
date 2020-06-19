@@ -2,7 +2,7 @@ import itertools
 
 from .. import Scene
 from ..property import *
-from ..util import LazyComment
+from ..util import LazyComment, Comment
 
 from .abstract import Rule, SingleSourceRule
 
@@ -71,7 +71,16 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
             if side0 == side1:
                 yield (
                     CongruentTrianglesProperty(tr0, tr1),
-                    LazyComment('congruent angles %s and %s and common side %s', ca0, ca1, side0),
+                    Comment(
+                        'congruent angles $%{anglemeasure:angle0_0}=%{anglemeasure:angle1_0}$ and $%{anglemeasure:angle0_1}=%{anglemeasure:angle1_1}$, and common side $%{segment:side}$',
+                        {
+                            'angle0_0': tr0.angles[0],
+                            'angle0_1': tr0.angles[1],
+                            'angle1_0': tr1.angles[0],
+                            'angle1_1': tr1.angles[1],
+                            'side': side0
+                        }
+                    ),
                     [ca0, ca1, ncl]
                 )
                 return
@@ -84,7 +93,17 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
             if val == 1:
                 yield (
                     CongruentTrianglesProperty(tr0, tr1),
-                    LazyComment('congruent angles %s and %s and congruent sides %s and %s', ca0, ca1, side0, side1),
+                    Comment(
+                        'congruent angles $%{anglemeasure:angle0_0}=%{anglemeasure:angle1_0}$ and $%{anglemeasure:angle0_1}=%{anglemeasure:angle1_1}$, and congruent sides $|%{segment:side0}|=|%{segment:side1}|$',
+                        {
+                            'angle0_0': tr0.angles[0],
+                            'angle0_1': tr0.angles[1],
+                            'angle1_0': tr1.angles[0],
+                            'angle1_1': tr1.angles[1],
+                            'side0': side0,
+                            'side1': side1
+                        }
+                    ),
                     [ca0, ca1, rat, ncl]
                 )
                 return
@@ -140,14 +159,28 @@ class CongruentTrianglesByAngleAndTwoSidesRule(Rule):
                 rsn1 = rsn1[0]
             if ca is None:
                 ca = self.context.angle_ratio_property(ang0, ang1)
+
+            pattern = 'common side $%{segment:common}$, $%{segment:side0} = %{segment:side1}$, and $%{anglemeasure:angle0} = %{anglemeasure:angle1}$'
             if rsn0 == True:
-                comment = LazyComment('common side %s, %s, and %s', vec0, rsn1, ca)
+                comment = Comment(pattern, {
+                    'common': vec0,
+                    'side0': vec1,
+                    'side1': ang1.vectors[0],
+                    'angle0': ang0,
+                    'angle1': ang1
+                })
                 premises = [rsn1, ca]
             elif rsn1 == True:
-                comment = LazyComment('common side %s, %s, and %s', vec1, rsn0, ca)
+                comment = Comment(pattern, {
+                    'common': vec1,
+                    'side0': vec0,
+                    'side1': ang1.vectors[1],
+                    'angle0': ang0,
+                    'angle1': ang1
+                })
                 premises = [rsn0, ca]
             else:
-                comment = 'Two pairs of congruent sides, and angle between the sides'
+                comment = LazyComment('Two pairs of congruent sides, and angle between the sides')
                 premises = [rsn0, rsn1, ca]
             yield (
                 CongruentTrianglesProperty(
@@ -215,7 +248,10 @@ class SimilarTrianglesWithCongruentSideRule(SingleSourceRule):
             self.processed.add(prop)
             yield (
                 CongruentTrianglesProperty(prop.triangle0, prop.triangle1),
-                LazyComment('similar triangles with common non-zero side %s', sides0[i]),
+                Comment(
+                    'similar triangles with common non-zero side $%{segment:side}$',
+                    {'side': sides0[i]}
+                ),
                 [prop, ne]
             )
             return
@@ -234,7 +270,10 @@ class SimilarTrianglesWithCongruentSideRule(SingleSourceRule):
             self.processed.add(prop)
             yield (
                 CongruentTrianglesProperty(prop.triangle0, prop.triangle1),
-                LazyComment('similar triangles with congruent sides %s and %s', sides0[i], sides1[i]),
+                Comment(
+                    'similar triangles with congruent sides $%{segment:side0}$ and $%{segment:side1}$',
+                    {'side0': sides0[i], 'side1': sides1[i]}
+                ),
                 [prop, cs, ne]
             )
             return
@@ -276,7 +315,10 @@ class CongruentTrianglesByThreeSidesRule(Rule):
             if third0.as_segment == third1.as_segment:
                 yield (
                     prop,
-                    LazyComment('common side %s, %s, %s', third0, cs0, cs1),
+                    Comment(
+                        'common side $%{segment:side0}$, $%{segment:side1_0} = %{segment:side1_1}$, $%{segment:side2_0} = %{segment:side2_1}$',
+                        {'side0': third0, 'side1_0': seg0, 'side1_1': seg1, 'side2_0': cs1.segment0, 'side2_1': cs1.segment1}
+                    ),
                     [cs0, cs1]
                 )
             else:
@@ -380,13 +422,19 @@ class IsoscelesTriangleByConrguentLegsAndAngleRule(Rule):
         if prop.degree == 60:
             yield (
                 EquilateralTriangleProperty(angle.point_set),
-                LazyComment('congruent sides %s and %s, and %s = %s', ratio.segment0, ratio.segment1, angle, prop.degree_str),
+                Comment(
+                    'congruent sides $%{segment:side0}$ and $%{segment:side1}$, and $%{anglemeasure:angle} = %{degree:degree}$',
+                    {'side0': ratio.segment0, 'side1': ratio.segment1, 'angle': angle, 'degree': prop.degree}
+                ),
                 [ratio, prop]
             )
         else:
             yield (
                 IsoscelesTriangleProperty(angle.vertex, angle.vectors[0].end.segment(angle.vectors[1].end)),
-                LazyComment('congruent legs %s and %s', ratio.segment0, ratio.segment1),
+                Comment(
+                    'congruent legs $%{segment:side0}$ and $%{segment:side1}$',
+                    {'side0': ratio.segment0, 'side1': ratio.segment1}
+                ),
                 [ratio, prop]
             )
 
@@ -413,7 +461,10 @@ class IsoscelesTriangleByConrguentLegsRule(Rule):
         self.processed.add(prop)
         yield (
             IsoscelesTriangleProperty(apex, base0.segment(base1)),
-            LazyComment('congruent legs %s and %s', prop.segment0, prop.segment1),
+            Comment(
+                'congruent legs $%{segment:side0}$ and $%{segment:side1}$',
+                {'side0': prop.segment0, 'side1': prop.segment1}
+            ),
             [prop, ne]
         )
 
@@ -444,13 +495,19 @@ class IsoscelesTriangleByConrguentBaseAnglesRule(Rule):
             if av0.degree == 60:
                 yield (
                     EquilateralTriangleProperty(ang0.point_set),
-                    LazyComment('%s = %s and %s = %s', ang0, av0.degree_str, ang1, av1.degree_str),
+                    Comment(
+                        '$%{anglemeasure:angle0} = %{degree:deg0}$ and $%{anglemeasure:angle1} = %{degree:deg1}$',
+                        {'angle0': ang0, 'angle1': ang1, 'deg0': av0.degree, 'deg1': av1.degree}
+                    ),
                     [av0, av1]
                 )
             else:
                 yield (
                     IsoscelesTriangleProperty(apex, base),
-                    LazyComment('congruent base angles %s = %s and %s = %s', ang0, av0.degree_str, ang1, av1.degree_str),
+                    Comment(
+                        'congruent base angles $%{anglemeasure:angle0} = %{degree:degree}$ and $%{anglemeasure:angle1} = %{degree:degree}$',
+                        {'angle0': ang0, 'angle1': ang1, 'degree': av0.degree}
+                    ),
                     [av0, av1]
                 )
 
@@ -464,6 +521,9 @@ class IsoscelesTriangleByConrguentBaseAnglesRule(Rule):
         ca = self.context.angle_ratio_property(ang0, ang1)
         yield (
             IsoscelesTriangleProperty(apex, base),
-            LazyComment('congruent base angles %s and %s', ang0, ang1),
-            [ca, nc]
+            Comment(
+                'congruent base angles $%{angle:angle0}$ and $%{angle:angle1}$',
+                {'angle0': ang0, 'angle1': ang1}
+            ),
+    [ca, nc]
         )

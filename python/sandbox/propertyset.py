@@ -8,7 +8,7 @@ from .property import *
 from .reason import Reason
 from .rules.abstract import SyntheticPropertyRule
 from .stats import Stats
-from .util import LazyComment, divide, degree_to_string
+from .util import LazyComment, Comment, divide, degree_to_string
 
 def _synthetic_property(prop, comment, premises):
     prop.rule = SyntheticPropertyRule.instance()
@@ -41,7 +41,10 @@ class LineSet:
             if edge:
                 prop = edge['prop']
                 return (
-                    LazyComment('%s and %s are the same line', segment0.as_line, segment1.as_line),
+                    Comment(
+                        '$%{line:line0}$ and $%{line:line1}$ are the same line',
+                        {'line0': segment0, 'line1': segment1}
+                    ),
                     [prop]
                 )
             path = nx.algorithms.shortest_path(self.premises_graph, segment0, segment1)
@@ -97,18 +100,27 @@ class LineSet:
                 seg0 = prop_not_on.segment
                 if pt_on in seg0.points:
                     prop = PointsCoincidenceProperty(pt_on, pt_not_on, False)
-                    comment = LazyComment('two of three non-collinear points %s, %s, and %s', pt_not_on, *seg0.points)
+                    comment = Comment(
+                        'two of three non-collinear points $%{point:pt0}$, $%{point:pt1}$, and $%{point:pt2}$',
+                        {'pt0': pt_not_on, 'pt1': seg0.points[0], 'pt2': seg0.points[1]}
+                    )
                     premises = [prop_not_on]
                     candidates.append(_synthetic_property(prop, comment, premises))
                 for seg1 in [seg for seg in self.segments if seg != seg0 and pt_on in seg.points]:
                     prop = PointsCoincidenceProperty(pt_on, pt_not_on, False)
-                    comment = LazyComment('point %s lies on line %s, %s does not', pt_on, seg0.as_line, pt_not_on)
+                    comment = Comment(
+                        'point $%{point:pt_on}$ lies on line $%{line:line}$, $%{point:pt_not_on}$ does not',
+                        {'pt_on': pt_on, 'line': seg0, 'pt_not_on': pt_not_on}
+                    )
                     premises = [self.same_line_property(seg0, seg1), prop_not_on]
                     candidates.append(_synthetic_property(prop, comment, premises))
                 for prop_on in self.points_on.get(pt_on):
                     seg1 = prop_on.segment
                     prop = PointsCoincidenceProperty(pt_on, pt_not_on, False)
-                    comment = LazyComment('point %s lies on line %s, %s does not', pt_on, seg0.as_line, pt_not_on)
+                    comment = Comment(
+                        'point $%{point:pt_on}$ lies on line $%{line:line}$, $%{point:pt_not_on}$ does not',
+                        {'pt_on': pt_on, 'line': seg0, 'pt_not_on': pt_not_on}
+                    )
                     if seg0 == seg1:
                         premises = [*prop_on.reason.premises, *prop_not_on.reason.premises]
                     else:
@@ -423,7 +435,10 @@ class LineSet:
                     premises.append(line.same_line_property(pnol.segment, side))
                 candidates.append(_synthetic_property(
                     PointsCollinearityProperty(*pts, False),
-                    LazyComment('%s does not lie on %s', vertex, side.as_line),
+                    Comment(
+                        '$%{point:pt}$ does not lie on $%{line:line}$',
+                        {'pt': vertex, 'line': side}
+                    ),
                     premises
                 ))
 
@@ -538,8 +553,12 @@ class CyclicOrderPropertySet:
                 return (None, None)
 
             path = nx.algorithms.shortest_path(self.premises_graph, cycle0, cycle1)
-            pattern = ' = '.join(['%s'] * len(path))
-            comment = LazyComment(pattern, *path)
+            pattern = []
+            params = {}
+            for index, v in enumerate(path):
+                pattern.append('%' + ('{cycle:c%d}' % index))
+                params['c%d' % index] = v
+            comment = Comment('$' + ' = '.join(pattern) + '$', params)
             premises = [self.premises_graph.get_edge_data(i, j)['prop'] for i, j in zip(path[:-1], path[1:])]
             return (comment, premises)
 
@@ -690,49 +709,36 @@ class AngleRatioPropertySet:
             self.multiplier = multiplier
             self.angle_to_ratio = dict(angle_to_ratio)
 
-        def html(self):
-            pattern = []
-            params = []
-            for vertex, premise in zip(self.path, self.premises):
-                if premise:
-                    if isinstance(premise, AngleRatioProperty) and premise.same:
-                        pattern.append(' ≡ ')
-                    else:
-                        pattern.append(' = ')
-                if isinstance(vertex, CoreScene.Angle):
-                    coef = divide(self.multiplier, self.angle_to_ratio[vertex])
-                    if coef == 1:
-                        pattern.append('%s')
-                        params.append(vertex)
-                    else:
-                        pattern.append('%s %s')
-                        params.append(coef)
-                        params.append(vertex)
-                else:
-                    pattern.append(degree_to_string(self.multiplier * vertex))
-            return LazyComment(''.join(pattern), *params)
+        def stringify(self, printer):
+            return self.comment().stringify(printer)
 
         def __str__(self):
-            pattern = []
-            params = []
-            for vertex, premise in zip(self.path, self.premises):
+            return str(self.comment())
+
+        def comment(self):
+            pattern = ['$']
+            params = {}
+            for index, (vertex, premise) in enumerate(zip(self.path, self.premises)):
                 if premise:
                     if isinstance(premise, AngleRatioProperty) and premise.same:
-                        pattern.append(' ≡ ')
+                        pattern.append(' \equiv ')
                     else:
                         pattern.append(' = ')
                 if isinstance(vertex, CoreScene.Angle):
                     coef = divide(self.multiplier, self.angle_to_ratio[vertex])
-                    if coef == 1:
-                        pattern.append('%s')
-                        params.append(vertex)
-                    else:
-                        pattern.append('%s %s')
-                        params.append(coef)
-                        params.append(vertex)
+                    if coef != 1:
+                        pattern.append('%')
+                        pattern.append('{multiplier:coef%d}' % index)
+                        params['coef%d' % index] = coef
+                    pattern.append('%')
+                    pattern.append('{anglemeasure:angle%d}' % index)
+                    params['angle%d' % index] = vertex
                 else:
-                    pattern.append(degree_to_string(self.multiplier * vertex))
-            return str(LazyComment(''.join(pattern), *params))
+                    pattern.append('%')
+                    pattern.append('{degree:degree%d}' % index)
+                    params['degree%d' % index] = self.multiplier * vertex
+            pattern.append('$')
+            return Comment(''.join(pattern), params)
 
     class Family:
         def __init__(self):
@@ -1012,10 +1018,18 @@ class LengthRatioPropertySet:
 
         def explanation(self, ratio0, ratio1):
             path = nx.algorithms.shortest_path(self.premises_graph, ratio0, ratio1)
-            pattern = ' = '.join(['|%s| / |%s|' if len(v) == 2 else '%s' for v in path])
-            comment = LazyComment(pattern, *sum(path, ()))
+            pattern = []
+            params = {}
+            for index, v in enumerate(path):
+                if len(v) == 2:
+                    pattern.append('|%s{segment:num%d}| / |%s{segment:denom%d}|' % ('%', index, '%', index))
+                    params['num%d' % index] = v[0]
+                    params['denom%d' % index] = v[1]
+                else:
+                    pattern.append('%s{number:number%d}' % ('%', index))
+                    params['number%d' % index] = v[0]
             premises = [self.premises_graph.get_edge_data(i, j)['prop'] for i, j in zip(path[:-1], path[1:])]
-            return (comment, premises)
+            return (Comment('$' + ' = '.join(pattern) + '$', params), premises)
 
         def value_explanation(self, ratio):
             return self.explanation(ratio, (self.ratio_value, ))

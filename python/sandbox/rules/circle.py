@@ -2,7 +2,7 @@ import itertools
 
 from ..figure import Circle
 from ..property import *
-from ..util import LazyComment
+from ..util import LazyComment, Comment
 
 from .abstract import Rule, SingleSourceRule
 
@@ -53,7 +53,14 @@ class CyclicQuadrilateralRule(Rule):
 
         yield (
             ConcyclicPointsProperty(*points),
-            LazyComment('quadrilateral %s with two right angles %s and %s is cyclic', Scene.Polygon(vertex0, pts0[0], vertex1, pts0[1]), vertex0.angle(*pts0), vertex1.angle(*pts1)),
+            Comment(
+                'quadrilateral $%{polygon:quad}$ with two right angles $%{angle:right0}$ and $%{angle:right1}$ is cyclic',
+                {
+                    'quad': Scene.Polygon(vertex0, pts0[0], vertex1, pts0[1]),
+                    'right0': vertex0.angle(*pts0),
+                    'right1': vertex1.angle(*pts1)
+                }
+            ),
             [perp0, perp1, ne]
         )
 
@@ -238,16 +245,19 @@ class TwoChordsIntersectionRule(Rule):
 
             circle = Circle(*points)
             if av.degree == 0:
-                comment = LazyComment('%s and %s are chords of %s, %s is the intersection of lines %s and %s, and lies outside of the chord %s', chord1, chord0, circle, crossing, chord1.as_line, chord0.as_line, chord0)
+                pattern = '$%{segment:chord1}$ and $%{segment:chord0}$ are chords of $%{circle:circle}$, $%{point:crossing}$ is the intersection of lines $%{line:chord1}$ and $%{line:chord0}$, and lies outside of the chord $%{segment:chord0}$'
             elif av.degree == 180:
-                comment = LazyComment('%s is the intersection of chords %s and %s of %s, and lies inside %s', crossing, chord1, chord0, circle, chord0)
+                pattern = '$%{point:crossing}$ is the intersection of chords $%{segment:chord1}$ and $%{segment:chord0}$ of $%{circle:circle}$, and lies inside $%{segment:chord0}$'
             else:
                 assert False, 'Contradiction'
             if prop is None:
                 prop = self.context.concyclicity_property(*points)
             yield (
                 AngleValueProperty(crossing.angle(pt2, pt3), av.degree),
-                comment,
+                Comment(
+                    pattern,
+                    {'crossing': crossing, 'chord0': chord0, 'chord1': chord1, 'circle': circle}
+                ),
                 [prop, av] + premises
             )
 
@@ -263,15 +273,15 @@ class PointsOnChordRule(Rule):
             if av:
                 if av.degree == 0:
                     location = PointAndCircleProperty.Kind.outside
-                    comment = LazyComment('%s lies on line %s', pt, points[0].segment(points[1]).as_line)
+                    pattern = '$%{point:pt}$ lies on the line $%{line:chord}$'
                 elif av.degree == 180:
                     location = PointAndCircleProperty.Kind.inside
-                    comment = LazyComment('%s lies on chord %s', pt, points[0].segment(points[1]))
+                    pattern = '$%{point:pt}$ lies on the chord $%{segment:chord}$'
                 else:
                     assert False, 'Contradiction'
                 yield (
                     PointAndCircleProperty(pt, *circle.main_key, location),
-                    comment,
+                    Comment(pattern, {'pt': pt, 'chord': points[0].segment(points[1])})
                     [av] + premises
                 )
             if pc:
@@ -316,14 +326,13 @@ class InscribedAnglesWithCommonCircularArcRule(Rule):
                 ang1 = pp0[1].angle(*pp1)
                 circle = Circle(*ang0.point_set)
                 if sos.same:
-                    yield (
-                        AngleRatioProperty(ang0, ang1, 1),
-                        LazyComment('%s and %s are inscribed in %s and subtend the same arc', ang0, ang1, circle),
-                        [prop, sos]
-                    )
+                    pattern = '$%{angle:angle0}$ and $%{angle:angle1}$ are inscribed in $%{circle:circle}$ and subtend the same arc'
+                    new_prop = AngleRatioProperty(ang0, ang1, 1)
                 else:
-                    yield (
-                        SumOfTwoAnglesProperty(ang0, ang1, 180),
-                        LazyComment('%s and %s are inscribed in %s and subtend complementary arcs', ang0, ang1, circle),
-                        [prop, sos]
-                    )
+                    pattern = '$%{angle:angle0}$ and $%{angle:angle1}$ are inscribed in $%{circle:circle}$ and subtend complementary arcs'
+                    new_prop = SumOfTwoAnglesProperty(ang0, ang1, 180)
+                yield (
+                    new_prop,
+                    Comment(pattern, {'angle0': ang0, 'angle1': ang1, 'circle': circle}),
+                    [prop, sos]
+                )

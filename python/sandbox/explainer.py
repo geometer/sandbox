@@ -18,7 +18,7 @@ from .rules.triangles import *
 from .rules.trigonometric import *
 from .scene import Scene
 from .stats import Stats
-from .util import LazyComment
+from .util import LazyComment, Comment
 
 class Explainer:
     def __init__(self, scene, options={}):
@@ -190,20 +190,20 @@ class Explainer:
                 for endpoint in pia.angle.endpoints:
                     yield (
                         PointsCollinearityProperty(pia.point, pia.angle.vertex, endpoint, False),
-                        LazyComment(
-                            '%s is the vertex of %s, %s lies on a side, and %s lies inside',
-                            pia.angle.vertex, pia.angle, endpoint, pia.point
+                        Comment(
+                            '$%{point:vertex}$ is the vertex of $%{angle:angle}$, $%{point:on_side}$ lies on a side, and $%{point:inside}$ lies inside',
+                            {'vertex': pia.angle.vertex, 'angle': pia.angle, 'on_side': endpoint, 'inside': pia.point}
                         ),
                         [pia]
                     )
                 yield (
                     SameOrOppositeSideProperty(pia.angle.vectors[0].as_segment, pia.point, pia.angle.vectors[1].end, True),
-                    '', #TODO: write comment
+                    LazyComment('#TODO: write comment'),
                     [pia]
                 )
                 yield (
                     SameOrOppositeSideProperty(pia.angle.vectors[1].as_segment, pia.point, pia.angle.vectors[0].end, True),
-                    '', #TODO: write comment
+                    LazyComment('#TODO: write comment'),
                     [pia]
                 )
 
@@ -237,12 +237,18 @@ class Explainer:
                     angle = vertex.angle(*segment.points)
                     yield (
                         PointInsideAngleProperty(av.angle.vertex, angle),
-                        LazyComment('%s lies inside a segment with endpoints on sides of %s', av.angle.vertex, angle),
+                        Comment(
+                            '$%{point:vertex}$ lies on a segment with endpoints on sides of $%{angle:angle}$',
+                            {'vertex': av.angle.vertex, 'angle': angle}
+                        ),
                         [av, ncl]
                     )
                     yield (
                         SameOrOppositeSideProperty(av.angle.vertex.segment(vertex), *segment.points, False),
-                        LazyComment('%s lies inside segment %s, and %s is not on the line %s', av.angle.vertex, segment, vertex, segment),
+                        Comment(
+                            '$%{point:pt_on}$ lies on segment $%{segment:segment}$, and $%{point:pt_not_on}$ is not on the line $%{line:segment}$',
+                            {'pt_on': av.angle.vertex, 'pt_not_on': vertex, 'segment': segment}
+                        ),
                         [av, ncl]
                     )
 
@@ -286,9 +292,9 @@ class Explainer:
                             continue
                         yield (
                             AngleValueProperty(base.vertex.angle(vec0.end, foot), 0),
-                            LazyComment(
-                                '%s it the foot of the perpendicular from %s to %s, %s is acute',
-                                foot, vec1.end, vec0, base
+                            Comment(
+                                '$%{point:foot}$ is the foot of the perpendicular from $%{point:pt}$ to $%{line:line}$, and $%{angle:angle}$ is acute',
+                                {'foot': foot, 'pt': vec1.end, 'line': vec0, 'angle': base}
                             ),
                             [perp, col, aa]
                         )
@@ -310,9 +316,9 @@ class Explainer:
                             continue
                         yield (
                             AngleValueProperty(base.vertex.angle(vec0.end, foot), 180),
-                            LazyComment(
-                                '%s it the foot of the perpendicular from %s to %s, %s is obtuse',
-                                foot, vec1.end, vec0, base
+                            Comment(
+                                '$%{point:foot}$ is the foot of the perpendicular from $%{point:pt}$ to $%{line:line}$, and $%{angle:angle}$ is obtuse',
+                                {'foot': foot, 'pt': vec1.end, 'line': vec0, 'angle': base}
                             ),
                             [perp, col, aa]
                         )
@@ -336,9 +342,9 @@ class Explainer:
                             continue
                         yield (
                             PointsCoincidenceProperty(base.vertex, foot, True),
-                            LazyComment(
-                                '%s it the foot of the perpendicular from %s to %s, %s is right',
-                                foot, vec1.end, vec0, base
+                            Comment(
+                                '$%{point:foot}$ is the foot of the perpendicular from $%{point:pt}$ to $%{line:line}$, and $%{angle:angle}$ is right',
+                                {'foot': foot, 'pt': vec1.end, 'line': vec0, 'angle': base}
                             ),
                             [perp, col, aa]
                         )
@@ -378,9 +384,9 @@ class Explainer:
                             if ka2 is None or reasons_are_too_old and ka2.reason.obsolete:
                                 continue
                             if ka2.degree > ka.degree:
-                                comment = LazyComment(
-                                    '%s, %s, %s are collinear and %s > %s',
-                                    pt, *vec0.points, angle, base
+                                comment = Comment(
+                                    '$%{point:pt0}$, $%{point:pt1}$, $%{point:pt2}$ are collinear and $%{anglemeasure:angle0}$ > $%{anglemeasure:angle1}$',
+                                    {'pt0': pt, 'pt1': vec0.points[0], 'pt2': vec0.points[1], 'angle0': angle, 'angle1': base}
                                 )
                                 zero = base.vertex.angle(vec0.end, pt)
                                 yield (AngleValueProperty(zero, 0), comment, [col, ka2, ka])
@@ -402,7 +408,10 @@ class Explainer:
                     continue
                 yield (
                     AngleValueProperty(other0.angle(other1), 0),
-                    LazyComment('Both %s and %s are acute', aa0.angle, aa1.angle),
+                    Comment(
+                        'both $%{angle:angle0}$ and $%{angle:angle1}$ are acute',
+                        {'angle0': aa0.angle, 'angle1': aa1.angle}
+                    ),
                     [aa0, aa1, col]
                 )
 
@@ -446,7 +455,10 @@ class Explainer:
                     continue
                 if zero.reason.obsolete and ncl.reason.obsolete and ne.reason.obsolete:
                     continue
-                comment = LazyComment('%s ↑↑ %s', *ang.vectors)
+                comment = Comment(
+                    '$%{vector:vec0} \\uparrow\\!\\!\\!\\uparrow %{vector:vec1}$',
+                    {'vec0': ang.vectors[0], 'vec1': ang.vectors[1]}
+                )
                 premises = [zero, ncl, ne]
                 yield (
                     SameOrOppositeSideProperty(ang.vectors[0].as_segment, *ang.vectors[1].points, True),
@@ -481,7 +493,10 @@ class Explainer:
                             continue
                         yield (
                             SameOrOppositeSideProperty(other.segment(pt), *sos.points, sos.same),
-                            LazyComment('%s is the same line as %s', other.segment(pt), sos.segment),
+                            Comment(
+                                '$%{line:line0}$ is the same line as $%{line:line1}$',
+                                {'line0': other.segment(pt), 'line1': sos.segment}
+                            ),
                             [sos, col, ne]
                         )
 

@@ -6,7 +6,7 @@ from . import Scene, iterative_placement
 from .placement import Placement
 from .property import *
 from .stats import Stats
-from .util import LazyComment, divide
+from .util import divide
 
 ERROR = np.float128(5e-6)
 

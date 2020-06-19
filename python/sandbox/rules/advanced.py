@@ -2,7 +2,7 @@ import sympy as sp
 
 from .. import Scene
 from ..property import AngleValueProperty, IsoscelesTriangleProperty, LengthRatioProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, PointsCollinearityProperty
-from ..util import LazyComment
+from ..util import Comment
 
 from .abstract import SingleSourceRule
 
@@ -29,7 +29,10 @@ class RightAngledTriangleMedianRule(SingleSourceRule):
                 continue
             yield (
                 ProportionalLengthsProperty(hypot, med.segment(vertex), 2),
-                LazyComment('Median in right-angled %s is equal to half of the hypotenuse', Scene.Triangle(vertex, pt0, pt1)),
+                Comment(
+                    'median in right-angled $%{triangle:triangle}$ is equal to half of the hypotenuse',
+                    {'triangle': Scene.Triangle(vertex, pt0, pt1)}
+                ),
                 [prop, col, half0, half1]
             )
 
@@ -54,17 +57,17 @@ class Triangle30_60_90SidesRule(SingleSourceRule):
         short_leg = vertex.segment(pt1 if value.degree == 30 else pt0)
         yield (
             LengthRatioProperty(hypot, short_leg, 2),
-            LazyComment('Hypotenuse and cathetus opposite the 30º angle'),
+            Comment('hypotenuse and cathetus opposite the $%{degree:30}$ angle', {'30': 30}),
             [prop, value]
         )
         yield (
             LengthRatioProperty(hypot, long_leg, 2 / sp.sqrt(3)),
-            LazyComment('Hypotenuse and cathetus opposite the 60º angle'),
+            Comment('hypotenuse and cathetus opposite the $%{degree:60}$ angle', {'60': 60}),
             [prop, value]
         )
         yield (
             LengthRatioProperty(long_leg, short_leg, sp.sqrt(3)),
-            LazyComment('Catheti opposite 60º and 30º angles'),
+            Comment('catheti opposite $%{degree:60}$ and $%{degree:30}$ angles', {'60': 60, '30': 30}),
             [prop, value]
         )
 
@@ -91,7 +94,10 @@ class Triangle30_30_120SidesRule(SingleSourceRule):
         for pt in prop.base.points:
             yield (
                 LengthRatioProperty(prop.base, prop.apex.segment(pt), sp.sqrt(3)),
-                LazyComment('Ratio of base and leg in isosceles %s with base angle = 30º', prop.triangle),
+                Comment(
+                    'ratio of leg and base in isosceles $%{triangle:triangle}$ with base angle $%{degree:base}$',
+                    {'triangle': prop.triangle, 'base': 30}
+                ),
                 [prop, value]
             )
 
@@ -118,7 +124,10 @@ class Triangle72_72_36SidesRule(SingleSourceRule):
         for pt in prop.base.points:
             yield (
                 LengthRatioProperty(prop.apex.segment(pt), prop.base, (sp.sqrt(5) + 1) / 2),
-                LazyComment('Ratio of leg and base in isosceles %s with base angle = 72º', prop.triangle),
+                Comment(
+                    'ratio of leg and base in isosceles $%{triangle:triangle}$ with base angle $%{degree:base}$',
+                    {'triangle': prop.triangle, 'base': 72}
+                ),
                 [prop, value]
             )
 
@@ -145,6 +154,9 @@ class Triangle36_36_108SidesRule(SingleSourceRule):
         for pt in prop.base.points:
             yield (
                 LengthRatioProperty(prop.base, prop.apex.segment(pt), (sp.sqrt(5) + 1) / 2),
-                LazyComment('Ratio of base and leg in isosceles %s with base angle = 36º', prop.triangle),
+                Comment(
+                    'ratio of leg and base in isosceles $%{triangle:triangle}$ with base angle $%{degree:base}$',
+                    {'triangle': prop.triangle, 'base': 36}
+                ),
                 [prop, value]
             )

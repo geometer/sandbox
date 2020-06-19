@@ -5,8 +5,8 @@ This module is to be extended in the future to add more construction methods.
 import itertools
 import sympy as sp
 
-from .core import CoreScene
-from .util import LazyComment
+from .core import CoreScene, Constraint
+from .util import Comment
 
 class Scene(CoreScene):
     """
@@ -37,7 +37,7 @@ class Scene(CoreScene):
         altitude2 = self.altitude(triangle, triangle.points[2], layer='auxiliary')
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
-            kwargs['comment'] = LazyComment('Orthocentre of %s', triangle)
+            kwargs['comment'] = Comment('The orthocentre of $%{triangle:tr}$', {'tr': triangle})
         centre = altitude0.intersection_point(altitude1, **kwargs)
         centre.belongs_to(altitude2)
         return centre
@@ -50,7 +50,7 @@ class Scene(CoreScene):
         medians = [triangle.points[i].line_through(triangle.sides[i].middle_point(layer='auxiliary'), layer='auxiliary') for i in range(0, 3)]
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
-            kwargs['comment'] = LazyComment('Centroid of %s', triangle)
+            kwargs['comment'] = Comment('The centroid of $%{triangle:tr}$', {'tr': triangle})
         centre = medians[0].intersection_point(medians[1], **kwargs)
         centre.belongs_to(medians[2])
         return centre
@@ -63,13 +63,16 @@ class Scene(CoreScene):
         bisectors = [side.perpendicular_bisector_line(layer='auxiliary') for side in triangle.sides]
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
-            kwargs['comment'] = LazyComment('Circumcentre of %s', triangle)
+            kwargs['comment'] = Comment('The circumcentre of $%{triangle:tr}$', {'tr': triangle})
         centre = bisectors[0].intersection_point(bisectors[1], **kwargs)
         centre.belongs_to(bisectors[2])
         for seg0, seg1 in itertools.combinations([centre.segment(v) for v in triangle.points], 2):
             seg0.congruent_constraint(
                 seg1,
-                comment=LazyComment('%s is circumcentre of %s', centre, triangle)
+                comment=Comment(
+                    '$%{point:centre}$ is the circumcentre of $%{triangle:tr}$',
+                    {'centre': centre, 'tr': triangle}
+                )
             )
         return centre
 
@@ -84,22 +87,28 @@ class Scene(CoreScene):
 
     def centre_point(self, triangle, **kwargs):
         """
-        Centre of equialteral triangle
+        Centre of equilateral triangle
         """
         assert triangle.is_equilateral
+        # TODO: what if the triangle is degenerate?
         angles = triangle.angles
         bisector0 = angles[0].bisector_line(layer='auxiliary')
         bisector1 = angles[1].bisector_line(layer='auxiliary')
         bisector2 = angles[2].bisector_line(layer='auxiliary')
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
-            kwargs['comment'] = LazyComment('The centre of %s', triangle)
+            kwargs['comment'] = Comment('The centre of $%{triangle:tr}$', {'tr': triangle})
         centre = bisector0.intersection_point(bisector1, **kwargs)
-        comment = LazyComment('%s is the centre of %s', centre, triangle)
+        comment = Comment(
+            '$%{point:centre}$ is the centre of equilateral $%{triangle:triangle}$',
+            {'centre': centre, 'triangle': triangle}
+        )
         centre.belongs_to(bisector2)
         for angle in angles:
             angle.point_on_bisector_constraint(centre, comment=comment, guaranteed=True)
         centre.inside_triangle_constraint(triangle, comment=comment, guaranteed=True)
+        for v in triangle.points:
+            centre.not_equal_constraint(v, comment=comment, guaranteed=True)
         for vertex0, vertex1 in itertools.combinations(triangle.points, 2):
             centre.angle(vertex0, vertex1).value_constraint(120, comment=comment, guaranteed=True)
             vertex0.angle(centre, vertex1).value_constraint(30, comment=comment, guaranteed=True)
@@ -124,15 +133,24 @@ class Scene(CoreScene):
         bisector2 = angles[2].bisector_line(layer='auxiliary')
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
-            kwargs['comment'] = LazyComment('The incentre of %s', triangle)
+            kwargs['comment'] = Comment('The incentre of $%{triangle:tr}$', {'tr': triangle})
         centre = bisector0.intersection_point(bisector1, **kwargs)
         centre.belongs_to(bisector2)
         for angle in angles:
             angle.point_on_bisector_constraint(
                 centre,
-                comment=LazyComment('the incentre %s of %s lies on the bisector of %s', centre, triangle, angle)
+                comment=Comment(
+                    'the incentre $%{point:centre}$ of $%{triangle:triangle}$ lies on the bisector of $%{angle:angle}$',
+                    {'centre': centre, 'triangle': triangle, 'angle': angle}
+                )
             )
-        centre.inside_triangle_constraint(triangle, comment=LazyComment('the incentre %s lies inside %s', centre, triangle))
+        centre.inside_triangle_constraint(
+            triangle,
+            comment=Comment(
+                'the incentre $%{point:centre}$ lies inside $%{triangle:triangle}$',
+                {'centre': centre, 'triangle': triangle}
+            )
+        )
         return centre
 
     def incircle(self, triangle, **kwargs):
@@ -144,7 +162,7 @@ class Scene(CoreScene):
         foot = self.perpendicular_foot_point(centre, side, layer='auxiliary')
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
-            kwargs['comment'] = LazyComment('Incircle of %s', triangle)
+            kwargs['comment'] = Comment('The incircle of $%{triangle:tr}$', {'tr': triangle})
         return centre.circle_through(foot, **kwargs)
 
     def circumcircle(self, triangle, **kwargs):
@@ -154,7 +172,7 @@ class Scene(CoreScene):
         centre = self.circumcentre_point(triangle, layer='auxiliary')
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
-            kwargs['comment'] = LazyComment('Cicrumcircle of %s', triangle)
+            kwargs['comment'] = Comment('The circumcircle of $%{triangle:tr}$', {'tr': triangle})
         circle = centre.circle_through(triangle.points[0], **kwargs)
         triangle.points[1].belongs_to(circle)
         triangle.points[2].belongs_to(circle)
@@ -183,7 +201,7 @@ class Scene(CoreScene):
         """
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
-            kwargs['comment'] = LazyComment('%s is non-degenerate', triangle)
+            kwargs['comment'] = Comment('$%{triangle:tr}$ is non-degenerate', {'tr': triangle})
         triangle.points[0].not_collinear_constraint(triangle.points[1], triangle.points[2], **kwargs)
 
     def altitude(self, triangle, vertex, **kwargs):
@@ -198,9 +216,15 @@ class Scene(CoreScene):
         base = points[0].line_through(points[1], layer='auxiliary')
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
-            kwargs['comment'] = LazyComment('Altitude of %s from vertex %s', triangle, vertex)
+            kwargs['comment'] = Comment(
+                'Altitude of $%{triangle:triangle}$ from vertex $%{point:vertex}$',
+                {'triangle': triangle, 'vertex': vertex}
+            )
         altitude = vertex.perpendicular_line(base, **kwargs)
-        altitude.perpendicular_constraint(base, comment=LazyComment('altitude from vertex %s is perpendicular to the base %s', vertex, points[0].segment(points[1]).as_line), guaranteed=True)
+        altitude.perpendicular_constraint(base, comment=Comment(
+            'altitude from vertex $%{point:vertex}$ is perpendicular to the base $%{line:base}$',
+            {'vertex': vertex, 'base': points[0].segment(points[1])}
+        ), guaranteed=True)
         return altitude
 
     def equilateral_triangle(self, *points_or_labels, **kwargs):
@@ -218,18 +242,25 @@ class Scene(CoreScene):
             circle0 = pt0.circle_through(pt1, layer='invisible')
             circle1 = pt1.circle_through(pt0, layer='invisible')
             pt2 = circle0.intersection_point(circle1, **ptargs(2))
-        tri = Scene.Triangle(pt0, pt1, pt2)
+        triangle = Scene.Triangle(pt0, pt1, pt2)
+        point_set = set(triangle.points)
+        for cnstr in self.constraints(Constraint.Kind.not_equal):
+            if set(cnstr.params).issubset(point_set):
+                if 'comment' not in kwargs:
+                    kwargs = dict(kwargs)
+                    kwargs['comment'] = Comment('$%{triangle:tr}$ is non-degenerate equilateral', {'tr': triangle})
+                self.nondegenerate_triangle_constraint(triangle, **kwargs)
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
-            kwargs['comment'] = LazyComment('%s is equilateral', tri)
-        self.equilateral_constraint(tri, **kwargs)
+            kwargs['comment'] = Comment('$%{triangle:tr}$ is equilateral', {'tr': triangle})
+        self.equilateral_constraint(triangle, **kwargs)
 
         #TODO: this is a hack for sketches
         pt0.line_through(pt1)
         pt0.line_through(pt2)
         pt1.line_through(pt2)
 
-        return tri
+        return triangle
 
     def square(self, *points_or_labels):
         assert len(points_or_labels) == 4
@@ -257,7 +288,7 @@ class Scene(CoreScene):
         assert len(pts) == 4
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
-            kwargs['comment'] = LazyComment('%s is a square', Scene.Polygon(*pts))
+            kwargs['comment'] = Comment('$%{polygon:square}$ is a square', {'square': Scene.Polygon(*pts)})
 
         pts[0].vector(pts[1]).parallel_constraint(pts[3].vector(pts[2]), **kwargs)
         pts[0].vector(pts[3]).parallel_constraint(pts[1].vector(pts[2]), **kwargs)
@@ -296,7 +327,10 @@ class Scene(CoreScene):
         assert len(points) == 4
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
-            kwargs['comment'] = LazyComment('%s is a convex quadrangle', Scene.Polygon(*points))
+            kwargs['comment'] = Comment(
+                '$%{polygon:quad}$ is a convex quadrangle',
+                {'quad': Scene.Polygon(*points)}
+            )
 
         for i in range(0, 4):
             pts = [points[j % 4] for j in range(i, i + 4)]
@@ -323,7 +357,10 @@ class Scene(CoreScene):
             args['label'] = labels[3]
         pts.append(pts[0].translated_point(pts[1].vector(pts[2]), **args))
 
-        comment = LazyComment('%s %s %s %s is a parallelogram', *pts)
+        comment = Comment(
+            '$%{polygon:para}$ is a parallelogram',
+            {'para': Scene.Polygon(*pts)}
+        )
         pts[0].vector(pts[1]).parallel_constraint(pts[3].vector(pts[2]), comment=comment)
         pts[0].vector(pts[3]).parallel_constraint(pts[1].vector(pts[2]), comment=comment)
         pts[0].segment(pts[1]).congruent_constraint(pts[2].segment(pts[3]), comment=comment)

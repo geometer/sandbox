@@ -2,9 +2,9 @@ from enum import Enum, auto
 import itertools
 import sympy as sp
 
-from .figure import Figure
+from .figure import Figure, Circle
 from .scene import Scene
-from .util import LazyComment, divide, good_angles, normalize_number, keys_for_triangle, degree_to_string
+from .util import Comment, divide, good_angles, normalize_number, keys_for_triangle, degree_to_string
 
 class Property:
     def __init__(self, property_key):
@@ -51,8 +51,8 @@ class Property:
     def keys(self):
         return []
 
-    def html(self):
-        return self.description
+    def stringify(self, printer):
+        return self.description.stringify(printer)
 
     def compare_values(self, other):
         return True
@@ -95,15 +95,13 @@ class PointAndCircleProperty(Property):
 
     @property
     def description(self):
-        # TODO: single circle identifier in comment
         if self.location == PointAndCircleProperty.Kind.inside:
-            return LazyComment('%s lies inside the circle through %s, %s, and %s', self.point, *self.circle_key)
+            pattern ='$%{point:pt}$ lies inside $%{circle:circ}$',
         elif self.location == PointAndCircleProperty.Kind.outside:
-            return LazyComment('%s lies outside of the circle through %s, %s, and %s', self.point, *self.circle_key)
+            pattern ='$%{point:pt}$ lies outside of $%{circle:circ}$',
         elif self.location == PointAndCircleProperty.Kind.on:
-            return LazyComment('%s lies on the circle through %s, %s, and %s', self.point, *self.circle_key)
-        else:
-            raise Exception('location %s is not of type PointAndCircleProperty.Kind' % self.location)
+            pattern ='$%{point:pt}$ lies on $%{circle:circ}$',
+        return Comment(pattern, {'pt': self.point, 'circ': Circle(*self.circle_key)})
 
     def compare_values(self, other):
         return self.location == other.location
@@ -123,15 +121,13 @@ class CircleCoincidenceProperty(Property):
 
     @property
     def description(self):
-        # TODO: single circle identifier in comment
         if self.coincident:
-            return LazyComment(
-                '%s %s %s is the same circle as %s %s %s', *self.circle_keys[0], *self.circle_keys[1]
-            )
+            pattern = '$%{circle:c0}$ coincides with $%{circle:c1}$'
         else:
-            return LazyComment(
-                '%s %s %s and %s %s %s are different circles', *self.circle_keys[0], self.circle_keys[1]
-            )
+            pattern = '$%{circle:c0}$ and $%{circle:c1}$ differ'
+        return Comment(
+            pattern, {'c0': Circle(*self.circle_keys[0]), 'c1': Circle(*self.circle_keys[1])}
+        )
 
     def compare_values(self, other):
         return self.coincident == other.coincident
@@ -151,7 +147,10 @@ class ConcyclicPointsProperty(Property):
 
     @property
     def description(self):
-        return LazyComment('Points %s, %s, %s, and %s are concyclic', *self.points)
+        return Comment(
+            'Points $%{point:pt0}$, $%{point:pt1}$, $%{point:pt2}$, and $%{point:pt3}$ are concyclic',
+            dict(('pt%d' % index, pt) for index, pt in enumerate(self.points))
+        )
 
 class PointOnLineProperty(Property):
     """
@@ -169,10 +168,11 @@ class PointOnLineProperty(Property):
 
     @property
     def description(self):
-        return LazyComment(
-            '%s lies on line %s' if self.on_line else '%s does not lie on line %s',
-            self.point, self.segment.as_line
-        )
+        if self.on_line:
+            pattern = '$%{point:point}$ lies on line $%{line:line}$'
+        else:
+            pattern = '$%{point:point}$ does not lie on line $%{line:line}$'
+        return Comment(pattern, {'point': self.point, 'line': self.segment})
 
     def compare_values(self, other):
         return self.on_line == other.on_line
@@ -193,13 +193,10 @@ class LineCoincidenceProperty(Property):
     @property
     def description(self):
         if self.coincident:
-            return LazyComment(
-                '%s is the same line as %s', self.segments[0].as_line, self.segments[1].as_line
-            )
+            pattern = '$%{line:line0}$ is the same line as $%{line:line1}$'
         else:
-            return LazyComment(
-                '%s and %s are different lines', self.segments[0].as_line, self.segments[1].as_line
-            )
+            pattern = '$%{line:line0}$ and $%{line:line1}$ are different lines'
+        return Comment(pattern, {'line0': self.segments[0], 'line1': self.segments[1]})
 
     def compare_values(self, other):
         return self.coincident == other.coincident
@@ -223,9 +220,10 @@ class PointsCollinearityProperty(Property):
     @property
     def description(self):
         if self.collinear:
-            return LazyComment('Points %s, %s, and %s are collinear', *self.points)
+            pattern = 'Points $%{point:pt0}$, $%{point:pt1}$, and $%{point:pt2}$ are collinear'
         else:
-            return LazyComment('Points %s, %s, and %s are not collinear', *self.points)
+            pattern = 'Points $%{point:pt0}$, $%{point:pt1}$, and $%{point:pt2}$ are not collinear'
+        return Comment(pattern, {'pt0': self.points[0], 'pt1': self.points[1], 'pt2': self.points[2]})
 
     def compare_values(self, other):
         return self.collinear == other.collinear
@@ -247,7 +245,10 @@ class ParallelVectorsProperty(Property):
 
     @property
     def description(self):
-        return LazyComment('%s ↑↑ %s', *self.vectors)
+        return Comment(
+            '$%{vector:vec0} \\uparrow\\!\\!\\!\\uparrow %{vector:vec1}$',
+            {'vec0': self.vectors[0], 'vec1': self.vectors[1]}
+        )
 
 class ParallelSegmentsProperty(Property):
     """
@@ -266,7 +267,10 @@ class ParallelSegmentsProperty(Property):
 
     @property
     def description(self):
-        return LazyComment('%s ∥ %s', *self.segments)
+        return Comment(
+            '$%{segment:seg0} \,\\|\, %{segment:seg1}$',
+            {'seg0': self.segments[0], 'seg1': self.segments[1]}
+        )
 
 class PerpendicularSegmentsProperty(Property):
     """
@@ -285,7 +289,10 @@ class PerpendicularSegmentsProperty(Property):
 
     @property
     def description(self):
-        return LazyComment('%s ⟂ %s', *self.segments)
+        return Comment(
+            '$%{segment:seg0} \\perp %{segment:seg1}$',
+            {'seg0': self.segments[0], 'seg1': self.segments[1]}
+        )
 
 class PointsCoincidenceProperty(Property):
     """
@@ -306,9 +313,10 @@ class PointsCoincidenceProperty(Property):
     @property
     def description(self):
         if self.coincident:
-            return LazyComment('Points %s and %s are coincident', *self.points)
+            pattern = 'Points $%{point:pt0}$ and $%{point:pt1}$ are coincident'
         else:
-            return LazyComment('Points %s and %s are not coincident', *self.points)
+            pattern = 'Points $%{point:pt0}$ and $%{point:pt1}$ are not coincident'
+        return Comment(pattern, {'pt0': self.points[0], 'pt1': self.points[1]})
 
     def compare_values(self, other):
         return self.coincident == other.coincident
@@ -337,9 +345,10 @@ class SameOrOppositeSideProperty(Property):
     @property
     def description(self):
         if self.same:
-            return LazyComment('%s, %s located on the same side of line %s', *self.points, self.segment.as_line)
+            pattern = '$%{point:pt0}$, $%{point:pt1}$ located on the same side of line $%{line:line}$'
         else:
-            return LazyComment('%s, %s located on opposite sides of line %s', *self.points, self.segment.as_line)
+            pattern = '$%{point:pt0}$, $%{point:pt1}$ located on opposite sides of line $%{line:line}$'
+        return Comment(pattern, {'pt0': self.points[0], 'pt1': self.points[1], 'line': self.segment})
 
     def compare_values(self, other):
         return self.same == other.same
@@ -359,7 +368,7 @@ class PointInsideAngleProperty(Property):
 
     @property
     def description(self):
-        return LazyComment('%s lies inside %s', self.point, self.angle)
+        return Comment('$%{point:pt}$ lies inside $%{angle:angle}$', {'pt': self.point, 'angle': self.angle})
 
     def keys(self):
         return [self.point, self.angle]
@@ -381,7 +390,7 @@ class EquilateralTriangleProperty(Property):
 
     @property
     def description(self):
-        return LazyComment('%s is equilateral', self.triangle)
+        return Comment('$%{triangle:triangle}$ is equilateral', {'triangle': self.triangle})
 
 class AngleKindProperty(Property):
     """
@@ -409,7 +418,13 @@ class AngleKindProperty(Property):
 
     @property
     def description(self):
-        return LazyComment('%s is %s', self.angle, self.kind)
+        if self.kind == AngleKindProperty.Kind.acute:
+            pattern = '$%{angle:angle}$ is acute'
+        elif self.kind == AngleKindProperty.Kind.obtuse:
+            pattern = '$%{angle:angle}$ is obtuse'
+        else:
+            pattern = '$%{angle:angle}$ is right'
+        return Comment(pattern, {'angle': self.angle})
 
     def compare_values(self, other):
         return self.kind == other.kind
@@ -450,10 +465,16 @@ class AngleValueProperty(LinearAngleProperty):
     def description(self):
         if self.angle.vertex:
             if self.degree == 0:
-                return LazyComment('%s, %s in the same direction from %s', self.angle.vectors[0].end, self.angle.vectors[1].end, self.angle.vertex)
+                return Comment(
+                    '$%{point:pt0}$, $%{point:pt1}$ in the same direction from $%{point:vertex}$',
+                    {'pt0': self.angle.vectors[0].end, 'pt1': self.angle.vectors[1].end, 'vertex': self.angle.vertex}
+                )
             if self.degree == 180:
-                return LazyComment('%s lies inside segment %s', self.angle.vertex, self.angle.vectors[0].end.segment(self.angle.vectors[1].end))
-        return LazyComment('%s = %s', self.angle, self.degree_str)
+                return Comment(
+                    '$%{point:pt}$ lies inside segment $%{segment:seg}$',
+                    {'pt': self.angle.vertex, 'seg': self.angle.vectors[0].end.segment(self.angle.vectors[1].end)}
+                )
+        return Comment('$%{anglemeasure:ang} = %{degree:deg}$', {'ang': self.angle, 'deg': self.degree})
 
     def compare_values(self, other):
         return self.degree == other.degree
@@ -488,12 +509,18 @@ class AngleRatioProperty(LinearAngleProperty):
 
     @property
     def description(self):
+        params = {
+            'angle0': self.angle0,
+            'angle1': self.angle1,
+            'ratio': self.value
+        }
         if self.same:
-            return LazyComment('%s ≡ %s', self.angle0, self.angle1)
+            pattern = '$%{anglemeasure:angle0} \equiv %{anglemeasure:angle1}$'
         elif self.value == 1:
-            return LazyComment('%s = %s', self.angle0, self.angle1)
+            pattern = '$%{anglemeasure:angle0} = %{anglemeasure:angle1}$'
         else:
-            return LazyComment('%s = %s %s', self.angle0, self.value, self.angle1)
+            pattern = '$%{anglemeasure:angle0} = %{multiplier:ratio} %{anglemeasure:angle1}$'
+        return Comment(pattern, params)
 
     def compare_values(self, other):
         return self.value == other.value
@@ -519,7 +546,10 @@ class SumOfThreeAnglesProperty(LinearAngleProperty):
 
     @property
     def description(self):
-        return LazyComment('%s + %s + %s = %s', *self.angles, self.degree_str)
+        return Comment(
+            '$%{anglemeasure:a0} + %{anglemeasure:a1} + %{anglemeasure:a2} = %{degree:value}$',
+            {'a0': self.angles[0], 'a1': self.angles[1], 'a2': self.angles[2], 'value': self.degree}
+        )
 
     def compare_values(self, other):
         return self.degree == other.degree
@@ -549,7 +579,10 @@ class SumOfTwoAnglesProperty(LinearAngleProperty):
 
     @property
     def description(self):
-        return LazyComment('%s + %s = %s', *self.angles, self.degree_str)
+        return Comment(
+            '$%{anglemeasure:a0} + %{anglemeasure:a1} = %{degree:value}$',
+            {'a0': self.angles[0], 'a1': self.angles[1], 'value': self.degree}
+        )
 
     def compare_values(self, other):
         return self.degree == other.degree
@@ -574,7 +607,10 @@ class LengthRatioProperty(Property):
 
     @property
     def description(self):
-        return LazyComment('|%s| / |%s| = %s', self.segment0, self.segment1, self.value)
+        return Comment(
+            '$|%{segment:seg0}| / |%{segment:seg1}| = %{number:value}$',
+            {'seg0': self.segment0, 'seg1': self.segment1, 'value': self.value}
+        )
 
     def compare_values(self, other):
         return self.value == other.value
@@ -600,8 +636,15 @@ class ProportionalLengthsProperty(Property):
     @property
     def description(self):
         if self.value == 1:
-            return LazyComment('|%s| = |%s|', self.segment0, self.segment1)
-        return LazyComment('|%s| = %s |%s|', self.segment0, self.value, self.segment1)
+            return Comment('$|%{segment:seg0}| = |%{segment:seg1}|$', {
+                'seg0': self.segment0,
+                'seg1': self.segment1
+            })
+        return Comment('$|%{segment:seg0}| = %{multiplier:value}|%{segment:seg1}|$', {
+            'seg0': self.segment0,
+            'seg1': self.segment1,
+            'value': self.value
+        })
 
     def compare_values(self, other):
         if self.value == other.value:
@@ -629,7 +672,10 @@ class EqualLengthProductsProperty(Property):
 
     @property
     def description(self):
-        return LazyComment('|%s| * |%s| = |%s| * |%s|', *[self.segments[i] for i in (0, 3, 1, 2)])
+        return Comment(
+            '$|%{segment:seg0}| * |%{segment:seg3}| = |%{segment:seg1}| * |%{segment:seg2}|$',
+            dict(('seg%d' % index, segment) for index, segment in enumerate(self.segments))
+        )
 
 class EqualLengthRatiosProperty(Property):
     """
@@ -652,7 +698,10 @@ class EqualLengthRatiosProperty(Property):
 
     @property
     def description(self):
-        return LazyComment('|%s| / |%s| = |%s| / |%s|', *self.segments)
+        return Comment(
+            '$|%{segment:seg0}| / |%{segment:seg1}| = |%{segment:seg2}| / |%{segment:seg3}|$',
+            dict(('seg%d' % index, segment) for index, segment in enumerate(self.segments))
+        )
 
 class SimilarTrianglesProperty(Property):
     """
@@ -673,7 +722,7 @@ class SimilarTrianglesProperty(Property):
 
     @property
     def description(self):
-        return LazyComment('%s ~ %s', self.triangle0, self.triangle1)
+        return Comment('$%{triangle:t0} \sim %{triangle:t1}$', {'t0': self.triangle0, 't1': self.triangle1})
 
 class CongruentTrianglesProperty(Property):
     """
@@ -694,7 +743,7 @@ class CongruentTrianglesProperty(Property):
 
     @property
     def description(self):
-        return LazyComment('%s = %s', self.triangle0, self.triangle1)
+        return Comment('$%{triangle:t0} \cong %{triangle:t1}$', {'t0': self.triangle0, 't1': self.triangle1})
 
 class IsoscelesTriangleProperty(Property):
     """
@@ -715,7 +764,10 @@ class IsoscelesTriangleProperty(Property):
 
     @property
     def description(self):
-        return LazyComment('%s is isosceles with apex %s', self.triangle, self.apex)
+        return Comment(
+            '$%{triangle:isosceles}$ is isosceles with apex $%{point:apex}$',
+            {'isosceles': self.triangle, 'apex': self.apex}
+        )
 
 class Cycle(Figure):
     def __init__(self, pt0, pt1, pt2):
@@ -730,11 +782,8 @@ class Cycle(Figure):
             self.__reversed.__reversed = self
         return self.__reversed
 
-    def css_class(self):
-        return LazyComment('cyc__%s__%s__%s', *self.points)
-
     def __str__(self):
-        return '↻ %s %s %s' % self.points
+        return '\\circlearrowleft %s %s %s' % self.points
 
     def __eq__(self, other):
         return self.__key == other.__key
@@ -759,4 +808,7 @@ class SameCyclicOrderProperty(Property):
 
     @property
     def description(self):
-        return LazyComment('%s and %s have the same order', self.cycle0, self.cycle1)
+        return Comment(
+            '$%{cycle:cycle0}$ and $%{cycle:cycle1}$ have the same order',
+            {'cycle0': self.cycle0, 'cycle1': self.cycle1}
+        )

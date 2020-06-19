@@ -1,7 +1,7 @@
 import itertools
 
 from ..property import *
-from ..util import LazyComment
+from ..util import Comment
 
 from .abstract import SingleSourceRule
 
@@ -35,7 +35,10 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
                segments[1] != segments[3] and segments[2] != segments[3]:
                 yield (
                     EqualLengthProductsProperty(*segments),
-                    LazyComment('ratios of sides in similar %s and %s', prop.triangle0, prop.triangle1),
+                    Comment(
+                        'ratios of sides in similar $%{triangle:tr0}$ and $%{triangle:tr1}$',
+                        {'tr0': prop.triangle0, 'tr1': prop.triangle1}
+                    ),
                     [prop]
                 )
 
@@ -84,7 +87,10 @@ class CorrespondingAnglesInSimilarTrianglesRule(SingleSourceRule):
             mask |= bit
             yield (
                 AngleRatioProperty(angles0[i], angles1[i], 1),
-                LazyComment('corresponding angles in similar %s and %s', prop.triangle0, prop.triangle1),
+                Comment(
+                    'corresponding angles in similar $%{triangle:tr0}$ and $%{triangle:tr1}$',
+                    {'tr0': prop.triangle0, 'tr1': prop.triangle1}
+                ),
                 [prop] + ne
             )
 
@@ -109,7 +115,7 @@ class BaseAnglesOfIsoscelesRule(SingleSourceRule):
                 prop.base.points[1].angle(prop.apex, prop.base.points[0]),
                 1
             ),
-            LazyComment('base angles of isosceles %s', prop.triangle),
+            Comment('base angles of isosceles $%{triangle:tr}$', {'tr': prop.triangle}),
             [prop]
         )
 
@@ -135,7 +141,10 @@ class BaseAnglesOfIsoscelesWithKnownApexAngleRule(SingleSourceRule):
         ):
             yield (
                 AngleValueProperty(angle, divide(180 - av.degree, 2)),
-                LazyComment('base angles of isosceles %s with apex angle %s = %s', prop.triangle, av.angle, av.degree_str),
+                Comment(
+                    'base angles of isosceles $%{triangle:triangle}$ with apex angle $%{anglemeasure:angle} = %{degree:degree}$',
+                    {'triangle': prop.triangle, 'angle': av.angle, 'degree': av.degree}
+                ),
                 [prop, av]
             )
 
@@ -151,7 +160,7 @@ class LegsOfIsoscelesRule(SingleSourceRule):
                 prop.apex.segment(prop.base.points[1]),
                 1
             ),
-            LazyComment('legs of isosceles %s', prop.triangle),
+            Comment('legs of isosceles $%{triangle:triangle}$', {'triangle': prop.triangle}),
             [prop]
         )
 
@@ -170,7 +179,10 @@ class CorrespondingAnglesInCongruentTrianglesRule(SingleSourceRule):
             if angles0[i] != angles1[i]:
                 yield (
                     AngleRatioProperty(angles0[i], angles1[i], 1),
-                    LazyComment('corresponding angles in congruent %s and %s', prop.triangle0, prop.triangle1),
+                    Comment(
+                        'corresponding angles in congruent $%{triangle:tr0}$ and $%{triangle:tr1}$',
+                        {'tr0': prop.triangle0, 'tr1': prop.triangle1}
+                    ),
                     [prop, ncl]
                 )
 
@@ -188,7 +200,10 @@ class CorrespondingSidesInCongruentTrianglesRule(SingleSourceRule):
             if segment0 != segment1:
                 yield (
                     ProportionalLengthsProperty(segment0, segment1, 1),
-                    LazyComment('corresponding sides in congruent %s and %s', prop.triangle0, prop.triangle1),
+                    Comment(
+                        'corresponding sides in congruent $%{triangle:tr0}$ and $%{triangle:tr1}$',
+                        {'tr0': prop.triangle0, 'tr1': prop.triangle1}
+                    ),
                     [prop]
                 )
 
@@ -221,13 +236,19 @@ class CorrespondingSidesInSimilarTrianglesRule(SingleSourceRule):
                     if ratio != 1:
                         yield (
                             PointsCoincidenceProperty(*sides0[j].points, True),
-                            LazyComment('|%s| = %s * |%s| as %s is a side in similar but non-congruent %s and %s', sides0[j], ratio, sides0[j], sides0[j], prop.triangle0, prop.triangle1),
+                            Comment(
+                                '$|%{segment:side}| = %{multiplier:ratio} * |%{segment:side}|$ as $%{segment:size}$ is a side in similar but non-congruent $%{triangle:tr0}$ and $%{triangle:tr1}$',
+                                {'side': sides0[j], 'ratio': ratio, 'tr0': prop.triangle0, 'tr1': prop.triangle1}
+                            ),
                             [prop, lr]
                         )
                 else:
                     yield (
                         ProportionalLengthsProperty(sides0[j], sides1[j], ratio),
-                        LazyComment('ratio of sides in similar %s and %s', prop.triangle0, prop.triangle1),
+                        Comment(
+                            'ratio of sides in similar $%{triangle:t0}$ and $%{triangle:t1}$',
+                            {'t0': prop.triangle0, 't1': prop.triangle1}
+                        ),
                         [prop, lr]
                     )
 
@@ -250,7 +271,10 @@ class EquilateralTriangleAnglesRule(SingleSourceRule):
         for angle in prop.triangle.angles:
             yield (
                 AngleValueProperty(angle, 60),
-                LazyComment('angle of non-degenerate equilateral %s', prop.triangle),
+                Comment(
+                    'angle of non-degenerate equilateral $%{triangle:triangle}$',
+                    {'triangle': prop.triangle}
+                ),
                 [prop]
             )
 
@@ -264,6 +288,9 @@ class EquilateralTriangleSidesRule(SingleSourceRule):
         for side0, side1 in itertools.combinations(prop.triangle.sides, 2):
             yield (
                 ProportionalLengthsProperty(side0, side1, 1),
-                LazyComment('sides of equilateral %s', prop.triangle),
+                Comment(
+                    'sides of equilateral $%{triangle:triangle}$',
+                    {'triangle': prop.triangle}
+                ),
                 [prop]
             )
