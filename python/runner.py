@@ -66,6 +66,11 @@ def run_sample(scene, *props):
                 return 1 + max(depth(p) for p in prop.reason.premises)
             return 0
 
+        def full_size(prop):
+            if prop.reason.premises:
+                return 1 + sum(full_size(p) for p in prop.reason.premises)
+            return 1
+
         def all_premises(prop):
             premises = PropertySet(explainer.context.points)
             for p in prop.reason.all_premises:
@@ -77,6 +82,7 @@ def run_sample(scene, *props):
             if explanation:
                 dump(explanation)
                 print('Depth = %s' % depth(explanation))
+                print('Full size = %s' % full_size(explanation))
                 cumulative_priorities = {}
                 def cumu(prop):
                     cached = cumulative_priorities.get(prop)
