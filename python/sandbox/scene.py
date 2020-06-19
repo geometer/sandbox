@@ -90,36 +90,10 @@ class Scene(CoreScene):
         Centre of equilateral triangle
         """
         assert triangle.is_equilateral
-        # TODO: what if the triangle is degenerate?
-        angles = triangle.angles
-        bisector0 = angles[0].bisector_line(layer='auxiliary')
-        bisector1 = angles[1].bisector_line(layer='auxiliary')
-        bisector2 = angles[2].bisector_line(layer='auxiliary')
-        if 'comment' not in kwargs:
-            kwargs = dict(kwargs)
-            kwargs['comment'] = Comment('The centre of $%{triangle:tr}$', {'tr': triangle})
-        centre = bisector0.intersection_point(bisector1, **kwargs)
-        comment = Comment(
-            '$%{point:centre}$ is the centre of equilateral $%{triangle:triangle}$',
-            {'centre': centre, 'triangle': triangle}
-        )
-        centre.belongs_to(bisector2)
-        for angle in angles:
-            angle.point_on_bisector_constraint(centre, comment=comment, guaranteed=True)
-        centre.inside_triangle_constraint(triangle, comment=comment, guaranteed=True)
-        for v in triangle.points:
-            centre.not_equal_constraint(v, comment=comment, guaranteed=True)
-        for vertex0, vertex1 in itertools.combinations(triangle.points, 2):
-            centre.angle(vertex0, vertex1).value_constraint(120, comment=comment, guaranteed=True)
-            vertex0.angle(centre, vertex1).value_constraint(30, comment=comment, guaranteed=True)
-            vertex1.angle(centre, vertex0).value_constraint(30, comment=comment, guaranteed=True)
-        for v0, v1, v2 in itertools.permutations(triangle.points, 3):
-            centre.vector(v0).angle(v1.vector(v2)).value_constraint(90, comment=comment, guaranteed=True)
-        radiuses = [centre.segment(vertex) for vertex in triangle.points]
-        for rad0, rad1 in itertools.combinations(radiuses, 2):
-            rad0.congruent_constraint(rad1, comment=comment, guaranteed=True)
-        for radius, side in itertools.product(radiuses, triangle.sides):
-            side.ratio_constraint(radius, sp.sqrt(3), comment=comment, guaranteed=True)
+        aux = triangle.sides[0].middle_point(layer='invisible')
+        centre = aux.translated_point(aux.vector(triangle.points[0]), sp.sympify(1) / 3, **kwargs)
+        from .property import CentreOfEquilateralTriangleProperty
+        self.add_property(CentreOfEquilateralTriangleProperty(centre, triangle))
         return centre
 
     def incentre_point(self, triangle, **kwargs):
@@ -244,13 +218,6 @@ class Scene(CoreScene):
             pt2 = circle0.intersection_point(circle1, **ptargs(2))
         triangle = Scene.Triangle(pt0, pt1, pt2)
         point_set = set(triangle.points)
-        for cnstr in self.constraints(Constraint.Kind.not_equal):
-            if set(cnstr.params).issubset(point_set):
-                if 'comment' not in kwargs:
-                    kwargs = dict(kwargs)
-                    kwargs['comment'] = Comment('$%{triangle:tr}$ is non-degenerate equilateral', {'tr': triangle})
-                self.nondegenerate_triangle_constraint(triangle, **kwargs)
-
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
             kwargs['comment'] = Comment('$%{triangle:tr}$ is equilateral', {'tr': triangle})

@@ -1,4 +1,5 @@
 import itertools
+import sympy as sp
 
 from ..property import *
 from ..util import Comment
@@ -255,42 +256,129 @@ class CorrespondingSidesInSimilarTrianglesRule(SingleSourceRule):
         if original != mask:
             self.processed[prop] = mask
 
-class EquilateralTriangleAnglesRule(SingleSourceRule):
+class EquilateralTriangleRule(SingleSourceRule):
     property_type = EquilateralTriangleProperty
 
-    def apply(self, prop):
-        ne = None
-        for side in prop.triangle.sides:
-            ne = self.context.not_equal_property(*side.points)
-            if ne:
-                break
-        else:
-            return
-        if prop.reason.obsolete and ne.reason.obsolete:
-            return
-        for angle in prop.triangle.angles:
-            yield (
-                AngleValueProperty(angle, 60),
-                Comment(
-                    'angle of non-degenerate equilateral $%{triangle:triangle}$',
-                    {'triangle': prop.triangle}
-                ),
-                [prop]
-            )
-
-class EquilateralTriangleSidesRule(SingleSourceRule):
-    property_type = EquilateralTriangleProperty
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
 
     def apply(self, prop):
-        if prop.reason.obsolete:
+        mask = self.processed.get(prop, 0)
+        if mask == 0xF:
             return
-        sides = prop.triangle.sides
-        for side0, side1 in itertools.combinations(prop.triangle.sides, 2):
-            yield (
-                ProportionalLengthsProperty(side0, side1, 1),
-                Comment(
-                    'sides of equilateral $%{triangle:triangle}$',
-                    {'triangle': prop.triangle}
-                ),
-                [prop]
-            )
+        original = mask
+
+        if (mask & 0x1) == 0:
+            # properties not depending on degeneracy
+            mask |= 0x1
+            for side0, side1 in itertools.combinations(prop.triangle.sides, 2):
+                yield (
+                    ProportionalLengthsProperty(side0, side1, 1),
+                    Comment(
+                        'sides of equilateral $%{triangle:triangle}$',
+                        {'triangle': prop.triangle}
+                    ),
+                    [prop]
+                )
+
+        for side, bit in zip(prop.triangle.sides, (0x2, 0x4, 0x8)):
+            if mask & bit:
+                continue
+            ne = self.context.coincidence_property(*side.points)
+            if ne is None:
+                continue
+            mask |= bit
+
+            if ne.coincident:
+                sides_comment_pattern = '$%{point:v0}$ and $%{point:v1}$ are vertices of degenerate equlateral $%{triangle:triangle}$'
+            else:
+                sides_comment_pattern = '$%{point:v0}$ and $%{point:v1}$ are vertices of non-degenerate equlateral $%{triangle:triangle}$'
+                for angle in prop.triangle.angles:
+                    yield (
+                        AngleValueProperty(angle, 60),
+                        Comment(
+                            'angle of non-degenerate equilateral $%{triangle:triangle}$',
+                            {'triangle': prop.triangle}
+                        ),
+                        [prop, ne]
+                    )
+
+            for other_side in [s for s in prop.triangle.sides if s != side]:
+                yield (
+                    PointsCoincidenceProperty(*other_side.points, ne.coincident),
+                    Comment(
+                        sides_comment_pattern,
+                        {'v0': other_side.points[0], 'v1': other_side.points[1], 'triangle': prop.triangle}),
+                    [prop, ne]
+                )
+
+        if mask != original:
+            self.processed[prop] = mask
+
+class CentreOfEquilateralTriangleRule(SingleSourceRule):
+    property_type = CentreOfEquilateralTriangleProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
+    def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0xF:
+            return
+
+        vertices = prop.triangle.points
+        centre = prop.centre
+        radiuses = [centre.segment(v) for v in vertices]
+
+        if (mask & 0x1) == 0:
+            # properties not depending on degeneracy
+            mask |= 0x1
+            for rad0, rad1 in itertools.combinations(radiuses, 2):
+                comment = Comment(
+                    '$%{point:centre}$ is the centre of equilateral $%{triangle:triangle}$',
+                    {'centre': centre, 'triangle': prop.triangle}
+                )
+                yield (ProportionalLengthsProperty(rad0, rad1, 1), comment, [prop])
+
+        original = mask
+        for index in range(0, 3):
+            bit = 2 << index
+            if mask & bit:
+                continue
+            side = prop.triangle.sides[index]
+            ne = self.context.coincidence_property(*side.points)
+            if ne is None:
+                continue
+            mask |= bit
+
+            new_properties = []
+            for v in vertices:
+                new_properties.append(PointsCoincidenceProperty(centre, v, ne.coincident))
+
+            if ne.coincident:
+                pattern = '$%{point:centre}$ is the centre of degenerate equilateral $%{triangle:triangle}$'
+            else:
+                pattern = '$%{point:centre}$ is the centre of non-degenerate equilateral $%{triangle:triangle}$'
+                for v0, v1 in itertools.combinations(vertices, 2):
+                    new_properties.append(AngleValueProperty(centre.angle(v0, v1), 120))
+                    new_properties.append(AngleValueProperty(v0.angle(centre, v1), 30))
+                    new_properties.append(AngleValueProperty(v1.angle(centre, v0), 30))
+                for v0, v1, v2 in itertools.permutations(vertices, 3):
+                    new_properties.append(AngleValueProperty(centre.vector(v0).angle(v1.vector(v2)), 90))
+                for angle in prop.triangle.angles:
+                    new_properties.append(PointInsideAngleProperty(centre, angle))
+                for radius, side in itertools.product(radiuses, prop.triangle.sides):
+                    new_properties.append(ProportionalLengthsProperty(side, radius, sp.sqrt(3)))
+                for radius, side in zip(radiuses, prop.triangle.sides):
+                    new_properties.append(SameOrOppositeSideProperty(radius, *side.points, False))
+                for v, side in zip(vertices, prop.triangle.sides):
+                    new_properties.append(SameOrOppositeSideProperty(side, v, centre, True))
+
+            comment = Comment(pattern, {'centre': centre, 'triangle': prop.triangle})
+            for p in new_properties:
+                yield (p, comment, [prop, ne])
+
+        if mask != original:
+            self.processed[prop] = mask
