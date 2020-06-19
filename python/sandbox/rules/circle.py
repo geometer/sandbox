@@ -1,7 +1,7 @@
 import itertools
 
 from ..property import *
-from ..util import LazyComment
+from ..util import LazyComment, Comment
 
 from .abstract import Rule
 

@@ -3,7 +3,7 @@ import sympy as sp
 
 from ..property import ProportionalLengthsProperty
 from ..scene import Scene
-from ..util import LazyComment
+from ..util import Comment
 
 from .abstract import Rule
 
@@ -33,6 +33,6 @@ class LawOfSinesRule(Rule):
         for i, j in itertools.combinations(range(0, 3), 2):
             yield (
                 ProportionalLengthsProperty(sides[i], sides[j], sines[i] / sines[j]),
-                LazyComment('law of sines for %s', triangle),
+                Comment('law of sines for $%{triangle:triangle}$', {'triangle': triangle}),
                 [avs[0], avs[1]]
             )

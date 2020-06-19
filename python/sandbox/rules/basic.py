@@ -2,7 +2,7 @@ import itertools
 
 from ..property import *
 from ..scene import Scene
-from ..util import LazyComment, divide
+from ..util import LazyComment, Comment, divide
 
 from .abstract import Rule, SingleSourceRule
 
@@ -30,7 +30,10 @@ class SegmentWithEndpointsOnAngleSidesRule(SingleSourceRule):
         if X in (A, B, C, D):
             return
 
-        comment = LazyComment('%s is the intersection of ray [%s) and segment [%s]', X, A.vector(D).as_ray, B.segment(C))
+        comment = Comment(
+            '$%{point:X}$ is the intersection of ray $%{ray:ray}$ and segment $%{segment:segment}$',
+            {'X': X, 'ray': A.vector(D), 'segment': B.segment(C)}
+        )
         yield (AngleValueProperty(A.angle(D, X), 0), comment, [prop] + reasons)
         yield (AngleValueProperty(B.angle(C, X), 0), comment, [prop] + reasons)
         yield (AngleValueProperty(C.angle(B, X), 0), comment, [prop] + reasons)
@@ -141,32 +144,45 @@ class LengthRatioTransitivityRule(Rule):
         def _cs(coef):
             return '' if coef == 1 else ('%s ' % coef)
 
+        def comment(seg0, seg1, seg2, coef1, coef2):
+            if coef1 == 1:
+                if coef2 == 1:
+                    pattern = '$|%{segment:seg0}| = |%{segment:seg1}| = |%{segment:seg2}|$'
+                else:
+                    pattern = '$|%{segment:seg0}| = |%{segment:seg1}| = %{multiplier:coef2}|%{segment:seg2}|$'
+            else:
+                if coef2 == 1:
+                    pattern = '$|%{segment:seg0}| = %{multiplier:coef1}|%{segment:seg1}| = |%{segment:seg2}|$'
+                else:
+                    pattern = '$|%{segment:seg0}| = %{multiplier:coef1}|%{segment:seg1}| = %{multiplier:coef2}|%{segment:seg2}|$'
+            return Comment(pattern, {'seg0': seg0, 'seg1': seg1, 'seg2': seg2, 'coef1': coef1, 'coef2': coef2})
+
         if lr0.segment0 == lr1.segment0:
             coef = divide(lr1.value, lr0.value)
             yield (
                 ProportionalLengthsProperty(lr0.segment1, lr1.segment1, coef),
-                LazyComment('|%s| = %s|%s| = %s|%s|', lr0.segment1, _cs(divide(1, lr0.value)), lr0.segment0, _cs(coef), lr1.segment1),
+                comment(lr0.segment1, lr0.segment0, lr1.segment1, divide(1, lr0.value), coef),
                 [lr0, lr1]
             )
         elif lr0.segment0 == lr1.segment1:
             coef = lr1.value * lr0.value
             yield (
                 ProportionalLengthsProperty(lr1.segment0, lr0.segment1, coef),
-                LazyComment('|%s| = %s|%s| = %s|%s|', lr1.segment0, _cs(lr1.value), lr0.segment0, _cs(coef), lr0.segment1),
+                comment(lr1.segment0, lr0.segment0, lr0.segment1, lr1.value, coef),
                 [lr1, lr0]
             )
         elif lr0.segment1 == lr1.segment0:
             coef = lr1.value * lr0.value
             yield (
                 ProportionalLengthsProperty(lr0.segment0, lr1.segment1, coef),
-                LazyComment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.value), lr0.segment1, _cs(coef), lr1.segment1),
+                comment(lr0.segment0, lr0.segment1, lr1.segment1, lr0.value, coef),
                 [lr0, lr1]
             )
         elif lr0.segment1 == lr1.segment1:
             coef = divide(lr0.value, lr1.value)
             yield (
                 ProportionalLengthsProperty(lr0.segment0, lr1.segment0, coef),
-                LazyComment('|%s| = %s|%s| = %s|%s|', lr0.segment0, _cs(lr0.value), lr0.segment1, _cs(coef), lr1.segment0),
+                comment(lr0.segment0, lr0.segment1, lr1.segment0, lr0.value, coef),
                 [lr0, lr1]
             )
 
@@ -275,7 +291,16 @@ class AngleInTriangleWithTwoKnownAnglesRule(Rule):
             mask |= bit
             yield (
                 AngleValueProperty(angle2, 180 - prop.degree - av.degree),
-                LazyComment('third angle in %s with %s = %s and %s = %s', triangle, angle0, prop.degree_str, angle1, av.degree_str),
+                Comment(
+                    'third angle in $%{triangle:triangle}$ with $%{anglemeasure:angle0} = %{degree:degree0}$ and $%{anglemeasure:angle1} = %{degree:degree1}$',
+                    {
+                        'triangle': triangle,
+                        'angle0': angle0,
+                        'angle1': angle1,
+                        'degree0': prop.degree,
+                        'degree1': av.degree
+                    }
+                ),
                 [prop, av]
             )
         if mask != original:
@@ -300,10 +325,14 @@ class SumOfTwoAnglesInTriangleRule(Rule):
         angle2 = triangle.angles[2]
 
         if prop.degree == 90:
-            comment = LazyComment('sum of acute angles of right-angled %s', triangle)
+            pattern = 'sum of acute angles of right-angled $%{triangle:triangle}$'
         else:
-            comment = LazyComment('sum of two angles of %s, the third %s = %s', triangle, angle0, prop.degree_str)
-        yield (SumOfTwoAnglesProperty(angle1, angle2, 180 - prop.degree), comment, [prop])
+            pattern = 'sum of two angles of $%{triangle:triangle}$, the third $%{anglemeasure:angle} = %{degree:degree}$'
+        yield (
+            SumOfTwoAnglesProperty(angle1, angle2, 180 - prop.degree),
+            Comment(pattern, {'triangle': triangle, 'angle': angle0, 'degree': prop.degree}),
+            [prop]
+        )
 
 class SumOfThreeAnglesInTriangleRule(Rule):
     def __init__(self, context):
@@ -358,7 +387,10 @@ class SumOfThreeAnglesOnLineRule(Rule):
         angle = third.angle(av0.angle.vertex, av1.angle.vertex)
         yield (
             AngleValueProperty(angle, 180),
-            LazyComment('%s = %s and %s = %s', av0.angle, av0.degree_str, av1.angle, av1.degree_str),
+            Comment(
+                '$%{anglemeasure:angle0} = %{degree:degree0}$ and $%{anglemeasure:angle1} = %{degree:degree1}$',
+                {'angle0': av0.angle, 'degree0': av0.degree, 'angle1': av1.angle, 'degree1': av1.degree}
+            ),
             [av0, av1]
         )
 
@@ -376,7 +408,10 @@ class SumOfThreeAnglesOnLineRule2(Rule):
         for vec0, vec1 in (prop.angle.vectors, reversed(prop.angle.vectors)):
             yield (
                 AngleValueProperty(vec0.end.angle(vec0.start, vec1.end), 0),
-                LazyComment('%s lies between %s and %s', vec0.start, vec0.end, vec1.end),
+                Comment(
+                    '$%{point:pt0}$ lies between $%{point:pt1}$ and $%{point:pt2}$',
+                    {'pt0': vec0.start, 'pt1': vec0.end, 'pt2': vec1.end}
+                ),
                 [prop]
             )
 
@@ -389,14 +424,23 @@ class LengthRatioRule(SingleSourceRule):
 
         ne0 = self.context.not_equal_property(*seg0.points)
         ne1 = self.context.not_equal_property(*seg1.points)
+        pattern = 'otherwise, $%{point:pt0} = %{point:pt1}$'
         if ne0 is not None and ne1 is None:
             if prop.reason.obsolete and ne0.reason.obsolete:
                 return
-            yield (PointsCoincidenceProperty(*seg1.points, False), LazyComment('Otherwise, %s = %s', *seg0.points), [prop, ne0])
+            yield (
+                PointsCoincidenceProperty(*seg1.points, False),
+                Comment(pattern, {'pt0': seg0.points[0], 'pt1': seg0.points[1]}),
+                [prop, ne0]
+            )
         elif ne1 is not None and ne0 is None:
             if prop.reason.obsolete and ne1.reason.obsolete:
                 return
-            yield (PointsCoincidenceProperty(*seg0.points, False), LazyComment('Otherwise, %s = %s', *seg1.points), [prop, ne1])
+            yield (
+                PointsCoincidenceProperty(*seg0.points, False),
+                Comment(pattern, {'pt0': seg1.points[0], 'pt1': seg1.points[1]}),
+                [prop, ne1]
+            )
         elif ne0 is None and ne1 is None:
             common = next((pt for pt in seg0.points if pt in seg1.points), None)
             if common is None:
@@ -406,8 +450,17 @@ class LengthRatioRule(SingleSourceRule):
             ne = self.context.not_equal_property(pt0, pt1)
             if ne is None or prop.reason.obsolete and ne.reason.obsolete:
                 return
-            yield (PointsCoincidenceProperty(*seg0.points, False), LazyComment('Otherwise, %s = %s = %s', ne.points[0], common, ne.points[1]), [prop, ne])
-            yield (PointsCoincidenceProperty(*seg1.points, False), LazyComment('Otherwise, %s = %s = %s', ne.points[1], common, ne.points[0]), [prop, ne])
+            pattern = 'otherwise, $%{point:pt0} = %{point:pt1} = %{point:pt2}$'
+            yield (
+                PointsCoincidenceProperty(*seg0.points, False),
+                Comment(pattern, {'pt0': ne.points[0], 'pt1': common, 'pt2': ne.points[1]}),
+                [prop, ne]
+            )
+            yield (
+                PointsCoincidenceProperty(*seg1.points, False),
+                Comment(pattern, {'pt0': ne.points[1], 'pt1': common, 'pt2': ne.points[0]}),
+                [prop, ne]
+            )
 
 class ParallelVectorsRule(SingleSourceRule):
     property_type = ParallelVectorsProperty
@@ -424,7 +477,10 @@ class ParallelVectorsRule(SingleSourceRule):
         for prop in AngleValueProperty.generate(vec0, vec1, 0):
             yield (
                 prop,
-                LazyComment('non-zero parallel vectors %s and %s', vec0, vec1),
+                Comment(
+                    'non-zero parallel vectors $%{vector:vec0}$ and $%{vector:vec1}$',
+                    {'vec0': vec0, 'vec1': vec1}
+                ),
                 [para, ne0, ne1]
             )
 
@@ -453,7 +509,10 @@ class PerpendicularSegmentsRule(SingleSourceRule):
         for prop in AngleValueProperty.generate(vec0, vec1, 90):
             yield (
                 prop,
-                LazyComment('non-zero perpendicular segments %s and %s', seg0, seg1),
+                Comment(
+                    'non-zero perpendicular segments $%{segment:seg0}$ and $%{segment:seg1}$',
+                    {'seg0': seg0, 'seg1': seg1}
+                ),
                 [pv, ne0, ne1]
             )
 
@@ -483,9 +542,10 @@ class CommonPerpendicularRule(SingleSourceRule):
                     continue
                 other = perp.segments[1] if seg0 == perp.segments[0] else perp.segments[0]
                 if prop.angle.vertex:
-                    comment = LazyComment('%s is the same line as %s', seg0.as_line, seg1.as_line)
+                    pattern = '$%{line:line0}$ is the same line as $%{line:line1}$'
                 else:
-                    comment = LazyComment('any line perpendicular to %s is also perpendicular to %s', seg0.as_line, seg1.as_line)
+                    pattern = 'any line perpendicular to $%{line:line0}$ is also perpendicular to $%{line:line1}$'
+                comment = Comment(pattern, {'line0': seg0, 'line1': seg1})
                 yield (
                     PerpendicularSegmentsProperty(seg1, other),
                     comment,
@@ -557,14 +617,18 @@ class PerpendicularTransitivityRule(Rule):
         self.processed.add(key)
         pt0 = next(pt for pt in seg0.points if pt != common_point)
         pt1 = next(pt for pt in seg1.points if pt != common_point)
+        comment = Comment(
+            '$%{segment:seg0}$ and $%{segment:seg1}$ are perpendiculars to line $%{line:line}$',
+            {'seg0': seg0, 'seg1': seg1, 'line': common}
+        )
         yield (
             PerpendicularSegmentsProperty(common, pt0.segment(pt1)),
-            LazyComment('%s and %s are perpendiculars to line %s', seg0, seg1, common.as_line),
+            comment,
             [perp0, perp1, ne]
         )
         yield (
             PointsCollinearityProperty(common_point, pt0, pt1, True),
-            LazyComment('%s and %s are perpendiculars to line %s', seg0, seg1, common.as_line),
+            comment,
             [perp0, perp1, ne]
         )
 
@@ -580,17 +644,18 @@ class PerpendicularToEquidistantRule(SingleSourceRule):
                 [seg0.points[1].segment(pt) for pt in seg1.points]
             )
             cs = self.context.congruent_segments_property(*segments[0], True)
+            pattern = '$%{point:point}$ lies on the perpendicular bisector to $%{segment:base}$'
             if cs and not(prop.reason.obsolete and cs.reason.obsolete):
                 yield (
                     ProportionalLengthsProperty(*segments[1], 1),
-                    LazyComment('%s lies on the perpendicular bisector to %s', seg0.points[1], seg1),
+                    Comment(pattern, {'point': seg0.points[1], 'base': seg1}),
                     [prop, cs]
                 )
             cs = self.context.congruent_segments_property(*segments[1], True)
             if cs and not(prop.reason.obsolete and cs.reason.obsolete):
                 yield (
                     ProportionalLengthsProperty(*segments[0], 1),
-                    LazyComment('%s lies on the perpendicular bisector to %s', seg0.points[0], seg1),
+                    Comment(pattern, {'point': seg0.points[0], 'base': seg1}),
                     [prop, cs]
                 )
 
@@ -616,7 +681,10 @@ class EquidistantToPerpendicularRule(Rule):
         if not (cs0.reason.obsolete and cs1.reason.obsolete):
             yield (
                 PerpendicularSegmentsProperty(segment0, segment1),
-                LazyComment('%s and %s are both equidistant from %s and %s', common0, common1, *pts0),
+                Comment(
+                    'both $%{point:pt0}$ and $%{point:pt1}$ are equidistant from $%{point:endpoint0}$ and $%{point:endpoint1}$',
+                    {'pt0': common0, 'pt1': common1, 'endpoint0': pts0[0], 'endpoint1': pts0[1]}
+                ),
                 [cs0, cs1]
             )
         ne0 = self.context.not_equal_property(common0, common1)
@@ -629,7 +697,10 @@ class EquidistantToPerpendicularRule(Rule):
             return
         yield (
             SameOrOppositeSideProperty(segment0, *pts0, False),
-            LazyComment('perpendicular bisector %s separates endpoints of the segment %s', segment0.as_line, segment1),
+            Comment(
+                'perpendicular bisector $%{line:bisector}$ separates endpoints of $%{segment:segment}$',
+                {'bisector': segment0, 'segment': segment1}
+            ),
             [cs0, cs1, ne0, ne1]
         )
 
@@ -659,20 +730,18 @@ class EqualAnglesToCollinearityRule(SingleSourceRule):
             mask |= bit
             if ca.value != 1:
                 continue
+            comment = Comment(
+                '$%{anglemeasure:angle0} = %{anglemeasure:angle1}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$',
+                {'angle0': angles[0], 'angle1': angles[1], 'pt0': prop.points[0], 'pt1': prop.points[1], 'line': prop.segment}
+            )
             yield (
                 AngleValueProperty(p0.angle(*prop.points), 0),
-                LazyComment(
-                    '%s = %s, and points %s and %s are on the same side of %s',
-                    *angles, *prop.points, prop.segment.as_line
-                ),
+                comment,
                 [ca, prop]
             )
             yield (
                 PointsCollinearityProperty(p0, *prop.points, True),
-                LazyComment(
-                    '%s = %s, and points %s and %s are on the same side of %s',
-                    *angles, *prop.points, prop.segment.as_line
-                ),
+                comment,
                 [ca, prop]
             )
 
@@ -707,40 +776,41 @@ class AngleInsideBiggerOneRule(SingleSourceRule):
                 continue
             mask |= bit
             if av0.degree == av1.degree:
+                comment = Comment(
+                    '$%{anglemeasure:angle0} = %{anglemeasure:angle1}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$',
+                    {'angle0': angles[0], 'angle1': angles[1], 'pt0': prop.points[0], 'pt1': prop.points[1], 'line': prop.segment}
+                )
                 yield (
                     AngleValueProperty(p0.angle(*prop.points), 0),
-                    LazyComment(
-                        '%s = %s, and points %s and %s are on the same side of %s',
-                        *angles, *prop.points, prop.segment.as_line
-                    ),
+                    comment,
                     [av0, av1, prop]
                 )
                 yield (
                     PointsCollinearityProperty(p0, *prop.points, True),
-                    LazyComment(
-                        '%s = %s, and points %s and %s are on the same side of %s',
-                        *angles, *prop.points, prop.segment.as_line
-                    ),
-                    [av0, av1, prop]
-                )
-            elif av0.degree < av1.degree:
-                yield (
-                    PointInsideAngleProperty(prop.points[0], av1.angle),
-                    LazyComment(
-                        '%s and %s have common side and %s < %s',
-                        av0.angle, av1.angle, av0.angle, av1.angle
-                    ),
+                    comment,
                     [av0, av1, prop]
                 )
             else:
-                yield (
-                    PointInsideAngleProperty(prop.points[1], av0.angle),
-                    LazyComment(
-                        '%s and %s have common side and %s < %s',
-                        av1.angle, av0.angle, av1.angle, av0.angle
-                    ),
-                    [av1, av0, prop]
-                )
+                common_vector = p0.vector(p1)
+                pattern = '$%{angle:a0}$ and $%{angle:a1}$ with common side $%{ray:side}$ and $%{anglemeasure:a0} < %{anglemeasure:a1}$'
+                if av0.degree < av1.degree:
+                    yield (
+                        PointInsideAngleProperty(prop.points[0], av1.angle),
+                        Comment(
+                            pattern,
+                            {'a0': av0.angle, 'a1': av1.angle, 'side': common_vector}
+                        ),
+                        [av0, av1, prop]
+                    )
+                else:
+                    yield (
+                        PointInsideAngleProperty(prop.points[1], av0.angle),
+                        Comment(
+                            pattern,
+                            {'a0': av1.angle, 'a1': av0.angle, 'side': common_vector}
+                        ),
+                        [av1, av0, prop]
+                    )
 
         if mask != original:
             self.processed[prop] = mask
@@ -758,7 +828,7 @@ class PointsSeparatedByLineAreNotCoincidentRule(SingleSourceRule):
         if not prop.reason.obsolete:
             yield (
                 PointsCoincidenceProperty(prop.points[0], prop.points[1], False),
-                LazyComment('the points are separated by line %s', prop.segment.as_line),
+                Comment('the points are separated by $%{line:line}$', {'line': prop.segment}),
                 [prop]
             )
 
@@ -781,7 +851,10 @@ class SameSidePointInsideSegmentRule(SingleSourceRule):
             for endpoint in prop.points:
                 yield (
                     SameOrOppositeSideProperty(prop.segment, endpoint, pt, True),
-                    LazyComment('Segment %s does not cross line %s', segment, prop.segment),
+                    Comment(
+                        'segment $%{segment:segment}$ does not cross line $%{line:line}$',
+                        {'segment': segment, 'line': prop.segment}
+                    ),
                     [prop, value]
                 )
 
@@ -805,7 +878,7 @@ class TwoPerpendicularsRule(SingleSourceRule):
         vec1 = foot1.vector(prop.points[1]) if prop.same else prop.points[1].vector(foot1)
         yield (
             ParallelVectorsProperty(vec0, vec1),
-            LazyComment('Two perpendiculars to line %s', prop.segment),
+            Comment('two perpendiculars to $%{line:line}$', {'line': prop.segment}),
             premises
         )
 
@@ -838,7 +911,10 @@ class TwoPerpendicularsRule2(Rule):
         other1 = next(seg for seg in perp1.segments if seg != common)
         yield (
             ParallelSegmentsProperty(other0, other1),
-            LazyComment('%s ⟂ %s ⟂ %s', other0, common, other1),
+            Comment(
+                '$%{segment:seg0} \\perp %{segment:seg1} \\perp %{segment:seg2}$',
+                {'seg0': other0, 'seg1': common, 'seg2': other1}
+            ),
             [perp0, perp1, ne]
         )
 
@@ -869,7 +945,10 @@ class ParallelSameSideRule(SingleSourceRule):
                 continue
             yield (
                 SameOrOppositeSideProperty(seg0, *seg1.points, True),
-                LazyComment('%s and %s lie on a line parallel to %s', *seg1.points, seg0),
+                Comment(
+                    '$%{point:pt0}$ and $%{point:pt1}$ lie on a line parallel to $%{line:line}$',
+                    {'pt0': seg1.points[0], 'pt1': seg1.points[1], 'line': seg0}
+                ),
                 [prop, ncl]
             )
         if mask != original:
@@ -954,7 +1033,10 @@ class RotatedAngleRule(Rule):
         new_angle1 = vertex.angle(pts0[1], pts1[1])
         yield (
             AngleRatioProperty(new_angle0, new_angle1, 1),
-            LazyComment('%s is %s rotated by %s = %s', new_angle0, new_angle1, ang0, ang1),
+            Comment(
+                '$%{angle:angle0}$ is $%{angle:angle1}$ rotated by $%{anglemeasure:rot_angle0} = %{anglemeasure:rot_angle1}$',
+                {'angle0': new_angle0, 'angle1': new_angle1, 'rot_angle0': ang0, 'rot_angle1': ang1}
+            ),
             [ca, co]
         )
 
@@ -963,13 +1045,19 @@ class PartOfAcuteAngleIsAcuteRule(SingleSourceRule):
 
     def apply(self, prop):
         kind = self.context.angle_kind_property(prop.angle)
-        if kind is None or kind.kind == AngleKindProperty.Kind.obtuse or prop.reason.obsolete and kind.reason.obsolete:
+        if kind is None or prop.reason.obsolete and kind.reason.obsolete:
+            return
+        if kind.kind == AngleKindProperty.Kind.acute:
+            pattern = '$%{angle:part}$ is a part of acute $%{angle:whole}$'
+        elif kind.kind == AngleKindProperty.Kind.right:
+            pattern = '$%{angle:part}$ is a part of right $%{angle:whole}$'
+        else:
             return
         for vec in prop.angle.vectors:
             angle = prop.angle.vertex.angle(vec.end, prop.point)
             yield (
                 AngleKindProperty(angle, AngleKindProperty.Kind.acute),
-                LazyComment('%s is a part of %s %s', angle, kind.kind, prop.angle),
+                Comment(pattern, {'part': angle, 'whole': prop.angle}),
                 [prop, kind]
             )
 
@@ -982,16 +1070,17 @@ class AngleTypeByDegreeRule(Rule):
             return
         if prop.degree in (0, 180):
             return
+        pattern = '$%{degree:min} < %{anglemeasure:angle} = %{degree:degree} < %{degree:max}$'
         if prop.degree < 90:
             yield (
                 AngleKindProperty(prop.angle, AngleKindProperty.Kind.acute),
-                LazyComment('0º < %s = %s < 90º', prop.angle, prop.degree_str),
+                Comment(pattern, {'angle': prop.angle, 'degree': prop.degree, 'min': 0, 'max': 90}),
                 [prop]
             )
         elif prop.degree > 90:
             yield (
                 AngleKindProperty(prop.angle, AngleKindProperty.Kind.obtuse),
-                LazyComment('90º < %s = %s < 180º', prop.angle, prop.degree_str),
+                Comment(pattern, {'angle': prop.angle, 'degree': prop.degree, 'min': 90, 'max': 180}),
                 [prop]
             )
         else:
@@ -1038,17 +1127,18 @@ class AngleTypesInObtuseangledTriangleRule(SingleSourceRule):
     def apply(self, prop):
         if prop.reason.obsolete:
             return
-        ang = prop.angle
-        yield (
-            AngleKindProperty(ang.vectors[0].end.angle(ang.vertex, ang.vectors[1].end), AngleKindProperty.Kind.acute),
-            LazyComment('An angle of %s, another angle is %s', Scene.Triangle(*ang.point_set), prop.kind),
-            [prop]
-        )
-        yield (
-            AngleKindProperty(ang.vectors[1].end.angle(ang.vertex, ang.vectors[0].end), AngleKindProperty.Kind.acute),
-            LazyComment('An angle of %s, another angle is %s', Scene.Triangle(*ang.point_set), prop.kind),
-            [prop]
-        )
+        if prop.kind == AngleKindProperty.Kind.obtuse:
+            pattern = 'an angle of $%{triangle:triangle}$, another $%{angle:other}$ is obtuse'
+        else:
+            pattern = 'an angle of $%{triangle:triangle}$, another $%{angle:other}$ is right'
+        triangle = Scene.Triangle(prop.angle.vertex, *prop.angle.endpoints)
+        comment = Comment(pattern, {'triangle': triangle, 'other': prop.angle})
+        for angle in triangle.angles[1:]:
+            yield (
+                AngleKindProperty(angle, AngleKindProperty.Kind.acute),
+                comment,
+                [prop]
+            )
 
 class VerticalAnglesRule(Rule):
     def sources(self):
@@ -1068,6 +1158,8 @@ class VerticalAnglesRule(Rule):
             return
         if len(ng0.point_set.union(ng1.point_set)) != 5:
             return
+
+        pattern = '$%{angle:angle0}$ and $%{angle:angle1}$ are vertical angles'
         new_prop = AngleRatioProperty(
             ng0.vertex.angle(ng0.vectors[0].end, ng1.vectors[0].end),
             ng0.vertex.angle(ng0.vectors[1].end, ng1.vectors[1].end),
@@ -1075,7 +1167,7 @@ class VerticalAnglesRule(Rule):
         )
         yield (
             new_prop,
-            LazyComment('%s and %s are vertical angles', new_prop.angle0, new_prop.angle1),
+            Comment(pattern, {'angle0': new_prop.angle0, 'angle1': new_prop.angle1}),
             [av0, av1]
         )
         new_prop = AngleRatioProperty(
@@ -1085,7 +1177,7 @@ class VerticalAnglesRule(Rule):
         )
         yield (
             new_prop,
-            LazyComment('%s and %s are vertical angles', new_prop.angle0, new_prop.angle1),
+            Comment(pattern, {'angle0': new_prop.angle0, 'angle1': new_prop.angle1}),
             [av0, av1]
         )
 
@@ -1121,7 +1213,10 @@ class ReversedVerticalAnglesRule(Rule):
                     continue
                 yield (
                     AngleValueProperty(angle.vertex.angle(pt0, pt1), 180),
-                    LazyComment('%s = %s and %s lies on segment %s', ang0, ang1, angle.vertex, angle.vectors[0].end.segment(angle.vectors[1].end)),
+                    Comment(
+                        '$%{anglemeasure:angle0} = %{anglemeasure:angle1}$ and $%{point:pt}$ lies on segment $%{segment:segment}$',
+                        {'angle0': ang0, 'angle1': ang1, 'pt': angle.vertex, 'segment': angle.endpoints[0].segment(angle.endpoints[1])}
+                    ),
                     [ar, prop, oppo]
                 )
             if mask != original:
@@ -1168,7 +1263,10 @@ class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
                 for p in AngleValueProperty.generate(lp0.vector(pt0), lp1.vector(pt1), 0):
                     yield (
                         p,
-                        LazyComment('sum of consecutive angles: %s + %s = 180º', angle0, angle1),
+                        Comment(
+                            'sum of consecutive angles: $%{anglemeasure:angle0} + %{anglemeasure:angle1} = %{degree:180}$',
+                            {'angle0': angle0, 'angle1': angle1, '180': 180}
+                        ),
                         reasons
                     )
             else:
@@ -1179,7 +1277,10 @@ class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
                     for p in AngleValueProperty.generate(lp0.vector(pt0), pt1.vector(lp1), 0):
                         yield (
                             p,
-                            LazyComment('alternate angles %s and %s are equal', angle0, angle1),
+                            Comment(
+                                'alternate angles $%{angle:angle0}$ and $%{angle:angle1}$ are equal',
+                                {'angle0': angle0, 'angle1': angle1}
+                            ),
                             [prop, ratio_reason]
                         )
 
@@ -1274,16 +1375,17 @@ class TransversalRule(Rule):
                 if rev:
                     new_prop = SumOfTwoAnglesProperty(ngl0, ngl1, 180)
                     if common0 == common1:
-                        comment = LazyComment('supplementary angles: common side %s, and %s ↑↓ %s', vec.as_ray, vec0.as_ray, vec1.as_ray)
+                        pattern = 'supplementary angles: common side $%{ray:common}$, and $%{ray:vec0} \\uparrow\\!\\!\\!\\downarrow %{ray:vec1}$'
                     else:
-                        comment = LazyComment('consecutive angles: common line %s, and %s ↑↑ %s', vec.as_line, vec0.as_ray, vec1.as_ray)
+                        pattern = 'consecutive angles: common line $%{line:common}$, and $%{ray:vec0} \\uparrow\\!\\!\\!\\uparrow %{ray:vec1}$'
                 else:
                     if common0 == common1:
                         new_prop = AngleRatioProperty(ngl0, ngl1, 1, same=True)
-                        comment = LazyComment('same angle: common ray %s, and %s coincides with %s', vec.as_ray, vec0.as_ray, vec1.as_ray)
+                        pattern = 'same angle: common ray $%{ray:common}$, and $%{ray:vec0}$ coincides with $%{ray:vec1}$'
                     else:
                         new_prop = AngleRatioProperty(ngl0, ngl1, 1)
-                        comment = LazyComment('alternate angles: common line %s, and %s ↑↓ %s', vec.as_line, vec0.as_ray, vec1.as_ray)
+                        pattern = 'alternate angles: common line $%{line:common}$, and $%{ray:vec0} \\uparrow\\!\\!\\!\\downarrow %{ray:vec1}$'
+                comment = Comment(pattern, {'common': vec, 'vec0': vec0, 'vec1': vec1})
                 yield (new_prop, comment, [prop, ne])
 
 class SameAngleRule(Rule):
@@ -1307,7 +1409,15 @@ class SameAngleRule(Rule):
                 1,
                 same=True
             ),
-            LazyComment('%s ↑↑ %s and %s ↑↑ %s', *ng0.vectors, *ng1.vectors),
+            Comment(
+                '$%{vector:vec0} \\uparrow\\!\\!\\!\\uparrow %{vector:vec1} and %{vector:vec2} \\upuparrows %{vector:vec3}$',
+                {
+                    'vec0': ng0.vectors[0],
+                    'vec1': ng0.vectors[1],
+                    'vec2': ng1.vectors[0],
+                    'vec3': ng1.vectors[1]
+                }
+            ),
             [av0, av1]
         )
 
@@ -1323,17 +1433,16 @@ class PlanePositionsToLinePositionsRule(SingleSourceRule):
         if prop.reason.obsolete and all(p.reason.obsolete for p in reasons):
             return
         if prop.same:
-            yield (
-                AngleValueProperty(crossing.angle(pt0, pt1), 0),
-                LazyComment('%s is the intersection point of lines %s and %s', crossing, pt0.segment(pt1), prop.segment),
-                [prop] + reasons
-            )
+            pattern = '$%{point:crossing}$ is the intersection of lines $%{line:line0}$ and $%{line:line1}$'
+            new_prop = AngleValueProperty(crossing.angle(pt0, pt1), 0)
         else:
-            yield (
-                AngleValueProperty(crossing.angle(pt0, pt1), 180),
-                LazyComment('%s is the intersection point of segment %s and line %s', crossing, pt0.segment(pt1), prop.segment.as_line),
-                [prop] + reasons
-            )
+            pattern = '$%{point:crossing}$ is the intersection of segment $%{segment:line0}$ and line $%{line:line1}$'
+            new_prop = AngleValueProperty(crossing.angle(pt0, pt1), 180)
+        yield (
+            new_prop,
+            Comment(pattern, {'crossing': crossing, 'line0': pt0.segment(pt1), 'line1': prop.segment}),
+            [prop] + reasons
+        )
 
 class CeviansIntersectionRule(Rule):
     def sources(self):
@@ -1360,7 +1469,17 @@ class CeviansIntersectionRule(Rule):
             return
         if av0.reason.obsolete and av1.reason.obsolete and ncl.reason.obsolete and all(r.reason.obsolete for r in reasons):
             return
-        comment = LazyComment('%s is the intersection of cevians %s and %s with %s and %s inside the sides of %s', crossing, segment0, segment1, av1.angle.vertex, av0.angle.vertex, Scene.Triangle(vertex, pt0, pt1))
+        comment = Comment(
+            '$%{point:crossing}$ is the intersection of cevians $%{segment:cevian0}$ and $%{segment:cevian1}$ with feet $%{point:foot0}$ and $%{point:foot1}$ on sides of $%{triangle:triangle}$',
+            {
+                'crossing': crossing,
+                'cevian0': segment0,
+                'cevian1': segment1,
+                'foot0': av1.angle.vertex,
+                'foot1': av0.angle.vertex,
+                'triangle': Scene.Triangle(vertex, pt0, pt1)
+            }
+        )
         yield (
             PointInsideAngleProperty(crossing, vertex.angle(pt0, pt1)),
             comment,
@@ -1388,7 +1507,10 @@ class TwoAnglesWithCommonSideRule(SingleSourceRule):
         angle1 = prop.angle.vertex.angle(prop.angle.vectors[1].end, prop.point)
         yield (
             SumOfTwoAnglesProperty(angle0, angle1, av.degree),
-            LazyComment('%s + %s = %s = %s', angle0, angle1, prop.angle, av.degree_str),
+            Comment(
+                '$%{anglemeasure:angle0} + %{anglemeasure:angle1} = %{anglemeasure:sum} = %{degree:degree}$',
+                {'angle0': angle0, 'angle1': angle1, 'sum': prop.angle, 'degree': av.degree}
+            ),
             [prop, av]
         )
 
@@ -1418,21 +1540,30 @@ class TwoAnglesWithCommonSideDegreeRule(SingleSourceRule):
             mask |= 0x1
             yield (
                 AngleValueProperty(prop.angle, av0.degree + av1.degree),
-                LazyComment('%s = %s + %s = %s + %s', prop.angle, angle0, angle1, av0.degree_str, av1.degree_str),
+                Comment(
+                    '$%{anglemeasure:sum} = %{anglemeasure:angle0} + %{anglemeasure:angle1} = %{degree:degree0} + %{degree:degree1}$',
+                    {'sum': prop.angle, 'angle0': angle0, 'angle1': angle1, 'degree0': av0.degree, 'degree1': av1.degree}
+                ),
                 [prop, av0, av1]
             )
         if (mask & 0x2) == 0 and av0 and av_sum:
             mask |= 0x2
             yield (
                 AngleValueProperty(angle1, av_sum.degree - av0.degree),
-                LazyComment('%s = %s - %s = %s - %s', angle1, prop.angle, angle0, av_sum.degree_str, av0.degree_str),
+                Comment(
+                    '$%{anglemeasure:angle1} = %{anglemeasure:sum} - %{anglemeasure:angle0} = %{degree:degree_sum} - %{degree:degree0}$',
+                    {'sum': prop.angle, 'angle0': angle0, 'angle1': angle1, 'degree0': av0.degree, 'degree_sum': av_sum.degree}
+                ),
                 [prop, av_sum, av0]
             )
         if (mask & 0x4) == 0 and av1 and av_sum:
             mask |= 0x4
             yield (
                 AngleValueProperty(angle0, av_sum.degree - av1.degree),
-                LazyComment('%s = %s - %s = %s - %s', angle0, prop.angle, angle1, av_sum.degree_str, av1.degree_str),
+                Comment(
+                    '$%{anglemeasure:angle0} = %{anglemeasure:sum} - %{anglemeasure:angle1} = %{degree:degree_sum} - %{degree:degree1}$',
+                    {'sum': prop.angle, 'angle0': angle0, 'angle1': angle1, 'degree1': av1.degree, 'degree_sum': av_sum.degree}
+                ),
                 [prop, av_sum, av1]
             )
 
@@ -1508,37 +1639,28 @@ class TwoPointsRelativelyToLineTransitivityRule(Rule):
             return
         other1 = sos1.points[0] if sos1.points[1] == common else sos1.points[1]
         if sos0.same and sos1.same:
-            comment = LazyComment(
-                '%s, %s, and %s lies on the same side of %s',
-                other0, common, other1, sos0.segment.as_line
-            )
+            pattern = '$%{point:other0}$, $%{point:common}$, and $%{point:other1}$ lie on the same side of $%{line:line}$'
             pts = (other0, other1)
             premises = [sos0, sos1]
         elif sos0.same:
-            comment = LazyComment(
-                '%s, %s lies on the same side of %s, %s is on the opposite side',
-                other0, common, sos0.segment.as_line, other1
-            )
+            pattern = '$%{point:other0}$, $%{point:common}$ lie on the same side of $%{line:line}$, $%{point:other1}$ is on the opposite side'
             pts = (other0, other1)
             premises = [sos0, sos1]
         elif sos1.same:
-            comment = LazyComment(
-                '%s, %s lies on the same side of %s, %s is on the opposite side',
-                other1, common, sos0.segment.as_line, other0
-            )
+            pattern = '$%{point:other1}$, $%{point:common}$ lie on the same side of $%{line:line}$, $%{point:other0}$ is on the opposite side'
             pts = (other1, other0)
             premises = [sos1, sos0]
         else:
-            comment = LazyComment(
-                '%s, %s lies on opposite sides of %s, and %s, %s too',
-                other0, common, sos0.segment.as_line, common, other1
-            )
+            pattern = '$%{point:other0}$, $%{point:common}$ lie on opposite sides of $%{line:line}$, and $%{point:common}$, $%{point:other1}$ too'
             pts = (other0, other1)
             premises = [sos0, sos1]
 
         yield (
             SameOrOppositeSideProperty(sos0.segment, *pts, sos0.same == sos1.same),
-            comment,
+            Comment(
+                pattern,
+                {'other0': other0, 'other1': other1, 'common': common, 'line': sos0.segment}
+            ),
             premises
         )
 
@@ -1563,13 +1685,10 @@ class CongruentAnglesDegeneracyRule(Rule):
             if ca is None:
                 ca = self.context.angle_ratio_property(ang0, ang1)
             if col.collinear:
-                comment = LazyComment(
-                    'angles %s and %s are congruent, %s is degenerate', ang1, ang0, ang0
-                )
+                pattern = 'angles $%{angle:angle1}$ and $%{angle:angle0}$ are congruent, $%{angle:angle0}$ is degenerate'
             else:
-                comment = LazyComment(
-                    'angles %s and %s are congruent, %s is non-degenerate', ang1, ang0, ang0
-                )
+                pattern = 'angles $%{angle:angle1}$ and $%{angle:angle0}$ are congruent, $%{angle:angle0}$ is non-degenerate'
+            comment = Comment(pattern, {'angle0': ang0, 'angle1': ang1})
             yield (
                 PointsCollinearityProperty(*ang1.point_set, col.collinear),
                 comment,
@@ -1606,21 +1725,37 @@ class PointAndAngleRule(Rule):
         if fourth not in prop1.points:
             return
 
+        params = {
+            'pt0': pt0,
+            'pt1': pt1,
+            'fourth': fourth,
+            'side0': vertex.vector(pt0),
+            'side1': vertex.vector(pt1)
+        }
         if prop0.same and prop1.same:
             yield (
                 PointInsideAngleProperty(fourth, vertex.angle(pt0, pt1)),
-                LazyComment('%s lies on the same side of %s as %s and on the same side of %s as %s', fourth, vertex.vector(pt0).as_ray, pt1, vertex.vector(pt1).as_ray, pt0),
+                Comment(
+                    '$%{point:fourth}$ lies on the same side of $%{ray:side0}$ as $%{point:pt1}$ and on the same side of $%{ray:side1}$ as $%{point:pt0}$',
+                    params
+                ),
                 [prop0, prop1]
             )
         elif prop0.same:
             yield (
                 PointInsideAngleProperty(pt1, vertex.angle(pt0, fourth)),
-                LazyComment('%s lies on the same side of %s as %s and %s separates %s and %s', pt1, vertex.vector(pt0).as_ray, fourth, vertex.vector(pt1).as_ray, pt0, fourth),
+                Comment(
+                    '$%{point:pt1}$ lies on the same side of $%{ray:side0}$ as $%{point:fourth}$ and $%{ray:side1}$ separates $%{point:pt0}$ and $%{point:fourth}$',
+                    params
+                ),
                 [prop0, prop1]
             )
         else:
             yield (
                 PointInsideAngleProperty(pt0, vertex.angle(fourth, pt1)),
-                LazyComment('%s lies on the same side of %s as %s and %s separates %s and %s', pt0, vertex.vector(pt1).as_ray, fourth, vertex.vector(pt0).as_ray, pt1, fourth),
+                Comment(
+                    '$%{point:pt0}$ lies on the same side of $%{ray:side1}$ as $%{point:fourth}$ and $%{ray:side0}$ separates $%{point:pt1}$ and $%{point:fourth}$',
+                    params
+                ),
                 [prop1, prop0]
             )

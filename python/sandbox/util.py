@@ -1,4 +1,6 @@
+import re
 import sympy as sp
+from pylatexenc.latex2text import LatexNodes2Text
 
 def degree_to_string(degree):
     if isinstance(degree, sp.Number):
@@ -70,31 +72,99 @@ def good_angles(vector0, vector1, include_four_point=False):
         ]
     return []
 
-class LazyString:
-    def __init__(self, obj):
-        self.obj = obj
-
-    def __str__(self):
-        return str(self.obj)
-
 class LazyComment:
     def __init__(self, format_string, *params):
         self.format_string = format_string
         self.params = params
 
-    def __eq__(self, other):
-        return isinstance(other, ParametrizedString) and self.format_string == other.format_string and self.params == other.params
-
-    def html(self):
-        def htmlize(obj):
-            from .figure import Figure
-            if isinstance(obj, Figure):
-                return '<span class="figure %s"></span>' % obj.css_class()
-            while hasattr(obj, 'html'):
-                obj = obj.html()
-            return obj
-        return self.format_string % tuple(htmlize(p) for p in self.params)
+    def stringify(self, printer):
+        if printer:
+            def htmlize(obj):
+                from .figure import Figure
+                if isinstance(obj, Figure):
+                    return '<span class="missing"></span>'
+                while hasattr(obj, 'stringify'):
+                    obj = obj.stringify(printer)
+                return obj
+            return self.format_string % tuple(htmlize(p) for p in self.params)
+        return str(self)
 
     def __str__(self):
         from .core import CoreScene
         return self.format_string % tuple(p.name if isinstance(p, CoreScene.Object) else p for p in self.params)
+
+class SimplePrinter:
+    def print(self, line, params):
+        def to_str(name, kind):
+            obj = params[name]
+            if kind == 'degree':
+                return degree_to_string(obj)
+            return str(obj)
+
+        for match in re.finditer('%{(?P<type>[^:}]*):(?P<name>[^}]*)}', line):
+            line = line.replace(match.group(0), to_str(match.group('name'), match.group('type')))
+        return LatexNodes2Text().latex_to_text(line)
+
+class Comment:
+    def __init__(self, format_string, params={}):
+        from .scene import Scene
+        from .figure import Circle
+        from .property import Cycle
+        # TODO: validate format string + check that all params are presented in the map
+        # 1) balanced $'s
+        parts = format_string.split('$')
+        assert len(parts) % 2 == 1, 'Unbalanced $\'s in `%s`' % format_string
+
+        def validate_text_chunk(chunk):
+            # 2) all refs inside $'s
+            # 3) all TeX sequences inside $'s
+            for special in '%{}\\':
+                assert special not in chunk, 'Symbol `%s` outside of math area in `%s`' % (special, format_string)
+
+        def validate_math_chunk(chunk):
+            # TODO: 4) all {'s, }'s, and %'s are parts of references
+            clean = re.sub(r'%{([^:}]*):([^}]*)}', '', chunk)
+            for special in '%{}':
+                assert special not in clean, 'Orphaned `%s` in math area `$%s$`' % (special, chunk)
+            # 5) for each ref, the param is presented in the map
+            # 6) for each ref, the param type is correct
+            for match in re.finditer('%{(?P<type>[^:}]*):(?P<name>[^}]*)}', chunk):
+                name = match.group('name')
+                obj = params.get(name)
+                assert obj is not None, 'No value for parameter `%s`' % name
+                kind = match.group('type')
+                if kind in ('number', 'multiplier', 'degree'):
+                    assert isinstance(obj, int) or obj.is_number, 'Parameter `%s` of type `%s`, expected `%s`' % (name, type(obj), kind)
+                elif kind == 'point':
+                    assert isinstance(obj, Scene.Point), 'Parameter `%s` of type `%s`, expected `%s`' % (name, type(obj), kind)
+                elif kind in ('segment', 'line'):
+                    assert isinstance(obj, (Scene.Segment, Scene.Vector)), 'Parameter `%s` of type `%s`, expected `%s`' % (name, type(obj), kind)
+                elif kind in ('vector', 'ray'):
+                    assert isinstance(obj, Scene.Vector), 'Parameter `%s` of type `%s`, expected `%s`' % (name, type(obj), kind)
+                elif kind in ('angle', 'anglemeasure'):
+                    assert isinstance(obj, Scene.Angle), 'Parameter `%s` of type `%s`, expected `%s`' % (name, type(obj), kind)
+                elif kind == 'triangle':
+                    assert isinstance(obj, Scene.Triangle), 'Parameter `%s` of type `%s`, expected `%s`' % (name, type(obj), kind)
+                elif kind == 'polygon':
+                    assert isinstance(obj, Scene.Polygon), 'Parameter `%s` of type `%s`, expected `%s`' % (name, type(obj), kind)
+                elif kind == 'circle':
+                    assert isinstance(obj, Circle), 'Parameter `%s` of type `%s`, expected `%s`' % (name, type(obj), kind)
+                elif kind == 'cycle':
+                    assert isinstance(obj, Cycle), 'Parameter `%s` of type `%s`, expected `%s`' % (name, type(obj), kind)
+                else:
+                    assert False, 'Parameter `%s` of unknown type `%s`' % (name, kind)
+
+        for index, chunk in enumerate(parts):
+            if index % 2 == 1:
+                validate_math_chunk(chunk)
+            else:
+                validate_text_chunk(chunk)
+
+        self.format_string = format_string
+        self.params = params
+
+    def stringify(self, printer=SimplePrinter()):
+        return printer.print(self.format_string, self.params)
+
+    def __str__(self):
+        return self.stringify()

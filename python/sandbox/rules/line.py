@@ -34,7 +34,10 @@ class CollinearityToSameLineRule(SingleSourceRule):
                 continue
             yield (
                 LineCoincidenceProperty(side0, side1, True),
-                LazyComment('points %s, %s, and %s are collinear', *prop.points),
+                Comment(
+                    'points $%{point:pt0}$, $%{point:pt1}$, and $%{point:pt2}$ are collinear',
+                    {'pt0': prop.points[0], 'pt1': prop.points[1], 'pt2': prop.points[2]}
+                ),
                 [prop, eq0, eq1]
             )
 
@@ -70,7 +73,10 @@ class CollinearityToPointOnLineRule(SingleSourceRule):
             third = next(pt for pt in prop.points if pt not in side.points)
             yield (
                 PointOnLineProperty(third, side, True),
-                LazyComment('points %s, %s, and %s are collinear', third, *side.points),
+                Comment(
+                    'points $%{point:pt0}$, $%{point:pt1}$, and $%{point:pt2}$ are collinear',
+                    {'pt0': third, 'pt1': side.points[0], 'pt2': side.points[1]}
+                ),
                 [prop, eq]
             )
 
@@ -94,7 +100,10 @@ class NonCollinearityToDifferentLinesRule(SingleSourceRule):
         for side0, side1 in itertools.combinations(sides, 2):
             yield (
                 LineCoincidenceProperty(side0, side1, False),
-                LazyComment('points %s, %s, and %s are not collinear', *prop.points),
+                Comment(
+                    'points $%{point:pt0}$, $%{point:pt1}$, and $%{point:pt2}$ are not collinear',
+                    {'pt0': prop.points[0], 'pt1': prop.points[1], 'pt2': prop.points[2]}
+                ),
                 [prop]
             )
 
@@ -115,7 +124,10 @@ class NonCollinearityToPointNotOnLineRule(SingleSourceRule):
         for side, vertex in zip(triangle.sides, triangle.points):
             yield (
                 PointOnLineProperty(vertex, side, False),
-                LazyComment('points %s, %s, and %s are not collinear', vertex, *side.points),
+                Comment(
+                    'points $%{point:pt0}$, $%{point:pt1}$, and $%{point:pt2}$ are not collinear',
+                    {'pt0': vertex, 'pt1': side.points[0], 'pt2': side.points[1]}
+                ),
                 [prop]
             )
 
@@ -140,6 +152,9 @@ class MissingLineKeysRule(Rule):
                     premises.append(self.context.point_on_line_property(seg, pt1))
                 yield (
                     LineCoincidenceProperty(key, seg, True),
-                    LazyComment('non-coincident points %s and %s belong to %s', pt0, pt1, seg.as_line),
+                    Comment(
+                        'non-coincident points $%{point:pt0}$ and $%{point:pt1}$ belong to $%{line:line}$',
+                        {'pt0': pt0, 'pt1': pt1, 'line': seg}
+                    ),
                     premises + [ne]
                 )
