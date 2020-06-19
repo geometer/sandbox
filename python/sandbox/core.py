@@ -836,7 +836,7 @@ class CoreScene:
             return self.__permutations
 
         def __str__(self):
-            return '\\triangle %s %s %s' % self.points
+            return '\\bigtriangleup %s %s %s' % self.points
 
     class Polygon(Figure):
         def __init__(self, *points):
