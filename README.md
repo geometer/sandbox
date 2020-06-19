@@ -28,7 +28,7 @@ Possible problems are
 **Prerequisites**:
 
 * Python 3 (tested with 3.6 and 3.7)
-* Required libraries: numpy, scipy, sympy, networkx
+* Required libraries: numpy, scipy, sympy, networkx, pylatexenc
 
 **Implemented features**:
 
