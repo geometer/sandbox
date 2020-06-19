@@ -152,9 +152,16 @@ class BaseAnglesOfIsoscelesWithKnownApexAngleRule(SingleSourceRule):
 class LegsOfIsoscelesRule(SingleSourceRule):
     property_type = IsoscelesTriangleProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
     def apply(self, prop):
-        if prop.reason.obsolete:
-            return
+        self.processed.add(prop)
+
         yield (
             ProportionalLengthsProperty(
                 prop.apex.segment(prop.base.points[0]),
@@ -190,9 +197,16 @@ class CorrespondingAnglesInCongruentTrianglesRule(SingleSourceRule):
 class CorrespondingSidesInCongruentTrianglesRule(SingleSourceRule):
     property_type = CongruentTrianglesProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
     def apply(self, prop):
-        if prop.reason.obsolete:
-            return
+        self.processed.add(prop)
+
         sides0 = prop.triangle0.sides
         sides1 = prop.triangle1.sides
         for i in range(0, 3):
