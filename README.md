@@ -36,7 +36,11 @@ Possible problems are
 * Scene placement: an app that takes a scene and tries to find a configuration of objects that meets all the constraints ([placement.py](python/sandbox/placement.py))
 * Property hunter: a script that takes a scene placement and collects properties like “two triangles are similar” or “the ratio of two angles is integer” ([hunter.py](python/sandbox/hunter.py))
 * Explainer, an app that takes a scene, and applies rules to prove the facts about the scene. The explainer does not add any additional constructions nor make assumptions to analyse separate variants ([explainer.py](python/sandbox/explainer.py))
-* Web UI for explanations that shows the reason tree and a sketch of the scene. The sketch is implemented using [JSXGraph](https://jsxgraph.uni-bayreuth.de/wp/index.html). See examples in the [examples](examples) folder and `visualise_*.py` generator scripts in the [python](python) folder.
+
+**Web UI**:
+
+* Latest version of the UI is available at https://sandbox.geometer.name/
+* The UI is not open-source at the moment. An old version of the UI (sample HTMLs + generator scripts) moved to obsolete folder. The scripts are not more compatible with the core.
 
 **Tests and samples**:
 
