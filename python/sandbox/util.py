@@ -14,14 +14,26 @@ def keys_for_triangle(triangle, lengths):
         collection += triangle.sides
     return collection
 
-__simplification_cache = {}
+class SimplificationCache:
+    def __init__(self):
+        self.cache = {}
+        for num in (sp.sympify(1) / 2, sp.sympify(1) / 4, sp.sympify(3) / 4):
+            self.cache[num] = num
+        for num in (sp.sqrt(3), sp.sqrt(3) / 3):
+            self.cache[num] = num
+
+simplification = SimplificationCache()
+
 def simplify(num):
-    cached = __simplification_cache.get(num)
-    if cached:
-        return cached
+    if isinstance(num, int) or num.is_integer:
+        return num
+
+    cached_value = simplification.cache.get(num)
+    if cached_value:
+        return cached_value
     result = sp.simplify(num)
-    __simplification_cache[num] = result
-    __simplification_cache[result] = result
+    simplification.cache[num] = result
+    simplification.cache[result] = result
     return result
 
 def divide(num0, num1):
