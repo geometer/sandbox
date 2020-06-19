@@ -849,9 +849,18 @@ class CoreScene:
         self.__objects = []
         self.validation_constraints = []
         self.adjustment_constraints = []
+        self.__properties = set()
         self.__frozen = False
         self.__angles = {} # {vector, vector} => angle
         self.__segments = {} # {point, point} => angle
+
+    def add_property(self, prop):
+        if prop not in self.__properties:
+            self.__properties.add(prop)
+
+    @property
+    def properties(self):
+        return list(self.__properties)
 
     def constraint(self, kind, *args, **kwargs):
         cns = Constraint(kind, self, *args, **kwargs)

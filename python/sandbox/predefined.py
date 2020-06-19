@@ -1,6 +1,6 @@
 from .core import Constraint, CoreScene
 from .property import *
-from .util import LazyComment
+from .util import Comment, LazyComment
 
 def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
     layer_set = CoreScene.layers_by(max_layer)
@@ -169,3 +169,6 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
                 AngleRatioProperty(angle0, angle1, cnstr.params[2]),
                 cnstr.comment
             )
+
+    for prop in scene.properties:
+        yield (prop, Comment('given'))

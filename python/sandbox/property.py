@@ -392,6 +392,26 @@ class EquilateralTriangleProperty(Property):
     def description(self):
         return Comment('$%{triangle:triangle}$ is equilateral', {'triangle': self.triangle})
 
+class CentreOfEquilateralTriangleProperty(Property):
+    """
+    A point is the centre of equilateral triangle
+    """
+    def __init__(self, centre, triangle):
+        self.centre = centre
+        self.triangle = triangle
+        super().__init__((centre, frozenset(triangle.points)))
+
+    @property
+    def __priority__(self):
+        return 4.5
+
+    @property
+    def description(self):
+        return Comment(
+            '$%{point:centre}$ is the centre of equilateral $%{triangle:triangle}$',
+            {'centre': self.centre, 'triangle': self.triangle}
+        )
+
 class AngleKindProperty(Property):
     """
     An angle is acute/obtuse/right
