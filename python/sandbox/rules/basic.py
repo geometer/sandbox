@@ -6,6 +6,55 @@ from ..util import LazyComment, Comment, divide
 
 from .abstract import Rule, SingleSourceRule
 
+class PointInsideAngleConfigurationRule(SingleSourceRule):
+    property_type = PointInsideAngleProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
+    def apply(self, prop):
+        self.processed.add(prop)
+
+        for endpoint in prop.angle.endpoints:
+            yield (
+                PointsCollinearityProperty(prop.point, prop.angle.vertex, endpoint, False),
+                Comment(
+                    '$%{point:vertex}$ is the vertex of $%{angle:angle}$, $%{point:on_side}$ lies on a side, and $%{point:inside}$ lies inside',
+                    {'vertex': prop.angle.vertex, 'angle': prop.angle, 'on_side': endpoint, 'inside': prop.point}
+                ),
+                [prop]
+            )
+
+        yield (
+            SameOrOppositeSideProperty(prop.angle.vertex.segment(prop.point), *prop.angle.endpoints, False),
+            Comment(
+                'ray $%{ray:ray}$ inside $%{angle:angle}$ separates points $%{point:pt0}$ and $%{point:pt1}$ lying on different sides of the angle',
+                {'ray': prop.angle.vertex.vector(prop.point), 'angle': prop.angle, 'pt0': prop.angle.endpoints[0], 'pt1': prop.angle.endpoints[1]}
+            ),
+            [prop]
+        )
+        pattern = '$%{ray:side}$ is a side of $%{angle:angle}$, $%{point:other}$ lies on the other side, and $%{point:inside}$ lies inside the angle'
+        yield (
+            SameOrOppositeSideProperty(prop.angle.vectors[0].as_segment, prop.point, prop.angle.vectors[1].end, True),
+            Comment(
+                pattern,
+                {'side': prop.angle.vectors[0], 'angle': prop.angle, 'other': prop.angle.vectors[1].end, 'inside': prop.point}
+            ),
+            [prop]
+        )
+        yield (
+            SameOrOppositeSideProperty(prop.angle.vectors[1].as_segment, prop.point, prop.angle.vectors[0].end, True),
+            Comment(
+                pattern,
+                {'side': prop.angle.vectors[1], 'angle': prop.angle, 'other': prop.angle.vectors[0].end, 'inside': prop.point}
+            ),
+            [prop]
+        )
+
 class SegmentWithEndpointsOnAngleSidesRule(SingleSourceRule):
     property_type = PointInsideAngleProperty
 
@@ -1287,16 +1336,9 @@ class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
 class CyclicOrderRule(SingleSourceRule):
     property_type = SameOrOppositeSideProperty
 
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
-    def accepts(self, prop):
-        return prop not in self.processed
-
     def apply(self, prop):
-        self.processed.add(prop)
-
+        if prop.reason.obsolete:
+            return
         cycle0 = Cycle(*prop.segment.points, prop.points[0])
         cycle1 = Cycle(*prop.segment.points, prop.points[1])
         if not prop.same:
