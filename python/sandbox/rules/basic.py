@@ -297,7 +297,10 @@ class TwoPointsBelongsToTwoLinesRule(SingleSourceRule):
                     continue
                 yield (
                     PointsCoincidenceProperty(*side.points, True),
-                    LazyComment('%s and %s belong to two different lines %s and %s', *side.points, pt0.segment(ncl_pt), pt1.segment(ncl_pt)),
+                    Comment(
+                        '$%{point:pt0}$ and $%{point:pt1}$ belong to two different lines $%{line:line0}$ and $%{line:line1}$',
+                        {'pt0': side.points[0], 'pt1': side.points[1], 'line0': pt0.segment(ncl_pt), 'line1': pt1.segment(ncl_pt)}
+                    ),
                     [cl0, cl1, ncl]
                 )
                 break
