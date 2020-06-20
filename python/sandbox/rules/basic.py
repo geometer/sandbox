@@ -1339,9 +1339,16 @@ class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
 class CyclicOrderRule(SingleSourceRule):
     property_type = SameOrOppositeSideProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
     def apply(self, prop):
-        if prop.reason.obsolete:
-            return
+        self.processed.add(prop)
+
         cycle0 = Cycle(*prop.segment.points, prop.points[0])
         cycle1 = Cycle(*prop.segment.points, prop.points[1])
         if not prop.same:
