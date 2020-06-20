@@ -108,6 +108,7 @@ class Explainer:
             TwoPointsRelativelyToLineTransitivityRule(self.context),
             CongruentAnglesDegeneracyRule(self.context),
             PointAndAngleRule(self.context),
+            PointInsideAngleConfigurationRule(self.context),
 
             EquilateralTriangleByThreeSidesRule(self.context),
             IsoscelesTriangleByConrguentLegsAndAngleRule(self.context),
@@ -183,29 +184,6 @@ class Explainer:
                 for prop, comment, premises in rule.generate():
                     prop.rule = rule
                     yield (prop, comment, premises)
-
-            for pia in self.context.list(PointInsideAngleProperty):
-                if pia.reason.obsolete:
-                    continue
-                for endpoint in pia.angle.endpoints:
-                    yield (
-                        PointsCollinearityProperty(pia.point, pia.angle.vertex, endpoint, False),
-                        Comment(
-                            '$%{point:vertex}$ is the vertex of $%{angle:angle}$, $%{point:on_side}$ lies on a side, and $%{point:inside}$ lies inside',
-                            {'vertex': pia.angle.vertex, 'angle': pia.angle, 'on_side': endpoint, 'inside': pia.point}
-                        ),
-                        [pia]
-                    )
-                yield (
-                    SameOrOppositeSideProperty(pia.angle.vectors[0].as_segment, pia.point, pia.angle.vectors[1].end, True),
-                    LazyComment('#TODO: write comment'),
-                    [pia]
-                )
-                yield (
-                    SameOrOppositeSideProperty(pia.angle.vectors[1].as_segment, pia.point, pia.angle.vectors[0].end, True),
-                    LazyComment('#TODO: write comment'),
-                    [pia]
-                )
 
             angle_values = [prop for prop in self.context.angle_value_properties() \
                 if prop.angle.vertex is not None]
