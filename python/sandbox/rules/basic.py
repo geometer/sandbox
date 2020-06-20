@@ -1512,7 +1512,7 @@ class SameAngleRule(Rule):
                 same=True
             ),
             Comment(
-                '$%{vector:vec0} \\uparrow\\!\\!\\!\\uparrow %{vector:vec1} and %{vector:vec2} \\upuparrows %{vector:vec3}$',
+                '$%{vector:vec0} \\uparrow\\!\\!\\!\\uparrow %{vector:vec1}$ and $%{vector:vec2} \\uparrow\\!\\!\\!\\uparrow %{vector:vec3}$',
                 {
                     'vec0': ng0.vectors[0],
                     'vec1': ng0.vectors[1],
