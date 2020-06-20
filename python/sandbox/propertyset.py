@@ -567,34 +567,25 @@ class CyclicOrderPropertySet:
     def __find_by_cycle(self, cycle):
         for fam in self.families:
             if cycle in fam.cycle_set:
-                return (fam, True)
-            if cycle.reversed in fam.cycle_set:
-                return (fam, False)
-        return (None, None)
+                return fam
+        return None
 
     def add(self, prop):
         if hasattr(prop, 'rule') and prop.rule == SyntheticPropertyRule.instance():
             return
-        fam0, order0 = self.__find_by_cycle(prop.cycle0)
-        fam1, order1 = self.__find_by_cycle(prop.cycle1)
+        fam0 = self.__find_by_cycle(prop.cycle0)
+        fam1 = self.__find_by_cycle(prop.cycle1)
         if fam0 and fam1:
-            if fam0 == fam1:
-                # TODO: better way to report contradiction
-                assert order0 == order1, 'Contradiction'
-            else:
-                if order0 == order1:
-                    fam0.cycle_set.update(fam1.cycle_set)
-                else:
-                    for cycle in fam1.cycle_set:
-                        fam0.cycle_set.add(cycle.reversed)
+            if fam0 != fam1:
+                fam0.cycle_set.update(fam1.cycle_set)
                 fam0.premises_graph.add_edges_from(fam1.premises_graph.edges(data=True))
                 self.families.remove(fam1)
             fam = fam0
         elif fam0:
-            fam0.cycle_set.add(prop.cycle1 if order0 else prop.cycle1.reversed)
+            fam0.cycle_set.add(prop.cycle1)
             fam = fam0
         elif fam1:
-            fam1.cycle_set.add(prop.cycle0 if order1 else prop.cycle0.reversed)
+            fam1.cycle_set.add(prop.cycle0)
             fam = fam1
         else:
             fam = CyclicOrderPropertySet.Family()
@@ -602,15 +593,10 @@ class CyclicOrderPropertySet:
             fam.cycle_set.add(prop.cycle1)
             self.families.append(fam)
         fam.premises_graph.add_edge(prop.cycle0, prop.cycle1, prop=prop)
-        fam.premises_graph.add_edge(prop.cycle0.reversed, prop.cycle1.reversed, prop=prop)
 
     def explanation(self, cycle0, cycle1):
-        fam, order = self.__find_by_cycle(cycle0)
-        if fam is None:
-            return (None, None)
-        if order:
-            return fam.explanation(cycle0, cycle1)
-        return fam.explanation(cycle0.reversed, cycle1.reversed)
+        fam = self.__find_by_cycle(cycle0)
+        return fam.explanation(cycle0, cycle1) if fam else (None, None)
 
 class AngleRatioPropertySet:
     class CommentFromPath:

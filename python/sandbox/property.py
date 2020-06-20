@@ -802,9 +802,7 @@ class SameCyclicOrderProperty(Property):
     def __init__(self, cycle0, cycle1):
         self.cycle0 = cycle0
         self.cycle1 = cycle1
-        super().__init__(frozenset([
-            frozenset([cycle0, cycle1]), frozenset([cycle0.reversed, cycle1.reversed])
-        ]))
+        super().__init__(frozenset([cycle0, cycle1]))
 
     @property
     def __priority__(self):
