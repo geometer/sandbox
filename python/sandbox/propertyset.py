@@ -558,7 +558,7 @@ class CyclicOrderPropertySet:
             for index, v in enumerate(path):
                 pattern.append('%' + ('{cycle:c%d}' % index))
                 params['c%d' % index] = v
-            comment = Comment('$' + ' = '.join(pattern) + '$', params)
+            comment = Comment('$' + ' =\,\!\! '.join(pattern) + '$', params)
             premises = [self.premises_graph.get_edge_data(i, j)['prop'] for i, j in zip(path[:-1], path[1:])]
             return (comment, premises)
 
