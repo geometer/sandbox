@@ -118,7 +118,8 @@ class SimplePrinter:
         return LatexNodes2Text().latex_to_text(line)
 
 class Comment:
-    def __init__(self, format_string, params={}):
+    @staticmethod
+    def validate_data(format_string, params):
         from .scene import Scene
         from .figure import Circle
         from .property import Cycle
@@ -172,6 +173,10 @@ class Comment:
             else:
                 validate_text_chunk(chunk)
 
+        return True
+
+    def __init__(self, format_string, params={}):
+        assert Comment.validate_data(format_string, params)
         self.format_string = format_string
         self.params = params
 
