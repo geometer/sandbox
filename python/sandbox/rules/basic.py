@@ -1745,15 +1745,15 @@ class TwoPointsRelativelyToLineTransitivityRule(Rule):
             pts = (other0, other1)
             premises = [sos0, sos1]
         elif sos0.same:
-            pattern = '$%{point:other0}$, $%{point:common}$ lie on the same side of $%{line:line}$, $%{point:other1}$ is on the opposite side'
+            pattern = '$%{point:other0}$ and $%{point:common}$ lie on the same side of $%{line:line}$, $%{point:other1}$ is on the opposite side'
             pts = (other0, other1)
             premises = [sos0, sos1]
         elif sos1.same:
-            pattern = '$%{point:other1}$, $%{point:common}$ lie on the same side of $%{line:line}$, $%{point:other0}$ is on the opposite side'
+            pattern = '$%{point:other1}$ and $%{point:common}$ lie on the same side of $%{line:line}$, $%{point:other0}$ is on the opposite side'
             pts = (other1, other0)
             premises = [sos1, sos0]
         else:
-            pattern = '$%{point:other0}$, $%{point:common}$ lie on opposite sides of $%{line:line}$, and $%{point:common}$, $%{point:other1}$ too'
+            pattern = '$%{point:other0}$ and $%{point:common}$ lie on opposite sides of $%{line:line}$, and $%{point:common}$ and $%{point:other1}$ too'
             pts = (other0, other1)
             premises = [sos0, sos1]
 
