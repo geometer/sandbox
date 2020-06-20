@@ -171,4 +171,4 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
             )
 
     for prop in scene.properties:
-        yield (prop, Comment('given'))
+        yield (prop, Comment(''))
