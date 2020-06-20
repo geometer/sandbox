@@ -1,7 +1,7 @@
 from runner import run_sample
 from sandbox import Scene
 from sandbox.property import EquilateralTriangleProperty
-from sandbox.util import LazyComment
+from sandbox.util import Comment
 
 scene = Scene()
 
@@ -11,9 +11,10 @@ A, B, C = triangle.points
 def napoleonic(A, B, C):
     equilateral = scene.equilateral_triangle(A, B, '%s_1' % C.label)
     _, _, C1 = equilateral.points
-    C1.comment = LazyComment('Third vertex of equilateral triangle with base %s', A.segment(B))
+    C1.comment = Comment('Third vertex of equilateral triangle with base $%{segment:AB}$', {'AB': A.segment(B)})
     line = A.line_through(B, layer='auxiliary')
-    C1.opposite_side_constraint(C, line, comment=LazyComment('%s is outward of %s', C1, triangle))
+    comment = Comment('$%{triangle:equilateral}$ is facing away from $%{triangle:triangle}$', {'equilateral': equilateral, 'triangle': triangle})
+    C1.opposite_side_constraint(C, line, comment=comment)
     D = scene.centre_point(equilateral, label='%s_2' % C.label)
 
 napoleonic(A, B, C)
