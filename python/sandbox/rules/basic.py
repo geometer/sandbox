@@ -1294,9 +1294,12 @@ class CyclicOrderRule(SingleSourceRule):
         cycle1 = Cycle(*prop.segment.points, prop.points[1])
         if not prop.same:
             cycle1 = cycle1.reversed
+            pattern = '$%{line:line}$ separates $%{point:pt0}$ and $%{point:pt1}$'
+        else:
+            pattern = '$%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$'
         yield (
             SameCyclicOrderProperty(cycle0, cycle1),
-            '', #TODO: write comment
+            Comment(pattern, {'line': prop.segment, 'pt0': prop.points[0], 'pt1': prop.points[1]}),
             [prop]
         )
 
