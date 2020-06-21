@@ -873,16 +873,21 @@ class PointsSeparatedByLineAreNotCoincidentRule(SingleSourceRule):
     """
     property_type = SameOrOppositeSideProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
     def accepts(self, prop):
-        return not prop.same
+        return not prop.same and prop not in self.processed
 
     def apply(self, prop):
-        if not prop.reason.obsolete:
-            yield (
-                PointsCoincidenceProperty(prop.points[0], prop.points[1], False),
-                Comment('the points are separated by $%{line:line}$', {'line': prop.segment}),
-                [prop]
-            )
+        self.processed.add(prop)
+
+        yield (
+            PointsCoincidenceProperty(prop.points[0], prop.points[1], False),
+            Comment('the points are separated by $%{line:line}$', {'line': prop.segment}),
+            [prop]
+        )
 
 class SameSidePointInsideSegmentRule(SingleSourceRule):
     """
@@ -1158,12 +1163,16 @@ class PointsCollinearityByAngleDegreeRule(Rule):
 class RightAngleDegreeRule(SingleSourceRule):
     property_type = AngleKindProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
     def accepts(self, prop):
-        return prop.kind == AngleKindProperty.Kind.right
+        return prop.kind == AngleKindProperty.Kind.right and prop not in self.processed
 
     def apply(self, prop):
-        if prop.reason.obsolete:
-            return
+        self.processed.add(prop)
+
         yield (
             AngleValueProperty(prop.angle, 90),
             prop.reason.comment,
@@ -1173,12 +1182,16 @@ class RightAngleDegreeRule(SingleSourceRule):
 class AngleTypesInObtuseangledTriangleRule(SingleSourceRule):
     property_type = AngleKindProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
     def accepts(self, prop):
-        return prop.angle.vertex and prop.kind != AngleKindProperty.Kind.acute
+        return prop.angle.vertex and prop.kind != AngleKindProperty.Kind.acute and prop not in self.processed
 
     def apply(self, prop):
-        if prop.reason.obsolete:
-            return
+        self.processed.add(prop)
+
         if prop.kind == AngleKindProperty.Kind.obtuse:
             pattern = 'an angle of $%{triangle:triangle}$, another $%{angle:other}$ is obtuse'
         else:
