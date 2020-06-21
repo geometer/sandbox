@@ -496,10 +496,6 @@ class CoreScene:
                 self.__segment = self.start.segment(self.end)
             return self.__segment
 
-        @property
-        def as_line(self):
-            return CoreScene.StraightLine(self.start, self.end)
-
         def angle(self, other):
             angle = self.scene._get_angle(self, other)
             if not self.scene.is_frozen:
@@ -552,10 +548,6 @@ class CoreScene:
             self.points = (pt0, pt1)
             self.point_set = frozenset(self.points)
             self.__middle_point = None
-
-        @property
-        def as_line(self):
-            return CoreScene.StraightLine(*self.points)
 
         @property
         def scene(self):
@@ -774,14 +766,6 @@ class CoreScene:
             if self.vertex:
                 return '\\angle %s %s %s' % (self.vectors[0].end, self.vertex, self.vectors[1].end)
             return '\\angle(%s, %s)' % self.vectors
-
-    class StraightLine(Figure):
-        def __init__(self, point0, point1):
-            self.point0 = point0
-            self.point1 = point1
-
-        def __str__(self):
-            return '%s %s' % (self.point0, self.point1)
 
     class Triangle(Figure):
         def __init__(self, pt0, pt1, pt2):

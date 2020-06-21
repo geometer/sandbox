@@ -66,11 +66,11 @@ class LineSet:
             if point in self.points_on:
                 on = True
                 prop_set = self.points_on[point]
-                template = '%s lies on line %s, that coincides with %s'
+                template = '$%{point:pt}$ lies on line $%{line:line0}$, that coincides with $%{line:line1}$'
             elif point in self.points_not_on:
                 on = False
                 prop_set = self.points_not_on[point]
-                template = '%s does not lie on line %s, that coincides with %s'
+                template = '$%{point:pt}$ does not lie on line $%{line:line0}$, that coincides with $%{line:line1}$'
             else:
                 return None
 
@@ -79,7 +79,7 @@ class LineSet:
             for seg in self.segments:
                 if point in seg.points:
                     prop = PointOnLineProperty(point, segment, on)
-                    comment = LazyComment(template, point, seg.as_line, segment.as_line)
+                    comment = Comment(template, {'pt': point, 'line0': seg, 'line1': segment})
                     premises = [self.same_line_property(seg, segment)]
                     candidates.append(_synthetic_property(prop, comment, premises))
 
@@ -88,7 +88,7 @@ class LineSet:
                 if seg == segment:
                     return known
                 prop = PointOnLineProperty(point, segment, on)
-                comment = LazyComment(template, point, seg.as_line, segment.as_line)
+                comment = Comment(template, {'pt': point, 'line0': seg, 'line1': segment})
                 premises = [known, self.same_line_property(seg, segment)]
                 candidates.append(_synthetic_property(prop, comment, premises))
 
@@ -418,7 +418,10 @@ class LineSet:
                     premises.append(pol)
                 candidates.append(_synthetic_property(
                     PointsCollinearityProperty(*pts, True),
-                    LazyComment('%s, %s, and %s belong to %s', *pts, seg.as_line),
+                    Comment(
+                        '$%{point:pt0}$, $%{point:pt1}$, and $%{point:pt2}$ belong to $%{line:line}$',
+                        {'pt0': pt0, 'pt1': pt1, 'pt2': pt2, 'line': seg}
+                    ),
                     premises
                 ))
 
