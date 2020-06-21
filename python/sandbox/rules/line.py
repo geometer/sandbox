@@ -2,7 +2,6 @@ import itertools
 
 from .. import Scene
 from ..property import *
-from ..util import LazyComment
 
 from .abstract import Rule, SingleSourceRule
 

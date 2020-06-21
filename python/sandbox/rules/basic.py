@@ -1653,7 +1653,19 @@ class SameSideToInsideAngleRule(SingleSourceRule):
                 if prop1.same:
                     continue
                 triangle = Scene.Triangle(pt0, pt1, pt2)
-                comment = LazyComment('Line %s separates %s and %s, line %s separates %s and %s => the intersection %s lies inside %s', prop.segment.as_line, *prop.points, prop1.segment.as_line, *prop1.points, centre, triangle)
+                comment = Comment(
+                    'line $%{line:line0}$ separates $%{point:pt0}$ and $%{point:pt1}$, line $%{line:line1}$ separates $%{point:pt2}$ and $%{point:pt3}$ => the intersection $%{point:crossing}$ lies inside $%{triangle:triangle}$',
+                    {
+                        'line0': prop.segment,
+                        'pt0': prop.points[0],
+                        'pt1': prop.points[1],
+                        'line1': prop1.segment,
+                        'pt2': prop1.points[0],
+                        'pt3': prop1.points[1],
+                        'crossing': centre,
+                        'triangle': triangle
+                    }
+                )
                 angles = triangle.angles
                 for i in range(0, 3):
                     yield (
