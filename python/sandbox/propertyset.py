@@ -1430,18 +1430,6 @@ class PropertySet(LineSet):
                 return (candidate, [prop, col])
         return (None, [])
 
-    def collinear_points(self, segment):
-        points = []
-        for prop in [p for p in self.list(PointsCollinearityProperty, [segment]) if p.collinear]:
-            points.append(next(pt for pt in prop.points if pt not in segment.points))
-        return points
-
-    def not_collinear_points(self, segment):
-        points = []
-        for prop in [p for p in self.list(PointsCollinearityProperty, [segment]) if not p.collinear]:
-            points.append(next(pt for pt in prop.points if pt not in segment.points))
-        return points
-
     def stats(self):
         for circle in self.circles:
             print('CIRCLE')
