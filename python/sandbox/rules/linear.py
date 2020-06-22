@@ -164,9 +164,9 @@ class EqualSumsOfAnglesRule(Rule):
                 mask |= bit
                 yield (
                     AngleRatioProperty(other0, other1, 1),
-                    LazyComment(
-                        '%s + %s = %s = %s + %s',
-                        other0, eq0, sum0.degree_str, other1, eq1
+                    Comment(
+                        '$%{anglemeasure:other0} + %{anglemeasure:eq0} = %{degree:sum} = %{anglemeasure:other1} + %{anglemeasure:eq1}$',
+                        {'other0': other0, 'other1': other1, 'eq0': eq0, 'eq1': eq1, 'sum': sum0.degree}
                     ),
                     [sum0, sum1]
                 )
