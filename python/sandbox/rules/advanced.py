@@ -42,34 +42,68 @@ class Triangle30_60_90SidesRule(SingleSourceRule):
     """
     property_type = AngleValueProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
     def accepts(self, prop):
         return prop.degree == 90 and prop.angle.vertex
 
     def apply(self, prop):
-        vertex = prop.angle.vertex
-        pt0 = prop.angle.vectors[0].end
-        pt1 = prop.angle.vectors[1].end
-        value = self.context.angle_value_property(pt0.angle(vertex, pt1))
-        if value is None or value.degree not in (30, 60) or prop.reason.obsolete and value.reason.obsolete:
+        mask = self.processed.get(prop, 0)
+        if mask == 0x3:
             return
-        hypot = pt0.segment(pt1)
-        long_leg = vertex.segment(pt0 if value.degree == 30 else pt1)
-        short_leg = vertex.segment(pt1 if value.degree == 30 else pt0)
-        yield (
-            LengthRatioProperty(hypot, short_leg, 2),
-            Comment('hypotenuse and cathetus opposite the $%{degree:30}$ angle', {'30': 30}),
-            [prop, value]
-        )
-        yield (
-            LengthRatioProperty(hypot, long_leg, 2 / sp.sqrt(3)),
-            Comment('hypotenuse and cathetus opposite the $%{degree:60}$ angle', {'60': 60}),
-            [prop, value]
-        )
-        yield (
-            LengthRatioProperty(long_leg, short_leg, sp.sqrt(3)),
-            Comment('catheti opposite $%{degree:60}$ and $%{degree:30}$ angles', {'60': 60, '30': 30}),
-            [prop, value]
-        )
+
+        original = mask
+        vertex = prop.angle.vertex
+        triangle = Scene.Triangle(vertex, *prop.angle.endpoints)
+        for bit in (1, 2):
+            if mask & bit:
+                continue
+            value = self.context.angle_value_property(triangle.angles[bit])
+            if value is None:
+                continue
+            mask |= bit
+
+            oppo = triangle.sides[bit]
+            adj = triangle.sides[3 - bit]
+            hypot = triangle.sides[0]
+            if value.degree == 30:
+                pt0 = triangle.points[bit]
+                pt1 = triangle.points[3 - bit]
+                oppo_ratio = 2
+                adj_ratio = 2 / sp.sqrt(3)
+                catheti = (adj, oppo)
+                catheti_pattern = 'catheti adjacent and opposite to the $%{degree:deg}$ angle in $%{triangle:triangle}$'
+            elif value.degree == 60:
+                pt0 = triangle.points[3 - bit]
+                pt1 = triangle.points[bit]
+                oppo_ratio = 2 / sp.sqrt(3)
+                adj_ratio = 2
+                catheti = (oppo, adj)
+                catheti_pattern = 'catheti opposite and adjacent to the $%{degree:deg}$ angle in $%{triangle:triangle}$'
+            else:
+                mask = 0x3
+                continue
+            params = {'deg': value.degree, 'triangle': triangle}
+            yield (
+                LengthRatioProperty(hypot, oppo, oppo_ratio),
+                Comment('hypotenuse and cathetus opposite to the $%{degree:deg}$ angle in $%{triangle:triangle}$', params),
+                [prop, value]
+            )
+            yield (
+                LengthRatioProperty(hypot, adj, adj_ratio),
+                Comment('hypotenuse and cathetus adjacent to the $%{degree:deg}$ angle in $%{triangle:triangle}$', params),
+                [prop, value]
+            )
+            yield (
+                LengthRatioProperty(*catheti, sp.sqrt(3)),
+                Comment(catheti_pattern, params),
+                [prop, value]
+            )
+
+        if mask != original:
+            self.processed[prop] = mask
 
 class Triangle30_30_120SidesRule(SingleSourceRule):
     """
