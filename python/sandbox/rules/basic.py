@@ -569,16 +569,63 @@ class PerpendicularSegmentsRule(SingleSourceRule):
             )
 
 class Degree90ToPerpendicularSegmentsRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        return [p for p in self.context.angle_value_properties_for_degree(90) if p not in self.processed]
+
+    def apply(self, prop):
+        self.processed.add(prop)
+
+        yield (
+            PerpendicularSegmentsProperty(prop.angle.vectors[0].as_segment, prop.angle.vectors[1].as_segment),
+            prop.reason.comment,
+            prop.reason.premises
+        )
+
+class Degree90ToPerpendicularSegmentsRule2(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
     def sources(self):
         return self.context.angle_value_properties_for_degree(90)
 
     def apply(self, prop):
-        if not prop.reason.obsolete:
-            yield (
-                PerpendicularSegmentsProperty(prop.angle.vectors[0].as_segment, prop.angle.vectors[1].as_segment),
-                prop.reason.comment,
-                prop.reason.premises
-            )
+        seg0 = prop.angle.vectors[0].as_segment
+        seg1 = prop.angle.vectors[1].as_segment
+        for pt in self.context.collinear_points(seg0):
+            key = (prop, 0, pt)
+            if key in self.processed:
+                continue
+            self.processed.add(key)
+
+            for pt1 in seg0.points:
+                yield (
+                    PerpendicularSegmentsProperty(pt.segment(pt1), seg1),
+                    Comment(
+                        '$%{segment:seg0} \\perp %{segment:seg1}$, $%{point:pt}$ lies on $%{line:seg0}$',
+                        {'seg0': seg0, 'seg1': seg1, 'pt': pt}
+                    ),
+                    [prop, self.context.point_on_line_property(seg0, pt)]
+                )
+        for pt in self.context.collinear_points(seg1):
+            key = (prop, 1, pt)
+            if key in self.processed:
+                continue
+            self.processed.add(key)
+
+            for pt1 in seg1.points:
+                yield (
+                    PerpendicularSegmentsProperty(pt.segment(pt1), seg0),
+                    Comment(
+                        '$%{segment:seg1} \\perp %{segment:seg0}$, $%{point:pt}$ lies on $%{line:seg1}$',
+                        {'seg0': seg0, 'seg1': seg1, 'pt': pt}
+                    ),
+                    [prop, self.context.point_on_line_property(seg1, pt)]
+                )
 
 class CommonPerpendicularRule(SingleSourceRule):
     property_type = AngleValueProperty
