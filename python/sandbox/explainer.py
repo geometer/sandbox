@@ -57,6 +57,7 @@ class Explainer:
             ParallelVectorsRule(self.context),
             PerpendicularSegmentsRule(self.context),
             Degree90ToPerpendicularSegmentsRule(self.context),
+            Degree90ToPerpendicularSegmentsRule2(self.context),
             PerpendicularTransitivityRule(self.context),
             PerpendicularToEquidistantRule(self.context),
             EquidistantToPerpendicularRule(self.context),
