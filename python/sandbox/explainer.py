@@ -110,7 +110,7 @@ class Explainer:
             CongruentAnglesDegeneracyRule(self.context),
             PointAndAngleRule(self.context),
             PointInsideAngleConfigurationRule(self.context),
-            PerpendicularToSideOfAcuteAngledRule(self.context),
+            PerpendicularToSideOfObtuseAngledRule(self.context),
 
             EquilateralTriangleByThreeSidesRule(self.context),
             EquilateralTriangleByConrguentLegsAndAngleRule(self.context),
