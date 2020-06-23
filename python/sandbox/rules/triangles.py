@@ -402,13 +402,13 @@ class EquilateralTriangleByThreeSidesRule(Rule):
                 [prop, cs2]
             )
 
-class IsoscelesTriangleByConrguentLegsAndAngleRule(Rule):
+class EquilateralTriangleByConrguentLegsAndAngleRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
 
     def sources(self):
-        return [p for p in self.context.nondegenerate_angle_value_properties() if p.angle.vertex and p not in self.processed]
+        return [p for p in self.context.angle_value_properties_for_degree(60) if p.angle.vertex and p not in self.processed]
 
     def apply(self, prop):
         angle = prop.angle
@@ -419,24 +419,14 @@ class IsoscelesTriangleByConrguentLegsAndAngleRule(Rule):
         self.processed.add(prop)
         if value != 1:
             return
-        if prop.degree == 60:
-            yield (
-                EquilateralTriangleProperty(angle.point_set),
-                Comment(
-                    'congruent sides $%{segment:side0}$ and $%{segment:side1}$, and $%{anglemeasure:angle} = %{degree:degree}$',
-                    {'side0': ratio.segment0, 'side1': ratio.segment1, 'angle': angle, 'degree': prop.degree}
-                ),
-                [ratio, prop]
-            )
-        else:
-            yield (
-                IsoscelesTriangleProperty(angle.vertex, angle.vectors[0].end.segment(angle.vectors[1].end)),
-                Comment(
-                    'congruent legs $%{segment:side0}$ and $%{segment:side1}$',
-                    {'side0': ratio.segment0, 'side1': ratio.segment1}
-                ),
-                [ratio, prop]
-            )
+        yield (
+            EquilateralTriangleProperty(angle.point_set),
+            Comment(
+                'congruent sides $%{segment:side0}$ and $%{segment:side1}$, and $%{anglemeasure:angle} = %{degree:degree}$',
+                {'side0': ratio.segment0, 'side1': ratio.segment1, 'angle': angle, 'degree': prop.degree}
+            ),
+            [ratio, prop]
+        )
 
 class IsoscelesTriangleByConrguentLegsRule(Rule):
     def __init__(self, context):
@@ -454,10 +444,6 @@ class IsoscelesTriangleByConrguentLegsRule(Rule):
         base0 = next(pt for pt in prop.segment0.points if pt != apex)
         base1 = next(pt for pt in prop.segment1.points if pt != apex)
 
-        ne = self.context.not_equal_property(base0, base1)
-        if ne is None:
-            return
-
         self.processed.add(prop)
         yield (
             IsoscelesTriangleProperty(apex, base0.segment(base1)),
@@ -465,7 +451,7 @@ class IsoscelesTriangleByConrguentLegsRule(Rule):
                 'congruent legs $%{segment:side0}$ and $%{segment:side1}$',
                 {'side0': prop.segment0, 'side1': prop.segment1}
             ),
-            [prop, ne]
+            [prop]
         )
 
 class IsoscelesTriangleByConrguentBaseAnglesRule(Rule):

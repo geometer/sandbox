@@ -104,7 +104,7 @@ class Explainer:
             PointInsideAngleConfigurationRule(self.context),
 
             EquilateralTriangleByThreeSidesRule(self.context),
-            IsoscelesTriangleByConrguentLegsAndAngleRule(self.context),
+            EquilateralTriangleByConrguentLegsAndAngleRule(self.context),
             IsoscelesTriangleByConrguentLegsRule(self.context),
             IsoscelesTriangleByConrguentBaseAnglesRule(self.context),
             CongruentTrianglesByAngleAndTwoSidesRule(self.context),
