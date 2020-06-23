@@ -1933,3 +1933,51 @@ class PointAndAngleRule(Rule):
                 ),
                 [prop1, prop0]
             )
+
+class PerpendicularToSideOfAcuteAngledRule(SingleSourceRule):
+    property_type = AngleKindProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop.angle.vertex and prop.kind == AngleKindProperty.Kind.obtuse
+
+    def apply(self, prop):
+        long_side = prop.angle.endpoints[0].segment(prop.angle.endpoints[1])
+        for seg in [v.as_segment for v in prop.angle.vectors]:
+            for inside in self.context.point_inside_segment_properties(seg):
+                key = (prop.angle, inside.angle.vertex)
+                if key in self.processed:
+                    continue
+                for pt in self.context.collinear_points(long_side):
+                    perp_line = pt.segment(inside.angle.vertex)
+                    perp = self.context[PerpendicularSegmentsProperty(seg, perp_line)]
+                    if perp is None:
+                        continue
+                    self.processed.add(key)
+                    comment = Comment(
+                        '$%{triangle:triangle}$ is obtuse-angled (with the vertex $%{point:vertex}$), $%{point:inside}$ is inside $%{segment:side}$, $%{point:pt} \\in %{line:long}$, and $%{line:perp} \\perp %{line:side}$',
+                        {
+                            'triangle': Scene.Triangle(*prop.angle.point_set),
+                            'vertex': prop.angle.vertex,
+                            'inside': inside.angle.vertex,
+                            'side': seg,
+                            'pt': pt,
+                            'long': long_side,
+                            'perp': perp_line
+                        }
+                    )
+                    for ep in prop.angle.endpoints:
+                        yield (
+                            PointsCoincidenceProperty(pt, ep, False),
+                            comment,
+                            [prop, inside, perp]
+                        )
+                    yield (
+                        AngleValueProperty(pt.angle(*prop.angle.endpoints), 180),
+                        comment,
+                        [prop, inside, perp]
+                    )
+                    break
