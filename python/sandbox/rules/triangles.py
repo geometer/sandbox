@@ -211,7 +211,7 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
             elrs = []
             for inds in [(0, 1, 2, 3), (0, 2, 1, 3), (1, 0, 3, 2), (2, 0, 3, 1)]:
                 elrs.append(self.context.equal_length_ratios_property(*[segments[i] for i in inds]))
-            elrs = filter(None, elrs)
+            elrs = list(filter(None, elrs))
             if not elrs:
                 continue
             self.processed.add(src)
