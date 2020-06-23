@@ -109,7 +109,12 @@ class BaseAnglesOfIsoscelesRule(SingleSourceRule):
         return prop not in self.processed
 
     def apply(self, prop):
+        neq = self.context.coincidence_property(*prop.base.points)
+        if neq is None:
+            return
         self.processed.add(prop)
+        if neq.coincident:
+            return
         yield (
             AngleRatioProperty(
                 prop.base.points[0].angle(prop.apex, prop.base.points[1]),
@@ -117,7 +122,7 @@ class BaseAnglesOfIsoscelesRule(SingleSourceRule):
                 1
             ),
             Comment('base angles of isosceles $%{triangle:tr}$', {'tr': prop.triangle}),
-            [prop]
+            [prop, neq]
         )
 
 class BaseAnglesOfIsoscelesWithKnownApexAngleRule(SingleSourceRule):
@@ -135,6 +140,8 @@ class BaseAnglesOfIsoscelesWithKnownApexAngleRule(SingleSourceRule):
         if av is None:
             return
         self.processed.add(prop)
+        if av.degree == 0:
+            return
 
         for angle in (
             prop.base.points[0].angle(prop.apex, prop.base.points[1]),
