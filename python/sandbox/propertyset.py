@@ -1239,6 +1239,12 @@ class PropertySet(LineSet):
             return [p for p in self.list(AngleValueProperty) if p.degree == 0]
         return self.__angle_ratios.value_properties_for_degree(degree)
 
+    def point_inside_segment_properties(self, segment):
+        pts = set(segment.points)
+        for prop in self.angle_value_properties_for_degree(180):
+            if prop.angle.vertex and set(prop.angle.endpoints) == pts:
+                yield prop
+
     def angle_value_properties(self):
         return [p for p in self.list(AngleValueProperty) if p.degree == 0] + self.nondegenerate_angle_value_properties()
 
