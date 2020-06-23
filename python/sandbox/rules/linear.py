@@ -126,8 +126,9 @@ class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
         value1 = divide(prop.degree, 1 + ar.value)
         value0 = prop.degree - value1
         if ar.value == 1:
-            comment0 = LazyComment('2 %s = %s + %s = %s', ar.angle0, ar.angle0, ar.angle1, prop.degree_str)
-            comment1 = LazyComment('2 %s = %s + %s = %s', ar.angle1, ar.angle1, ar.angle0, prop.degree_str)
+            pattern = '$2\,%{angle:a0} = %{angle:a0} + %{angle:a1} = %{degree:sum}$'
+            comment0 = Comment(pattern, {'a0': ar.angle0, 'a1': ar.angle1, 'sum': prop.degree})
+            comment1 = Comment(pattern, {'a0': ar.angle1, 'a1': ar.angle0, 'sum': prop.degree})
         else:
             comment0 = LazyComment('%s + %s / %s = %s + %s = %s', ar.angle0, ar.angle0, ar.value, ar.angle0, ar.angle1, prop.degree_str)
             comment1 = LazyComment('%s + %s %s = %s + %s = %s', ar.angle1, ar.value, ar.angle1, ar.angle1, ar.angle0, prop.degree_str)

@@ -1144,6 +1144,37 @@ class RotatedAngleRule(Rule):
             [ca, co]
         )
 
+class PointInsidePartOfAngleRule(SingleSourceRule):
+    property_type = PointInsideAngleProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def apply(self, prop):
+        for pt in prop.angle.endpoints:
+            part = prop.angle.vertex.angle(pt, prop.point)
+            for prop1 in self.context.list(PointInsideAngleProperty, [part]):
+                key = (prop, prop1)
+                if key in self.processed:
+                    continue
+                self.processed.add(key)
+                comment = Comment(
+                    '$%{point:point}$ lies inside $%{angle:part}$ that is part of $%{angle:full}$',
+                    {'point': prop1.point, 'part': part, 'full': prop.angle}
+                )
+                yield (
+                    PointInsideAngleProperty(prop1.point, prop.angle),
+                    comment,
+                    [prop1, prop]
+                )
+                pt1 = next(p for p in prop.angle.endpoints if p != pt)
+                yield (
+                    PointInsideAngleProperty(prop.point, prop.angle.vertex.angle(pt1, prop1.point)),
+                    comment,
+                    [prop1, prop]
+                )
+
 class PartOfAcuteAngleIsAcuteRule(SingleSourceRule):
     property_type = PointInsideAngleProperty
 
