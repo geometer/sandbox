@@ -1885,7 +1885,7 @@ class PointAndAngleRule(Rule):
                 [prop1, prop0]
             )
 
-class PerpendicularToSideOfAcuteAngledRule(SingleSourceRule):
+class PerpendicularToSideOfObtuseAngledRule(SingleSourceRule):
     property_type = AngleKindProperty
 
     def __init__(self, context):
