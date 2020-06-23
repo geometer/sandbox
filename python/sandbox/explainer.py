@@ -93,6 +93,7 @@ class Explainer:
             AngleInsideBiggerOneRule(self.context),
             RightAngleDegreeRule(self.context),
             AngleTypesInObtuseangledTriangleRule(self.context),
+            PointInsidePartOfAngleRule(self.context),
             PartOfAcuteAngleIsAcuteRule(self.context),
             SameAngleRule(self.context),
             TransversalRule(self.context),
