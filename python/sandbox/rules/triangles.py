@@ -208,23 +208,24 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
                 vec0.as_segment, vec1.as_segment,
                 ang1.vectors[0].as_segment, ang1.vectors[1].as_segment
             )
+            elrs = []
             for inds in [(0, 1, 2, 3), (0, 2, 1, 3), (1, 0, 3, 2), (2, 0, 3, 1)]:
-                elr = self.context.equal_length_ratios_property(*[segments[i] for i in inds])
-                if elr:
-                    break
-            else:
+                elrs.append(self.context.equal_length_ratios_property(*[segments[i] for i in inds]))
+            elrs = filter(None, elrs)
+            if not elrs:
                 continue
             self.processed.add(src)
             if ca is None:
                 ca = self.context.angle_ratio_property(ang0, ang1)
-            yield (
-                SimilarTrianglesProperty(
-                    (ang0.vertex, vec0.end, vec1.end),
-                    (ang1.vertex, ang1.vectors[0].end, ang1.vectors[1].end)
-                ),
-                LazyComment('%s and %s', elr, ca),
-                [elr, ca]
-            )
+            for elr in elrs:
+                yield (
+                    SimilarTrianglesProperty(
+                        (ang0.vertex, vec0.end, vec1.end),
+                        (ang1.vertex, ang1.vectors[0].end, ang1.vectors[1].end)
+                    ),
+                    LazyComment('%s and %s', elr, ca),
+                    [elr, ca]
+                )
 
 class SimilarTrianglesWithCongruentSideRule(SingleSourceRule):
     property_type = SimilarTrianglesProperty
