@@ -366,6 +366,19 @@ class LineSet:
         elif isinstance(prop, ConcyclicPointsProperty):
             self.__concyclicity[frozenset(prop.points)] = prop
 
+    def __non_coincidence_property_candidates(self, line, pt_on, pt_not_on):
+        candidates = []
+        for key in [seg for seg in line.segments if pt_on not in seg.points]:
+            col = self.collinearity_property(pt_on, *key.points)
+            ncol = self.collinearity_property(pt_not_on, *key.points)
+            prop = PointsCoincidenceProperty(pt_on, pt_not_on, False)
+            comment = Comment(
+                'point $%{point:pt_on}$ lies on line $%{line:line}$, $%{point:pt_not_on}$ does not',
+                {'pt_on': pt_on, 'pt_not_on': pt_not_on, 'line': key}
+            )
+            candidates.append(_synthetic_property(prop, comment, [col, ncol]))
+        return candidates
+
     def coincidence_property(self, pt0, pt1):
         cached = self.__coincidence.get(frozenset([pt0, pt1]))
         if cached:
@@ -374,8 +387,10 @@ class LineSet:
         for line in self.__all_lines:
             if pt0 in line.points_on and pt1 in line.points_not_on:
                 candidates.append(line.non_coincidence_property(pt0, pt1))
+                candidates += self.__non_coincidence_property_candidates(line, pt0, pt1)
             elif pt1 in line.points_on and pt0 in line.points_not_on:
                 candidates.append(line.non_coincidence_property(pt1, pt0))
+                candidates += self.__non_coincidence_property_candidates(line, pt1, pt0)
         return LineSet.best_candidate(candidates)
 
     def point_on_line_property(self, segment, point):
