@@ -267,7 +267,7 @@ class ParallelSegmentsProperty(Property):
     @property
     def description(self):
         return Comment(
-            '$%{segment:seg0} \,\\|\, %{segment:seg1}$',
+            '$%{segment:seg0} \\,\\|\\, %{segment:seg1}$',
             {'seg0': self.segments[0], 'seg1': self.segments[1]}
         )
 
@@ -527,11 +527,11 @@ class AngleRatioProperty(LinearAngleProperty):
             'ratio': self.value
         }
         if self.same:
-            pattern = '$%{anglemeasure:angle0} \equiv %{anglemeasure:angle1}$'
+            pattern = '$%{anglemeasure:angle0} \\equiv %{anglemeasure:angle1}$'
         elif self.value == 1:
             pattern = '$%{anglemeasure:angle0} = %{anglemeasure:angle1}$'
         else:
-            pattern = '$%{anglemeasure:angle0} = %{multiplier:ratio}\,%{anglemeasure:angle1}$'
+            pattern = '$%{anglemeasure:angle0} = %{multiplier:ratio}\\,%{anglemeasure:angle1}$'
         return Comment(pattern, params)
 
     def compare_values(self, other):
@@ -726,7 +726,7 @@ class SimilarTrianglesProperty(Property):
 
     @property
     def description(self):
-        return Comment('$%{triangle:t0} \sim %{triangle:t1}$', {'t0': self.triangle0, 't1': self.triangle1})
+        return Comment('$%{triangle:t0} \\sim %{triangle:t1}$', {'t0': self.triangle0, 't1': self.triangle1})
 
 class CongruentTrianglesProperty(Property):
     """
@@ -747,7 +747,7 @@ class CongruentTrianglesProperty(Property):
 
     @property
     def description(self):
-        return Comment('$%{triangle:t0} \cong %{triangle:t1}$', {'t0': self.triangle0, 't1': self.triangle1})
+        return Comment('$%{triangle:t0} \\cong %{triangle:t1}$', {'t0': self.triangle0, 't1': self.triangle1})
 
 class IsoscelesTriangleProperty(Property):
     """
