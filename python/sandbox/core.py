@@ -677,16 +677,11 @@ class CoreScene:
         assert vector0.scene == self
         assert vector1.scene == self
 
-        if vector0.end == vector1.end:
-            vector0, vector1 = vector0.reversed, vector1.reversed
         key = frozenset([vector0, vector1])
         angle = self.__angles.get(key)
         if angle is None:
             angle = CoreScene.Angle(vector0, vector1)
             self.__angles[key] = angle
-            if vector0.start != vector1.start:
-                assert vector0.end != vector1.end
-                self.__angles[frozenset([vector0.reversed, vector1.reversed])] = angle
         return angle
 
     class Angle(Figure):
@@ -694,6 +689,10 @@ class CoreScene:
             assert vector0 != vector1 and vector0 != vector1.reversed
             self.vectors = (vector0, vector1)
             self.vertex = vector0.start if vector0.start == vector1.start else None
+            if self.vertex:
+                self.pseudo_vertex = self.vertex
+            else:
+                self.pseudo_vertex = next((p for p in vector0.points if p in vector1.points), None)
             self.point_set = frozenset([*vector0.points, *vector1.points])
             self.__bisector = None
 
