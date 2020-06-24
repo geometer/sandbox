@@ -539,7 +539,7 @@ class AngleRatioProperty(LinearAngleProperty):
         elif self.value == 1:
             pattern = '$%{anglemeasure:angle0} = %{anglemeasure:angle1}$'
         else:
-            pattern = '$%{anglemeasure:angle0} = %{multiplier:ratio} %{anglemeasure:angle1}$'
+            pattern = '$%{anglemeasure:angle0} = %{multiplier:ratio}\,%{anglemeasure:angle1}$'
         return Comment(pattern, params)
 
     def compare_values(self, other):
