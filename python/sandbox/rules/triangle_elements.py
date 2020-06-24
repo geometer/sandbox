@@ -175,24 +175,41 @@ class LegsOfIsoscelesRule(SingleSourceRule):
 class CorrespondingAnglesInCongruentTrianglesRule(SingleSourceRule):
     property_type = CongruentTrianglesProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
     def apply(self, prop):
-        ncl = self.context.collinearity_property(*prop.triangle0.points)
-        if ncl is None:
-            ncl = self.context.collinearity_property(*prop.triangle1.points)
-        if ncl is None or ncl.collinear or prop.reason.obsolete and ncl.reason.obsolete:
+        mask = self.processed.get(prop, 0)
+        if mask == 0x3:
             return
-        angles0 = prop.triangle0.angles
-        angles1 = prop.triangle1.angles
-        for i in range(0, 3):
-            if angles0[i] != angles1[i]:
-                yield (
-                    AngleRatioProperty(angles0[i], angles1[i], 1),
-                    Comment(
-                        'corresponding angles in congruent $%{triangle:tr0}$ and $%{triangle:tr1}$',
-                        {'tr0': prop.triangle0, 'tr1': prop.triangle1}
-                    ),
-                    [prop, ncl]
-                )
+
+        original = mask
+        for triangle, bit in ((prop.triangle0, 1), (prop.triangle1, 2)):
+            if mask & bit:
+                continue
+            ncl = self.context.collinearity_property(*triangle.points)
+            if ncl is None:
+                continue
+            if ncl.collinear:
+                mask = 0x3
+                break
+            mask |= bit
+            angles0 = prop.triangle0.angles
+            angles1 = prop.triangle1.angles
+            for i in range(0, 3):
+                if angles0[i] != angles1[i]:
+                    yield (
+                        AngleRatioProperty(angles0[i], angles1[i], 1),
+                        Comment(
+                            'corresponding angles in congruent $%{triangle:tr0}$ and $%{triangle:tr1}$',
+                            {'tr0': prop.triangle0, 'tr1': prop.triangle1}
+                        ),
+                        [prop, ncl]
+                    )
+
+        if mask != original:
+            self.processed[prop] = mask
 
 class CorrespondingSidesInCongruentTrianglesRule(SingleSourceRule):
     property_type = CongruentTrianglesProperty
