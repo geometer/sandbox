@@ -10,16 +10,13 @@ class Reason:
 
     def reset_premises(self):
         self.__all_premises = None
-        self.__cost = None
         self.__depth = None
         self.__total_nodes = None
         self.__unique_nodes = None
 
     @property
     def cost(self):
-        if self.__cost is None:
-            self.__cost = len(self.all_premises)
-        return self.__cost
+        return self.unique_nodes
 
     @property
     def depth(self):
