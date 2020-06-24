@@ -4,7 +4,7 @@ import sympy as sp
 
 from .figure import Figure, Circle
 from .scene import Scene
-from .util import Comment, divide, good_angles, normalize_number, keys_for_triangle, degree_to_string
+from .util import Comment, divide, normalize_number, keys_for_triangle, degree_to_string
 
 class Property:
     def __init__(self, property_key):
@@ -459,8 +459,28 @@ class AngleValueProperty(LinearAngleProperty):
     """
     @staticmethod
     def generate(vector0, vector1, value):
-        for ngl, complementary in good_angles(vector0, vector1, include_four_point=True):
-            yield AngleValueProperty(ngl, 180 - value if complementary else value)
+        def rev(first, second):
+            vec0 = vector0.reversed if first else vector0
+            vec1 = vector1.reversed if second else vector1
+            return vec0.angle(vec1)
+
+        if vector0.start == vector1.start:
+            angles = [(rev(False, False), False)]
+        elif vector0.start == vector1.end:
+            angles = [(rev(False, True), True)]
+        elif vector0.end == vector1.start:
+            angles = [(rev(True, False), True)]
+        elif vector0.end == vector1.end:
+            angles = [(rev(True, True), False)]
+        else:
+            angles = [
+                (rev(False, False), False),
+                (rev(False, True), True),
+                (rev(True, False), True),
+                (rev(True, True), False),
+            ]
+        for ngl, supplementary in angles:
+            yield AngleValueProperty(ngl, 180 - value if supplementary else value)
 
     def __init__(self, angle, degree):
         self.angle = angle

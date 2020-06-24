@@ -54,36 +54,6 @@ def normalize_number(num):
     num = simplify(num)
     return int(num) if num.is_integer else num
 
-def good_angles(vector0, vector1, include_four_point=False):
-    """
-    Returns list of pairs (ang, complementary) where ang is an angle
-    consisting of the same segments as the given vectors, and
-    complementary is False if the values of ang and the given value is the same
-    and True if ang is complementary to the vector0.angle(vector1).
-
-    The list contains one pair if the segments have a common endpoint,
-    and two pairs otherwise.
-    """
-    def rev(first, second):
-        vec0 = vector0.reversed if first else vector0
-        vec1 = vector1.reversed if second else vector1
-        return vec0.angle(vec1)
-
-    if vector0.start == vector1.start:
-        return [(rev(False, False), False)]
-    if vector0.start == vector1.end:
-        return [(rev(False, True), True)]
-    if vector0.end == vector1.start:
-        return [(rev(True, False), True)]
-    if vector0.end == vector1.end:
-        return [(rev(True, True), False)]
-    if include_four_point:
-        return [
-            (rev(False, False), False),
-            (rev(False, True), True)
-        ]
-    return []
-
 class LazyComment:
     def __init__(self, format_string, *params):
         self.format_string = format_string
