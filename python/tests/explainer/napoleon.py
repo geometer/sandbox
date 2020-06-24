@@ -1,6 +1,6 @@
 from sandbox import Scene
 from sandbox.property import EquilateralTriangleProperty
-from sandbox.util import LazyComment
+from sandbox.util import Comment
 
 from .base import ExplainerTest
 
@@ -12,13 +12,11 @@ class NapoleonOutward(ExplainerTest):
         A, B, C = triangle.points
 
         def napoleonic(A, B, C):
-            circleAB = A.circle_through(B, layer='invisible')
-            circleBA = B.circle_through(A, layer='invisible')
-            V = circleAB.intersection_point(circleBA, label=C.label + '1')
-            equilateral = Scene.Triangle(A, B, V)
-            A.scene.equilateral_constraint(equilateral, comment=LazyComment('Given: %s is equilateral', equilateral))
+            equilateral = scene.equilateral_triangle(A, B, C.label + '1')
+            _, _, V = equilateral.points
             line = A.line_through(B, layer='auxiliary')
-            V.opposite_side_constraint(C, line, comment=LazyComment('Given: %s is outward of %s', V, triangle))
+            comment = Comment('$%{triangle:equilateral}$ is facing away from $%{triangle:triangle}$', {'equilateral': equilateral, 'triangle': triangle})
+            V.opposite_side_constraint(C, line, comment=comment)
             D = scene.incentre_point(equilateral, label=C.label + '2')
 
         napoleonic(A, B, C)
@@ -39,13 +37,11 @@ class NapoleonInward(ExplainerTest):
         A, B, C = triangle.points
 
         def napoleonic(A, B, C):
-            circleAB = A.circle_through(B, layer='invisible')
-            circleBA = B.circle_through(A, layer='invisible')
-            V = circleAB.intersection_point(circleBA, label=C.label + '1')
-            equilateral = Scene.Triangle(A, B, V)
-            A.scene.equilateral_constraint(equilateral, comment=LazyComment('Given: %s is equilateral', equilateral))
+            equilateral = scene.equilateral_triangle(A, B, C.label + '1')
+            _, _, V = equilateral.points
             line = A.line_through(B, layer='auxiliary')
-            V.same_side_constraint(C, line, comment=LazyComment('Given: %s is inward of %s', V, triangle))
+            comment = Comment('$%{triangle:equilateral}$ is facing into $%{triangle:triangle}$', {'equilateral': equilateral, 'triangle': triangle})
+            V.same_side_constraint(C, line, comment=comment)
             D = scene.incentre_point(equilateral, label=C.label + '2')
 
         napoleonic(A, B, C)
