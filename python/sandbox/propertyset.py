@@ -690,9 +690,11 @@ class AngleRatioPropertySet:
                 properties.append(_synthetic_property(prop, comment, premises))
             return properties
 
-        def value_properties_for_degree(self, degree):
+        def value_properties_for_degree(self, degree, condition):
             properties = []
             for angle, ratio in self.angle_to_ratio.items():
+                if condition and not condition(angle):
+                    continue
                 if self.degree * ratio != degree:
                     continue
                 edge = self.premises_graph.get_edge_data(angle, self.degree)
@@ -790,11 +792,9 @@ class AngleRatioPropertySet:
         fam = self.family_with_degree
         return fam.value_properties() if fam else []
 
-    def value_properties_for_degree(self, degree):
-        if degree == 0:
-            return [prop for prop in self.list(AngleValueProperty) if prop.degree == 0]
+    def value_properties_for_degree(self, degree, condition):
         fam = self.family_with_degree
-        return fam.value_properties_for_degree(degree) if fam else []
+        return fam.value_properties_for_degree(degree, condition) if fam else []
 
     def ratio_property(self, angle0, angle1):
         key = frozenset((angle0, angle1))
@@ -1249,16 +1249,19 @@ class PropertySet(LineSet):
     def nondegenerate_angle_value_properties(self):
         return self.__angle_ratios.value_properties()
 
-    def angle_value_properties_for_degree(self, degree):
+    def angle_value_properties_for_degree(self, degree, condition=None):
         if degree == 0:
-            return [p for p in self.list(AngleValueProperty) if p.degree == 0]
-        return self.__angle_ratios.value_properties_for_degree(degree)
+            if condition:
+                return [p for p in self.list(AngleValueProperty) if p.degree == 0 and condition(p.angle)]
+            else:
+                return [p for p in self.list(AngleValueProperty) if p.degree == 0]
+        return self.__angle_ratios.value_properties_for_degree(degree, condition)
 
     def point_inside_segment_properties(self, segment):
         pts = set(segment.points)
-        for prop in self.angle_value_properties_for_degree(180):
-            if prop.angle.vertex and set(prop.angle.endpoints) == pts:
-                yield prop
+        return self.angle_value_properties_for_degree(
+            180, lambda angle:angle.vertex and set(angle.endpoints) == pts
+        )
 
     def angle_value_properties(self):
         return [p for p in self.list(AngleValueProperty) if p.degree == 0] + self.nondegenerate_angle_value_properties()
