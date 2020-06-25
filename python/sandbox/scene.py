@@ -101,16 +101,13 @@ class Scene(CoreScene):
         Centre of the inscribed circle of the triangle
         """
         self.nondegenerate_triangle_constraint(triangle)
-        angles = triangle.angles
-        bisector0 = angles[0].bisector_line(layer='auxiliary')
-        bisector1 = angles[1].bisector_line(layer='auxiliary')
-        bisector2 = angles[2].bisector_line(layer='auxiliary')
+        bisectors = [a.bisector_line(layer='auxiliary') for a in triangle.angles]
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
             kwargs['comment'] = Comment('The incentre of $%{triangle:tr}$', {'tr': triangle})
-        centre = bisector0.intersection_point(bisector1, **kwargs)
-        centre.belongs_to(bisector2)
-        for angle in angles:
+        centre = bisectors[0].intersection_point(bisectors[1], **kwargs)
+        centre.belongs_to(bisectors[2])
+        for angle in triangle.angles:
             angle.point_on_bisector_constraint(
                 centre,
                 comment=Comment(
@@ -127,6 +124,38 @@ class Scene(CoreScene):
         )
         return centre
 
+    def excentre_point(self, triangle, vertex, **kwargs):
+        """
+        Centre of the inscribed circle of the triangle
+        """
+        self.nondegenerate_triangle_constraint(triangle)
+        assert vertex in triangle.points
+        def correct(angle):
+            vec0 = angle.vectors[0]
+            if vec0.end == vertex:
+                vec0 = vec0.reversed
+            vec1 = angle.vectors[1]
+            if vec1.end == vertex:
+                vec1 = vec1.reversed
+            return vec0.angle(vec1)
+
+        angles = [correct(a) for a in triangle.angles]
+        bisectors = [a.bisector_line(layer='auxiliary') for a in angles]
+        if 'comment' not in kwargs:
+            kwargs = dict(kwargs)
+            kwargs['comment'] = Comment('The excentre of $%{triangle:tr}$ opposite to $%{point:vertex}$', {'tr': triangle, 'vertex': vertex})
+        centre = bisectors[0].intersection_point(bisectors[1], **kwargs)
+        centre.belongs_to(bisectors[2])
+        for angle in angles:
+            angle.point_on_bisector_constraint(
+                centre,
+                comment=Comment(
+                    'the excentre $%{point:centre}$ of $%{triangle:triangle}$ lies on the bisector of $%{angle:angle}$',
+                    {'centre': centre, 'triangle': triangle, 'angle': angle}
+                )
+            )
+        return centre
+
     def incircle(self, triangle, **kwargs):
         """
         Inscribed circle of the triangle
@@ -137,6 +166,19 @@ class Scene(CoreScene):
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
             kwargs['comment'] = Comment('The incircle of $%{triangle:tr}$', {'tr': triangle})
+        return centre.circle_through(foot, **kwargs)
+
+    def excircle(self, triangle, vertex, **kwargs):
+        """
+        Inscribed circle of the triangle
+        """
+        centre = self.excentre_point(triangle, vertex, layer='auxiliary')
+        pts = [pt for pt in triangle.points if pt != vertex]
+        side = pts[0].line_through(pts[1], layer='auxiliary')
+        foot = self.perpendicular_foot_point(centre, side, layer='auxiliary')
+        if 'comment' not in kwargs:
+            kwargs = dict(kwargs)
+            kwargs['comment'] = Comment('The excircle of $%{triangle:tr}$ opposite to $%{point:vertex}$', {'tr': triangle, 'vertex': vertex})
         return centre.circle_through(foot, **kwargs)
 
     def circumcircle(self, triangle, **kwargs):
