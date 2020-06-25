@@ -1581,6 +1581,43 @@ class TransversalRule(Rule):
                 comment = Comment(pattern, {'common': vec, 'vec0': vec0, 'vec1': vec1})
                 yield (new_prop, comment, [prop, ne])
 
+class TwoPointsInsideSegmentRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        segment_to_props = {}
+        for av in [av for av in self.context.angle_value_properties_for_degree(180) if av.angle.vertex]:
+            segment = av.angle.endpoints[0].segment(av.angle.endpoints[1])
+            props = segment_to_props.get(segment)
+            if props:
+                props.add(av)
+            else:
+                segment_to_props[segment] = {av}
+
+        for segment, props in segment_to_props.items():
+            for av0, av1 in itertools.combinations(props, 2):
+                key = frozenset([av0.angle, av1.angle])
+                if key not in self.processed:
+                    self.processed.add(key)
+                    yield (segment, av0, av1)
+
+    def apply(self, src):
+        segment, av0, av1 = src
+
+        pt0 = av0.angle.vertex
+        pt1 = av1.angle.vertex
+        for pt in segment.points:
+            yield (
+                AngleValueProperty(pt.angle(pt0, pt1), 0),
+                Comment(
+                    'both $%{point:pt0}$ and $%{point:pt1}$ lie inside segment $%{segment:segment}$',
+                    {'pt0': pt0, 'pt1': pt1, 'segment': segment}
+                ),
+                [av0, av1]
+            )
+
 class SameAngleRule(Rule):
     def __init__(self, context):
         super().__init__(context)
