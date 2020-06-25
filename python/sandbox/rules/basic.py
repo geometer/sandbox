@@ -2107,23 +2107,17 @@ class PointAndAngleRule(Rule):
         self.processed = set()
 
     def sources(self):
-        for prop0, prop1 in itertools.combinations(self.context.list(SameOrOppositeSideProperty), 2):
-            if prop0.segment == prop1.segment or not prop0.same and not prop1.same:
-                continue
-            vertex = common_endpoint(prop0.segment, prop1.segment)
-            if vertex is None:
-                continue
-            pt0 = other_point(prop0.segment.points, vertex)
-            if pt0 not in prop1.points:
-                continue
-            pt1 = other_point(prop1.segment.points, vertex)
-            if pt1 not in prop0.points:
-                continue
-            fourth = other_point(prop0.points, pt1)
-            if fourth not in prop1.points:
-                continue
-
-            yield (prop0, prop1, vertex, pt0, pt1, fourth)
+        for prop0 in self.context.list(SameOrOppositeSideProperty):
+            for vertex in prop0.segment.points:
+                pt0 = other_point(prop0.segment.points, vertex)
+                for pt1 in prop0.points:
+                    fourth = other_point(prop0.points, pt1)
+                    prop1 = self.context.two_points_relatively_to_line_property(
+                        vertex.segment(pt1), pt0, fourth
+                    )
+                    if prop1 is None or not prop0.same and not prop1.same:
+                        continue
+                    yield (prop0, prop1, vertex, pt0, pt1, fourth)
 
     def apply(self, src):
         prop0, prop1, vertex, pt0, pt1, fourth = src
