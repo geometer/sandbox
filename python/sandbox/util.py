@@ -101,6 +101,7 @@ class SimplePrinter:
 class Comment:
     @staticmethod
     def validate_data(format_string, params):
+        assert isinstance(format_string, str)
         from .scene import Scene
         from .figure import Circle
         from .property import Cycle
