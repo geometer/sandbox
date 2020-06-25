@@ -481,6 +481,7 @@ class AngleValueProperty(LinearAngleProperty):
             yield AngleValueProperty(ngl, 180 - value if supplementary else value)
 
     def __init__(self, angle, degree):
+        assert isinstance(angle, Scene.Angle)
         self.angle = angle
         self.degree = normalize_number(degree)
         super().__init__(angle)
@@ -519,6 +520,8 @@ class AngleRatioProperty(LinearAngleProperty):
     Two angle values ratio
     """
     def __init__(self, angle0, angle1, ratio, same=False):
+        assert isinstance(angle0, Scene.Angle)
+        assert isinstance(angle1, Scene.Angle)
         # angle0 / angle1 = ratio
         if ratio >= 1:
             self.angle0 = angle0
