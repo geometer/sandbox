@@ -665,6 +665,18 @@ class AngleRatioPropertySet:
             premises = [self.premises_graph.get_edge_data(i, j)['prop'] for i, j in zip(path[:-1], path[1:])]
             return (AngleRatioPropertySet.CommentFromPath(path, premises, multiplier, self.angle_to_ratio), premises)
 
+        def ratio_property(self, angle0, angle1):
+            edge = self.premises_graph.get_edge_data(angle0, angle1)
+            if edge:
+                return edge['prop']
+            path = nx.algorithms.shortest_path(self.premises_graph, angle0, angle1)
+            coef = self.angle_to_ratio[angle0]
+            comment, premises = self.explanation_from_path(path, coef)
+            value = divide(coef, self.angle_to_ratio[angle1])
+            same = value == 1 and all(isinstance(prop, AngleRatioProperty) and prop.same for prop in [self.premises_graph.get_edge_data(i, j)['prop'] for i, j in zip(path[:-1], path[1:])])
+            prop = AngleRatioProperty(angle0, angle1, value, same=same)
+            return _synthetic_property(prop, comment, premises)
+
         def value_property(self, angle):
             ratio = self.angle_to_ratio.get(angle)
             if ratio is None:
@@ -797,29 +809,18 @@ class AngleRatioPropertySet:
         return fam.value_properties_for_degree(degree, condition) if fam else []
 
     def ratio_property(self, angle0, angle1):
-        key = frozenset((angle0, angle1))
+        key = (angle0, angle1)
         cached = self.__ratio_cache.get(key)
         if cached:
             return cached
-        prop = self.__ratio_property(angle0, angle1)
-        if prop:
-            self.__ratio_cache[key] = prop
-        return prop
-
-    def __ratio_property(self, angle0, angle1):
         fam = self.angle_to_family.get(angle0)
         if fam is None or angle1 not in fam.angle_to_ratio:
             return None
-        edge = fam.premises_graph.get_edge_data(angle0, angle1)
-        if edge:
-            return edge['prop']
-        path = nx.algorithms.shortest_path(fam.premises_graph, angle0, angle1)
-        coef = fam.angle_to_ratio[angle0]
-        comment, premises = fam.explanation_from_path(path, coef)
-        value = divide(coef, fam.angle_to_ratio[angle1])
-        same = value == 1 and all(isinstance(prop, AngleRatioProperty) and prop.same for prop in [fam.premises_graph.get_edge_data(i, j)['prop'] for i, j in zip(path[:-1], path[1:])])
-        prop = AngleRatioProperty(angle0, angle1, value, same=same)
-        return _synthetic_property(prop, comment, premises)
+        prop = fam.ratio_property(angle0, angle1)
+        if prop:
+            self.__ratio_cache[key] = prop
+            self.__ratio_cache[(angle1, angle0)] = prop
+        return prop
 
     def same_triple_ratio_properties(self):
         for fam in set(self.angle_to_family.values()):
