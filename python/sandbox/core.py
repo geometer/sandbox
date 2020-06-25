@@ -684,6 +684,22 @@ class CoreScene:
         angle = self.__angles.get(key)
         if angle is None:
             angle = CoreScene.Angle(vector0, vector1)
+            if angle.vertex is None and angle.pseudo_vertex:
+                if angle.vectors[0].end == angle.vectors[1].start:
+                    from .property import SumOfTwoAnglesProperty
+                    #TODO add comment
+                    self.add_property(SumOfTwoAnglesProperty(
+                        angle, angle.vectors[0].reversed.angle(angle.vectors[1]), 180
+                    ))
+                elif angle.vectors[0].start == angle.vectors[1].end:
+                    from .property import SumOfTwoAnglesProperty
+                    #TODO add comment
+                    self.add_property(SumOfTwoAnglesProperty(
+                        angle, angle.vectors[0].angle(angle.vectors[1].reversed), 180
+                    ))
+                elif angle.vectors[0].end == angle.vectors[1].end:
+                    #TODO vertical angles
+                    pass
             self.__angles[key] = angle
         return angle
 
@@ -730,18 +746,17 @@ class CoreScene:
             return self.__bisector
 
         def point_on_bisector_constraint(self, point, **kwargs):
-            if self.vertex is None:
-                # TODO: constraints anyway
-                return
+            bisector = self.pseudo_vertex.vector(point)
             if kwargs.get('comment') is None:
                 kwargs = dict(kwargs)
                 kwargs['comment'] = Comment(
                     '$%{ray:bisector}$ is the bisector of $%{angle:angle}$',
-                    {'bisector': self.vertex.vector(point), 'angle': self}
+                    {'bisector': bisector, 'angle': self}
                 )
-            angle0 = self.vertex.angle(self.vectors[0].end, point)
-            angle1 = self.vertex.angle(self.vectors[1].end, point)
-            point.inside_constraint(self, **kwargs)
+            angle0 = self.vectors[0].angle(bisector)
+            angle1 = self.vectors[1].angle(bisector)
+            if self.vertex:
+                point.inside_constraint(self, **kwargs)
             self.ratio_constraint(angle0, 2, **kwargs)
             self.ratio_constraint(angle1, 2, **kwargs)
             angle0.ratio_constraint(angle1, 1, **kwargs)
