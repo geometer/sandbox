@@ -95,11 +95,11 @@ class PointAndCircleProperty(Property):
     @property
     def description(self):
         if self.location == PointAndCircleProperty.Kind.inside:
-            pattern ='$%{point:pt}$ lies inside $%{circle:circ}$',
+            pattern ='$%{point:pt}$ lies inside $%{circle:circ}$'
         elif self.location == PointAndCircleProperty.Kind.outside:
-            pattern ='$%{point:pt}$ lies outside of $%{circle:circ}$',
+            pattern ='$%{point:pt}$ lies outside of $%{circle:circ}$'
         elif self.location == PointAndCircleProperty.Kind.on:
-            pattern ='$%{point:pt}$ lies on $%{circle:circ}$',
+            pattern ='$%{point:pt}$ lies on $%{circle:circ}$'
         return Comment(pattern, {'pt': self.point, 'circ': Circle(*self.circle_key)})
 
     def compare_values(self, other):
