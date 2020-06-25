@@ -438,6 +438,9 @@ class CoreScene:
                 elif self.centre == self.radius.points[1]:
                     self.all_points.append(self.radius.points[0])
 
+        def centre_point(self, **kwargs):
+            return self.centre.with_extra_args(**kwargs)
+
         def free_point(self, **kwargs):
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
@@ -706,22 +709,30 @@ class CoreScene:
             return (self.vectors[0].end, self.vectors[1].end)
 
         def bisector_line(self, **kwargs):
-            assert self.vertex, 'Cannot construct bisector of angle %s with no vertex' % self
+            assert self.pseudo_vertex, 'Cannot construct bisector of angle %s with no vertex' % self
             if self.__bisector:
                 return self.__bisector.with_extra_args(**kwargs)
-            circle = self.vertex.circle_through(self.vectors[0].end, layer='invisible')
-            line = self.vertex.line_through(self.vectors[1].end, layer='invisible')
+            v = self.pseudo_vertex
+            vec0 = self.vectors[0]
+            e0 = vec0.end if v == vec0.start else v.translated_point(vec0, layer='invisible')
+            vec1 = self.vectors[1]
+            e1 = vec1.end if v == vec1.start else v.translated_point(vec1, layer='invisible')
+            circle = v.circle_through(e0, layer='invisible')
+            line = v.line_through(e1, layer='invisible')
             X = circle.intersection_point(line, layer='invisible')
-            self.vertex.same_direction_constraint(X, self.vectors[1].end)
-            Y = X.translated_point(self.vectors[0], layer='invisible')
+            v.same_direction_constraint(X, e1)
+            Y = X.translated_point(v.vector(e0), layer='invisible')
             self.point_on_bisector_constraint(Y, guaranteed=True)
             if kwargs.get('comment') is None:
                 kwargs = dict(kwargs)
                 kwargs['comment'] = LazyComment('bisector of %s', self)
-            self.__bisector = self.vertex.line_through(Y, **kwargs)
+            self.__bisector = v.line_through(Y, **kwargs)
             return self.__bisector
 
         def point_on_bisector_constraint(self, point, **kwargs):
+            if self.vertex is None:
+                # TODO: constraints anyway
+                return
             if kwargs.get('comment') is None:
                 kwargs = dict(kwargs)
                 kwargs['comment'] = Comment(
