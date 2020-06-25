@@ -2,7 +2,7 @@ import itertools
 
 from ..property import *
 from ..scene import Scene
-from ..util import LazyComment, Comment, divide
+from ..util import LazyComment, Comment, divide, common_endpoint, other_point
 
 from .abstract import Rule, SingleSourceRule
 
@@ -423,7 +423,7 @@ class SumOfThreeAnglesOnLineRule(Rule):
         self.processed = set()
 
     def sources(self):
-        avs = [p for p in self.context.angle_value_properties_for_degree(0) if p.angle.vertex]
+        avs = self.context.angle_value_properties_for_degree(0, lambda angle: angle.vertex)
         for av0, av1 in itertools.combinations(avs, 2):
             if av0.angle.point_set == av1.angle.point_set:
                 yield (av0, av1)
@@ -452,10 +452,12 @@ class SumOfThreeAnglesOnLineRule2(Rule):
         self.processed = set()
 
     def sources(self):
-        return [p for p in self.context.angle_value_properties_for_degree(180) if p.angle.vertex and p not in self.processed]
+        return self.context.angle_value_properties_for_degree(
+            180, lambda angle: angle.vertex and angle not in self.processed
+        )
 
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.angle)
 
         for vec0, vec1 in (prop.angle.vectors, reversed(prop.angle.vectors)):
             yield (
@@ -574,10 +576,12 @@ class Degree90ToPerpendicularSegmentsRule(Rule):
         self.processed = set()
 
     def sources(self):
-        return [p for p in self.context.angle_value_properties_for_degree(90) if p not in self.processed]
+        return self.context.angle_value_properties_for_degree(
+            90, lambda angle: angle not in self.processed
+        )
 
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.angle)
 
         yield (
             PerpendicularSegmentsProperty(prop.angle.vectors[0].as_segment, prop.angle.vectors[1].as_segment),
@@ -1115,9 +1119,7 @@ class RotatedAngleSimplifiedRule(Rule):
         self.processed = {}
 
     def sources(self):
-        for prop in self.context.angle_value_properties_for_degree(180):
-            if prop.angle.vertex is None:
-                continue
+        for prop in self.context.angle_value_properties_for_degree(180, lambda a: a.vertex):
             segment = prop.angle.endpoints[0].segment(prop.angle.endpoints[1])
             for oppo in self.context.list(SameOrOppositeSideProperty, [segment]):
                 if oppo.same:
@@ -1334,7 +1336,7 @@ class AngleTypesInObtuseangledTriangleRule(SingleSourceRule):
 
 class VerticalAnglesRule(Rule):
     def sources(self):
-        return itertools.combinations([av for av in self.context.angle_value_properties_for_degree(180) if av.angle.vertex], 2)
+        return itertools.combinations(self.context.angle_value_properties_for_degree(180, lambda a: a.vertex), 2)
 
     @classmethod
     def priority(clazz):
@@ -1379,7 +1381,7 @@ class ReversedVerticalAnglesRule(Rule):
         self.processed = {} # pair (prop, oppo) => mask
 
     def sources(self):
-        return [p for p in self.context.angle_value_properties_for_degree(180) if p.angle.vertex]
+        return self.context.angle_value_properties_for_degree(180, lambda a: a.vertex)
 
     def apply(self, prop):
         angle = prop.angle
@@ -1588,7 +1590,7 @@ class TwoPointsInsideSegmentRule(Rule):
 
     def sources(self):
         segment_to_props = {}
-        for av in [av for av in self.context.angle_value_properties_for_degree(180) if av.angle.vertex]:
+        for av in self.context.angle_value_properties_for_degree(180, lambda a: a.vertex):
             segment = av.angle.endpoints[0].segment(av.angle.endpoints[1])
             props = segment_to_props.get(segment)
             if props:
@@ -1624,7 +1626,7 @@ class TwoPointsOnRayRule(Rule):
         self.processed = set()
 
     def sources(self):
-        return [av for av in self.context.angle_value_properties_for_degree(0) if av.angle.vertex]
+        return self.context.angle_value_properties_for_degree(0, lambda a: a.vertex)
 
     def apply(self, prop):
         zero = prop.angle
@@ -1742,7 +1744,7 @@ class SameAngleRule2(Rule):
         self.processed = set()
 
     def sources(self):
-        return [p for p in self.context.angle_value_properties_for_degree(180) if p.angle.vertex]
+        return self.context.angle_value_properties_for_degree(180, lambda a: a.vertex)
 
     def apply(self, prop):
         angle = prop.angle
@@ -1838,7 +1840,7 @@ class PlanePositionsToLinePositionsRule(SingleSourceRule):
 
 class CeviansIntersectionRule(Rule):
     def sources(self):
-        return itertools.combinations([av for av in self.context.angle_value_properties_for_degree(180) if av.angle.vertex], 2)
+        return itertools.combinations(self.context.angle_value_properties_for_degree(180, lambda a: a.vertex), 2)
 
     def apply(self, src):
         av0, av1 = src
@@ -2105,29 +2107,31 @@ class PointAndAngleRule(Rule):
         self.processed = set()
 
     def sources(self):
-        return itertools.combinations(self.context.list(SameOrOppositeSideProperty), 2)
+        for prop0, prop1 in itertools.combinations(self.context.list(SameOrOppositeSideProperty), 2):
+            if prop0.segment == prop1.segment or not prop0.same and not prop1.same:
+                continue
+            vertex = common_endpoint(prop0.segment, prop1.segment)
+            if vertex is None:
+                continue
+            pt0 = other_point(prop0.segment.points, vertex)
+            if pt0 not in prop1.points:
+                continue
+            pt1 = other_point(prop1.segment.points, vertex)
+            if pt1 not in prop0.points:
+                continue
+            fourth = other_point(prop0.points, pt1)
+            if fourth not in prop1.points:
+                return
+
+            yield (prop0, prop1, vertex, pt0, pt1, fourth)
 
     def apply(self, src):
-        key = frozenset(src)
+        prop0, prop1, vertex, pt0, pt1, fourth = src
+
+        key = frozenset([prop0, prop1])
         if key in self.processed:
             return
         self.processed.add(key)
-
-        prop0, prop1 = src
-        if prop0.segment == prop1.segment or not prop0.same and not prop1.same:
-            return
-        vertex = next((pt for pt in prop0.segment.points if pt in prop1.segment.points), None)
-        if vertex is None:
-            return
-        pt0 = next(pt for pt in prop0.segment.points if pt != vertex)
-        if pt0 not in prop1.points:
-            return
-        pt1 = next(pt for pt in prop1.segment.points if pt != vertex)
-        if pt1 not in prop0.points:
-            return
-        fourth = next(pt for pt in prop0.points if pt != pt1)
-        if fourth not in prop1.points:
-            return
 
         params = {
             'pt0': pt0,

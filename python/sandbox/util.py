@@ -2,6 +2,17 @@ import re
 import sympy as sp
 from pylatexenc.latex2text import LatexNodes2Text
 
+def common_endpoint(segment0, segment1):
+    if segment0.points[0] in segment1.points:
+        return segment0.points[0]
+    if segment0.points[1] in segment1.points:
+        return segment0.points[1]
+    return None
+
+def other_point(pair, point):
+    pt0 = pair[0]
+    return pt0 if pt0 != point else pair[1]
+
 def degree_to_string(degree):
     if isinstance(degree, sp.Number):
         if not degree.is_integer and (2 * degree).is_integer:

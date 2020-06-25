@@ -150,17 +150,24 @@ class EqualSumsOfAnglesRule(Rule):
 
         sum0, sum1 = src
         original = mask
-        for index, (eq0, eq1) in enumerate(itertools.product(sum0.angles, sum1.angles)):
+        for index in range(0, 4):
             bit = 1 << index
             if mask & bit:
                 continue
 
-            other0 = next(ang for ang in sum0.angles if ang != eq0)
-            other1 = next(ang for ang in sum1.angles if ang != eq1)
+            if index // 2:
+                other0, eq0 = sum0.angles
+            else:
+                eq0, other0 = sum0.angles
+            if index % 2:
+                other1, eq1 = sum1.angles
+            else:
+                eq1, other1 = sum1.angles
+
             if other0 == other1:
                 mask |= bit
-                mask |= 8 // bit # 0x1 <=> 0x8, 0x2 <=> 0x4
                 continue
+
             if eq0 == eq1:
                 mask |= bit
                 yield (

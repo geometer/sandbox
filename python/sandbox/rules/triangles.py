@@ -409,7 +409,9 @@ class EquilateralTriangleByConrguentLegsAndAngleRule(Rule):
         self.processed = set()
 
     def sources(self):
-        return [p for p in self.context.angle_value_properties_for_degree(60) if p.angle.vertex and p not in self.processed]
+        return self.context.angle_value_properties_for_degree(
+            60, lambda angle: angle.vertex and angle not in self.processed
+        )
 
     def apply(self, prop):
         angle = prop.angle
@@ -417,7 +419,7 @@ class EquilateralTriangleByConrguentLegsAndAngleRule(Rule):
         if ratio is None:
             return
 
-        self.processed.add(prop)
+        self.processed.add(angle)
         if value != 1:
             return
         yield (
