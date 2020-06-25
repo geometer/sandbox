@@ -1582,26 +1582,30 @@ class TransversalRule(Rule):
                 yield (new_prop, comment, [prop, ne])
 
 class SameAngleRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
     def sources(self):
         return itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 0], 2)
 
     def apply(self, src):
-        av0, av1 = src
-        if av0.reason.obsolete and av1.reason.obsolete:
+        if src in self.processed:
             return
+        self.processed.add(src)
+
+        av0, av1 = src
         ng0 = av0.angle
         ng1 = av1.angle
         if ng0.vertex != ng1.vertex:
             return
         if len(ng0.point_set.union(ng1.point_set)) != 5:
             return
+
+        angle0 = ng0.vertex.angle(ng0.vectors[0].end, ng1.vectors[0].end)
+        angle1 = ng0.vertex.angle(ng0.vectors[1].end, ng1.vectors[1].end)
         yield (
-            AngleRatioProperty(
-                ng0.vertex.angle(ng0.vectors[0].end, ng1.vectors[0].end),
-                ng0.vertex.angle(ng0.vectors[1].end, ng1.vectors[1].end),
-                1,
-                same=True
-            ),
+            AngleRatioProperty(angle0, angle1, 1, same=True),
             Comment(
                 '$%{vector:vec0} \\uparrow\\!\\!\\!\\uparrow %{vector:vec1}$ and $%{vector:vec2} \\uparrow\\!\\!\\!\\uparrow %{vector:vec3}$',
                 {
@@ -1613,6 +1617,83 @@ class SameAngleRule(Rule):
             ),
             [av0, av1]
         )
+
+class SameAngleRule2(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        return [p for p in self.context.angle_value_properties_for_degree(180) if p.angle.vertex]
+
+    def apply(self, prop):
+        angle = prop.angle
+        side = angle.endpoints[0].segment(angle.endpoints[1])
+        for pt in self.context.not_collinear_points(side):
+            key = (angle, pt)
+            if key in self.processed:
+                continue
+            self.processed.add(key)
+
+            for pt0, pt1 in (angle.endpoints, reversed(angle.endpoints)):
+                angle0 = pt0.angle(pt, pt1)
+                angle1 = pt0.angle(pt, angle.vertex)
+                yield (
+                    AngleRatioProperty(angle0, angle1, 1, same=True),
+                    Comment(
+                        '$%{point:pt}$ lies on side $%{segment:side}$ of $%{angle:angle}$',
+                        {'pt': angle.vertex, 'side': side, 'angle': angle0}
+                    ),
+                    [prop]
+                )
+                pattern = '$%{point:pt}$ lies on side $%{segment:side}$ of $%{angle:angle}$, $%{angle:known} = %{degree:degree}$'
+                value = self.context.angle_value_property(angle0)
+                if value:
+                    yield (
+                        AngleValueProperty(angle1, value.degree),
+                        Comment(
+                            pattern,
+                            {'pt': angle.vertex, 'side': side, 'angle': angle0, 'known': angle0, 'degree': value.degree}
+                        ),
+                        [prop, value]
+                    )
+                value = self.context.angle_value_property(angle1)
+                if value:
+                    yield (
+                        AngleValueProperty(angle0, value.degree),
+                        Comment(
+                            pattern,
+                            {'pt': angle.vertex, 'side': side, 'angle': angle0, 'known': angle1, 'degree': value.degree}
+                        ),
+                        [prop, value]
+                    )
+
+class SameAngleDegreeRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        return self.context.nondegenerate_angle_value_properties()
+
+    def apply(self, prop):
+        angle = prop.angle
+        for vec0, vec1 in (angle.vectors, reversed(angle.vectors)):
+            for inside in self.context.point_inside_segment_properties(vec0):
+                pt = inside.angle.vertex
+                key = (angle, pt)
+                if key in self.processed:
+                    continue
+                self.processed.add(key)
+
+                yield (
+                    AngleValueProperty(vec1.angle(vec0.start.vector(pt)), prop.degree),
+                    Comment(
+                        '$%{point:pt}$ lies on side $%{segment:side}$ of $%{angle:angle}$, $%{angle:angle} = %{degree:degree}$',
+                        {'pt': pt, 'side': vec0, 'angle': angle, 'degree': prop.degree}
+                    ),
+                    [prop, inside]
+                )
 
 class PlanePositionsToLinePositionsRule(SingleSourceRule):
     property_type = SameOrOppositeSideProperty

@@ -96,6 +96,8 @@ class Explainer:
             PointInsidePartOfAngleRule(self.context),
             PartOfAcuteAngleIsAcuteRule(self.context),
             SameAngleRule(self.context),
+            SameAngleRule2(self.context),
+            SameAngleDegreeRule(self.context),
             TransversalRule(self.context),
             SupplementaryAnglesRule(self.context),
             VerticalAnglesRule(self.context),
