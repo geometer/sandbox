@@ -1618,6 +1618,87 @@ class TwoPointsInsideSegmentRule(Rule):
                 [av0, av1]
             )
 
+class TwoPointsOnRayRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        return [av for av in self.context.angle_value_properties_for_degree(0) if av.angle.vertex]
+
+    def apply(self, prop):
+        zero = prop.angle
+        pt0, pt1 = zero.endpoints
+        for pt in self.context.not_collinear_points(zero.vectors[0].as_segment):
+            key = (zero, pt)
+            if key in self.processed:
+                continue
+            angle0 = pt0.angle(zero.vertex, pt)
+            value0 = self.context.angle_value_property(angle0)
+            if value0 is None:
+                continue
+            angle1 = pt1.angle(zero.vertex, pt)
+            value1 = self.context.angle_value_property(angle1)
+            if value1 is None:
+                continue
+            self.processed.add(key)
+            pattern = '$%{point:pt}$ lies on $%{ray:ray}$ and $%{angle:lesser} < %{angle:greater}$'
+            if value0.degree < value1.degree:
+                comment = Comment(
+                    pattern,
+                    {'pt': pt0, 'ray': zero.vertex.vector(pt1), 'lesser': angle0, 'greater': angle1}
+                )
+                yield (
+                    AngleValueProperty(pt0.angle(pt1, zero.vertex), 0),
+                    comment,
+                    [prop, value0, value1]
+                )
+                yield (
+                    AngleValueProperty(pt1.angle(pt0, zero.vertex), 180),
+                    comment,
+                    [prop, value0, value1]
+                )
+                yield (
+                    PointsCoincidenceProperty(pt0, pt1, False),
+                    Comment(
+                        '$%{angle:angle0} \\neq %{angle:angle1}$',
+                        {'angle0': angle0, 'angle1': angle1}
+                    ),
+                    [value0, value1]
+                )
+            elif value1.degree < value0.degree:
+                comment = Comment(
+                    pattern,
+                    {'pt': pt1, 'ray': zero.vertex.vector(pt0), 'lesser': angle1, 'greater': angle0}
+                )
+                yield (
+                    AngleValueProperty(pt1.angle(pt0, zero.vertex), 0),
+                    comment,
+                    [prop, value0, value1]
+                )
+                yield (
+                    AngleValueProperty(pt0.angle(pt1, zero.vertex), 180),
+                    comment,
+                    [prop, value0, value1]
+                )
+                yield (
+                    PointsCoincidenceProperty(pt0, pt1, False),
+                    Comment(
+                        '$%{angle:angle0} \\neq %{angle:angle1}$',
+                        {'angle0': angle0, 'angle1': angle1}
+                    ),
+                    [value0, value1]
+                )
+            else:
+                yield (
+                    PointsCoincidenceProperty(pt0, pt1, True),
+                    Comment(
+                        '$%{point:pt}$ lies on $%{ray:ray}$ and $%{angle:angle0} = %{angle:angle1}$',
+                        {'pt': pt0, 'ray': zero.vertex.vector(pt1), 'angle0': angle0, 'angle1': angle1}
+                    ),
+                    [prop, value0, value1]
+                )
+
 class SameAngleRule(Rule):
     def __init__(self, context):
         super().__init__(context)
