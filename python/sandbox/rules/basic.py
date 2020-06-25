@@ -2121,7 +2121,7 @@ class PointAndAngleRule(Rule):
                 continue
             fourth = other_point(prop0.points, pt1)
             if fourth not in prop1.points:
-                return
+                continue
 
             yield (prop0, prop1, vertex, pt0, pt1, fourth)
 
