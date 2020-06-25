@@ -2,7 +2,7 @@ import itertools
 
 from .. import Scene
 from ..property import *
-from ..util import LazyComment, Comment
+from ..util import LazyComment, Comment, common_endpoint, other_point
 
 from .abstract import Rule, SingleSourceRule
 
@@ -289,27 +289,18 @@ class CongruentTrianglesByThreeSidesRule(Rule):
         if cs0.reason.obsolete and cs1.reason.obsolete:
             return
 
-        def common_point(segment0, segment1):
-            if segment0.points[0] in segment1.points:
-                if segment0.points[1] in segment1.points:
-                    return None
-                return segment0.points[0]
-            if segment0.points[1] in segment1.points:
-                return segment0.points[1]
-            return None
-        def other_point(segment, point):
-            return segment.points[0] if point == segment.points[1] else segment.points[1]
-
         for seg0, seg1 in [(cs0.segment0, cs0.segment1), (cs0.segment1, cs0.segment0)]:
             points0 = set((*seg0.points, *cs1.segment0.points))
             if len(points0) != 3 or points0 == set((*seg1.points, *cs1.segment1.points)):
                 continue
-            common0 = common_point(seg0, cs1.segment0)
-            common1 = common_point(seg1, cs1.segment1)
+            common0 = common_endpoint(seg0, cs1.segment0)
+            if seg1 == cs1.segment1:
+                continue
+            common1 = common_endpoint(seg1, cs1.segment1)
             if common1 is None:
                 continue
-            third0 = other_point(seg0, common0).vector(other_point(cs1.segment0, common0))
-            third1 = other_point(seg1, common1).vector(other_point(cs1.segment1, common1))
+            third0 = other_point(seg0.points, common0).vector(other_point(cs1.segment0.points, common0))
+            third1 = other_point(seg1.points, common1).vector(other_point(cs1.segment1.points, common1))
             prop = CongruentTrianglesProperty(
                 (common0, *third0.points), (common1, *third1.points)
             )
@@ -346,25 +337,16 @@ class SimilarTrianglesByThreeSidesRule(Rule):
         elif value0 != value1:
             return
 
-        def common_point(segment0, segment1):
-            if segment0.points[0] in segment1.points:
-                if segment0.points[1] in segment1.points:
-                    return None
-                return segment0.points[0]
-            if segment0.points[1] in segment1.points:
-                return segment0.points[1]
-            return None
-        def other_point(segment, point):
-            return segment.points[0] if point == segment.points[1] else segment.points[1]
-
-        common0 = common_point(num0, num1)
+        if num0 == num1 or den0 == den1:
+            return
+        common0 = common_endpoint(num0, num1)
         if common0 is None:
             return
-        common1 = common_point(den0, den1)
+        common1 = common_endpoint(den0, den1)
         if common1 is None:
             return
-        third0 = other_point(num0, common0).vector(other_point(num1, common0))
-        third1 = other_point(den0, common1).vector(other_point(den1, common1))
+        third0 = other_point(num0.points, common0).vector(other_point(num1.points, common0))
+        third1 = other_point(den0.points, common1).vector(other_point(den1.points, common1))
         ncl = self.context.collinearity_property(common0, *third0.points)
         if ncl is None or ncl.collinear:
             return
