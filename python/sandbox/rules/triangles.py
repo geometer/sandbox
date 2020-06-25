@@ -323,45 +323,62 @@ class CongruentTrianglesByThreeSidesRule(Rule):
                     )
 
 class SimilarTrianglesByThreeSidesRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
     def sources(self):
         return itertools.combinations(self.context.length_ratios(allow_zeroes=True), 2)
 
     def apply(self, src):
+        key = frozenset(src)
+        if key in self.processed:
+            return
+
         triple0, triple1 = src
         num0, den0, value0 = triple0
         num1, den1, value1 = triple1
         if value0 == 1:
+            self.processed.add(key)
             return
         if value0 * value1 == 1:
             num1, den1, value1 = den1, num1, value0
         elif value0 != value1:
+            self.processed.add(key)
             return
 
         if num0 == num1 or den0 == den1:
+            self.processed.add(key)
             return
         common0 = common_endpoint(num0, num1)
         if common0 is None:
+            self.processed.add(key)
             return
         common1 = common_endpoint(den0, den1)
         if common1 is None:
+            self.processed.add(key)
             return
         third0 = other_point(num0.points, common0).vector(other_point(num1.points, common0))
         third1 = other_point(den0.points, common1).vector(other_point(den1.points, common1))
         ncl = self.context.collinearity_property(common0, *third0.points)
-        if ncl is None or ncl.collinear:
+        if ncl is None:
+            return
+        if ncl.collinear:
+            self.processed.add(key)
             return
         ps2, value2 = self.context.length_ratio_property_and_value(third0.as_segment, third1.as_segment, True)
-        if ps2 is None or value2 != value0:
+        if ps2 is None:
+            return
+        self.processed.add(key)
+        if value2 != value0:
             return
         ps0, _ = self.context.length_ratio_property_and_value(num0, den0, allow_zeroes=True)
         ps1, _ = self.context.length_ratio_property_and_value(num1, den1, allow_zeroes=True)
-        if ncl is None or ps0.reason.obsolete and ps1.reason.obsolete and ps2.reason.obsolete and ncl.reason.obsolete:
-            return
         yield (
             SimilarTrianglesProperty(
                 (common0, *third0.points), (common1, *third1.points)
             ),
-            'Three pairs of sides with the same ratio',
+            LazyComment('Three pairs of sides with the same ratio'),
             [ps0, ps1, ps2, ncl]
         )
 
