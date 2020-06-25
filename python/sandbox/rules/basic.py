@@ -2054,66 +2054,71 @@ class CongruentAnglesDegeneracyRule(Rule):
                 [ca, col]
             )
 
-class PointAndAngleRule(Rule):
+class PointAndAngleRule(SingleSourceRule):
+    property_type = SameOrOppositeSideProperty
+
     def __init__(self, context):
         super().__init__(context)
-        self.processed = set()
+        self.processed = {}
 
-    def sources(self):
-        for prop0 in self.context.list(SameOrOppositeSideProperty):
-            for vertex in prop0.segment.points:
-                pt0 = other_point(prop0.segment.points, vertex)
-                for pt1 in prop0.points:
-                    fourth = other_point(prop0.points, pt1)
-                    prop1 = self.context.two_points_relatively_to_line_property(
-                        vertex.segment(pt1), pt0, fourth
-                    )
-                    if prop1 is None or not prop0.same and not prop1.same:
-                        continue
-                    yield (prop0, prop1, vertex, pt0, pt1, fourth)
-
-    def apply(self, src):
-        prop0, prop1, vertex, pt0, pt1, fourth = src
-
-        key = frozenset([prop0, prop1])
-        if key in self.processed:
+    def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0x0F:
             return
-        self.processed.add(key)
+        original = mask
+        for vertex, bit0 in zip(prop.segment.points, (0x1, 0x4)):
+            pt0 = other_point(prop.segment.points, vertex)
+            for pt1, bit in zip(prop.points, (bit0, bit0 >> 1)):
+                if mask & bit:
+                    continue
+                fourth = other_point(prop.points, pt1)
+                prop1 = self.context.two_points_relatively_to_line_property(
+                    vertex.segment(pt1), pt0, fourth
+                )
+                if prop1 is None:
+                    continue
+                mask |= bit
+                # TODO: update self.processed[prop1]
+                if not prop.same and not prop1.same:
+                    continue
 
-        params = {
-            'pt0': pt0,
-            'pt1': pt1,
-            'fourth': fourth,
-            'side0': vertex.vector(pt0),
-            'side1': vertex.vector(pt1)
-        }
-        if prop0.same and prop1.same:
-            yield (
-                PointInsideAngleProperty(fourth, vertex.angle(pt0, pt1)),
-                Comment(
-                    '$%{point:fourth}$ lies on the same side of $%{ray:side0}$ as $%{point:pt1}$ and on the same side of $%{ray:side1}$ as $%{point:pt0}$',
-                    params
-                ),
-                [prop0, prop1]
-            )
-        elif prop0.same:
-            yield (
-                PointInsideAngleProperty(pt1, vertex.angle(pt0, fourth)),
-                Comment(
-                    '$%{point:pt1}$ lies on the same side of $%{ray:side0}$ as $%{point:fourth}$ and $%{ray:side1}$ separates $%{point:pt0}$ and $%{point:fourth}$',
-                    params
-                ),
-                [prop0, prop1]
-            )
-        else:
-            yield (
-                PointInsideAngleProperty(pt0, vertex.angle(fourth, pt1)),
-                Comment(
-                    '$%{point:pt0}$ lies on the same side of $%{ray:side1}$ as $%{point:fourth}$ and $%{ray:side0}$ separates $%{point:pt1}$ and $%{point:fourth}$',
-                    params
-                ),
-                [prop1, prop0]
-            )
+                params = {
+                    'pt0': pt0,
+                    'pt1': pt1,
+                    'fourth': fourth,
+                    'side0': vertex.vector(pt0),
+                    'side1': vertex.vector(pt1)
+                }
+                if prop.same and prop1.same:
+                    yield (
+                        PointInsideAngleProperty(fourth, vertex.angle(pt0, pt1)),
+                        Comment(
+                            '$%{point:fourth}$ lies on the same side of $%{ray:side0}$ as $%{point:pt1}$ and on the same side of $%{ray:side1}$ as $%{point:pt0}$',
+                            params
+                        ),
+                        [prop, prop1]
+                    )
+                elif prop.same:
+                    yield (
+                        PointInsideAngleProperty(pt1, vertex.angle(pt0, fourth)),
+                        Comment(
+                            '$%{point:pt1}$ lies on the same side of $%{ray:side0}$ as $%{point:fourth}$ and $%{ray:side1}$ separates $%{point:pt0}$ and $%{point:fourth}$',
+                            params
+                        ),
+                        [prop, prop1]
+                    )
+                else:
+                    yield (
+                        PointInsideAngleProperty(pt0, vertex.angle(fourth, pt1)),
+                        Comment(
+                            '$%{point:pt0}$ lies on the same side of $%{ray:side1}$ as $%{point:fourth}$ and $%{ray:side0}$ separates $%{point:pt1}$ and $%{point:fourth}$',
+                            params
+                        ),
+                        [prop1, prop]
+                    )
+
+        if mask != original:
+            self.processed[prop] = mask
 
 class PerpendicularToSideOfObtuseAngledRule(SingleSourceRule):
     property_type = AngleKindProperty
