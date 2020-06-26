@@ -413,7 +413,7 @@ class SumOfThreeAnglesInTriangleRule(Rule):
         triangle = Scene.Triangle(pt0, pt1, pt2)
         yield (
             SumOfThreeAnglesProperty(*triangle.angles, 180),
-            LazyComment('three angles of %s', triangle),
+            Comment('three angles of $%{triangle:triangle}$', {'triangle': triangle}),
             [ne0, ne1, ne2]
         )
 
@@ -1238,7 +1238,10 @@ class PointsCollinearityByAngleDegreeRule(Rule):
             return
         yield (
             PointsCollinearityProperty(*prop.angle.point_set, prop.degree in (0, 180)),
-            LazyComment('%s', prop),
+            Comment(
+                '$%{anglemeasure:angle} = %{degree:degree}$',
+                {'angle': prop.angle, 'degree': prop.degree}
+            ),
             [prop]
         )
 
