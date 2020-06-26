@@ -14,7 +14,7 @@ class AltitudesAndSimilarityAcuteTest(ExplainerTest):
         A1 = altitudeA.intersection_point(B.line_through(C), label='A1')
         B1 = altitudeB.intersection_point(A.line_through(C), label='B1')
 
-        C.angle(A, B).is_acute_constraint(comment='Test')
+        C.angle(A, B).is_acute_constraint()
 
         return scene
 
@@ -38,7 +38,7 @@ class AltitudesAndSimilarityObtuseTest(ExplainerTest):
         A1 = altitudeA.intersection_point(B.line_through(C), label='A1')
         B1 = altitudeB.intersection_point(A.line_through(C), label='B1')
 
-        C.angle(A, B).is_obtuse_constraint(comment='Test')
+        C.angle(A, B).is_obtuse_constraint()
 
         return scene
 

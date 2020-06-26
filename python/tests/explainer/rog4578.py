@@ -14,7 +14,7 @@ class RomanticsOfGeometry4578(ExplainerTest):
         A, B, C = triangle.points
         D = scene.orthocentre_point(triangle, label='D')
         D.inside_triangle_constraint(triangle)
-        A.segment(B).congruent_constraint(C.segment(D), comment='Given: |AB| = |CD|')
+        A.segment(B).congruent_constraint(C.segment(D))
 
         return scene
 
@@ -32,7 +32,7 @@ class RomanticsOfGeometry4578Constructions(ExplainerTest):
         D.inside_triangle_constraint(triangle)
         H = A.line_through(D).intersection_point(B.line_through(C), label='H')
         G = C.line_through(D).intersection_point(A.line_through(B), label='G')
-        A.segment(B).congruent_constraint(C.segment(D), comment='Given: |AB| = |CD|')
+        A.segment(B).congruent_constraint(C.segment(D))
 
         return scene
 
@@ -48,7 +48,7 @@ class RomanticsOfGeometry4578Auxiliary(ExplainerTest):
         A, B, C = triangle.points
         D = scene.orthocentre_point(triangle, label='D')
         D.inside_triangle_constraint(triangle)
-        A.segment(B).congruent_constraint(C.segment(D), comment='Given: |AB| = |CD|')
+        A.segment(B).congruent_constraint(C.segment(D))
 
         return scene
 
