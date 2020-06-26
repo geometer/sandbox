@@ -12,7 +12,7 @@ class RomanticsOfGeometry4594(ExplainerTest):
 
         triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
         A, B, C = triangle.points
-        A.segment(B).perpendicular_constraint(A.segment(C), comment='Given: AB ⟂ AC')
+        A.segment(B).perpendicular_constraint(A.segment(C))
         I = scene.incentre_point(triangle, label='I')
         J = scene.orthocentre_point(Scene.Triangle(A, B, I), label='J')
 
@@ -32,7 +32,7 @@ class RomanticsOfGeometry4594Constructions(ExplainerTest):
 
         triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
         A, B, C = triangle.points
-        A.segment(B).perpendicular_constraint(A.segment(C), comment='Given: AB ⟂ AC')
+        A.segment(B).perpendicular_constraint(A.segment(C))
         I = scene.incentre_point(triangle, label='I')
         J = scene.orthocentre_point(Scene.Triangle(A, B, I), label='J')
 
@@ -56,7 +56,7 @@ class RomanticsOfGeometry4594Auxiliary(ExplainerTest):
 
         triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
         A, B, C = triangle.points
-        A.segment(B).perpendicular_constraint(A.segment(C), comment='Given: AB ⟂ AC')
+        A.segment(B).perpendicular_constraint(A.segment(C))
         I = scene.incentre_point(triangle, label='I')
         J = scene.orthocentre_point(Scene.Triangle(A, B, I), label='J')
 
