@@ -13,6 +13,12 @@ def other_point(pair, point):
     pt0 = pair[0]
     return pt0 if pt0 != point else pair[1]
 
+def degree_to_string(degree):
+    if isinstance(degree, sp.Number):
+        if not degree.is_integer and (2 * degree).is_integer:
+            return '%.1fº' % degree
+    return '%sº' % degree
+
 def keys_for_triangle(triangle, lengths):
     collection = []
     if lengths is None or 3 in lengths:
@@ -85,10 +91,7 @@ class SimplePrinter:
         def to_str(name, kind):
             obj = params[name]
             if kind == 'degree':
-                if isinstance(obj, sp.Number):
-                    if not obj.is_integer and (2 * obj).is_integer:
-                        return '%.1fº' % obj
-                return '%sº' % obj
+                return degree_to_string(obj)
             return str(obj)
 
         for match in re.finditer('%{(?P<type>[^:}]*):(?P<name>[^}]*)}', line):
