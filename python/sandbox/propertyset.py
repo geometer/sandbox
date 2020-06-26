@@ -7,7 +7,7 @@ from .property import *
 from .reason import Reason
 from .rules.abstract import SyntheticPropertyRule
 from .stats import Stats
-from .util import LazyComment, Comment, divide, degree_to_string
+from .util import LazyComment, Comment, divide
 
 def _synthetic_property(prop, comment, premises):
     prop.rule = SyntheticPropertyRule.instance()

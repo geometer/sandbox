@@ -3,7 +3,7 @@ import itertools
 
 from .figure import Figure, Circle
 from .scene import Scene
-from .util import Comment, divide, normalize_number, keys_for_triangle, degree_to_string
+from .util import Comment, divide, normalize_number, keys_for_triangle
 
 class Property:
     def __init__(self, property_key):
@@ -494,10 +494,6 @@ class AngleValueProperty(LinearAngleProperty):
         return [self.angle]
 
     @property
-    def degree_str(self):
-        return degree_to_string(self.degree)
-
-    @property
     def description(self):
         if self.angle.vertex:
             if self.degree == 0:
@@ -573,10 +569,6 @@ class SumOfThreeAnglesProperty(LinearAngleProperty):
         return self.angles
 
     @property
-    def degree_str(self):
-        return degree_to_string(self.degree)
-
-    @property
     def description(self):
         return Comment(
             '$%{anglemeasure:a0} + %{anglemeasure:a1} + %{anglemeasure:a2} = %{degree:value}$',
@@ -597,10 +589,6 @@ class SumOfTwoAnglesProperty(LinearAngleProperty):
 
     def keys(self):
         return self.angles
-
-    @property
-    def degree_str(self):
-        return degree_to_string(self.degree)
 
     @property
     def __priority__(self):
