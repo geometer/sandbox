@@ -126,7 +126,7 @@ class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
         value1 = divide(prop.degree, 1 + ar.value)
         value0 = prop.degree - value1
         if ar.value == 1:
-            pattern = '$2\,%{angle:a0} = %{angle:a0} + %{angle:a1} = %{degree:sum}$'
+            pattern = '$2\,%{anglemeasure:a0} = %{anglemeasure:a0} + %{anglemeasure:a1} = %{degree:sum}$'
             comment0 = Comment(pattern, {'a0': ar.angle0, 'a1': ar.angle1, 'sum': prop.degree})
             comment1 = Comment(pattern, {'a0': ar.angle1, 'a1': ar.angle0, 'sum': prop.degree})
         else:
