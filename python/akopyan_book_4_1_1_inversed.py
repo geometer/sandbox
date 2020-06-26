@@ -1,24 +1,28 @@
 from runner import run_sample
 from sandbox import Scene
-from sandbox.property import *
+from sandbox.property import AngleRatioProperty, ProportionalLengthsProperty
 
 scene = Scene()
 
 triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
 A, B, C = triangle.points
+circ = scene.circumcircle(triangle)
 H = scene.orthocentre_point(triangle, label='H')
 
 altitudeA = scene.altitude(triangle, A)
 A1 = altitudeA.intersection_point(B.line_through(C), label='A_1')
-A2 = A1.translated_point(H.vector(A1), label='A_2')
+A2 = altitudeA.intersection_point(circ, label='A_2')
+A2.not_equal_constraint(A)
 
 altitudeB = scene.altitude(triangle, B)
 B1 = altitudeB.intersection_point(A.line_through(C), label='B_1')
-B2 = B1.translated_point(H.vector(B1), label='B_2')
+B2 = altitudeB.intersection_point(circ, label='B_2')
+B2.not_equal_constraint(B)
 
 altitudeC = scene.altitude(triangle, C)
 C1 = altitudeC.intersection_point(B.line_through(A), label='C_1')
-C2 = C1.translated_point(H.vector(C1), label='C_2')
+C2 = altitudeC.intersection_point(circ, label='C_2')
+C2.not_equal_constraint(C)
 
 #A.angle(B, C).is_obtuse_constraint()
 #A.angle(B, C).is_right_constraint()
@@ -27,13 +31,10 @@ B.angle(A, C).is_acute_constraint(comment='assumption')
 C.angle(B, A).is_acute_constraint(comment='assumption')
 
 props = (
-    ProportionalLengthsProperty(A2.segment(B), H.segment(B), 1),
-    AngleRatioProperty(A2.angle(B, C), H.angle(B, C), 1),
-    SumOfTwoAnglesProperty(A.angle(B, C), H.angle(B, C), 180),
-    SumOfTwoAnglesProperty(A.angle(B, C), A2.angle(B, C), 180),
-    ConcyclicPointsProperty(A, B1, C1, H),
-    SumOfTwoAnglesProperty(A.angle(B, C), H.angle(B1, C1), 180),
-    ConcyclicPointsProperty(A, B, C, A2),
+    AngleRatioProperty(B.angle(B1, C), A.angle(B1, B2), 1),
+    AngleRatioProperty(A.angle(B1, H), B.angle(B1, C), 1),
+    AngleRatioProperty(A.angle(B1, H), A.angle(B1, B2), 1),
+    ProportionalLengthsProperty(B1.segment(H), B1.segment(B2), 1),
 )
 
 run_sample(scene, *props)
