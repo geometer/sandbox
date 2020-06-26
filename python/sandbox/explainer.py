@@ -315,7 +315,7 @@ class Explainer:
                             [perp, col, aa]
                         )
 
-            for aa in [p for p in self.context.list(AngleValueProperty) if p.degree == 90]:
+            for aa in self.context.angle_value_properties_for_degree(90):
                 base = aa.angle
                 if base.vertex is None:
                     continue
