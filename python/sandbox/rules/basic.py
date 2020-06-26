@@ -1472,7 +1472,7 @@ class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
                         yield (
                             p,
                             Comment(
-                                'alternate angles $%{angle:angle0}$ and $%{angle:angle1}$ are equal',
+                                'alternate angles $%{angle:angle0}$ and $%{angle:angle1}$ are congruent',
                                 {'angle0': angle0, 'angle1': angle1}
                             ),
                             [prop, ratio_reason]
@@ -1644,7 +1644,7 @@ class TwoPointsOnRayRule(Rule):
             if value1 is None:
                 continue
             self.processed.add(key)
-            pattern = '$%{point:pt}$ lies on $%{ray:ray}$ and $%{angle:lesser} < %{angle:greater}$'
+            pattern = '$%{point:pt}$ lies on $%{ray:ray}$ and $%{anglemeasure:lesser} < %{anglemeasure:greater}$'
             if value0.degree < value1.degree:
                 comment = Comment(
                     pattern,
@@ -1663,7 +1663,7 @@ class TwoPointsOnRayRule(Rule):
                 yield (
                     PointsCoincidenceProperty(pt0, pt1, False),
                     Comment(
-                        '$%{angle:angle0} \\neq %{angle:angle1}$',
+                        '$%{anglemeasure:angle0} \\neq %{anglemeasure:angle1}$',
                         {'angle0': angle0, 'angle1': angle1}
                     ),
                     [value0, value1]
@@ -1686,7 +1686,7 @@ class TwoPointsOnRayRule(Rule):
                 yield (
                     PointsCoincidenceProperty(pt0, pt1, False),
                     Comment(
-                        '$%{angle:angle0} \\neq %{angle:angle1}$',
+                        '$%{anglemeasure:angle0} \\neq %{anglemeasure:angle1}$',
                         {'angle0': angle0, 'angle1': angle1}
                     ),
                     [value0, value1]
@@ -1695,7 +1695,7 @@ class TwoPointsOnRayRule(Rule):
                 yield (
                     PointsCoincidenceProperty(pt0, pt1, True),
                     Comment(
-                        '$%{point:pt}$ lies on $%{ray:ray}$ and $%{angle:angle0} = %{angle:angle1}$',
+                        '$%{point:pt}$ lies on $%{ray:ray}$ and $%{anglemeasure:angle0} = %{anglemeasure:angle1}$',
                         {'pt': pt0, 'ray': zero.vertex.vector(pt1), 'angle0': angle0, 'angle1': angle1}
                     ),
                     [prop, value0, value1]
@@ -1766,7 +1766,7 @@ class SameAngleRule2(Rule):
                     ),
                     [prop]
                 )
-                pattern = '$%{point:pt}$ lies on side $%{segment:side}$ of $%{angle:angle}$, $%{angle:known} = %{degree:degree}$'
+                pattern = '$%{point:pt}$ lies on side $%{segment:side}$ of $%{angle:angle}$, $%{anglemeasure:known} = %{degree:degree}$'
                 value = self.context.angle_value_property(angle0)
                 if value:
                     yield (
@@ -1809,7 +1809,7 @@ class SameAngleDegreeRule(Rule):
                 yield (
                     AngleValueProperty(vec1.angle(vec0.start.vector(pt)), prop.degree),
                     Comment(
-                        '$%{point:pt}$ lies on side $%{segment:side}$ of $%{angle:angle}$, $%{angle:angle} = %{degree:degree}$',
+                        '$%{point:pt}$ lies on side $%{segment:side}$ of $%{angle:angle}$, $%{anglemeasure:angle} = %{degree:degree}$',
                         {'pt': pt, 'side': vec0, 'angle': angle, 'degree': prop.degree}
                     ),
                     [prop, inside]
