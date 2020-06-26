@@ -250,9 +250,16 @@ class Explainer:
                             if ka is None or reasons_are_too_old and ka.reason.obsolete:
                                 continue
                             if ka.degree >= 90:
-                                comment = LazyComment(
-                                    '%s, %s, %s are collinear, %s is acute, and %s = %s',
-                                    pt, *vec0.points, base, angle, ka.degree_str
+                                comment = Comment(
+                                    '$%{point:pt0}$, $%{point:pt1}$, $%{point:pt2}$ are collinear, $%{angle:base}$ is acute, and $%{anglemeasure:angle} = %{degree:degree}$',
+                                    {
+                                        'pt0': pt,
+                                        'pt1': vec0.points[0],
+                                        'pt2': vec0.points[1],
+                                        'base': base,
+                                        'angle': angle,
+                                        'degree': ka.degree
+                                    }
                                 )
                                 zero = base.vertex.angle(vec0.end, pt)
                                 yield (AngleValueProperty(zero, 0), comment, [col, aa, ka])
