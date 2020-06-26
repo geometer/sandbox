@@ -1,7 +1,7 @@
 import itertools
 
 from ..property import *
-from ..util import LazyComment, divide
+from ..util import Comment, divide
 
 from .abstract import Rule, SingleSourceRule
 
@@ -96,9 +96,16 @@ class AngleBySumOfThreeRule(SingleSourceRule):
             third = next(angle for angle in prop.angles if angle not in (av0.angle, av1.angle))
             yield (
                 AngleValueProperty(third, prop.degree - av0.degree - av1.degree),
-                LazyComment(
-                    '%s = %s + %s + %s = %s + %s + %s',
-                    prop.degree_str, third, av0.angle, av1.angle, third, av0.degree_str, av1.degree_str
+                Comment(
+                    '$%{degree:sum} = %{anglemeasure:third} + %{anglemeasure:a0} + %{anglemeasure:a1} = %{anglemeasure:third} + %{degree:d0} + %{degree:d0}$',
+                    {
+                        'a0': av0.angle,
+                        'a1': av1.angle,
+                        'third': third,
+                        'd0': av0.degree,
+                        'd1': av1.degree,
+                        'sum': prop.degree
+                    }
                 ),
                 [prop, av0, av1]
             )
@@ -130,8 +137,24 @@ class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
             comment0 = Comment(pattern, {'a0': ar.angle0, 'a1': ar.angle1, 'sum': prop.degree})
             comment1 = Comment(pattern, {'a0': ar.angle1, 'a1': ar.angle0, 'sum': prop.degree})
         else:
-            comment0 = LazyComment('%s + %s / %s = %s + %s = %s', ar.angle0, ar.angle0, ar.value, ar.angle0, ar.angle1, prop.degree_str)
-            comment1 = LazyComment('%s + %s %s = %s + %s = %s', ar.angle1, ar.value, ar.angle1, ar.angle1, ar.angle0, prop.degree_str)
+            comment0 = Comment(
+                '$%{anglemeasure:a0} + %{anglemeasure:a0} / %{multiplier:coef} = %{anglemeasure:a0} + %{anglemeasure:a1} = %{degree:sum}$',
+                {
+                    'a0': ar.angle0,
+                    'a1': ar.angle1,
+                    'coef': ar.value,
+                    'sum': prop.degree
+                }
+            )
+            comment1 = Comment(
+                '$%{anglemeasure:a1} + %{multiplier:coef} * %{anglemeasure:a1} = %{anglemeasure:a1} + %{anglemeasure:a0} = %{degree:sum}$',
+                {
+                    'a0': ar.angle0,
+                    'a1': ar.angle1,
+                    'coef': ar.value,
+                    'sum': prop.degree
+                }
+            )
         yield (AngleValueProperty(ar.angle0, value0), comment0, [prop, ar])
         yield (AngleValueProperty(ar.angle1, value1), comment1, [prop, ar])
 

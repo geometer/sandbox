@@ -111,7 +111,15 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
 
         yield (
             SimilarTrianglesProperty(tr0, tr1),
-            LazyComment('congruent angles %s and %s', ca0, ca1),
+            Comment(
+                'congruent angles $%{anglemeasure:angle0_0}=%{anglemeasure:angle1_0}$ and $%{anglemeasure:angle0_1}=%{anglemeasure:angle1_1}$',
+                {
+                    'angle0_0': tr0.angles[0],
+                    'angle0_1': tr0.angles[1],
+                    'angle1_0': tr1.angles[0],
+                    'angle1_1': tr1.angles[1]
+                }
+            ),
             [ca0, ca1, ncl]
         )
 
@@ -165,7 +173,7 @@ class CongruentTrianglesByAngleAndTwoSidesRule(Rule):
                 comment = Comment(pattern, {
                     'common': vec0,
                     'side0': vec1,
-                    'side1': ang1.vectors[0],
+                    'side1': ang1.vectors[1],
                     'angle0': ang0,
                     'angle1': ang1
                 })
@@ -174,13 +182,23 @@ class CongruentTrianglesByAngleAndTwoSidesRule(Rule):
                 comment = Comment(pattern, {
                     'common': vec1,
                     'side0': vec0,
-                    'side1': ang1.vectors[1],
+                    'side1': ang1.vectors[0],
                     'angle0': ang0,
                     'angle1': ang1
                 })
                 premises = [rsn0, ca]
             else:
-                comment = LazyComment('Two pairs of congruent sides, and angle between the sides')
+                comment = Comment(
+                    'two pair of congruent sides $%{segment:side0} = %{segment:side1}$ and $%{segment:side2} = %{segment:side3}$, and congruent angles between the sides $%{anglemeasure:angle0} = %{anglemeasure:angle1}$',
+                    {
+                        'side0': vec0,
+                        'side1': ang1.vectors[0],
+                        'side2': vec1,
+                        'side3': ang1.vectors[1],
+                        'angle0': ang0,
+                        'angle1': ang1
+                    }
+                )
                 premises = [rsn0, rsn1, ca]
             yield (
                 CongruentTrianglesProperty(
@@ -318,7 +336,17 @@ class CongruentTrianglesByThreeSidesRule(Rule):
                 if cs2:
                     yield (
                         prop,
-                        LazyComment('three pairs of congruent sides'),
+                        Comment(
+                            'three pairs of congruent sides: $%{segment:side0_0} = %{segment:side0_1}$, $%{segment:side1_0} = %{segment:side1_1}$, $%{segment:side2_0} = %{segment:side2_1}$',
+                            {
+                                'side0_0': seg0,
+                                'side0_1': seg1,
+                                'side1_0': cs1.segment0,
+                                'side1_1': cs1.segment1,
+                                'side2_0': third0,
+                                'side2_1': third1
+                            }
+                        ),
                         [cs0, cs1, cs2]
                     )
 
@@ -398,7 +426,10 @@ class EquilateralTriangleByThreeSidesRule(Rule):
         if cs2:
             yield (
                 EquilateralTriangleProperty((common, pt0, pt1)),
-                LazyComment('congruent sides %s and %s', prop, cs2),
+                Comment(
+                    'congruent sides $%{segment:s0} = %{segment:s1}$ and $%{segment:s2} = %{segment:s3}$',
+                    {'s0': prop.segment0, 's1': prop.segment1, 's2': cs2.segment0, 's3': cs2.segment1}
+                ),
                 [prop, cs2]
             )
 
