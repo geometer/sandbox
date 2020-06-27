@@ -1375,41 +1375,31 @@ class ReversedVerticalAnglesRule(Rule):
 class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
     property_type = SameOrOppositeSideProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
     def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0x3:
+            return
+        original = mask
+
         lp0 = prop.segment.points[0]
         lp1 = prop.segment.points[1]
-        for pt0, pt1 in [prop.points, reversed(prop.points)]:
+        for pt0, pt1, bit in [(*prop.points, 1), (*reversed(prop.points), 2)]:
+            if mask & bit:
+                continue
             angle0 = lp0.angle(pt0, lp1)
             angle1 = lp1.angle(pt1, lp0)
             if prop.same:
-                try:
-                    sum_reason = self.context[SumOfTwoAnglesProperty(angle0, angle1, 180)]
-                except: #TODO: check contradiction with no try/except
+                sum_degree = self.context.sum_of_two_angles(angle0, angle1)
+                if sum_degree is None:
                     continue
-                ratio_reason = None
-                if sum_reason is None:
-                    for cnd in [p for p in self.context.list(SumOfTwoAnglesProperty, [angle0]) if p.degree == 180]:
-                        other = cnd.angles[0] if cnd.angles[1] == angle0 else cnd.angles[1]
-                        ratio_reason = self.context.angle_ratio_property(other, angle1)
-                        if ratio_reason:
-                            if ratio_reason.value == 1:
-                                sum_reason = cnd
-                            break
-                if sum_reason is None:
-                    for cnd in [p for p in self.context.list(SumOfTwoAnglesProperty, [angle1]) if p.degree == 180]:
-                        other = cnd.angles[0] if cnd.angles[1] == angle1 else cnd.angles[1]
-                        ratio_reason = self.context.angle_ratio_property(other, angle0)
-                        if ratio_reason:
-                            if ratio_reason.value == 1:
-                                sum_reason = cnd
-                            break
-                if sum_reason is None:
+                mask |= bit
+                if sum_degree != 180:
                     continue
-                reasons = [prop, sum_reason]
-                if ratio_reason:
-                    reasons.append(ratio_reason)
-                if all(p.reason.obsolete for p in reasons):
-                    continue
+                sum_reason = self.context.sum_of_two_angles_property(angle0, angle1)
                 for p in AngleValueProperty.generate(lp0.vector(pt0), lp1.vector(pt1), 0):
                     yield (
                         p,
@@ -1417,22 +1407,27 @@ class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
                             'sum of consecutive angles: $%{anglemeasure:angle0} + %{anglemeasure:angle1} = %{degree:180}$',
                             {'angle0': angle0, 'angle1': angle1, '180': 180}
                         ),
-                        reasons
+                        [prop, sum_reason]
                     )
             else:
                 ratio_reason = self.context.angle_ratio_property(angle0, angle1)
-                if ratio_reason is None or prop.reason.obsolete and ratio_reason.reason.obsolete:
+                if ratio_reason is None:
                     continue
-                if ratio_reason.value == 1:
-                    for p in AngleValueProperty.generate(lp0.vector(pt0), pt1.vector(lp1), 0):
-                        yield (
-                            p,
-                            Comment(
-                                'alternate angles $%{angle:angle0}$ and $%{angle:angle1}$ are congruent',
-                                {'angle0': angle0, 'angle1': angle1}
-                            ),
-                            [prop, ratio_reason]
-                        )
+                mask |= bit
+                if ratio_reason.value != 1:
+                    continue
+                for p in AngleValueProperty.generate(lp0.vector(pt0), pt1.vector(lp1), 0):
+                    yield (
+                        p,
+                        Comment(
+                            'alternate angles $%{angle:angle0}$ and $%{angle:angle1}$ are congruent',
+                            {'angle0': angle0, 'angle1': angle1}
+                        ),
+                        [prop, ratio_reason]
+                    )
+
+        if mask != original:
+            self.processed[prop] = mask
 
 class CyclicOrderRule(SingleSourceRule):
     property_type = SameOrOppositeSideProperty
