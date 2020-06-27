@@ -910,71 +910,37 @@ class AngleRatioPropertySet:
             self.angle_to_family[prop.angle1] = fam
 
     def sum_of_two_angles(self, angle0, angle1):
-        stored = self.__sum_of_two_angles.get((angle0, angle1))
-        if stored:
-            return stored.degree
-
-        congruents0 = list(self.congruent_angles_for(angle0))
-        for a0 in congruents0:
-            known = self.__sum_of_two_angles.get((a0, angle1))
-            if known:
-                return known.degree
-        congruents1 = [angle1] + list(self.congruent_angles_for(angle1))
-        for a0 in congruents0:
-            for a1 in congruents1:
-                known = self.__sum_of_two_angles.get((a0, a1))
-                if known:
-                    return known.degree
-
+        congruents0 = set(self.congruent_angles_for(angle0))
+        congruents0.add(angle0)
+        congruents1 = set(self.congruent_angles_for(angle1))
+        congruents1.add(angle1)
+        for key, value in self.__sum_of_two_angles.items():
+            if key[0] in congruents0 and key[1] in congruents1:
+                return value.degree
         return None
 
     def sum_of_two_angles_property(self, angle0, angle1):
-        stored = self.__sum_of_two_angles.get((angle0, angle1))
-        if stored:
-            return stored
-
         candidates = []
         pattern = '$%{angle:angle0} + %{angle:angle1} = %{angle:a0} + %{angle:a1} = %{degree:sum}$'
 
-        congruents0 = list(self.congruent_angles_for(angle0))
-        congruents1 = list(self.congruent_angles_for(angle1))
-        for a0 in congruents0:
-            known = self.__sum_of_two_angles.get((a0, angle1))
-            if known is None:
-                continue
-            prop = SumOfTwoAnglesProperty(angle0, angle1, known.degree)
-            comment = Comment(
-                pattern,
-                {'angle0': angle0, 'angle1': angle1, 'a0': a0, 'a1': angle1, 'sum': known.degree}
-            )
-            candidates.append(_synthetic_property(
-                prop, comment, [known, self.ratio_property(angle0, a0)]
-            ))
-        for a1 in congruents1:
-            known = self.__sum_of_two_angles.get((angle0, a1))
-            if known is None:
-                continue
-            prop = SumOfTwoAnglesProperty(angle0, angle1, known.degree)
-            comment = Comment(
-                pattern,
-                {'angle0': angle0, 'angle1': angle1, 'a0': angle0, 'a1': a1, 'sum': known.degree}
-            )
-            candidates.append(_synthetic_property(
-                prop, comment, [known, self.ratio_property(angle1, a1)]
-            ))
-        for a0 in congruents0:
-            for a1 in congruents1:
-                known = self.__sum_of_two_angles.get((a0, a1))
-                if known is None:
-                    continue
+        congruents0 = set(self.congruent_angles_for(angle0))
+        congruents0.add(angle0)
+        congruents1 = set(self.congruent_angles_for(angle1))
+        congruents1.add(angle1)
+
+        for (a0, a1), known in self.__sum_of_two_angles.items():
+            if a0 in congruents0 and a1 in congruents1:
                 prop = SumOfTwoAnglesProperty(angle0, angle1, known.degree)
                 comment = Comment(
                     pattern,
                     {'angle0': angle0, 'angle1': angle1, 'a0': a0, 'a1': a1, 'sum': known.degree}
                 )
-                candidates.append(_synthetic_property(
-                    prop, comment, [known, self.ratio_property(angle0, a0), self.ratio_property(angle1, a1)]
-                ))
+                premises = [known]
+                if angle0 != a0:
+                    premises.append(self.ratio_property(angle0, a0))
+                if angle1 != a1:
+                    premises.append(self.ratio_property(angle1, a1))
+                candidates.append(_synthetic_property(prop, comment, premises))
 
         return PropertySet.best_candidate(candidates)
 
