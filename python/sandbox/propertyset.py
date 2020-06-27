@@ -766,6 +766,10 @@ class AngleRatioPropertySet:
             prop = AngleRatioProperty(angle0, angle1, value, same=same)
             return _synthetic_property(prop, comment, premises)
 
+        def value(self, angle):
+            ratio = self.angle_to_ratio.get(angle)
+            return ratio * self.degree if ratio else None
+
         def value_property(self, angle):
             ratio = self.angle_to_ratio.get(angle)
             if ratio is None:
@@ -790,6 +794,13 @@ class AngleRatioPropertySet:
                 prop = AngleValueProperty(angle, self.degree * ratio)
                 properties.append(_synthetic_property(prop, comment, premises))
             return properties
+
+        def angles_for_degree(self, degree):
+            angles = []
+            for angle, ratio in self.angle_to_ratio.items():
+                if ratio * self.degree == degree:
+                    angles.append(angle)
+            return angles
 
         def value_properties_for_degree(self, degree, condition):
             properties = []
@@ -880,6 +891,10 @@ class AngleRatioPropertySet:
         self.__ratio_cache = {} # {angle, angle} => prop
         self.__sum_of_two_angles = {} # (angle, angle) => prop
 
+    def value(self, angle):
+        fam = self.family_with_degree
+        return fam.value(angle) if fam else None
+
     def value_property(self, angle):
         prop = self.__value_cache.get(angle)
         if prop:
@@ -893,6 +908,10 @@ class AngleRatioPropertySet:
     def value_properties(self):
         fam = self.family_with_degree
         return fam.value_properties() if fam else []
+
+    def angles_for_degree(self, degree):
+        fam = self.family_with_degree
+        return fam.angles_for_degree(degree) if fam else []
 
     def value_properties_for_degree(self, degree, condition):
         fam = self.family_with_degree
@@ -1374,6 +1393,9 @@ class PropertySet(LineSet):
         prop = self.coincidence_property(pt0, pt1)
         return prop if prop and not prop.coincident else None
 
+    def angle_value(self, angle):
+        return self.__angle_ratios.value(angle)
+
     def angle_value_property(self, angle):
         return self.__angle_ratios.value_property(angle)
 
@@ -1383,6 +1405,11 @@ class PropertySet(LineSet):
     def nondegenerate_angle_value_properties(self):
         return self.__angle_ratios.value_properties()
 
+    def angles_for_degree(self, degree):
+        if degree == 0:
+            return [p.angle for p in self.list(AngleValueProperty) if p.degree == 0]
+        return self.__angle_ratios.angles_for_degree(degree)
+
     def angle_value_properties_for_degree(self, degree, condition=None):
         if degree == 0:
             if condition:
@@ -1391,11 +1418,8 @@ class PropertySet(LineSet):
                 return [p for p in self.list(AngleValueProperty) if p.degree == 0]
         return self.__angle_ratios.value_properties_for_degree(degree, condition)
 
-    def point_inside_segment_properties(self, segment):
-        pts = set(segment.points)
-        return self.angle_value_properties_for_degree(
-            180, lambda angle:angle.vertex and set(angle.endpoints) == pts
-        )
+    def points_inside_segment(self, segment):
+        return [pt for pt in self.collinear_points(segment) if self.__angle_ratios.value(pt.angle(*segment.points)) == 180]
 
     def angle_value_properties(self):
         return [p for p in self.list(AngleValueProperty) if p.degree == 0] + self.nondegenerate_angle_value_properties()
