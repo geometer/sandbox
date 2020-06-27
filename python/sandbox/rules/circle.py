@@ -25,8 +25,8 @@ class CyclicQuadrilateralRule(Rule):
             self.processed.add(key)
             return
 
-        oppo0 = self.context.two_points_relatively_to_line_property(endpoints[0].segment(endpoints[1]), av0.angle.vertex, av1.angle.vertex)
-        oppo1 = self.context.two_points_relatively_to_line_property(av0.angle.vertex.segment(av1.angle.vertex), *endpoints)
+        oppo0 = self.context.two_points_relative_to_line_property(endpoints[0].segment(endpoints[1]), av0.angle.vertex, av1.angle.vertex)
+        oppo1 = self.context.two_points_relative_to_line_property(av0.angle.vertex.segment(av1.angle.vertex), *endpoints)
         if oppo0 is None and oppo1 is None:
             return
         self.processed.add(key)

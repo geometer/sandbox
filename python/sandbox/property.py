@@ -70,7 +70,7 @@ class Property:
 
 class PointAndCircleProperty(Property):
     """
-    Point location relatively to circle
+    Point location relative to circle
     """
     class Kind(Enum):
         inside  = auto()
