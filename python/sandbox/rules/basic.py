@@ -1016,19 +1016,20 @@ class SameSidePointInsideSegmentRule(SingleSourceRule):
 
     def apply(self, prop):
         segment = prop.points[0].segment(prop.points[1])
-        for inside in self.context.point_inside_segment_properties(segment):
-            key = (prop, inside.angle.vertex)
+        for inside in self.context.points_inside_segment(segment):
+            key = (prop, inside)
             if key in self.processed:
                 continue
             self.processed.add(key)
+            inside_prop = self.context.angle_value_property(inside.angle(*prop.points))
             for endpoint in prop.points:
                 yield (
-                    SameOrOppositeSideProperty(prop.segment, endpoint, inside.angle.vertex, True),
+                    SameOrOppositeSideProperty(prop.segment, endpoint, inside, True),
                     Comment(
                         'segment $%{segment:segment}$ does not cross line $%{line:line}$',
                         {'segment': segment, 'line': prop.segment}
                     ),
-                    [prop, inside]
+                    [prop, inside_prop]
                 )
 
 class PointInsideSegmentRelativeToLineRule(SingleSourceRule):
@@ -1041,10 +1042,10 @@ class PointInsideSegmentRelativeToLineRule(SingleSourceRule):
     def apply(self, prop):
         for index, (pt_on, pt_not_on) in enumerate(itertools.product(prop.segment.points, prop.points)):
             segment = pt_on.segment(pt_not_on)
-            for inside in self.context.point_inside_segment_properties(segment):
-                if inside.angle.vertex in prop.points:
+            for inside in self.context.points_inside_segment(segment):
+                if inside in prop.points:
                     continue
-                key = (prop, index, inside.angle.vertex)
+                key = (prop, index, inside)
                 if key in self.processed:
                     continue
                 self.processed.add(key)
@@ -1053,16 +1054,17 @@ class PointInsideSegmentRelativeToLineRule(SingleSourceRule):
                     pattern = '$%{point:pt_not_on}$ and $%{point:pt2}$ are on the same side of $%{line:line}$ and $%{point:inside}$ lies inside $%{segment:segment}$'
                 else:
                     pattern = '$%{point:pt_not_on}$ and $%{point:pt2}$ are on opposide sides of $%{line:line}$ and $%{point:inside}$ lies inside $%{segment:segment}$'
+                inside_prop = self.context.angle_value_property(inside.angle(*segment.points))
                 yield (
-                    SameOrOppositeSideProperty(prop.segment, inside.angle.vertex, pt2, prop.same),
+                    SameOrOppositeSideProperty(prop.segment, inside, pt2, prop.same),
                     Comment(pattern, {
                         'pt_not_on': pt_not_on,
                         'pt2': pt2,
                         'line': prop.segment,
-                        'inside': inside.angle.vertex,
+                        'inside': inside,
                         'segment': segment
                     }),
-                    [prop, inside]
+                    [prop, inside_prop]
                 )
 
 class TwoPerpendicularsRule(SingleSourceRule):
@@ -1849,20 +1851,21 @@ class SameAngleDegreeRule(Rule):
     def apply(self, prop):
         angle = prop.angle
         for vec0, vec1 in (angle.vectors, reversed(angle.vectors)):
-            for inside in self.context.point_inside_segment_properties(vec0):
-                pt = inside.angle.vertex
+            for inside in self.context.points_inside_segment(vec0.as_segment):
+                pt = inside
                 key = (angle, pt)
                 if key in self.processed:
                     continue
                 self.processed.add(key)
 
+                inside_prop = self.context.angle_value_property(inside.angle(*vec0.points))
                 yield (
                     AngleValueProperty(vec1.angle(vec0.start.vector(pt)), prop.degree),
                     Comment(
                         '$%{point:pt}$ lies on side $%{segment:side}$ of $%{angle:angle}$, $%{anglemeasure:angle} = %{degree:degree}$',
                         {'pt': pt, 'side': vec0, 'angle': angle, 'degree': prop.degree}
                     ),
-                    [prop, inside]
+                    [prop, inside_prop]
                 )
 
 class PlanePositionsToLinePositionsRule(SingleSourceRule):
@@ -2230,12 +2233,13 @@ class PerpendicularToSideOfObtuseAngledRule(SingleSourceRule):
     def apply(self, prop):
         long_side = prop.angle.endpoints[0].segment(prop.angle.endpoints[1])
         for seg in [v.as_segment for v in prop.angle.vectors]:
-            for inside in self.context.point_inside_segment_properties(seg):
-                key = (prop.angle, inside.angle.vertex)
+            for inside in self.context.points_inside_segment(seg):
+                key = (prop.angle, inside)
                 if key in self.processed:
                     continue
+                inside_prop = self.context.angle_value_property(inside.angle(*seg.points))
                 for pt in self.context.collinear_points(long_side):
-                    perp_line = pt.segment(inside.angle.vertex)
+                    perp_line = pt.segment(inside)
                     perp = self.context[PerpendicularSegmentsProperty(seg, perp_line)]
                     if perp is None:
                         continue
@@ -2245,7 +2249,7 @@ class PerpendicularToSideOfObtuseAngledRule(SingleSourceRule):
                         {
                             'triangle': Scene.Triangle(*prop.angle.point_set),
                             'vertex': prop.angle.vertex,
-                            'inside': inside.angle.vertex,
+                            'inside': inside,
                             'side': seg,
                             'pt': pt,
                             'long': long_side,
@@ -2256,12 +2260,12 @@ class PerpendicularToSideOfObtuseAngledRule(SingleSourceRule):
                         yield (
                             PointsCoincidenceProperty(pt, ep, False),
                             comment,
-                            [prop, inside, perp]
+                            [prop, inside_prop, perp]
                         )
                     yield (
                         AngleValueProperty(pt.angle(*prop.angle.endpoints), 180),
                         comment,
-                        [prop, inside, perp]
+                        [prop, inside_prop, perp]
                     )
                     break
 
