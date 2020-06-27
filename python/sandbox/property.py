@@ -299,6 +299,9 @@ class PointsCoincidenceProperty(Property):
     [Not] coincident points
     """
     def __init__(self, point0, point1, coincident):
+        assert isinstance(point0, Scene.Point)
+        assert isinstance(point1, Scene.Point)
+        assert point0 != point1
         self.points = [point0, point1]
         super().__init__(frozenset(self.points), {point0, point1})
         self.coincident = coincident

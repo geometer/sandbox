@@ -50,6 +50,7 @@ class Explainer:
             EqualSumsOfAnglesRule(self.context),
             AngleFromSumOfTwoAnglesRule(self.context),
             #SumOfAngles180DegreeRule(self.context),
+            AngleTypeAndPerpendicularRule(self.context),
             CoincidenceTransitivityRule(self.context),
             TwoPointsBelongsToTwoLinesRule(self.context),
             TwoPointsBelongsToTwoPerpendicularsRule(self.context),
@@ -109,6 +110,7 @@ class Explainer:
             CongruentAnglesDegeneracyRule(self.context),
             PointAndAngleRule(self.context),
             PointInsideAngleConfigurationRule(self.context),
+            PointInsideAngleAndPointOnSideRule(self.context),
             PerpendicularToSideOfObtuseAngledRule(self.context),
 
             EquilateralTriangleByThreeSidesRule(self.context),
@@ -258,56 +260,6 @@ class Explainer:
                                 zero = base.vertex.angle(vec0.end, pt)
                                 yield (AngleValueProperty(zero, 0), comment, [col, aa, ka])
                             break
-
-            for aa in [p for p in self.context.list(AngleKindProperty) if p.kind == AngleKindProperty.Kind.acute]:
-                base = aa.angle
-                if base.vertex is None:
-                    continue
-                for vec0, vec1 in [base.vectors, reversed(base.vectors)]:
-                    for perp in self.context.list(PerpendicularSegmentsProperty, [vec0.as_segment]):
-                        other = perp.segments[0] if vec0.as_segment == perp.segments[1] else perp.segments[1]
-                        if vec1.end not in other.points:
-                            continue
-                        foot = next(pt for pt in other.points if pt != vec1.end)
-                        if foot in vec0.points:
-                            continue
-                        col = self.context.collinearity_property(foot, *vec0.points)
-                        if col is None or not col.collinear:
-                            continue
-                        if aa.reason.obsolete and perp.reason.obsolete and col.reason.obsolete:
-                            continue
-                        yield (
-                            AngleValueProperty(base.vertex.angle(vec0.end, foot), 0),
-                            Comment(
-                                '$%{point:foot}$ is the foot of the perpendicular from $%{point:pt}$ to $%{line:line}$, and $%{angle:angle}$ is acute',
-                                {'foot': foot, 'pt': vec1.end, 'line': vec0, 'angle': base}
-                            ),
-                            [perp, col, aa]
-                        )
-
-            for aa in [p for p in self.context.list(AngleKindProperty) if p.kind == AngleKindProperty.Kind.obtuse]:
-                base = aa.angle
-                if base.vertex is None:
-                    continue
-                for vec0, vec1 in [base.vectors, reversed(base.vectors)]:
-                    for perp in self.context.list(PerpendicularSegmentsProperty, [vec0.as_segment]):
-                        other = perp.segments[0] if vec0.as_segment == perp.segments[1] else perp.segments[1]
-                        if vec1.end not in other.points:
-                            continue
-                        foot = next(pt for pt in other.points if pt != vec1.end)
-                        col = self.context.collinearity_property(foot, *vec0.points)
-                        if col is None or not col.collinear:
-                            continue
-                        if aa.reason.obsolete and perp.reason.obsolete and col.reason.obsolete:
-                            continue
-                        yield (
-                            AngleValueProperty(base.vertex.angle(vec0.end, foot), 180),
-                            Comment(
-                                '$%{point:foot}$ is the foot of the perpendicular from $%{point:pt}$ to $%{line:line}$, and $%{angle:angle}$ is obtuse',
-                                {'foot': foot, 'pt': vec1.end, 'line': vec0, 'angle': base}
-                            ),
-                            [perp, col, aa]
-                        )
 
             for aa in self.context.angle_value_properties_for_degree(90):
                 base = aa.angle

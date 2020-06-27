@@ -6,6 +6,66 @@ from ..util import LazyComment, Comment, divide, common_endpoint, other_point
 
 from .abstract import Rule, SingleSourceRule
 
+class PointInsideAngleAndPointOnSideRule(SingleSourceRule):
+    property_type = PointInsideAngleProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def apply(self, prop):
+        for vec in prop.angle.vectors:
+            for pt in self.context.collinear_points(vec.as_segment):
+                key = (prop, pt)
+                if key in self.processed:
+                    continue
+                self.processed.add(key)
+                yield (
+                    PointsCoincidenceProperty(prop.point, pt, False),
+                    Comment(
+                        '$%{point:inside}$ lies inside $%{angle:angle}$, $%{point:pt}$ is on $%{line:side}$',
+                        {'inside': prop.point, 'angle': prop.angle, 'pt': pt, 'side': vec}
+                    ),
+                    [prop, self.context.collinearity_property(*vec.points, pt)]
+                )
+
+class AngleTypeAndPerpendicularRule(SingleSourceRule):
+    property_type = AngleKindProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop.angle.vertex and prop.kind != AngleKindProperty.Kind.right
+
+    def apply(self, prop):
+        angle = prop.angle
+        if prop.kind == AngleKindProperty.Kind.acute:
+            pattern = '$%{point:foot}$ is the foot of perpendicular from point $%{point:pt}$ on side of acute $%{angle:angle}$ to another side'
+        else:
+            pattern = '$%{point:foot}$ is the foot of perpendicular from point $%{point:pt}$ on side of obtuse $%{angle:angle}$ to extension of another side'
+        for vec0, vec1 in (angle.vectors, reversed(angle.vectors)):
+            key = (prop, vec0.end)
+            if key in self.processed:
+                continue
+            foot, premises = self.context.foot_of_perpendicular(vec0.end, vec1.as_segment)
+            if foot is None:
+                continue
+            self.processed.add(key)
+            comment = Comment(pattern, {'foot': foot, 'pt': vec0.end, 'angle': angle})
+            new_props = [
+                PointsCollinearityProperty(vec0.end, foot, angle.vertex, False),
+                PointsCoincidenceProperty(foot, angle.vertex, False),
+            ]
+            if foot != vec1.end:
+                if prop.kind == AngleKindProperty.Kind.acute:
+                    new_props.append(AngleValueProperty(angle.vertex.angle(foot, vec1.end), 0))
+                else:
+                    new_props.append(AngleValueProperty(angle.vertex.angle(foot, vec1.end), 180))
+            for p in new_props:
+                yield (p, comment, [prop] + premises)
+
 class PointInsideAngleConfigurationRule(SingleSourceRule):
     property_type = PointInsideAngleProperty
 
