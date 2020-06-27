@@ -591,6 +591,7 @@ class CoreScene:
                     self.scene, CoreScene.Point.Origin.translated,
                     base=self.points[0], delta=delta, coef=coef, **kwargs
                 )
+            middle.collinear_constraint(*self.points, guaranteed=True)
             from .property import MiddleOfSegmentProperty
             self.scene.add_property(MiddleOfSegmentProperty(middle, self))
             self.__middle_point = middle
