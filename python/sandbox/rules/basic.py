@@ -103,7 +103,7 @@ class SumOfAngles180DegreeRule(Rule):
             return
         pt0 = next(pt for pt in prop.angles[0].endpoints if pt != common)
         pt1 = next(pt for pt in prop.angles[1].endpoints if pt != common)
-        oppo = self.context.two_points_relatively_to_line_property(prop.angles[0].vertex.segment(common), pt0, pt1)
+        oppo = self.context.two_points_relative_to_line_property(prop.angles[0].vertex.segment(common), pt0, pt1)
         if oppo is None:
             return
         self.processed.add(prop)
@@ -947,23 +947,62 @@ class SameSidePointInsideSegmentRule(SingleSourceRule):
     """
     property_type = SameOrOppositeSideProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
     def accepts(self, prop):
         return prop.same
 
     def apply(self, prop):
         segment = prop.points[0].segment(prop.points[1])
-        for pt in self.context.collinear_points(segment):
-            value = self.context.angle_value_property(pt.angle(*prop.points))
-            if not value or value.degree != 180 or prop.reason.obsolete and value.reason.obsolete:
-                return
+        for inside in self.context.point_inside_segment_properties(segment):
+            key = (prop, inside.angle.vertex)
+            if key in self.processed:
+                continue
+            self.processed.add(key)
             for endpoint in prop.points:
                 yield (
-                    SameOrOppositeSideProperty(prop.segment, endpoint, pt, True),
+                    SameOrOppositeSideProperty(prop.segment, endpoint, inside.angle.vertex, True),
                     Comment(
                         'segment $%{segment:segment}$ does not cross line $%{line:line}$',
                         {'segment': segment, 'line': prop.segment}
                     ),
-                    [prop, value]
+                    [prop, inside]
+                )
+
+class PointInsideSegmentRelativeToLineRule(SingleSourceRule):
+    property_type = SameOrOppositeSideProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def apply(self, prop):
+        for index, (pt_on, pt_not_on) in enumerate(itertools.product(prop.segment.points, prop.points)):
+            segment = pt_on.segment(pt_not_on)
+            for inside in self.context.point_inside_segment_properties(segment):
+                if inside.angle.vertex in prop.points:
+                    continue
+                key = (prop, index, inside.angle.vertex)
+                if key in self.processed:
+                    continue
+                self.processed.add(key)
+                pt2 = prop.points[1] if pt_not_on == prop.points[0] else prop.points[0]
+                if prop.same:
+                    pattern = '$%{point:pt_not_on}$ and $%{point:pt2}$ are on the same side of $%{line:line}$ and $%{point:inside}$ lies inside $%{segment:segment}$'
+                else:
+                    pattern = '$%{point:pt_not_on}$ and $%{point:pt2}$ are on opposide sides of $%{line:line}$ and $%{point:inside}$ lies inside $%{segment:segment}$'
+                yield (
+                    SameOrOppositeSideProperty(prop.segment, inside.angle.vertex, pt2, prop.same),
+                    Comment(pattern, {
+                        'pt_not_on': pt_not_on,
+                        'pt2': pt2,
+                        'line': prop.segment,
+                        'inside': inside.angle.vertex,
+                        'segment': segment
+                    }),
+                    [prop, inside]
                 )
 
 class TwoPerpendicularsRule(SingleSourceRule):
@@ -1985,7 +2024,7 @@ class SameSideToInsideAngleRule(SingleSourceRule):
                 bit = 1 << index
                 if mask & bit:
                     continue
-                prop1 = self.context.two_points_relatively_to_line_property(centre.segment(pt0), pt1, pt2)
+                prop1 = self.context.two_points_relative_to_line_property(centre.segment(pt0), pt1, pt2)
                 if prop1 is None:
                     continue
                 mask |= bit
@@ -2015,7 +2054,7 @@ class SameSideToInsideAngleRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
-class TwoPointsRelativelyToLineTransitivityRule(Rule):
+class TwoPointsRelativeToLineTransitivityRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
@@ -2117,7 +2156,7 @@ class PointAndAngleRule(SingleSourceRule):
                 if mask & bit:
                     continue
                 fourth = other_point(prop.points, pt1)
-                prop1 = self.context.two_points_relatively_to_line_property(
+                prop1 = self.context.two_points_relative_to_line_property(
                     vertex.segment(pt1), pt0, fourth
                 )
                 if prop1 is None:

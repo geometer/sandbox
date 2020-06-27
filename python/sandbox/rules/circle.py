@@ -348,7 +348,7 @@ class InscribedAnglesWithCommonCircularArcRule(Rule):
 
         for pt0, pt1 in itertools.combinations(points, 2):
             pt2, pt3 = [pt for pt in points if pt not in (pt0, pt1)]
-            sos = self.context.two_points_relatively_to_line_property(
+            sos = self.context.two_points_relative_to_line_property(
                 pt0.segment(pt1), pt2, pt3
             )
             if sos is None:
