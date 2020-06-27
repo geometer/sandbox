@@ -73,6 +73,7 @@ class Explainer:
             CorrespondingSidesInCongruentTrianglesRule(self.context),
             CorrespondingSidesInSimilarTrianglesRule(self.context),
             LengthProductEqualityToRatioRule(self.context),
+            MiddleOfSegmentRule(self.context),
             EquilateralTriangleRule(self.context),
             CentreOfEquilateralTriangleRule(self.context),
             BaseAnglesOfIsoscelesWithKnownApexAngleRule(self.context),

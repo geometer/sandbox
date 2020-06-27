@@ -511,6 +511,26 @@ class AngleValueProperty(LinearAngleProperty):
     def compare_values(self, other):
         return self.degree == other.degree
 
+class MiddleOfSegmentProperty(Property):
+    """
+    A point is the middle of segment
+    """
+    def __init__(self, point, segment):
+        self.point = point
+        self.segment = segment
+        super().__init__((point, segment))
+
+    @property
+    def __priority__(self):
+        return 2
+
+    @property
+    def description(self):
+        return Comment(
+            '$%{point:point}$ is the middle of $%{segment:segment}$',
+            {'point': self.point, 'segment': self.segment}
+        )
+
 class AngleRatioProperty(LinearAngleProperty):
     """
     Two angle values ratio

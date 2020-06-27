@@ -2165,3 +2165,60 @@ class PerpendicularToSideOfObtuseAngledRule(SingleSourceRule):
                         [prop, inside, perp]
                     )
                     break
+
+class MiddleOfSegmentRule(SingleSourceRule):
+    property_type = MiddleOfSegmentProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
+    def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0xF:
+            return
+        original = mask
+
+        comment = Comment(
+            '$%{point:point}$ is the midpoint of $%{segment:segment}$',
+            {'point': prop.point, 'segment': prop.segment}
+        )
+
+        triangle = Scene.Triangle(prop.point, *prop.segment.points)
+        if (mask & 0x1) == 0:
+            # properties not depending on degeneracy
+            mask |= 0x1
+            new_properties = (
+                PointsCollinearityProperty(*triangle.points, True),
+                ProportionalLengthsProperty(triangle.sides[0], triangle.sides[1], 2),
+                ProportionalLengthsProperty(triangle.sides[0], triangle.sides[2], 2),
+                ProportionalLengthsProperty(triangle.sides[1], triangle.sides[2], 1),
+            )
+            for p in new_properties:
+                yield (p, comment, [prop])
+
+        for index, seg in enumerate(triangle.sides):
+            bit = 2 << index
+            if mask & bit:
+                continue
+            ne = self.context.coincidence_property(*seg.points)
+            if ne is None:
+                continue
+            mask |= bit
+            if ne.coincident:
+                mask |= 0xE
+                break
+
+            new_properties = [
+                AngleValueProperty(triangle.angles[0], 180),
+                AngleValueProperty(triangle.angles[1], 0),
+                AngleValueProperty(triangle.angles[2], 0),
+            ]
+            for side in triangle.sides:
+                if side != seg:
+                    new_properties.append(PointsCoincidenceProperty(*side.points, False))
+            for p in new_properties:
+                yield (p, comment, [prop, ne])
+
+        if mask != original:
+            self.processed[prop] = mask
