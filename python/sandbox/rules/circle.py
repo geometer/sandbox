@@ -11,7 +11,7 @@ class CyclicQuadrilateralRule(Rule):
         self.processed = set()
 
     def sources(self):
-        right_angles = [prop for prop in self.context.angle_value_properties_for_degree(90) if prop.angle.vertex]
+        right_angles = self.context.angle_value_properties_for_degree(90, lambda a: a.vertex)
         return itertools.combinations(right_angles, 2)
 
     def apply(self, src):
@@ -35,6 +35,13 @@ class CyclicQuadrilateralRule(Rule):
                 return
             yield (
                 ConcyclicPointsProperty(av0.angle.vertex, av1.angle.vertex, *endpoints),
-                LazyComment('convex quadrilateral %s with two right angles %s and %s is cyclic', Scene.Polygon(av0.angle.vertex, endpoints[0], av1.angle.vertex, endpoints[1]), av0.angle, av1.angle),
+                Comment(
+                    'convex quadrilateral $%{polygon:quad}$ with two right angles $%{angle:a0}$ and $%{angle:a1}$ is cyclic',
+                    {
+                        'quad': Scene.Polygon(av0.angle.vertex, endpoints[0], av1.angle.vertex, endpoints[1]),
+                        'a0': av0.angle,
+                        'a1': av1.angle
+                    }
+                ),
                 [av0, av1, oppo]
             )
