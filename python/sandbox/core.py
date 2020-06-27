@@ -856,9 +856,21 @@ class CoreScene:
     class Polygon(Figure):
         def __init__(self, *points):
             self.points = tuple(points)
+            self.__sides = None
 
         def __str__(self):
             return ' '.join(['%s'] * len(self.points)) % self.points
+
+        @property
+        def scene(self):
+            return self.points[0].scene
+
+        @property
+        def sides(self):
+            pts = self.points
+            if self.__sides is None:
+                self.__sides = tuple(p0.segment(p1) for (p0, p1) in zip(pts, pts[1:] + (pts[0], )))
+            return self.__sides
 
     def __init__(self):
         self.__objects = []
