@@ -37,6 +37,7 @@ class Explainer:
 
             #ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule(self.context),
             CyclicQuadrilateralRule(self.context),
+            CyclicQuadrilateralRule2(self.context),
             PointsOnCircleRule(self.context),
             ConcyclicToSameCircleRule(self.context),
             InscribedAnglesWithCommonCircularArcRule(self.context),
