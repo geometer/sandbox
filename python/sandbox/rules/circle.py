@@ -40,16 +40,7 @@ class CyclicQuadrilateralRule(Rule):
             return
 
         points = [vertex0, vertex1, *pts0]
-        for pt0, pt1 in itertools.combinations(points, 2):
-            ne = self.context.coincidence_property(pt0, pt1)
-            if ne is not None:
-                # TODO: select best candidate instead
-                break
-        if ne is None:
-            return
         self.processed.add(key)
-        if ne.coincident:
-            return
 
         yield (
             ConcyclicPointsProperty(*points),
@@ -61,7 +52,7 @@ class CyclicQuadrilateralRule(Rule):
                     'right1': vertex1.angle(*pts1)
                 }
             ),
-            [perp0, perp1, ne]
+            [perp0, perp1]
         )
 
 class CyclicQuadrilateralRule2(SingleSourceRule):
