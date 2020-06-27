@@ -1379,6 +1379,25 @@ class PropertySet(LineSet):
     def congruent_angles_for(self, angle):
         return self.__angle_ratios.congruent_angles_for(angle)
 
+    def sum_of_two_angles(self, angle0, angle1):
+        stored = self.__sum_of_two_angles.get((angle0, angle1))
+        if stored:
+            return stored.degree
+
+        congruents0 = list(self.congruent_angles_for(angle0))
+        for a0 in congruents0:
+            known = self.__sum_of_two_angles.get((a0, angle1))
+            if known:
+                return known.degree
+        congruents1 = [angle1] + list(self.congruent_angles_for(angle1))
+        for a0 in congruents0:
+            for a1 in congruents1:
+                known = self.__sum_of_two_angles.get((a0, a1))
+                if known:
+                    return known.degree
+
+        return None
+
     def sum_of_two_angles_property(self, angle0, angle1):
         stored = self.__sum_of_two_angles.get((angle0, angle1))
         if stored:
