@@ -32,6 +32,9 @@ props = (
     SumOfTwoAnglesProperty(A.angle(B, C), H.angle(B, C), 180),
     SumOfTwoAnglesProperty(A.angle(B, C), A2.angle(B, C), 180),
     ConcyclicPointsProperty(A, B1, C1, H),
+    SumOfTwoAnglesProperty(A.angle(B1, C1), H.angle(B1, C1), 180),
+    AngleRatioProperty(H.angle(B1, C1), H.angle(B, C), 1),
+    AngleRatioProperty(A.angle(B1, C1), A.angle(B, C), 1),
     SumOfTwoAnglesProperty(A.angle(B, C), H.angle(B1, C1), 180),
     ConcyclicPointsProperty(A, B, C, A2),
 )
