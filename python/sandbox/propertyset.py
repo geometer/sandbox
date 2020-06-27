@@ -1214,6 +1214,7 @@ class PropertySet(LineSet):
         self.__cyclic_orders = CyclicOrderPropertySet()
         self.__similar_triangles = {} # (three points) => {(three points)}
         self.__two_points_relatively_to_line = {} # key => SameOrOppositeSideProperty
+        self.__sum_of_two_angles = {} # (angle, angle) => prop
 
     def add(self, prop):
         def put(key):
@@ -1237,6 +1238,9 @@ class PropertySet(LineSet):
             self.__angle_kinds[prop.angle] = prop
         elif type_key == AngleRatioProperty:
             self.__angle_ratios.add(prop)
+        elif type_key == SumOfTwoAnglesProperty:
+            self.__sum_of_two_angles[prop.angles] = prop
+            self.__sum_of_two_angles[(prop.angles[1], prop.angles[0])] = prop
         elif type_key == ProportionalLengthsProperty:
             self.__length_ratios.add(prop)
         elif type_key == LengthRatioProperty:
@@ -1325,6 +1329,8 @@ class PropertySet(LineSet):
                 existing = self.collinearity_property(*prop.points)
             elif isinstance(prop, PointOnLineProperty):
                 existing = self.point_on_line_property(prop.segment, prop.point)
+            elif isinstance(prop, SumOfTwoAnglesProperty):
+                existing = self.sum_of_two_angles_property(*prop.angles)
         #TODO: LengthRatioProperty
         #TODO: EqualLengthRatiosProperty
         if existing and not existing.compare_values(prop):
@@ -1372,6 +1378,66 @@ class PropertySet(LineSet):
 
     def congruent_angles_for(self, angle):
         return self.__angle_ratios.congruent_angles_for(angle)
+
+    def sum_of_two_angles_property(self, angle0, angle1):
+        stored = self.__sum_of_two_angles.get((angle0, angle1))
+        if stored:
+            return stored
+
+        angle_congruency = {}
+        def congruency(a0, a1):
+            key = (a0, a1)
+            prop = angle_congruency.get(key)
+            if prop:
+                return prop
+            prop = self.angle_ratio_property(a0, a1)
+            angle_congruency[key] = prop
+            return prop
+
+        candidates = []
+        pattern = '$%{angle:angle0} + %{angle:angle1} = %{angle:a0} + %{angle:a1} = %{degree:sum}$'
+
+        congruents0 = list(self.congruent_angles_for(angle0))
+        congruents1 = list(self.congruent_angles_for(angle1))
+        for a0 in congruents0:
+            known = self.__sum_of_two_angles.get((a0, angle1))
+            if known is None:
+                continue
+            prop = SumOfTwoAnglesProperty(angle0, angle1, known.degree)
+            comment = Comment(
+                pattern,
+                {'angle0': angle0, 'angle1': angle1, 'a0': a0, 'a1': angle1, 'sum': known.degree}
+            )
+            candidates.append(_synthetic_property(
+                prop, comment, [known, congruency(angle0, a0)]
+            ))
+        for a1 in congruents1:
+            known = self.__sum_of_two_angles.get((angle0, a1))
+            if known is None:
+                continue
+            prop = SumOfTwoAnglesProperty(angle0, angle1, known.degree)
+            comment = Comment(
+                pattern,
+                {'angle0': angle0, 'angle1': angle1, 'a0': angle0, 'a1': a1, 'sum': known.degree}
+            )
+            candidates.append(_synthetic_property(
+                prop, comment, [known, congruency(angle1, a1)]
+            ))
+        for a0 in congruents0:
+            for a1 in congruents1:
+                known = self.__sum_of_two_angles.get((a0, a1))
+                if known is None:
+                    continue
+                prop = SumOfTwoAnglesProperty(angle0, angle1, known.degree)
+                comment = Comment(
+                    pattern,
+                    {'angle0': angle0, 'angle1': angle1, 'a0': a0, 'a1': a1, 'sum': known.degree}
+                )
+                candidates.append(_synthetic_property(
+                    prop, comment, [known, congruency(angle0, a0), congruency(angle1, a1)]
+                ))
+
+        return PropertySet.best_candidate(candidates)
 
     def length_ratios(self, allow_zeroes):
         if allow_zeroes:
