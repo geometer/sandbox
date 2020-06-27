@@ -171,4 +171,5 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
             )
 
     for prop in scene.properties:
-        yield (prop, Comment(''))
+        if all_visible(prop.point_set):
+            yield (prop, Comment(''))
