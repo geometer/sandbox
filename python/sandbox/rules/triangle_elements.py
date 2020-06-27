@@ -365,6 +365,7 @@ class CentreOfEquilateralTriangleRule(SingleSourceRule):
         mask = self.processed.get(prop, 0)
         if mask == 0xF:
             return
+        original = mask
 
         vertices = prop.triangle.points
         centre = prop.centre
@@ -380,7 +381,6 @@ class CentreOfEquilateralTriangleRule(SingleSourceRule):
                 )
                 yield (ProportionalLengthsProperty(rad0, rad1, 1), comment, [prop])
 
-        original = mask
         for index in range(0, 3):
             bit = 2 << index
             if mask & bit:

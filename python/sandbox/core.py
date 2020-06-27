@@ -149,6 +149,16 @@ class CoreScene:
             self.segment(new_point).ratio_constraint(vector.as_segment, sp.Abs(coef), guaranteed=True)
             return new_point
 
+        def symmetric_point(self, centre, **kwargs):
+            symmetric = CoreScene.Point(
+                self.scene, CoreScene.Point.Origin.translated,
+                base=centre, delta=self.vector(centre), coef=1, **kwargs
+            )
+            symmetric.collinear_constraint(self, centre, guaranteed=True)
+            from .property import MiddleOfSegmentProperty
+            self.scene.add_property(MiddleOfSegmentProperty(centre, self.segment(symmetric)))
+            return symmetric
+
         def perpendicular_line(self, line, **kwargs):
             """
             Constructs a line through the point, perpendicular to the given line.
@@ -355,6 +365,9 @@ class CoreScene:
                 )
             for angle in triangle.angles:
                 self.inside_constraint(angle, **kwargs)
+            from .property import SameOrOppositeSideProperty
+            for vertex, side in zip(triangle.points, triangle.sides):
+                self.scene.add_property(SameOrOppositeSideProperty(side, vertex, self, True))
 
     class Line(Object):
         prefix = 'Ln_'
@@ -578,16 +591,8 @@ class CoreScene:
                     self.scene, CoreScene.Point.Origin.translated,
                     base=self.points[0], delta=delta, coef=coef, **kwargs
                 )
-            half0 = middle.segment(self.points[0])
-            half1 = middle.segment(self.points[1])
-            comment = Comment(
-                '$%{point:middle}$ is the middle of $%{segment:segment}$',
-                {'middle': middle, 'segment': self}
-            )
-            middle.inside_constraint(self, comment=comment, guaranteed=True)
-            self.ratio_constraint(half0, 2, comment=comment, guaranteed=True)
-            self.ratio_constraint(half1, 2, comment=comment, guaranteed=True)
-            half0.ratio_constraint(half1, 1, comment=comment, guaranteed=True)
+            from .property import MiddleOfSegmentProperty
+            self.scene.add_property(MiddleOfSegmentProperty(middle, self))
             self.__middle_point = middle
             return middle
 
