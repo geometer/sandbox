@@ -500,8 +500,8 @@ class SumOfThreeAnglesOnLineRule(Rule):
         yield (
             AngleValueProperty(angle, 180),
             Comment(
-                '$%{anglemeasure:angle0} = %{degree:degree0}$ and $%{anglemeasure:angle1} = %{degree:degree1}$',
-                {'angle0': av0.angle, 'degree0': av0.degree, 'angle1': av1.angle, 'degree1': av1.degree}
+                '$%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{point:pt2}$, $%{point:pt2}$ and $%{point:pt1}$ are on the same side of $%{point:pt0}$',
+                {'pt1': third, 'pt0': av0.angle.vertex, 'pt2': av1.angle.vertex}
             ),
             [av0, av1]
         )
