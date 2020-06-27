@@ -4,6 +4,7 @@ import re
 import sympy as sp
 
 from .core import CoreScene
+from .figure import Circle
 from .property import *
 from .reason import Reason
 from .rules.abstract import SyntheticPropertyRule
@@ -194,7 +195,10 @@ class LineSet:
                     premises.append(self.point_on_circle_property(pt, key))
                 candidates.append(_synthetic_property(
                     ConcyclicPointsProperty(*pts),
-                    LazyComment('%s, %s, %s, and %s lie on %s', *pts, key),
+                    Comment(
+                        '$%{point:pt0}$, $%{point:pt1}$, $%{point:pt2}$, and $%{point:pt3}$ lie on $%{circle:circle}$',
+                        {'pt0': pt0, 'pt1': pt1, 'pt2': pt2, 'pt3': pt3, 'circle': Circle(*key)}
+                    ),
                     premises
                 ))
             return LineSet.best_candidate(candidates)

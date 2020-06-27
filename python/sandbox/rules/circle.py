@@ -164,7 +164,10 @@ class PointsOnCircleRule(SingleSourceRule):
             pt = next(pt for pt in prop.points if pt not in triple)
             yield (
                 PointAndCircleProperty(pt, *triple, PointAndCircleProperty.Kind.on),
-                LazyComment('%s, %s, %s, and %s are concyclic', pt, *triple),
+                Comment(
+                    '$%{point:pt0}$, $%{point:pt1}$, $%{point:pt2}$, and $%{point:pt3}$ are concyclic',
+                    {'pt0': pt, 'pt1': triple[0], 'pt2': triple[1], 'pt3': triple[2]}
+                ),
                 [prop, ncl]
             )
         if mask != original:
@@ -203,7 +206,10 @@ class ConcyclicToSameCircleRule(SingleSourceRule):
                 continue
             yield (
                 CircleCoincidenceProperty(triple0, triple1, True),
-                LazyComment('%s, %s, %s, and %s are concyclic', *pair, *others),
+                Comment(
+                    '$%{point:pt0}$, $%{point:pt1}$, $%{point:pt2}$, and $%{point:pt3}$ are concyclic',
+                    {'pt0': pair[0], 'pt1': pair[1], 'pt2': others[0], 'pt3': others[1]}
+                ),
                 [prop, ncl0, ncl1]
             )
         if mask != original:
