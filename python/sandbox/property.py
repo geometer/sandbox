@@ -138,7 +138,7 @@ class ConcyclicPointsProperty(Property):
     Concyclic points
     """
     def __init__(self, *points):
-        assert len(points) == 4
+        assert len(points) >= 4
         self.points = points
         super().__init__(frozenset(self.points), set(points))
 
@@ -148,9 +148,10 @@ class ConcyclicPointsProperty(Property):
 
     @property
     def description(self):
+        patterns = ['$%{point:' + str(i) + '}$' for i in range(0, len(self.points))]
         return Comment(
-            'Points $%{point:pt0}$, $%{point:pt1}$, $%{point:pt2}$, and $%{point:pt3}$ are concyclic',
-            dict(('pt%d' % index, pt) for index, pt in enumerate(self.points))
+            'Points ' + ', '.join(patterns[:-1]) + ', and ' + patterns[-1] + ' are concyclic',
+            dict((str(index), pt) for index, pt in enumerate(self.points))
         )
 
 class PointOnLineProperty(Property):

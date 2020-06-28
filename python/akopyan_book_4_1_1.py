@@ -27,7 +27,7 @@ B.angle(A, C).is_acute_constraint(comment='assumption')
 C.angle(B, A).is_acute_constraint(comment='assumption')
 
 props = (
-    ConcyclicPointsProperty(A, B, C, A2),
+    ConcyclicPointsProperty(A, B, C, A2, B2, C2),
 )
 
 run_sample(scene, *props)

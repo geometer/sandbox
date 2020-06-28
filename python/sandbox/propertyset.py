@@ -184,8 +184,10 @@ class LineSet:
                 ))
             return LineSet.best_candidate(candidates)
 
-        def concyclicity_property(self, pt0, pt1, pt2, pt3):
-            pts = (pt0, pt1, pt2, pt3)
+        def concyclicity_property(self, *pts):
+            pt_patterns = ['$%{point:' + str(i) + '}$' for i in range(0, len(pts))]
+            pattern = ', '.join(pt_patterns[:-1]) + ', and ' + pt_patterns[-1] + ' lie on $%{circle:circle}$'
+            common_params = dict((str(index), pt) for index, pt in enumerate(pts))
             candidates = []
             for key in self.keys:
                 premises = []
@@ -193,12 +195,11 @@ class LineSet:
                     if pt in key:
                         continue
                     premises.append(self.point_on_circle_property(pt, key))
+                params = dict(common_params)
+                params['circle'] = Circle(*key)
                 candidates.append(_synthetic_property(
                     ConcyclicPointsProperty(*pts),
-                    Comment(
-                        '$%{point:pt0}$, $%{point:pt1}$, $%{point:pt2}$, and $%{point:pt3}$ lie on $%{circle:circle}$',
-                        {'pt0': pt0, 'pt1': pt1, 'pt2': pt2, 'pt3': pt3, 'circle': Circle(*key)}
-                    ),
+                    Comment(pattern, params),
                     premises
                 ))
             return LineSet.best_candidate(candidates)
@@ -404,8 +405,7 @@ class LineSet:
         line = self.__segment_to_line.get(segment)
         return line.point_on_line_property(segment, point) if line else None
 
-    def concyclicity_property(self, pt0, pt1, pt2, pt3):
-        pts = (pt0, pt1, pt2, pt3)
+    def concyclicity_property(self, *pts):
         key = frozenset(pts)
         cached = self.__concyclicity.get(key)
         if cached:
@@ -1387,6 +1387,8 @@ class PropertySet(LineSet):
                 existing = self.point_on_line_property(prop.segment, prop.point)
             elif isinstance(prop, SumOfTwoAnglesProperty):
                 existing = self.sum_of_two_angles_property(*prop.angles)
+            elif isinstance(prop, ConcyclicPointsProperty):
+                existing = self.concyclicity_property(*prop.points)
         #TODO: LengthRatioProperty
         #TODO: EqualLengthRatiosProperty
         if existing and not existing.compare_values(prop):
