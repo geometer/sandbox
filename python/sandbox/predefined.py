@@ -109,13 +109,6 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
                 cnstr.comment
             )
 
-    for cnstr in scene.constraints(Constraint.Kind.equilateral):
-        if all_visible(cnstr.params[0].points):
-            yield (
-                EquilateralTriangleProperty(cnstr.params[0]),
-                cnstr.comment
-            )
-
     for line in scene.lines(max_layer='auxiliary'):
         for pts in itertools.combinations([p for p in line.all_points], 3):
             if all_visible(pts):
