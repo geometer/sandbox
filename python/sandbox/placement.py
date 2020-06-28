@@ -195,6 +195,8 @@ class Placement(BasePlacement):
         not_placed = list(self.scene.points())
         passed_constraints = set()
         def add(p: CoreScene.Point, *coords):
+            if hasattr(p, 'x') and hasattr(p, 'y'):
+                coords = sorted(coords, key=lambda coo: np.hypot(coo.x - p.x, coo.y - p.y))
             for candidate in coords:
                 temp = Placement.TempPlacement(self, p, candidate)
                 for cs in self.scene.validation_constraints:
