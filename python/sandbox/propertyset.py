@@ -415,12 +415,15 @@ class LineSet:
                 return circle.concyclicity_property(*pts)
         return None
 
-    def collinearity_property(self, pt0, pt1, pt2):
-        pts = (pt0, pt1, pt2)
+    def collinearity_property(self, *pts):
         key = frozenset(pts)
         cached = self.__collinearity.get(key)
         if cached:
             return cached
+
+        pt_patterns = ['$%{point:' + str(i) + '}$' for i in range(0, len(pts))]
+        pattern = ', '.join(pt_patterns[:-1]) + ', and ' + pt_patterns[-1] + ' belong to $%{line:line}$'
+        common_params = dict((str(index), pt) for index, pt in enumerate(pts))
 
         candidates = []
         for line in self.__all_lines:
@@ -435,16 +438,20 @@ class LineSet:
                     if pol is None:
                         pol = line.point_on_line_property(seg, pt)
                     premises.append(pol)
+                params = dict(common_params)
+                params['line'] = seg
+                prop = PointsCollinearityProperty(*pts, True) if len(pts) == 3 else MultiPointsCollinearityProperty(*pts)
                 candidates.append(_synthetic_property(
-                    PointsCollinearityProperty(*pts, True),
-                    Comment(
-                        '$%{point:pt0}$, $%{point:pt1}$, and $%{point:pt2}$ belong to $%{line:line}$',
-                        {'pt0': pt0, 'pt1': pt1, 'pt2': pt2, 'line': seg}
-                    ),
-                    premises
+                    prop, Comment(pattern, params), premises
                 ))
 
-        triangle = Scene.Triangle(pt0, pt1, pt2)
+        if len(pts) > 3:
+            prop = LineSet.best_candidate(candidates)
+            if prop:
+                self.__collinearity[key] = prop
+            return prop
+
+        triangle = Scene.Triangle(*pts)
         lines = [(triangle.sides[i], self.__segment_to_line.get(triangle.sides[i]), triangle.points[i]) for i in range(0, 3)]
         lines = [lw for lw in lines if lw[1]]
         for (side, line, vertex) in lines:
@@ -467,7 +474,7 @@ class LineSet:
         for (segment0, line0, _), (segment1, line1, _) in itertools.combinations(lines, 2):
             if line0 == line1:
                 comment, premises = line0.same_line_explanation(segment0, segment1)
-                prop = PointsCollinearityProperty(pt0, pt1, pt2, True)
+                prop = PointsCollinearityProperty(*pts, True)
                 candidates.append(_synthetic_property(prop, comment, premises))
                 continue
             data = self.__different_lines_graph.get_edge_data(line0, line1)
@@ -489,7 +496,7 @@ class LineSet:
                         comment = LazyComment('%s and %s are different lines, %s is the same as %s, and %s is the same as %s', segment0, segment1, seg0, segment0, seg1, segment1) 
                         premises.append(line0.same_line_property(seg0, segment0))
                         premises.append(line1.same_line_property(seg1, segment1))
-                    prop = PointsCollinearityProperty(pt0, pt1, pt2, False)
+                    prop = PointsCollinearityProperty(*pts, False)
                     candidates.append(_synthetic_property(prop, comment, premises))
 
         prop = LineSet.best_candidate(candidates)
@@ -1382,6 +1389,8 @@ class PropertySet(LineSet):
             #elif isinstance(prop, PointAndCircleProperty):
             #    existing = self.point_and_circle_property(prop.point, prop.circle_key)
             elif isinstance(prop, PointsCollinearityProperty):
+                existing = self.collinearity_property(*prop.points)
+            elif isinstance(prop, MultiPointsCollinearityProperty):
                 existing = self.collinearity_property(*prop.points)
             elif isinstance(prop, PointOnLineProperty):
                 existing = self.point_on_line_property(prop.segment, prop.point)

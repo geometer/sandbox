@@ -230,6 +230,26 @@ class PointsCollinearityProperty(Property):
     def compare_values(self, other):
         return self.collinear == other.collinear
 
+class MultiPointsCollinearityProperty(Property):
+    """
+    Collinear points
+    """
+    def __init__(self, *points):
+        self.points = tuple(points)
+        super().__init__(frozenset(points), set(points))
+
+    @property
+    def __priority__(self):
+        return 1
+
+    @property
+    def description(self):
+        patterns = ['$%{point:' + str(i) + '}$' for i in range(0, len(self.points))]
+        return Comment(
+            'Points ' + ', '.join(patterns[:-1]) + ', and ' + patterns[-1] + ' are collinear',
+            dict((str(index), pt) for index, pt in enumerate(self.points))
+        )
+
 class ParallelVectorsProperty(Property):
     """
     Two vectors are parallel (or at least one of them has zero length)
