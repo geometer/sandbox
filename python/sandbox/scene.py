@@ -267,7 +267,7 @@ class Scene(CoreScene):
 
         return triangle
 
-    def square(self, *points_or_labels):
+    def square(self, *points_or_labels, non_degenerate=False):
         assert len(points_or_labels) == 4
         #TODO: check argument types
         def kwargs(index):
@@ -286,54 +286,25 @@ class Scene(CoreScene):
             else pt2.translated_point(pt1.vector(pt0), 1, **kwargs(3))
 
         pts = (pt0, pt1, pt2, pt3)
-        self.square_constraint(*pts)
+        self.square_constraint(pts, non_degenerate=non_degenerate)
         return pts
 
-    def square_constraint(self, *pts, **kwargs):
+    def square_constraint(self, pts, non_degenerate, **kwargs):
         assert len(pts) == 4
-        if 'comment' not in kwargs:
-            kwargs = dict(kwargs)
-            kwargs['comment'] = Comment('$%{polygon:square}$ is a square', {'square': Scene.Polygon(*pts)})
 
-        pts[0].vector(pts[1]).parallel_constraint(pts[3].vector(pts[2]), **kwargs)
-        pts[0].vector(pts[3]).parallel_constraint(pts[1].vector(pts[2]), **kwargs)
-        sides = [pts[i].segment(pts[j]) for i, j in ((0, 1), (0, 3), (1, 2), (2, 3))]
-        for side0, side1 in itertools.combinations(sides, 2):
-            side0.congruent_constraint(side1, **kwargs)
-        for pt0, pt1, pt2 in itertools.combinations(pts, 3):
-            pt0.not_collinear_constraint(pt1, pt2, **kwargs)
-        pts[0].segment(pts[1]).perpendicular_constraint(pts[0].segment(pts[3]), **kwargs)
-        pts[0].segment(pts[1]).perpendicular_constraint(pts[1].segment(pts[2]), **kwargs)
-        pts[2].segment(pts[3]).perpendicular_constraint(pts[0].segment(pts[3]), **kwargs)
-        pts[2].segment(pts[3]).perpendicular_constraint(pts[1].segment(pts[2]), **kwargs)
-
-        pts[0].angle(pts[1], pts[3]).value_constraint(90, guaranteed=True, **kwargs)
-        pts[0].angle(pts[1], pts[2]).value_constraint(45, guaranteed=True, **kwargs)
-        pts[0].angle(pts[3], pts[2]).value_constraint(45, guaranteed=True, **kwargs)
-        pts[1].angle(pts[2], pts[0]).value_constraint(90, guaranteed=True, **kwargs)
-        pts[1].angle(pts[2], pts[3]).value_constraint(45, guaranteed=True, **kwargs)
-        pts[1].angle(pts[3], pts[0]).value_constraint(45, guaranteed=True, **kwargs)
-        pts[2].angle(pts[3], pts[1]).value_constraint(90, guaranteed=True, **kwargs)
-        pts[2].angle(pts[3], pts[0]).value_constraint(45, guaranteed=True, **kwargs)
-        pts[2].angle(pts[0], pts[1]).value_constraint(45, guaranteed=True, **kwargs)
-        pts[3].angle(pts[0], pts[2]).value_constraint(90, guaranteed=True, **kwargs)
-        pts[3].angle(pts[0], pts[1]).value_constraint(45, guaranteed=True, **kwargs)
-        pts[3].angle(pts[1], pts[2]).value_constraint(45, guaranteed=True, **kwargs)
-
-        self.convex_quadrilateral_constraint(*pts, **kwargs)
-
-        #TODO: this is a hack for sketches
-        pts[0].line_through(pts[1])
-        pts[1].line_through(pts[2])
-        pts[2].line_through(pts[3])
-        pts[3].line_through(pts[0])
+        if non_degenerate:
+            from .property import NondegenerateSquareProperty
+            self.add_property(NondegenerateSquareProperty(Scene.Polygon(*pts)))
+        else:
+            from .property import SquareProperty
+            self.add_property(SquareProperty(Scene.Polygon(*pts)))
 
     def convex_quadrilateral_constraint(self, *points, **kwargs):
         assert len(points) == 4
         if 'comment' not in kwargs:
             kwargs = dict(kwargs)
             kwargs['comment'] = Comment(
-                '$%{polygon:quad}$ is a convex quadrangle',
+                '$%{polygon:quad}$ is a convex quadrilateral',
                 {'quad': Scene.Polygon(*points)}
             )
 

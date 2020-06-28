@@ -857,6 +857,7 @@ class CoreScene:
         def __init__(self, *points):
             self.points = tuple(points)
             self.__sides = None
+            self.__angles = None
 
         def __str__(self):
             return ' '.join(['%s'] * len(self.points)) % self.points
@@ -867,10 +868,17 @@ class CoreScene:
 
         @property
         def sides(self):
-            pts = self.points
             if self.__sides is None:
+                pts = self.points
                 self.__sides = tuple(p0.segment(p1) for (p0, p1) in zip(pts, pts[1:] + (pts[0], )))
             return self.__sides
+
+        @property
+        def angles(self):
+            if self.__angles is None:
+                pts = self.points + self.points[:2]
+                self.__angles = tuple(pts[i + 1].angle(pts[i], pts[i + 2]) for i in range(0, len(self.points)))
+            return self.__angles
 
     def __init__(self):
         self.__objects = []
