@@ -13,6 +13,7 @@ from .rules.basic import *
 from .rules.circle import *
 from .rules.line import *
 from .rules.linear import *
+from .rules.quadrilateral import *
 from .rules.triangle_elements import *
 from .rules.triangles import *
 from .rules.trigonometric import *
@@ -84,6 +85,10 @@ class Explainer:
             CorrespondingSidesInSimilarTrianglesRule(self.context),
             LengthProductEqualityToRatioRule(self.context),
             MiddleOfSegmentRule(self.context),
+            ConvexQuadrilateralRule(self.context),
+            SquareRule(self.context),
+            SquareDegeneracyRule(self.context),
+            NondegenerateSquareRule(self.context),
             EquilateralTriangleRule(self.context),
             CentreOfEquilateralTriangleRule(self.context),
             BaseAnglesOfIsoscelesWithKnownApexAngleRule(self.context),

@@ -32,7 +32,9 @@ class SimplificationCache:
         self.cache = {}
         for num in (sp.sympify(1) / 2, sp.sympify(1) / 4, sp.sympify(3) / 4):
             self.cache[num] = num
-        for num in (sp.sqrt(3), sp.sqrt(3) / 3):
+        for num in (sp.sqrt(2), sp.sqrt(2) / 2):
+            self.cache[num] = num
+        for num in (sp.sqrt(3), sp.sqrt(3) / 2, sp.sqrt(3) / 3):
             self.cache[num] = num
 
 simplification = SimplificationCache()

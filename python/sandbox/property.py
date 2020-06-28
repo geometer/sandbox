@@ -417,6 +417,46 @@ class EquilateralTriangleProperty(Property):
     def description(self):
         return Comment('$%{triangle:triangle}$ is equilateral', {'triangle': self.triangle})
 
+class SquareProperty(Property):
+    """
+    Square
+    """
+    @staticmethod
+    def unique_key(four_points):
+        def perms(four):
+            return [four, (*four[1:], four[0]), (*four[2:], *four[:2]), (four[3], *four[:3])]
+        return frozenset(perms(four_points) + perms(tuple(reversed(four_points))))
+
+    def __init__(self, square):
+        assert len(square.points) == 4
+        self.square = square
+        super().__init__(SquareProperty.unique_key(square.points), {*square.points})
+
+    @property
+    def __priority__(self):
+        return 4
+
+    @property
+    def description(self):
+        return Comment('$%{polygon:square}$ is a square', {'square': self.square})
+
+class NondegenerateSquareProperty(Property):
+    """
+    Non-degenerate square
+    """
+    def __init__(self, square):
+        assert len(square.points) == 4
+        self.square = square
+        super().__init__(SquareProperty.unique_key(square.points), {*square.points})
+
+    @property
+    def __priority__(self):
+        return 4.5
+
+    @property
+    def description(self):
+        return Comment('$%{polygon:square}$ is a non-degenerate square', {'square': self.square})
+
 class CentreOfEquilateralTriangleProperty(Property):
     """
     A point is the centre of equilateral triangle
