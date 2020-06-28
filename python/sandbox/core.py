@@ -914,6 +914,8 @@ class CoreScene:
                 {'equilateral': triangle}
             )
         self.constraint(Constraint.Kind.equilateral, triangle, **kwargs)
+        from .property import EquilateralTriangleProperty
+        self.add_property(EquilateralTriangleProperty(triangle))
 
     def quadrilateral_constraint(self, A, B, C, D, **kwargs):
         """
