@@ -36,15 +36,6 @@ class Explainer:
             NonCollinearityToPointNotOnLineRule(self.context),
             MissingLineKeysRule(self.context),
 
-            #ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule(self.context),
-            CyclicQuadrilateralRule(self.context),
-            CyclicQuadrilateralRule2(self.context),
-            PointsOnCircleRule(self.context),
-            ConcyclicToSameCircleRule(self.context),
-            InscribedAnglesWithCommonCircularArcRule(self.context),
-            #PointsOnChordRule(self.context),
-            TwoChordsIntersectionRule(self.context),
-            #ThreeCollinearPointsOnCircleRule(self.context),
             LengthRatioTransitivityRule(self.context),
             ProportionalLengthsToLengthsRatioRule(self.context),
             LengthRatiosWithCommonDenominatorRule(self.context),
@@ -138,6 +129,19 @@ class Explainer:
             SimilarTrianglesByThreeSidesRule(self.context),
             SimilarTrianglesWithCongruentSideRule(self.context),
         ]
+
+        if options.get('circles'):
+            self.__rules += [
+                #ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule(self.context),
+                CyclicQuadrilateralRule(self.context),
+                CyclicQuadrilateralRule2(self.context),
+                PointsOnCircleRule(self.context),
+                ConcyclicToSameCircleRule(self.context),
+                InscribedAnglesWithCommonCircularArcRule(self.context),
+                #PointsOnChordRule(self.context),
+                TwoChordsIntersectionRule(self.context),
+                #ThreeCollinearPointsOnCircleRule(self.context),
+            ]
         if options.get('advanced'):
             self.__rules += [
                 RightAngledTriangleMedianRule(self.context),
