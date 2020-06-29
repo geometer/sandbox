@@ -103,6 +103,7 @@ class CoreScene:
             translated        = auto()
             perp              = auto()
             line              = auto()
+            segment           = auto()
             circle            = auto()
             line_x_line       = auto()
             circle_x_line     = auto()
@@ -601,7 +602,8 @@ class CoreScene:
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
                 kwargs['comment'] = LazyComment('point on segment %s', self)
-            point = self.line_through(layer='auxiliary').free_point(**kwargs)
+            point = CoreScene.Point(self.scene, CoreScene.Point.Origin.segment, base=self, **kwargs)
+            point.belongs_to(self.line_through(layer='auxiliary'))
             point.inside_constraint(self)
             return point
 

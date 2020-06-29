@@ -239,6 +239,14 @@ class Placement(BasePlacement):
                             0.5 * (loc0.x + loc1.x) + coef * (loc0.x - loc1.x),
                             0.5 * (loc0.y + loc1.y) + coef * (loc0.y - loc1.y)
                         ))
+                    elif p.origin == CoreScene.Point.Origin.segment:
+                        loc0 = self.location(p.base.points[0])
+                        loc1 = self.location(p.base.points[1])
+                        coef = self.__get_coord_01(p.label + '.coef')
+                        add(p, TwoDCoordinates(
+                            loc1.x + coef * (loc0.x - loc1.x),
+                            loc1.y + coef * (loc0.y - loc1.y)
+                        ))
                     elif p.origin == CoreScene.Point.Origin.translated:
                         base = self.location(p.base)
                         start = self.location(p.delta.start)
@@ -398,6 +406,13 @@ class Placement(BasePlacement):
         value = self.params.get(label)
         if value is None:
             value = np.float128(np.tan((np.random.random() - 0.5) * np.pi))
+            self.params[label] = value
+        return value
+
+    def __get_coord_01(self, label):
+        value = self.params.get(label)
+        if value is None:
+            value = np.float128(np.random.random())
             self.params[label] = value
         return value
 
