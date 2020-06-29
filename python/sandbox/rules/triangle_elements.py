@@ -98,6 +98,41 @@ class CorrespondingAnglesInSimilarTrianglesRule(SingleSourceRule):
         if original != mask:
             self.processed[prop] = mask
 
+class CorrespondingAnglesInSimilarTrianglesRule2(SingleSourceRule):
+    property_type = SimilarTrianglesProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
+    def apply(self, prop):
+        ncl0 = self.context.collinearity_property(*prop.triangle0.points)
+        if ncl0 is None:
+            return
+        if ncl0.collinear:
+            self.processed.add(prop)
+            return
+        ncl1 = self.context.collinearity_property(*prop.triangle1.points)
+        if ncl1 is None:
+            return
+        self.processed.add(prop)
+        if ncl1.collinear:
+            # TODO: triangle1 is a point
+            return
+
+        for i in range(0, 3):
+            yield (
+                AngleRatioProperty(prop.triangle0.angles[i], prop.triangle1.angles[i], 1),
+                Comment(
+                    'corresponding angles in similar non-degenerate $%{triangle:tr0}$ and $%{triangle:tr1}$',
+                    {'tr0': prop.triangle0, 'tr1': prop.triangle1}
+                ),
+                [prop, ncl0, ncl1]
+            )
+
 class BaseAnglesOfIsoscelesRule(SingleSourceRule):
     property_type = IsoscelesTriangleProperty
 

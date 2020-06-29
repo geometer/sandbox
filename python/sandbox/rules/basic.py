@@ -1261,6 +1261,120 @@ class RotatedAngleSimplifiedRule(Rule):
         if mask != original:
             self.processed[src] = mask
 
+class TwoAcuteOrRightAnglesWithCommonSideRule(SingleSourceRule):
+    property_type = SameOrOppositeSideProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
+    def accepts(self, prop):
+        return not prop.same
+
+    def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0x3:
+            return
+        original = mask
+
+        for v0, v1, bit in [(*prop.segment.points, 0x1), (*reversed(prop.segment.points), 0x2)]:
+            if mask & bit:
+                continue
+
+            kind0 = self.context.angle_kind_property(v0.angle(prop.points[0], v1))
+            if kind0 is None:
+                continue
+            if kind0.kind == AngleKindProperty.Kind.obtuse:
+                mask |= bit
+                continue
+            kind1 = self.context.angle_kind_property(v0.angle(prop.points[1], v1))
+            if kind1 is None:
+                continue
+            mask |= bit
+            if kind1.kind == AngleKindProperty.Kind.obtuse:
+                continue
+            if kind1.kind == AngleKindProperty.Kind.right and kind0.kind == kind1.kind:
+                continue
+
+            if kind0.kind == AngleKindProperty.Kind.acute:
+                if kind1.kind == AngleKindProperty.Kind.acute:
+                    pattern = 'acute angles $%{angle:angle0}$ and $%{angle:angle1}$ with common side $%{ray:side}$'
+                else:
+                    pattern = 'acute $%{angle:angle0}$ and right $%{angle:angle1}$ with common side $%{ray:side}$'
+            else:
+                pattern = 'acute $%{angle:angle1}$ and right $%{angle:angle0}$ with common side $%{ray:side}$'
+            yield (
+                PointInsideAngleProperty(v1, v0.angle(*prop.points)),
+                Comment(
+                    pattern,
+                    {'angle0': kind0.angle, 'angle1': kind1.angle, 'side': v0.vector(v1)}
+                ),
+                [kind0, kind1, prop]
+            )
+
+        if mask != original:
+            self.processed[prop] = mask
+
+class CongruentAnglesWithCommonPartRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
+    def sources(self):
+        pias = self.context.list(PointInsideAngleProperty)
+        return [(p0, p1) for (p0, p1) in itertools.combinations(pias, 2) if p0.angle.vertex == p1.angle.vertex and p0.point in p1.angle.endpoints and p1.point in p0.angle.endpoints]
+
+    def apply(self, src):
+        key = frozenset(src)
+        mask = self.processed.get(key, 0)
+        if mask == 0x3:
+            return
+        original = mask
+
+        prop0, prop1 = src
+        sum0, sum1 = prop0.angle, prop1.angle
+        vertex = sum0.vertex
+        common = vertex.angle(prop0.point, prop1.point)
+        pt0 = next(pt for pt in sum0.endpoints if pt != prop1.point)
+        pt1 = next(pt for pt in sum1.endpoints if pt != prop0.point)
+        summand0 = vertex.angle(pt0, prop0.point)
+        summand1 = vertex.angle(pt1, prop1.point)
+
+        if (mask & 0x1) == 0:
+            known = self.context.angle_ratio_property(sum0, sum1)
+            if known:
+                if known.value == 1:
+                    mask |= 0x1
+                    yield (
+                        AngleRatioProperty(summand0, summand1, 1),
+                        Comment(
+                            '$%{anglemeasure:summand0} = %{anglemeasure:sum0} - %{anglemeasure:common} = %{anglemeasure:sum1} - %{anglemeasure:common} = %{anglemeasure:summand1}$',
+                            {'sum0': sum0, 'sum1': sum1, 'common': common, 'summand0': summand0, 'summand1': summand1}
+                        ),
+                        [known, prop0, prop1]
+                    )
+                else:
+                    mask = 0x3
+
+        if (mask & 0x2) == 0:
+            known = self.context.angle_ratio_property(summand0, summand1)
+            if known:
+                if known.value == 1:
+                    mask |= 0x2
+                    yield (
+                        AngleRatioProperty(sum0, sum1, 1),
+                        Comment(
+                            '$%{angle:sum0}$ and $%{angle:sum1}$ consist of common part $%{angle:common}$ and congruent $%{angle:summand0}$ and $%{angle:summand1}$',
+                            {'sum0': sum0, 'sum1': sum1, 'common': common, 'summand0': summand0, 'summand1': summand1}
+                        ),
+                        [known, prop0, prop1]
+                    )
+                else:
+                    mask = 0x3
+
+        if mask != original:
+            self.processed[key] = mask
+
 class RotatedAngleRule(Rule):
     def __init__(self, context):
         super().__init__(context)
@@ -2191,14 +2305,47 @@ class CongruentAnglesDegeneracyRule(Rule):
             if ca is None:
                 ca = self.context.angle_ratio_property(ang0, ang1)
             if col.collinear:
-                pattern = 'angles $%{angle:angle1}$ and $%{angle:angle0}$ are congruent, $%{angle:angle0}$ is degenerate'
+                pattern = '$%{angle:angle1}$ and $%{angle:angle0}$ are congruent, $%{angle:angle0}$ is degenerate'
             else:
-                pattern = 'angles $%{angle:angle1}$ and $%{angle:angle0}$ are congruent, $%{angle:angle0}$ is non-degenerate'
+                pattern = '$%{angle:angle1}$ and $%{angle:angle0}$ are congruent, $%{angle:angle0}$ is non-degenerate'
             comment = Comment(pattern, {'angle0': ang0, 'angle1': ang1})
             yield (
                 PointsCollinearityProperty(*ang1.point_set, col.collinear),
                 comment,
                 [ca, col]
+            )
+
+class CongruentAnglesKindRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        return self.context.congruent_angles_with_vertex()
+
+    def apply(self, src):
+        ca = None
+        for key in (src, (src[1], src[0])):
+            if key in self.processed:
+                continue
+            ang0, ang1 = key
+            kind = self.context.angle_kind_property(ang0)
+            if kind is None:
+                continue
+            self.processed.add(key)
+            if ca is None:
+                ca = self.context.angle_ratio_property(ang0, ang1)
+            if kind.kind == AngleKindProperty.Kind.acute:
+                pattern = '$%{angle:angle1}$ and $%{angle:angle0}$ are congruent, $%{angle:angle0}$ is acute'
+            elif kind.kind == AngleKindProperty.Kind.obtuse:
+                pattern = '$%{angle:angle1}$ and $%{angle:angle0}$ are congruent, $%{angle:angle0}$ is obtuse'
+            else:
+                pattern = '$%{angle:angle1}$ and $%{angle:angle0}$ are congruent, $%{angle:angle0}$ is right'
+            comment = Comment(pattern, {'angle0': ang0, 'angle1': ang1})
+            yield (
+                AngleKindProperty(ang1, kind.kind),
+                comment,
+                [ca, kind]
             )
 
 class PointAndAngleRule(SingleSourceRule):
