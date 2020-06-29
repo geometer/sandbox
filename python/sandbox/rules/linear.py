@@ -6,14 +6,14 @@ from ..util import Comment, divide
 from .abstract import Rule, SingleSourceRule
 
 class AngleFromSumOfTwoAnglesRule(SingleSourceRule):
-    property_type = SumOfTwoAnglesProperty
+    property_type = SumOfAnglesProperty
 
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
 
-    def accept(self, prop):
-        return prop not in self.processed
+    def accepts(self, prop):
+        return len(prop.angles) == 2 and prop not in self.processed
 
     def apply(self, prop):
         for a0, a1 in (prop.angles, reversed(prop.angles)):
@@ -32,11 +32,14 @@ class AngleFromSumOfTwoAnglesRule(SingleSourceRule):
             return
 
 class SumOfTwoAnglesByThreeRule(SingleSourceRule):
-    property_type = SumOfThreeAnglesProperty
+    property_type = SumOfAnglesProperty
 
     def __init__(self, context):
         super().__init__(context)
         self.processed = {}
+
+    def accepts(self, prop):
+        return len(prop.angles) == 3
 
     def apply(self, prop):
         mask = self.processed.get(prop, 0)
@@ -54,7 +57,7 @@ class SumOfTwoAnglesByThreeRule(SingleSourceRule):
             mask |= bit
             others = [ang for ang in prop.angles if ang != angle]
             yield (
-                SumOfTwoAnglesProperty(*others, prop.degree - av.degree),
+                SumOfAnglesProperty(*others, degree=prop.degree - av.degree),
                 Comment(
                     '$%{degree:sum} = %{anglemeasure:a0} + %{anglemeasure:a1} + %{anglemeasure:a2} = %{anglemeasure:a0} + %{anglemeasure:a1} + %{degree:degree2}$',
                     {'a0': others[0], 'a1': others[1], 'a2': angle, 'sum': prop.degree, 'degree2': av.degree}
@@ -65,11 +68,14 @@ class SumOfTwoAnglesByThreeRule(SingleSourceRule):
             self.processed[prop] = mask
 
 class AngleBySumOfThreeRule(SingleSourceRule):
-    property_type = SumOfThreeAnglesProperty
+    property_type = SumOfAnglesProperty
 
     def __init__(self, context):
         super().__init__(context)
         self.processed = {}
+
+    def accepts(self, prop):
+        return len(prop.angles) == 3
 
     def apply(self, prop):
         mask = self.processed.get(prop, 0)
@@ -116,14 +122,14 @@ class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
     """
     If the sum and the ratio of two angles are known, we can find the values
     """
-    property_type = SumOfTwoAnglesProperty
+    property_type = SumOfAnglesProperty
 
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
 
     def accepts(self, prop):
-        return prop not in self.processed
+        return len(prop.angles) == 2 and prop not in self.processed
 
     def apply(self, prop):
         ar = self.context.angle_ratio_property(prop.angles[0], prop.angles[1])
@@ -164,7 +170,8 @@ class EqualSumsOfAnglesRule(Rule):
         self.processed = {} # prop => bit mask
 
     def sources(self):
-        return [(s0, s1) for (s0, s1) in itertools.combinations(self.context.list(SumOfTwoAnglesProperty), 2) if s0.degree == s1.degree]
+        sums_of_two = [p for p in self.context.list(SumOfAnglesProperty) if len(p.angles) == 2]
+        return [(s0, s1) for (s0, s1) in itertools.combinations(sums_of_two, 2) if s0.degree == s1.degree]
 
     def apply(self, src):
         mask = self.processed.get(src, 0)

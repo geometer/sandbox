@@ -900,7 +900,7 @@ class AngleRatioPropertySet:
         self.family_with_degree = None
         self.__value_cache = {} # angle => prop
         self.__ratio_cache = {} # {angle, angle} => prop
-        self.__sum_of_two_angles = {} # (angle, angle) => prop
+        self.__sum_of_angles = {} # (angle, angle, ...) => prop
 
     def value(self, angle):
         fam = self.family_with_degree
@@ -967,9 +967,9 @@ class AngleRatioPropertySet:
             self.__add_ratio_property(prop)
         elif isinstance(prop, AngleValueProperty):
             self.__add_value_property(prop)
-        elif isinstance(prop, SumOfTwoAnglesProperty):
-            self.__sum_of_two_angles[prop.angles] = prop
-            self.__sum_of_two_angles[(prop.angles[1], prop.angles[0])] = prop
+        elif isinstance(prop, SumOfAnglesProperty):
+            for perm in itertools.permutations(prop.angles, len(prop.angles)):
+                self.__sum_of_angles[perm] = prop
 
     def __add_value_property(self, prop):
         self.__value_cache[prop.angle] = prop
@@ -1028,37 +1028,33 @@ class AngleRatioPropertySet:
             self.angle_to_family[prop.angle0] = fam
             self.angle_to_family[prop.angle1] = fam
 
-    def sum_of_two_angles(self, angle0, angle1):
-        congruents0 = set(self.congruent_angles_for(angle0))
-        congruents0.add(angle0)
-        congruents1 = set(self.congruent_angles_for(angle1))
-        congruents1.add(angle1)
-        for key, value in self.__sum_of_two_angles.items():
-            if key[0] in congruents0 and key[1] in congruents1:
+    def sum_of_angles(self, *angles):
+        congruents = [set([ngl] + list(self.congruent_angles_for(ngl))) for ngl in angles]
+        for key, value in self.__sum_of_angles.items():
+            if len(key) == len(angles) and all(key[i] in congruents[i] for i in range(0, len(key))):
                 return value.degree
         return None
 
-    def sum_of_two_angles_property(self, angle0, angle1):
+    def sum_of_angles_property(self, *angles):
         candidates = []
-        pattern = '$%{angle:angle0} + %{angle:angle1} = %{angle:a0} + %{angle:a1} = %{degree:sum}$'
+        p0 = ['%{angle:a' + str(i) + '}' for i in range(0, len(angles))]
+        p1 = ['%{angle:' + str(i) + '}' for i in range(0, len(angles))]
+        pattern = '$' + ' + '.join(p0) + ' = ' + ' + '.join(p1) + ' = %{degree:sum}$'
+        common_params = {'a' + str(i): angle for i, angle in enumerate(angles)}
 
-        congruents0 = set(self.congruent_angles_for(angle0))
-        congruents0.add(angle0)
-        congruents1 = set(self.congruent_angles_for(angle1))
-        congruents1.add(angle1)
+        congruents = [set([ngl] + list(self.congruent_angles_for(ngl))) for ngl in angles]
 
-        for (a0, a1), known in self.__sum_of_two_angles.items():
-            if a0 in congruents0 and a1 in congruents1:
-                prop = SumOfTwoAnglesProperty(angle0, angle1, known.degree)
-                comment = Comment(
-                    pattern,
-                    {'angle0': angle0, 'angle1': angle1, 'a0': a0, 'a1': a1, 'sum': known.degree}
-                )
+        for key, known in self.__sum_of_angles.items():
+            if len(key) == len(angles) and all(key[i] in congruents[i] for i in range(0, len(key))):
+                prop = SumOfAnglesProperty(*angles, degree=known.degree)
+                params = dict(common_params)
+                params.update({str(i): a for i, a in enumerate(key)})
+                params['sum'] = known.degree
+                comment = Comment(pattern, params)
                 premises = [known]
-                if angle0 != a0:
-                    premises.append(self.ratio_property(angle0, a0))
-                if angle1 != a1:
-                    premises.append(self.ratio_property(angle1, a1))
+                for angle, a in zip(angles, key):
+                    if angle != a:
+                        premises.append(self.ratio_property(angle, a))
                 candidates.append(_synthetic_property(prop, comment, premises))
 
         return PropertySet.best_candidate(candidates)
@@ -1300,7 +1296,7 @@ class PropertySet(LineSet):
         self.__indexes[prop] = len(self.__indexes)
         if isinstance(prop, LinearAngleProperty):
             self.__linear_angles.add(prop)
-        if type_key in (AngleValueProperty, AngleRatioProperty, SumOfTwoAnglesProperty):
+        if type_key in (AngleValueProperty, AngleRatioProperty, SumOfAnglesProperty):
             self.__angle_ratios.add(prop)
         elif type_key == AngleKindProperty:
             self.__angle_kinds[prop.angle] = prop
@@ -1394,8 +1390,8 @@ class PropertySet(LineSet):
                 existing = self.collinearity_property(*prop.points)
             elif isinstance(prop, PointOnLineProperty):
                 existing = self.point_on_line_property(prop.segment, prop.point)
-            elif isinstance(prop, SumOfTwoAnglesProperty):
-                existing = self.sum_of_two_angles_property(*prop.angles)
+            elif isinstance(prop, SumOfAnglesProperty):
+                existing = self.sum_of_angles_property(*prop.angles)
             elif isinstance(prop, ConcyclicPointsProperty):
                 existing = self.concyclicity_property(*prop.points)
         #TODO: LengthRatioProperty
@@ -1451,11 +1447,11 @@ class PropertySet(LineSet):
     def congruent_angles_for(self, angle):
         return self.__angle_ratios.congruent_angles_for(angle)
 
-    def sum_of_two_angles(self, angle0, angle1):
-        return self.__angle_ratios.sum_of_two_angles(angle0, angle1)
+    def sum_of_angles(self, *angles):
+        return self.__angle_ratios.sum_of_angles(*angles)
 
-    def sum_of_two_angles_property(self, angle0, angle1):
-        return self.__angle_ratios.sum_of_two_angles_property(angle0, angle1)
+    def sum_of_angles_property(self, *angles):
+        return self.__angle_ratios.sum_of_angles_property(*angles)
 
     def length_ratios(self, allow_zeroes):
         if allow_zeroes:

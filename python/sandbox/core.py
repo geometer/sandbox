@@ -694,16 +694,16 @@ class CoreScene:
             angle = CoreScene.Angle(vector0, vector1)
             if angle.vertex is None and angle.pseudo_vertex:
                 if angle.vectors[0].end == angle.vectors[1].start:
-                    from .property import SumOfTwoAnglesProperty
+                    from .property import SumOfAnglesProperty
                     #TODO add comment
-                    self.add_property(SumOfTwoAnglesProperty(
-                        angle, angle.vectors[0].reversed.angle(angle.vectors[1]), 180
+                    self.add_property(SumOfAnglesProperty(
+                        angle, angle.vectors[0].reversed.angle(angle.vectors[1]), degree=180
                     ))
                 elif angle.vectors[0].start == angle.vectors[1].end:
-                    from .property import SumOfTwoAnglesProperty
+                    from .property import SumOfAnglesProperty
                     #TODO add comment
-                    self.add_property(SumOfTwoAnglesProperty(
-                        angle, angle.vectors[0].angle(angle.vectors[1].reversed), 180
+                    self.add_property(SumOfAnglesProperty(
+                        angle, angle.vectors[0].angle(angle.vectors[1].reversed), degree=180
                     ))
                 elif angle.vectors[0].end == angle.vectors[1].end:
                     #TODO vertical angles

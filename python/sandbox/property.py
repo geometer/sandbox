@@ -649,45 +649,23 @@ class AngleRatioProperty(LinearAngleProperty):
     def compare_values(self, other):
         return self.value == other.value
 
-class SumOfThreeAnglesProperty(LinearAngleProperty):
+class SumOfAnglesProperty(LinearAngleProperty):
     """
-    Sum of three angles is equal to degree
+    Sum of angles is equal to degree
     """
-    def __init__(self, angle0, angle1, angle2, degree):
-        self.angles = (angle0, angle1, angle2)
+    def __init__(self, *angles, degree=None):
+        self.angles = angles
         self.degree = degree
-        super().__init__(frozenset(self.angles), {*angle0.point_set, *angle1.point_set, *angle2.point_set})
+        points = set()
+        for angle in angles:
+            points.update(angle.point_set)
+        super().__init__(frozenset(angles), points)
 
     def keys(self):
         return self.angles
 
     def equation(self, angle_to_expression):
-        return angle_to_expression(self.angles[0]) + angle_to_expression(self.angles[1]) + angle_to_expression(self.angles[2]) - self.degree
-
-    @property
-    def description(self):
-        return Comment(
-            '$%{anglemeasure:a0} + %{anglemeasure:a1} + %{anglemeasure:a2} = %{degree:value}$',
-            {'a0': self.angles[0], 'a1': self.angles[1], 'a2': self.angles[2], 'value': self.degree}
-        )
-
-    def compare_values(self, other):
-        return self.degree == other.degree
-
-class SumOfTwoAnglesProperty(LinearAngleProperty):
-    """
-    Sum of two angles is equal to degree
-    """
-    def __init__(self, angle0, angle1, degree):
-        self.angles = (angle0, angle1)
-        self.degree = degree
-        super().__init__(frozenset([angle0, angle1]), {*angle0.point_set, *angle1.point_set})
-
-    def keys(self):
-        return self.angles
-
-    def equation(self, angle_to_expression):
-        return angle_to_expression(self.angles[0]) + angle_to_expression(self.angles[1]) - self.degree
+        return sum(angle_to_expression(ngl) for ngl in self.angles) - self.degree
 
     @property
     def __priority__(self):
@@ -695,10 +673,10 @@ class SumOfTwoAnglesProperty(LinearAngleProperty):
 
     @property
     def description(self):
-        return Comment(
-            '$%{anglemeasure:a0} + %{anglemeasure:a1} = %{degree:value}$',
-            {'a0': self.angles[0], 'a1': self.angles[1], 'value': self.degree}
-        )
+        patterns = ['$%{anglemeasure:' + str(i) + '}$' for i in range(0, len(self.angles))]
+        params = {str(i): angle for i, angle in enumerate(self.angles)}
+        params['value'] = self.degree
+        return Comment(' + '.join(patterns) + ' = %{degree:value}$', params)
 
     def compare_values(self, other):
         return self.degree == other.degree

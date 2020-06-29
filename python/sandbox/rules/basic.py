@@ -154,7 +154,7 @@ class SumOfAngles180DegreeRule(Rule):
         self.processed = set()
 
     def sources(self):
-        return [p for p in self.context.list(SumOfTwoAnglesProperty) if p.angles[0].vertex is not None and p.angles[0].vertex == p.angles[1].vertex and p.degree == 180 and p not in self.processed]
+        return [p for p in self.context.list(SumOfAnglesProperty) if len(p.angles) == 2 and p.angles[0].vertex is not None and p.angles[0].vertex == p.angles[1].vertex and p.degree == 180 and p not in self.processed]
 
     def apply(self, prop):
         common = next((pt for pt in prop.angles[0].endpoints if pt in prop.angles[1].endpoints), None)
@@ -441,7 +441,7 @@ class SumOfTwoAnglesInTriangleRule(Rule):
         else:
             pattern = 'sum of two angles of $%{triangle:triangle}$, the third $%{anglemeasure:angle} = %{degree:degree}$'
         yield (
-            SumOfTwoAnglesProperty(angle1, angle2, 180 - prop.degree),
+            SumOfAnglesProperty(angle1, angle2, degree=180 - prop.degree),
             Comment(pattern, {'triangle': triangle, 'angle': angle0, 'degree': prop.degree}),
             [prop]
         )
@@ -472,7 +472,7 @@ class SumOfThreeAnglesInTriangleRule(Rule):
         ne1 = self.context.coincidence_property(pt0, pt2)
         triangle = Scene.Triangle(pt0, pt1, pt2)
         yield (
-            SumOfThreeAnglesProperty(*triangle.angles, 180),
+            SumOfAnglesProperty(*triangle.angles, degree=180),
             Comment('three angles of $%{triangle:triangle}$', {'triangle': triangle}),
             [ne0, ne1, ne2]
         )
@@ -1655,13 +1655,13 @@ class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
             angle0 = lp0.angle(pt0, lp1)
             angle1 = lp1.angle(pt1, lp0)
             if prop.same:
-                sum_degree = self.context.sum_of_two_angles(angle0, angle1)
+                sum_degree = self.context.sum_of_angles(angle0, angle1)
                 if sum_degree is None:
                     continue
                 mask |= bit
                 if sum_degree != 180:
                     continue
-                sum_reason = self.context.sum_of_two_angles_property(angle0, angle1)
+                sum_reason = self.context.sum_of_angles_property(angle0, angle1)
                 for p in AngleValueProperty.generate(lp0.vector(pt0), lp1.vector(pt1), 0):
                     yield (
                         p,
@@ -1723,10 +1723,10 @@ class SupplementaryAnglesRule(SingleSourceRule):
             if prop.reason.obsolete and ne.reason.obsolete:
                 continue
             yield (
-                SumOfTwoAnglesProperty(
+                SumOfAnglesProperty(
                     ang.vertex.angle(ang.vectors[0].end, pt),
                     ang.vertex.angle(pt, ang.vectors[1].end),
-                    180
+                    degree=180
                 ),
                 LazyComment('supplementary angles'),
                 [prop, ne]
@@ -1781,7 +1781,7 @@ class TransversalRule(Rule):
                     continue
 
                 if rev:
-                    new_prop = SumOfTwoAnglesProperty(ngl0, ngl1, 180)
+                    new_prop = SumOfAnglesProperty(ngl0, ngl1, degree=180)
                     if common0 == common1:
                         pattern = 'supplementary angles: common side $%{ray:common}$, and $%{ray:vec0} \\uparrow\\!\\!\\!\\downarrow %{ray:vec1}$'
                     else:
@@ -2114,7 +2114,7 @@ class TwoAnglesWithCommonSideRule(SingleSourceRule):
         angle0 = prop.angle.vertex.angle(prop.angle.vectors[0].end, prop.point)
         angle1 = prop.angle.vertex.angle(prop.angle.vectors[1].end, prop.point)
         yield (
-            SumOfTwoAnglesProperty(angle0, angle1, av.degree),
+            SumOfAnglesProperty(angle0, angle1, degree=av.degree),
             Comment(
                 '$%{anglemeasure:angle0} + %{anglemeasure:angle1} = %{anglemeasure:sum} = %{degree:degree}$',
                 {'angle0': angle0, 'angle1': angle1, 'sum': prop.angle, 'degree': av.degree}

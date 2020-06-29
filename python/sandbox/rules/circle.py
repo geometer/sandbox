@@ -68,13 +68,13 @@ class CyclicQuadrilateralRule2(SingleSourceRule):
     def apply(self, prop):
         angle0 = prop.points[0].angle(*prop.segment.points)
         angle1 = prop.points[1].angle(*prop.segment.points)
-        sum_degree = self.context.sum_of_two_angles(angle0, angle1)
+        sum_degree = self.context.sum_of_angles(angle0, angle1)
         if sum_degree is None:
             return
         self.processed.add(prop)
         if sum_degree != 180:
             return
-        sum_prop = self.context.sum_of_two_angles_property(angle0, angle1)
+        sum_prop = self.context.sum_of_angles_property(angle0, angle1)
 
         points = (prop.points[0], prop.segment.points[0], prop.points[1], prop.segment.points[1])
         yield (
@@ -356,7 +356,7 @@ class InscribedAnglesWithCommonCircularArcRule(Rule):
                     new_prop = AngleRatioProperty(ang0, ang1, 1)
                 else:
                     pattern = '$%{angle:angle0}$ and $%{angle:angle1}$ are inscribed in $%{circle:circle}$ and subtend complementary arcs'
-                    new_prop = SumOfTwoAnglesProperty(ang0, ang1, 180)
+                    new_prop = SumOfAnglesProperty(ang0, ang1, degree=180)
                 yield (
                     new_prop,
                     Comment(pattern, {'angle0': ang0, 'angle1': ang1, 'circle': circle}),
