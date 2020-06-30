@@ -417,7 +417,31 @@ class EquilateralTriangleProperty(Property):
     def description(self):
         return Comment('$%{triangle:triangle}$ is equilateral', {'triangle': self.triangle})
 
-class SquareProperty(Property):
+class QuadrilateralProperty(Property):
+    @staticmethod
+    def unique_key(four_points):
+        def perms(four):
+            return [four, (*four[1:], four[0]), (*four[2:], *four[:2]), (four[3], *four[:3])]
+        return frozenset(perms(four_points) + perms(tuple(reversed(four_points))))
+
+class ConvexQuadrilateralProperty(QuadrilateralProperty):
+    """
+    Non-degenerate convex quadrilateral
+    """
+    def __init__(self, quadrilateral):
+        assert len(quadrilateral.points) == 4
+        self.quadrilateral = quadrilateral
+        super().__init__(QuadrilateralProperty.unique_key(quadrilateral.points), set(quadrilateral.points))
+
+    @property
+    def __priority__(self):
+        return 3
+
+    @property
+    def description(self):
+        return Comment('$%{polygon:quad}$ is a convex quadrilateral', {'quad': self.quadrilateral})
+
+class SquareProperty(QuadrilateralProperty):
     """
     Square
     """
@@ -430,7 +454,7 @@ class SquareProperty(Property):
     def __init__(self, square):
         assert len(square.points) == 4
         self.square = square
-        super().__init__(SquareProperty.unique_key(square.points), {*square.points})
+        super().__init__(QuadrilateralProperty.unique_key(square.points), set(square.points))
 
     @property
     def __priority__(self):
@@ -440,14 +464,14 @@ class SquareProperty(Property):
     def description(self):
         return Comment('$%{polygon:square}$ is a square', {'square': self.square})
 
-class NondegenerateSquareProperty(Property):
+class NondegenerateSquareProperty(QuadrilateralProperty):
     """
     Non-degenerate square
     """
     def __init__(self, square):
         assert len(square.points) == 4
         self.square = square
-        super().__init__(SquareProperty.unique_key(square.points), {*square.points})
+        super().__init__(QuadrilateralProperty.unique_key(square.points), set(square.points))
 
     @property
     def __priority__(self):

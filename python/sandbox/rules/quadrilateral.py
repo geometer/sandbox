@@ -6,19 +6,75 @@ from ..util import Comment
 
 from .abstract import Rule, SingleSourceRule
 
+class PointsToConvexQuadrilateralRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        oppos = [p for p in self.context.list(SameOrOppositeSideProperty) if not p.same]
+        for p0, p1 in itertools.combinations(oppos, 2):
+            if set(p0.points) == set(p1.segment.points) and set(p1.points) == set(p0.segment.points):
+                yield (p0, p1)
+
+    def apply(self, src):
+        if src in self.processed:
+            return
+
+        prop0, prop1 = src
+        self.processed.add(src)
+        self.processed.add((prop1, prop0))
+
+        p0 = prop0.points
+        p1 = prop0.segment.points
+        quad = Scene.Polygon(p0[0], p1[0], p0[1], p1[1])
+        yield (
+            ConvexQuadrilateralProperty(quad),
+            Comment(
+                'both diagonals $%{segment:d0}$ and $%{segment:d1}$ divide quadrilateral $%{polygon:quad}$',
+                {'d0': prop0.segment, 'd1': prop1.segment, 'quad': quad}
+            ),
+            [prop0, prop1]
+        )
+
+class SumOfAnglesOfConvexQuadrilateralRule(SingleSourceRule):
+    property_type = ConvexQuadrilateralProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
+    def apply(self, prop):
+        self.processed.add(prop)
+
+        yield (
+            SumOfAnglesProperty(*prop.quadrilateral.angles, degree=360),
+            Comment('sum of angles of convex $%{polygon:quad}$', {'quad': prop.quadrilateral}),
+            [prop]
+        )
+
 class ConvexQuadrilateralRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
 
     def sources(self):
-        return [p for p in self.context.list(NondegenerateSquareProperty) if p not in self.processed]
+        return [p for p in self.context.list(ConvexQuadrilateralProperty) + self.context.list(NondegenerateSquareProperty) if p not in self.processed]
 
     def apply(self, prop):
         self.processed.add(prop)
 
-        comment = Comment('$%{polygon:square}$ is a non-degenerate square', {'square': prop.square})
-        points = prop.square.points * 2
+        if isinstance(prop, NondegenerateSquareProperty):
+            quad = prop.square
+            pattern = '$%{polygon:quad}$ is a non-degenerate square'
+        else:
+            quad = prop.quadrilateral
+            pattern = '$%{polygon:quad}$ is a convex quadrilateral'
+        points = quad.points * 2
+        comment = Comment(pattern, {'quad': quad})
         for i in range(0, 4):
             pts = [points[j] for j in range(i, i + 4)]
             yield (
