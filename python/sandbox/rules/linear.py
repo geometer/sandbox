@@ -5,67 +5,46 @@ from ..util import Comment, divide
 
 from .abstract import Rule, SingleSourceRule
 
-class AngleFromSumOfTwoAnglesRule(SingleSourceRule):
-    property_type = SumOfAnglesProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
-    def accepts(self, prop):
-        return len(prop.angles) == 2 and prop not in self.processed
-
-    def apply(self, prop):
-        for a0, a1 in (prop.angles, reversed(prop.angles)):
-            av = self.context.angle_value_property(a0)
-            if av is None:
-                continue
-            self.processed.add(prop)
-            yield (
-                AngleValueProperty(a1, prop.degree - av.degree),
-                Comment(
-                    '$%{anglemeasure:a1} + %{degree:degree0} = %{anglemeasure:a1} + %{anglemeasure:a0} = %{degree:sum}$',
-                    {'a0': a0, 'a1': a1, 'degree0': av.degree, 'sum': prop.degree}
-                ),
-                [prop, av]
-            )
-            return
-
-class SumOfTwoAnglesByThreeRule(SingleSourceRule):
+class EliminateAngleFromSumRule(SingleSourceRule):
     property_type = SumOfAnglesProperty
 
     def __init__(self, context):
         super().__init__(context)
         self.processed = {}
 
-    def accepts(self, prop):
-        return len(prop.angles) == 3
-
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
-        if mask == 0x7:
+        processed_angles = self.processed.get(prop, set())
+        length = len(processed_angles)
+        if length == len(prop.angles):
             return
 
-        original = mask
-        for index, angle in enumerate(prop.angles):
-            bit = 1 << index
-            if mask & bit:
-                continue
+        for angle in [a for a in prop.angles if a not in processed_angles]:
             av = self.context.angle_value_property(angle)
             if av is None:
                 continue
-            mask |= bit
+            processed_angles.add(angle)
             others = [ang for ang in prop.angles if ang != angle]
+            if len(others) == 1:
+                new_prop = AngleValueProperty(others[0], prop.degree - av.degree)
+            else:
+                new_prop = SumOfAnglesProperty(*others, degree=prop.degree - av.degree)
+
+            pattern = ' + '.join(['%{anglemeasure:' + str(i) + '}' for i in range(0, len(others))])
+            params = {str(i): a for i, a in enumerate(others)}
+            params['eliminated'] = angle
+            params['sum'] = prop.degree
+            params['degree'] = av.degree
             yield (
-                SumOfAnglesProperty(*others, degree=prop.degree - av.degree),
+                new_prop,
                 Comment(
-                    '$%{degree:sum} = %{anglemeasure:a0} + %{anglemeasure:a1} + %{anglemeasure:a2} = %{anglemeasure:a0} + %{anglemeasure:a1} + %{degree:degree2}$',
-                    {'a0': others[0], 'a1': others[1], 'a2': angle, 'sum': prop.degree, 'degree2': av.degree}
+                    '$%{degree:sum} = ' + pattern + ' + %{anglemeasure:eliminated} = ' + pattern + ' + %{degree:degree}$',
+                    params
                 ),
                 [prop, av]
             )
-        if mask != original:
-            self.processed[prop] = mask
+
+        if len(processed_angles) != length:
+            self.processed[angle] = processed_angles
 
 class AngleBySumOfThreeRule(SingleSourceRule):
     property_type = SumOfAnglesProperty
