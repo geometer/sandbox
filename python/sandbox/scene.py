@@ -285,34 +285,14 @@ class Scene(CoreScene):
         pt3 = points_or_labels[3] if isinstance(points_or_labels[3], Scene.Point) \
             else pt2.translated_point(pt1.vector(pt0), 1, **kwargs(3))
 
-        pts = (pt0, pt1, pt2, pt3)
-        self.square_constraint(pts, non_degenerate=non_degenerate)
-        return pts
-
-    def square_constraint(self, pts, non_degenerate, **kwargs):
-        assert len(pts) == 4
-
+        square = Scene.Polygon(pt0, pt1, pt2, pt3)
         if non_degenerate:
             from .property import NondegenerateSquareProperty
-            self.add_property(NondegenerateSquareProperty(Scene.Polygon(*pts)))
+            self.add_property(NondegenerateSquareProperty(square))
         else:
             from .property import SquareProperty
-            self.add_property(SquareProperty(Scene.Polygon(*pts)))
-
-    def convex_quadrilateral_constraint(self, *points, **kwargs):
-        assert len(points) == 4
-        if 'comment' not in kwargs:
-            kwargs = dict(kwargs)
-            kwargs['comment'] = Comment(
-                '$%{polygon:quad}$ is a convex quadrilateral',
-                {'quad': Scene.Polygon(*points)}
-            )
-
-        for i in range(0, 4):
-            pts = [points[j % 4] for j in range(i, i + 4)]
-            pts[0].same_side_constraint(pts[1], pts[2].line_through(pts[3], layer='auxiliary'), **kwargs) 
-        points[0].opposite_side_constraint(points[2], points[1].line_through(points[3], layer='auxiliary'), **kwargs) 
-        points[1].opposite_side_constraint(points[3], points[0].line_through(points[2], layer='auxiliary'), **kwargs) 
+            self.add_property(SquareProperty(square))
+        return square
 
     def parallelogram(self, labels=None):
         """
