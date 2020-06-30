@@ -1029,6 +1029,10 @@ class AngleRatioPropertySet:
             self.angle_to_family[prop.angle1] = fam
 
     def sum_of_angles(self, *angles):
+        cached = self.__sum_of_angles.get(angles)
+        if cached:
+            return cached.degree
+
         congruents = [set([ngl] + list(self.congruent_angles_for(ngl))) for ngl in angles]
         for key, value in self.__sum_of_angles.items():
             if len(key) == len(angles) and all(key[i] in congruents[i] for i in range(0, len(key))):
@@ -1036,6 +1040,10 @@ class AngleRatioPropertySet:
         return None
 
     def sum_of_angles_property(self, *angles):
+        cached = self.__sum_of_angles.get(angles)
+        if cached:
+            return cached
+
         candidates = []
         p0 = ['%{angle:a' + str(i) + '}' for i in range(0, len(angles))]
         p1 = ['%{angle:' + str(i) + '}' for i in range(0, len(angles))]
