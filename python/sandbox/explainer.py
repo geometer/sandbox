@@ -62,6 +62,7 @@ class Explainer:
             PerpendicularToEquidistantRule(self.context),
             EquidistantToPerpendicularRule(self.context),
             PointsSeparatedByLineAreNotCoincidentRule(self.context),
+            PointInsideAngleAndSecantRule(self.context),
             PointInsideSegmentRelativeToLineRule(self.context),
             SameSidePointInsideSegmentRule(self.context),
             TwoPerpendicularsRule(self.context),

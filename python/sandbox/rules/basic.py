@@ -6,6 +6,33 @@ from ..util import LazyComment, Comment, divide, common_endpoint, other_point
 
 from .abstract import Rule, SingleSourceRule
 
+class PointInsideAngleAndSecantRule(SingleSourceRule):
+    property_type = PointInsideAngleProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
+    def apply(self, prop):
+        col = self.context.collinearity_property(prop.point, *prop.angle.endpoints)
+        if col is None:
+            return
+        self.processed.add(prop)
+
+        if not col.collinear:
+            return
+        yield (
+            AngleValueProperty(prop.point.angle(*prop.angle.endpoints), 180),
+            Comment(
+                '$%{point:pt0}$ and $%{point:pt1}$ are on different sides of $%{angle:angle}$, $%{point:inside}$ lies inside',
+                {'pt0': prop.angle.endpoints[0], 'pt1': prop.angle.endpoints[1], 'angle': prop.angle, 'inside': prop.point}
+            ),
+            [prop, col]
+        )
+
 class PointInsideAngleAndPointOnSideRule(SingleSourceRule):
     property_type = PointInsideAngleProperty
 
@@ -92,7 +119,7 @@ class PointInsideAngleConfigurationRule(SingleSourceRule):
         yield (
             SameOrOppositeSideProperty(prop.angle.vertex.segment(prop.point), *prop.angle.endpoints, False),
             Comment(
-                'ray $%{ray:ray}$ inside $%{angle:angle}$ separates points $%{point:pt0}$ and $%{point:pt1}$ lying on different sides of the angle',
+                'ray $%{ray:ray}$ inside $%{angle:angle}$ separates points $%{point:pt0}$ and $%{point:pt1}$',
                 {'ray': prop.angle.vertex.vector(prop.point), 'angle': prop.angle, 'pt0': prop.angle.endpoints[0], 'pt1': prop.angle.endpoints[1]}
             ),
             [prop]
