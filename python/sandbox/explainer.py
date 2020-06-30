@@ -131,6 +131,7 @@ class Explainer:
             CongruentTrianglesByThreeSidesRule(self.context),
             SimilarTrianglesByTwoAnglesRule(self.context),
             SimilarTrianglesByAngleAndTwoSidesRule(self.context),
+            SimilarTrianglesByAngleAndTwoSidesRule2(self.context),
             SimilarTrianglesByThreeSidesRule(self.context),
             SimilarTrianglesWithCongruentSideRule(self.context),
         ]

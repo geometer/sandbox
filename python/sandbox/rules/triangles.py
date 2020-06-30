@@ -216,6 +216,60 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
         self.processed = set()
 
     def sources(self):
+        num_to_ratio = {}
+        for seg0, seg1, ratio in self.context.length_ratios(allow_zeroes=True):
+            common = common_endpoint(seg0, seg1)
+            if common is None:
+                continue
+            triangle = Scene.Triangle(
+                common, other_point(seg0.points, common), other_point(seg1.points, common)
+            )
+            lst = num_to_ratio.get(ratio)
+            if lst:
+                lst.append(triangle)
+            else:
+                num_to_ratio[ratio] = [triangle]
+        for num, lst in num_to_ratio.items():
+            if num == 1:
+                for t0, t1 in itertools.combinations(lst, 2):
+                    if set(t0.points) == set(t1.points):
+                        continue
+                    yield (t0, t1)
+                    yield (t0, Scene.Triangle(t1.points[0], t1.points[2], t1.points[1]))
+            else:
+                for t0, t1 in itertools.combinations(lst, 2):
+                    if set(t0.points) == set(t1.points):
+                        continue
+                    yield (t0, t1)
+
+    def apply(self, src):
+        t0, t1 = src
+
+        if (t0.points, t1.points) in self.processed:
+            return
+
+        ar = self.context.angle_ratio_property(t0.angles[0], t1.angles[0])
+        if ar is None:
+            return
+        self.processed.add((t0.points, t1.points))
+        self.processed.add((t1.points, t0.points))
+
+        if ar.value != 1:
+            return
+        rat0, value = self.context.length_ratio_property_and_value(t0.sides[1], t0.sides[2], allow_zeroes=True)
+        rat1, value1 = self.context.length_ratio_property_and_value(t1.sides[1], t1.sides[2], allow_zeroes=True)
+        yield (
+            SimilarTrianglesProperty(t0, t1),
+            LazyComment('%s, %s, and %s', rat0, rat1, ar),
+            [rat0, rat1, ar]
+        )
+
+class SimilarTrianglesByAngleAndTwoSidesRule2(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
         return [(a0, a1) for a0, a1 in self.context.congruent_angles_with_vertex() if a0.point_set != a1.point_set and (a0, a1) not in self.processed]
 
     def apply(self, src):
