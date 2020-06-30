@@ -697,10 +697,10 @@ class SumOfAnglesProperty(LinearAngleProperty):
 
     @property
     def description(self):
-        patterns = ['$%{anglemeasure:' + str(i) + '}$' for i in range(0, len(self.angles))]
+        patterns = ['%{anglemeasure:' + str(i) + '}' for i in range(0, len(self.angles))]
         params = {str(i): angle for i, angle in enumerate(self.angles)}
         params['value'] = self.degree
-        return Comment(' + '.join(patterns) + ' = %{degree:value}$', params)
+        return Comment('$' + ' + '.join(patterns) + ' = %{degree:value}$', params)
 
     def compare_values(self, other):
         return self.degree == other.degree
