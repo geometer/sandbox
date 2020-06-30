@@ -1,5 +1,6 @@
 from enum import Enum, auto
 import itertools
+import numpy as np
 import sympy as sp
 
 from .figure import Figure, Circle
@@ -315,6 +316,11 @@ class PerpendicularSegmentsProperty(Property):
             '$%{segment:seg0} \\perp %{segment:seg1}$',
             {'seg0': self.segments[0], 'seg1': self.segments[1]}
         )
+
+    def verify(self, placement):
+        vec0 = self.segments[0].points[0].vector(self.segments[0].points[1])
+        vec1 = self.segments[1].points[0].vector(self.segments[1].points[1])
+        return np.fabs(placement.scalar_product(vec0, vec1)) < 1e-8
 
 class PointsCoincidenceProperty(Property):
     """
@@ -701,6 +707,10 @@ class SumOfAnglesProperty(LinearAngleProperty):
         params = {str(i): angle for i, angle in enumerate(self.angles)}
         params['value'] = self.degree
         return Comment('$' + ' + '.join(patterns) + ' = %{degree:value}$', params)
+
+    def verify(self, placement):
+        value = sum(placement.angle(angle) for angle in self.angles)
+        return np.fabs(value * 180 / np.pi - self.degree) < 1e-8
 
     def compare_values(self, other):
         return self.degree == other.degree

@@ -12,6 +12,7 @@ def run_sample(scene, *props):
     parser.add_argument('--max-layer', default='user', choices=CoreScene.layers)
     parser.add_argument('--dump', nargs='+', choices=('scene', 'constraints', 'stats', 'result', 'properties', 'explanation'), default=('stats', 'result'))
     parser.add_argument('--run-hunter', action='store_true')
+    parser.add_argument('--run-verifier', action='store_true')
     parser.add_argument('--extra-rules', nargs='+', choices=('advanced', 'circles', 'trigonometric'), default=())
     parser.add_argument('--profile', action='store_true')
     args = parser.parse_args()
@@ -26,6 +27,17 @@ def run_sample(scene, *props):
         properties = hunter.properties
     else:
         properties = []
+
+    if args.run_verifier:
+        attempts = 20
+        counts = [0] * len(props)
+        for _ in range(0, attempts):
+            placement = iterative_placement(scene)
+            for index, prop in enumerate(props):
+                if prop.verify(placement):
+                    counts[index] += 1
+        for prop, count in zip(props, counts):
+            print('\tVerified %d/%d: %s' % (count, attempts, prop))
 
     options = { 'max_layer': args.max_layer }
     for extra in args.extra_rules:
