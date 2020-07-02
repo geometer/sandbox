@@ -2048,32 +2048,51 @@ class SameAngleRule2(Rule):
                         [prop, value]
                     )
 
-class SameAngleDegreeRule(Rule):
+class SameAngleRule3(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
 
     def sources(self):
-        return self.context.nondegenerate_angle_value_properties()
+        return self.context.angle_value_properties_for_degree(0, lambda a: a.vertex)
 
     def apply(self, prop):
         angle = prop.angle
-        for vec0, vec1 in (angle.vectors, reversed(angle.vectors)):
-            for inside in self.context.points_inside_segment(vec0.as_segment):
-                pt = inside
-                key = (angle, pt)
-                if key in self.processed:
-                    continue
-                self.processed.add(key)
+        for pt in self.context.not_collinear_points(angle.vectors[0].as_segment):
+            key = (angle, pt)
+            if key in self.processed:
+                continue
+            self.processed.add(key)
 
-                inside_prop = self.context.angle_value_property(inside.angle(*vec0.points))
+            angles = [angle.vertex.angle(pt, endpoint) for endpoint in angle.endpoints]
+            yield (
+                AngleRatioProperty(*angles, 1, same=True),
+                Comment(
+                    '$%{point:pt}$ lies on side $%{ray:side}$ of $%{angle:angle}$',
+                    {'pt': angle.endpoints[1], 'side': angle.vectors[0], 'angle': angles[0]}
+                ),
+                [prop]
+            )
+            pattern = '$%{point:pt}$ lies on side $%{ray:side}$ of $%{angle:known}$, $%{anglemeasure:known} = %{degree:degree}$'
+            value = self.context.angle_value_property(angles[0])
+            if value:
                 yield (
-                    AngleValueProperty(vec1.angle(vec0.start.vector(pt)), prop.degree),
+                    AngleValueProperty(angles[1], value.degree),
                     Comment(
-                        '$%{point:pt}$ lies on side $%{segment:side}$ of $%{angle:angle}$, $%{anglemeasure:angle} = %{degree:degree}$',
-                        {'pt': pt, 'side': vec0, 'angle': angle, 'degree': prop.degree}
+                        pattern,
+                        {'pt': angle.endpoints[1], 'side': angle.vectors[0], 'known': angles[0], 'degree': value.degree}
                     ),
-                    [prop, inside_prop]
+                    [prop, value]
+                )
+            value = self.context.angle_value_property(angles[1])
+            if value:
+                yield (
+                    AngleValueProperty(angles[0], value.degree),
+                    Comment(
+                        pattern,
+                        {'pt': angle.endpoints[0], 'side': angle.vectors[1], 'known': angles[1], 'degree': value.degree}
+                    ),
+                    [prop, value]
                 )
 
 class PlanePositionsToLinePositionsRule(SingleSourceRule):

@@ -104,7 +104,7 @@ class Explainer:
             TwoPointsOnRayRule(self.context),
             SameAngleRule(self.context),
             SameAngleRule2(self.context),
-            SameAngleDegreeRule(self.context),
+            SameAngleRule3(self.context),
             TransversalRule(self.context),
             SupplementaryAnglesRule(self.context),
             VerticalAnglesRule(self.context),
