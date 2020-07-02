@@ -1100,7 +1100,7 @@ class PointInsideSegmentRelativeToLineRule(SingleSourceRule):
                 if prop.same:
                     pattern = '$%{point:pt_not_on}$ and $%{point:pt2}$ are on the same side of $%{line:line}$ and $%{point:inside}$ lies inside $%{segment:segment}$'
                 else:
-                    pattern = '$%{point:pt_not_on}$ and $%{point:pt2}$ are on opposide sides of $%{line:line}$ and $%{point:inside}$ lies inside $%{segment:segment}$'
+                    pattern = '$%{point:pt_not_on}$ and $%{point:pt2}$ are on opposite sides of $%{line:line}$ and $%{point:inside}$ lies inside $%{segment:segment}$'
                 inside_prop = self.context.angle_value_property(inside.angle(*segment.points))
                 yield (
                     SameOrOppositeSideProperty(prop.segment, inside, pt2, prop.same),
