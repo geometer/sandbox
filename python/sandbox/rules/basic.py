@@ -1181,32 +1181,38 @@ class ParallelSameSideRule(SingleSourceRule):
         super().__init__(context)
         self.processed = {}
 
+    def accepts(self, prop):
+        return common_endpoint(prop.segments[0], prop.segments[1]) is None
+
     def apply(self, prop):
         mask = self.processed.get(prop, 0)
-        if mask == 0x3:
+        if mask == 0xF:
             return
         original = mask
-        for seg0, seg1, bit in ((*prop.segments, 1), (*reversed(prop.segments), 2)):
-            if mask & bit:
-                continue
-            ncl = False
-            if seg1.points[0] not in seg0.points:
-                ncl = self.context.collinearity_property(*seg0.points, seg1.points[0])
-            if not ncl and seg1.points[1] not in seg0.points:
-                ncl = self.context.collinearity_property(*seg0.points, seg1.points[1])
-            if ncl is None:
-                continue
-            mask |= bit
-            if ncl == False or ncl.collinear:
-                continue
-            yield (
-                SameOrOppositeSideProperty(seg0, *seg1.points, True),
-                Comment(
-                    '$%{point:pt0}$ and $%{point:pt1}$ lie on a line parallel to $%{line:line}$',
-                    {'pt0': seg1.points[0], 'pt1': seg1.points[1], 'line': seg0}
-                ),
-                [prop, ncl]
+
+        index = 0
+        for seg0, seg1 in (prop.segments, reversed(prop.segments)):
+            comment = Comment(
+                '$%{point:pt0}$ and $%{point:pt1}$ lie on a line parallel to $%{line:line}$',
+                {'pt0': seg1.points[0], 'pt1': seg1.points[1], 'line': seg0}
             )
+            for pt in seg1.points:
+                bit = 1 << index
+                index += 1
+                if mask & bit:
+                    continue
+                ncl = self.context.collinearity_property(*seg0.points, pt)
+                if ncl is None:
+                    continue
+                mask |= bit
+                if ncl.collinear:
+                    mask = 0xF
+                    break
+                yield (
+                    SameOrOppositeSideProperty(seg0, *seg1.points, True),
+                    comment, [prop, ncl]
+                )
+
         if mask != original:
             self.processed[prop] = mask
 
@@ -2618,7 +2624,7 @@ class PerpendicularToSideOfObtuseAngledRule(SingleSourceRule):
                         continue
                     self.processed.add(key)
                     comment = Comment(
-                        '$%{triangle:triangle}$ is obtuse-angled (with the vertex $%{point:vertex}$), $%{point:inside}$ is inside $%{segment:side}$, $%{point:pt} \\in %{line:long}$, and $%{line:perp} \\perp %{line:side}$',
+                        '$%{triangle:triangle}$ is obtuse-angled with the vertex $%{point:vertex}$, $%{point:inside}$ is inside $%{segment:side}$, $%{point:pt} \\in %{line:long}$, and $%{line:perp} \\perp %{line:side}$',
                         {
                             'triangle': Scene.Triangle(*prop.angle.point_set),
                             'vertex': prop.angle.vertex,
