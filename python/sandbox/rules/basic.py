@@ -938,73 +938,6 @@ class EqualAnglesToCollinearityRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
-class AngleInsideBiggerOneRule(SingleSourceRule):
-    property_type = SameOrOppositeSideProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
-    def accepts(self, prop):
-        return prop.same
-
-    def apply(self, prop):
-        mask = self.processed.get(prop, 0)
-        if mask == 0x3:
-            return
-
-        original = mask
-        for (p0, p1), bit in ((prop.segment.points, 1), (reversed(prop.segment.points), 2)):
-            if mask & bit:
-                continue
-            angles = [p0.angle(p1, pt) for pt in prop.points]
-            av0 = self.context.angle_value_property(angles[0])
-            if av0 is None:
-                continue
-            av1 = self.context.angle_value_property(angles[1])
-            if av1 is None:
-                continue
-            mask |= bit
-            if av0.degree == av1.degree:
-                comment = Comment(
-                    '$%{anglemeasure:angle0} = %{anglemeasure:angle1}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$',
-                    {'angle0': angles[0], 'angle1': angles[1], 'pt0': prop.points[0], 'pt1': prop.points[1], 'line': prop.segment}
-                )
-                yield (
-                    AngleValueProperty(p0.angle(*prop.points), 0),
-                    comment,
-                    [av0, av1, prop]
-                )
-                yield (
-                    PointsCollinearityProperty(p0, *prop.points, True),
-                    comment,
-                    [av0, av1, prop]
-                )
-            else:
-                common_vector = p0.vector(p1)
-                pattern = '$%{angle:a0}$ and $%{angle:a1}$ with common side $%{ray:side}$ and $%{anglemeasure:a0} < %{anglemeasure:a1}$'
-                if av0.degree < av1.degree:
-                    yield (
-                        PointInsideAngleProperty(prop.points[0], av1.angle),
-                        Comment(
-                            pattern,
-                            {'a0': av0.angle, 'a1': av1.angle, 'side': common_vector}
-                        ),
-                        [av0, av1, prop]
-                    )
-                else:
-                    yield (
-                        PointInsideAngleProperty(prop.points[1], av0.angle),
-                        Comment(
-                            pattern,
-                            {'a0': av1.angle, 'a1': av0.angle, 'side': common_vector}
-                        ),
-                        [av1, av0, prop]
-                    )
-
-        if mask != original:
-            self.processed[prop] = mask
-
 class PointsSeparatedByLineAreNotCoincidentRule(SingleSourceRule):
     """
     If two points are separated by a line, the points are not coincident
@@ -2201,6 +2134,119 @@ class TwoAnglesWithCommonSideDegreeRule(SingleSourceRule):
                 ),
                 [prop, av_sum, av1]
             )
+
+        if mask != original:
+            self.processed[prop] = mask
+
+class KnownAnglesWithCommonSideRule(SingleSourceRule):
+    property_type = SameOrOppositeSideProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
+    def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0x3:
+            return
+        original = mask
+
+        for (sp0, sp1), bit in ((prop.segment.points, 0x1), (reversed(prop.segment.points), 0x2)):
+            if mask & bit:
+                continue
+            pt0, pt1 = prop.points
+            av0 = self.context.angle_value_property(sp0.angle(sp1, pt0))
+            if av0 is None:
+                continue
+            av1 = self.context.angle_value_property(sp0.angle(sp1, pt1))
+            if av1 is None:
+                continue
+            mask |= bit
+
+            if av0.degree < av1.degree:
+                pt0, pt1 = pt1, pt0
+                av0, av1 = av1, av0
+            params = {
+                'angle0': av0.angle,
+                'angle1': av1.angle,
+                'degree0': av0.degree,
+                'degree1': av1.degree,
+                '180': 180,
+                'pt0': pt0,
+                'pt1': pt1,
+                'line': prop.segment
+            }
+            if prop.same:
+                if av0.degree == av1.degree:
+                    comment = Comment(
+                        '$%{anglemeasure:angle0} = %{degree:degree0} = %{anglemeasure:angle1}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$',
+                        params
+                    )
+                    yield (
+                        PointsCollinearityProperty(sp0, pt0, pt1, True),
+                        comment,
+                        [av0, av1, prop]
+                    )
+                    yield (
+                        AngleValueProperty(sp0.angle(pt0, pt1), 0),
+                        comment,
+                        [av0, av1, prop]
+                    )
+                    continue
+                yield (
+                    PointInsideAngleProperty(pt1, av0.angle),
+                    Comment(
+                        '$%{anglemeasure:angle0} = %{degree:degree0} > %{degree:degree1} = %{anglemeasure:angle1}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$',
+                        params
+                    ),
+                    [av1, av0, prop]
+                )
+                yield (
+                    AngleValueProperty(sp0.angle(*prop.points), av0.degree - av1.degree),
+                    Comment(
+                        '$%{anglemeasure:angle0} = %{degree:degree0}$, $%{anglemeasure:angle1} = %{degree:degree1}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$',
+                        params
+                    ),
+                    [av0, av1, prop]
+                )
+            else:
+                if av0.degree + av1.degree == 180:
+                    comment = Comment(
+                        '$%{anglemeasure:angle0} + %{anglemeasure:angle1} = %{degree:180}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on opposite sides of $%{line:line}$',
+                        params
+                    )
+                    yield (
+                        PointsCollinearityProperty(sp0, *prop.points, True),
+                        comment,
+                        [av0, av1, prop]
+                    )
+                    yield (
+                        AngleValueProperty(sp0.angle(*prop.points), 180),
+                        comment,
+                        [av0, av1, prop]
+                    )
+                    continue
+                comment = Comment(
+                    '$%{anglemeasure:angle0} = %{degree:degree0}$, $%{anglemeasure:angle1} = %{degree:degree1}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on opposite sides of $%{line:line}$',
+                    params
+                )
+                degree_sum = av0.degree + av1.degree
+                if degree_sum < 180:
+                    yield (
+                        PointInsideAngleProperty(sp1, sp0.angle(pt0, pt1)),
+                        Comment(
+                            '$%{anglemeasure:angle0} + %{anglemeasure:angle1} = %{degree:degree0} + %{degree:degree1} < %{degree:180}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$',
+                            params
+                        ),
+                        [av1, av0, prop]
+                    )
+                if degree_sum > 180:
+                    degree_sum = 360 - degree_sum
+                yield (
+                    AngleValueProperty(sp0.angle(*prop.points), degree_sum),
+                    comment,
+                    [av0, av1, prop]
+                )
 
         if mask != original:
             self.processed[prop] = mask
