@@ -185,7 +185,7 @@ class BaseAnglesOfIsoscelesWithKnownApexAngleRule(SingleSourceRule):
             yield (
                 AngleValueProperty(angle, divide(180 - av.degree, 2)),
                 Comment(
-                    'base angles of isosceles $%{triangle:triangle}$ with apex angle $%{anglemeasure:angle} = %{degree:degree}$',
+                    'base angle of isosceles $%{triangle:triangle}$ with apex angle $%{anglemeasure:angle} = %{degree:degree}$',
                     {'triangle': prop.triangle, 'angle': av.angle, 'degree': av.degree}
                 ),
                 [prop, av]

@@ -865,7 +865,7 @@ class AngleRatioPropertySet:
                     if edge:
                         yield edge['prop']
                         continue
-                    path = nx.algorithms.shortest_path(self.premises_graph, angle0, angle1, weight='cost')
+                    path = nx.algorithms.shortest_path(self.premises_graph, angle0, angle1)
                     comment, premises = self.explanation_from_path(path, ratio0)
                     prop = AngleRatioProperty(angle0, angle1, divide(ratio0, ratio1))
                     yield _synthetic_property(prop, comment, premises)
@@ -882,7 +882,7 @@ class AngleRatioPropertySet:
             else:
                 self.angle_to_ratio[prop.angle] = 1
                 self.degree = prop.degree
-            self.premises_graph.add_edge(prop.angle, self.degree, prop=prop, cost=prop.reason.cost)
+            self.premises_graph.add_edge(prop.angle, self.degree, prop=prop)
 
         def add_ratio_property(self, prop):
             ratio0 = self.angle_to_ratio.get(prop.angle0)
@@ -897,7 +897,7 @@ class AngleRatioPropertySet:
             else:
                 self.angle_to_ratio[prop.angle0] = prop.value
                 self.angle_to_ratio[prop.angle1] = 1
-            self.premises_graph.add_edge(prop.angle0, prop.angle1, prop=prop, cost=prop.reason.cost)
+            self.premises_graph.add_edge(prop.angle0, prop.angle1, prop=prop)
 
     def __init__(self):
         self.angle_to_family = {}
@@ -1301,11 +1301,13 @@ class PropertySet(LineSet):
                 self.__combined[key] = [prop]
 
         type_key = type(prop)
-        put(type_key)
-        for key in prop.keys():
-            put((type_key, key))
-        self.__full_set[prop] = prop
-        self.__indexes[prop] = len(self.__indexes)
+        if prop not in self.__full_set:
+            put(type_key)
+            for key in prop.keys():
+                put((type_key, key))
+            self.__full_set[prop] = prop
+            self.__indexes[prop] = len(self.__indexes)
+
         if isinstance(prop, LinearAngleProperty):
             self.__linear_angles.add(prop)
         if type_key in (AngleValueProperty, AngleRatioProperty, SumOfAnglesProperty):
@@ -1420,7 +1422,16 @@ class PropertySet(LineSet):
         return self.__angle_ratios.value(angle)
 
     def angle_value_property(self, angle):
-        return self.__angle_ratios.value_property(angle)
+        prop = self.__angle_ratios.value_property(angle)
+        if prop is None:
+            return None
+        existing = self.__full_set.get(prop)
+        if existing:
+            if existing.reason.cost > prop.reason.cost:
+                existing.reason = prop.reason
+            return existing
+        else:
+            return prop
 
     def angle_kind_property(self, angle):
         return self.__angle_kinds.get(angle)

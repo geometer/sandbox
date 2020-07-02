@@ -7,7 +7,7 @@ from .predefined import enumerate_predefined_properties
 from .property import *
 from .propertyset import PropertySet
 from .reason import Reason
-from .rules.abstract import PredefinedPropertyRule
+from .rules.abstract import PredefinedPropertyRule, SyntheticPropertyRule
 from .rules.advanced import *
 from .rules.basic import *
 from .rules.circle import *
@@ -77,7 +77,7 @@ class Explainer:
             CorrespondingSidesInSimilarTrianglesRule(self.context),
             LengthProductEqualityToRatioRule(self.context),
             MiddleOfSegmentRule(self.context),
-            #KnownAnglesToConvexQuadrilateralRule(self.context),
+            KnownAnglesToConvexQuadrilateralRule(self.context),
             PointsToConvexQuadrilateralRule(self.context),
             ConvexQuadrilateralRule(self.context),
             SumOfAnglesOfConvexQuadrilateralRule(self.context),
@@ -188,11 +188,11 @@ class Explainer:
             if isinstance(prop, AngleRatioProperty) and prop.same:
                 existing.same = True
             #### --- HACK ---
+            prop.reason = reason
             reason.obsolete = existing.reason.obsolete
+            was_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
             existing.reason = reason
-            #TODO: if the rule reference changed from 'synthetic',
-            # add the property to the context
-            if self.context.index_of(existing) is None:
+            if was_synthetic or self.context.index_of(existing) is None:
                 insert(existing)
 
     def explain(self):
