@@ -605,7 +605,7 @@ class CyclicOrderPropertySet:
         return None
 
     def add(self, prop):
-        if prop.reason.rule == SyntheticPropertyRule.instance():
+        if prop.reason and prop.reason.rule == SyntheticPropertyRule.instance():
             return
         fam0 = self.__find_by_cycle(prop.cycle0)
         fam1 = self.__find_by_cycle(prop.cycle1)
@@ -965,7 +965,7 @@ class AngleRatioPropertySet:
                     yield a
 
     def add(self, prop):
-        if prop.reason.rule == SyntheticPropertyRule.instance():
+        if prop.reason and prop.reason.rule == SyntheticPropertyRule.instance():
             return
         if isinstance(prop, AngleRatioProperty):
             self.__add_ratio_property(prop)
@@ -1190,7 +1190,7 @@ class LengthRatioPropertySet:
             self.ratio_to_family[ratio1] = fam
 
     def add(self, prop):
-        if prop.reason.rule == SyntheticPropertyRule.instance():
+        if prop.reason and prop.reason.rule == SyntheticPropertyRule.instance():
             return
         if isinstance(prop, EqualLengthRatiosProperty):
             self.__add_elr(prop)
