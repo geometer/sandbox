@@ -77,6 +77,7 @@ class Explainer:
             CorrespondingSidesInSimilarTrianglesRule(self.context),
             LengthProductEqualityToRatioRule(self.context),
             MiddleOfSegmentRule(self.context),
+            #KnownAnglesToConvexQuadrilateralRule(self.context),
             PointsToConvexQuadrilateralRule(self.context),
             ConvexQuadrilateralRule(self.context),
             SumOfAnglesOfConvexQuadrilateralRule(self.context),
@@ -123,6 +124,7 @@ class Explainer:
             PointInsideAngleConfigurationRule(self.context),
             PointInsideAngleAndPointOnSideRule(self.context),
             PerpendicularToSideOfObtuseAngledRule(self.context),
+            PerpendicularInAcuteAngleRule(self.context),
 
             EquilateralTriangleByThreeSidesRule(self.context),
             EquilateralTriangleByConrguentLegsAndAngleRule(self.context),

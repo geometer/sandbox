@@ -6,6 +6,37 @@ from ..util import LazyComment, Comment, divide, common_endpoint, other_point
 
 from .abstract import Rule, SingleSourceRule
 
+class PerpendicularInAcuteAngleRule(SingleSourceRule):
+    property_type = AngleKindProperty
+
+    def accepts(self, prop):
+        return prop.angle.vertex and prop.kind == AngleKindProperty.Kind.acute
+
+    def apply(self, prop):
+        for v0, v1 in (prop.angle.vectors, reversed(prop.angle.vectors)):
+            for pt in self.context.collinear_points(v0.as_segment):
+                foot, premises = self.context.foot_of_perpendicular(pt, v1.as_segment)
+                if foot is None:
+                    continue
+                if foot == v1.end:
+                    degree = 0
+                else:
+                    av = self.context.angle_value_property(v1.start.angle(foot, v1.end))
+                    if av is None:
+                        continue
+                    premises = premises + [av]
+                    degree = av.degree
+                co = self.context.collinearity_property(pt, *v0.points)
+                if degree == 0:
+                    pattern = '$%{angle:angle}$ is acute, foot of the perpendicular from $%{point:pt}$ to line $%{line:side}$ lies on ray $%{ray:side}$'
+                else:
+                    pattern = '$%{angle:angle}$ is acute, foot of the perpendicular from $%{point:pt}$ to line $%{line:side}$ lies outside of ray $%{ray:side}$'
+                yield (
+                    AngleValueProperty(v0.start.angle(pt, v0.end), degree),
+                    Comment(pattern, {'angle': prop.angle, 'pt': pt, 'side': v1}),
+                    [prop, co] + premises
+                )
+
 class PointInsideAngleAndSecantRule(SingleSourceRule):
     property_type = PointInsideAngleProperty
 

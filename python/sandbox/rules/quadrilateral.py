@@ -6,6 +6,59 @@ from ..util import Comment
 
 from .abstract import Rule, SingleSourceRule
 
+class KnownAnglesToConvexQuadrilateralRule(SingleSourceRule):
+    property_type = SameOrOppositeSideProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = {}
+
+    def accepts(self, prop):
+        return prop.same
+
+    def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0x3:
+            return
+        original = mask
+
+        for (sp0, sp1), bit in ((prop.segment.points, 0x1), (reversed(prop.segment.points), 0x2)):
+            if mask & bit:
+                continue
+            pt0, pt1 = prop.points
+            av0 = self.context.angle_value_property(sp0.angle(sp1, pt0))
+            if av0 is None:
+                continue
+            av1 = self.context.angle_value_property(sp1.angle(sp0, pt1))
+            if av1 is None:
+                continue
+            mask |= bit
+
+            sum_degree = av0.degree + av1.degree
+            if sum_degree < 180:
+                continue
+            params = {
+                'angle0': av0.angle,
+                'angle1': av1.angle,
+                'sum': sum_degree,
+                '180': 180,
+                'pt0': pt0,
+                'pt1': pt1,
+                'line': prop.segment
+            }
+            if sum_degree == 180:
+                pattern = '$%{anglemeasure:angle0} + %{anglemeasure:angle1} = %{degree:sum}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$'
+            else:
+                pattern = '$%{anglemeasure:angle0} + %{anglemeasure:angle1} = %{degree:sum} > %{degree:180}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$'
+            yield (
+                ConvexQuadrilateralProperty(Scene.Polygon(pt0, sp0, sp1, pt1)),
+                Comment(pattern, params),
+                [av0, av1, prop]
+            )
+
+        if mask != original:
+            self.processed[prop] = mask
+
 class PointsToConvexQuadrilateralRule(Rule):
     def __init__(self, context):
         super().__init__(context)
