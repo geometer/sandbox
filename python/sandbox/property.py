@@ -36,10 +36,10 @@ class Property:
 
     @property
     def priority(self):
-        if not hasattr(self.reason, 'rule'):
-            return self.__priority__ * 2
-        else:
+        if self.reason.rule:
             return self.__priority__ * self.reason.rule.priority()
+        else:
+            return self.__priority__ * 2
 
     @property
     def __priority__(self):
