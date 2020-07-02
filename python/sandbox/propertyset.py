@@ -12,8 +12,12 @@ from .stats import Stats
 from .util import LazyComment, Comment, divide
 
 def _synthetic_property(prop, comment, premises):
-    prop.rule = SyntheticPropertyRule.instance()
-    prop.reason = Reason(1 + max(p.reason.generation for p in premises), comment, premises)
+    prop.reason = Reason(
+        SyntheticPropertyRule.instance(),
+        1 + max(p.reason.generation for p in premises),
+        comment,
+        premises
+    )
     prop.reason.obsolete = all(p.reason.obsolete for p in premises)
     return prop
 
@@ -601,7 +605,7 @@ class CyclicOrderPropertySet:
         return None
 
     def add(self, prop):
-        if hasattr(prop, 'rule') and prop.rule == SyntheticPropertyRule.instance():
+        if hasattr(prop, 'rule') and prop.reason.rule == SyntheticPropertyRule.instance():
             return
         fam0 = self.__find_by_cycle(prop.cycle0)
         fam1 = self.__find_by_cycle(prop.cycle1)
@@ -961,7 +965,7 @@ class AngleRatioPropertySet:
                     yield a
 
     def add(self, prop):
-        if hasattr(prop, 'rule') and prop.rule == SyntheticPropertyRule.instance():
+        if hasattr(prop, 'rule') and prop.reason.rule == SyntheticPropertyRule.instance():
             return
         if isinstance(prop, AngleRatioProperty):
             self.__add_ratio_property(prop)
@@ -1186,7 +1190,7 @@ class LengthRatioPropertySet:
             self.ratio_to_family[ratio1] = fam
 
     def add(self, prop):
-        if hasattr(prop, 'rule') and prop.rule == SyntheticPropertyRule.instance():
+        if hasattr(prop, 'rule') and prop.reason.rule == SyntheticPropertyRule.instance():
             return
         if isinstance(prop, EqualLengthRatiosProperty):
             self.__add_elr(prop)

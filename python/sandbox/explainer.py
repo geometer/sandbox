@@ -168,8 +168,8 @@ class Explainer:
     def __max_layer(self):
         return self.__options.get('max_layer', 'user')
 
-    def __reason(self, prop, comment, premises=None):
-        reason = Reason(self.__iteration_step_count, comment, premises)
+    def __reason(self, prop, rule, comment, premises=None):
+        reason = Reason(rule, self.__iteration_step_count, comment, premises)
         def insert(pro):
             for pre in pro.reason.premises:
                 if self.context.index_of(pre) is None:
@@ -189,12 +189,8 @@ class Explainer:
             #### --- HACK ---
             reason.obsolete = existing.reason.obsolete
             existing.reason = reason
-            if hasattr(prop, 'rule'):
-                existing.rule = prop.rule
-            elif hasattr(existing, 'rule'):
-                delattr(existing, 'rule')
             #TODO: if the rule reference changed from 'synthetic',
-            # add the property to a transitivity set
+            # add the property to the context
             if self.context.index_of(existing) is None:
                 insert(existing)
 
@@ -212,8 +208,7 @@ class Explainer:
         def iteration():
             for rule in self.__rules:
                 for prop, comment, premises in rule.generate():
-                    prop.rule = rule
-                    yield (prop, comment, premises)
+                    yield (prop, rule, comment, premises)
 
             angle_values = [prop for prop in self.context.angle_value_properties() \
                 if prop.angle.vertex is not None]
@@ -231,6 +226,7 @@ class Explainer:
                         segment = vertex.segment(pt2)
                         yield (
                             SameOrOppositeSideProperty(segment, pt0, pt1, True),
+                            None,
                             LazyComment('%s, %s', av, nc), #TODO: better comment
                             [av, nc]
                         )
@@ -245,6 +241,7 @@ class Explainer:
                     angle = vertex.angle(*segment.points)
                     yield (
                         PointInsideAngleProperty(av.angle.vertex, angle),
+                        None,
                         Comment(
                             '$%{point:vertex}$ lies on a segment with endpoints on sides of $%{angle:angle}$',
                             {'vertex': av.angle.vertex, 'angle': angle}
@@ -253,6 +250,7 @@ class Explainer:
                     )
                     yield (
                         SameOrOppositeSideProperty(av.angle.vertex.segment(vertex), *segment.points, False),
+                        None,
                         Comment(
                             '$%{point:pt_on}$ lies on segment $%{segment:segment}$, and $%{point:pt_not_on}$ is not on the line $%{line:segment}$',
                             {'pt_on': av.angle.vertex, 'pt_not_on': vertex, 'segment': segment}
@@ -285,7 +283,7 @@ class Explainer:
                                     }
                                 )
                                 zero = base.vertex.angle(vec0.end, pt)
-                                yield (AngleValueProperty(zero, 0), comment, [col, aa, ka])
+                                yield (AngleValueProperty(zero, 0), None, comment, [col, aa, ka])
                             break
 
             for aa in self.context.angle_value_properties_for_degree(90):
@@ -307,6 +305,7 @@ class Explainer:
                             continue
                         yield (
                             PointsCoincidenceProperty(base.vertex, foot, True),
+                            None,
                             Comment(
                                 '$%{point:foot}$ is the foot of the perpendicular from $%{point:pt}$ to $%{line:line}$, and $%{angle:angle}$ is right',
                                 {'foot': foot, 'pt': vec1.end, 'line': vec0, 'angle': base}
@@ -332,7 +331,7 @@ class Explainer:
 #                                    pt, *vec0.points, base, angle, ka.degree_str
 #                                )
 #                                zero = base.vertex.angle(vec0.end, pt)
-#                                yield (AngleValueProperty(zero, 180), comment, [col, oa, ka])
+#                                yield (AngleValueProperty(zero, 180), None, comment, [col, oa, ka])
 #                            break
 
             for ka in self.context.nondegenerate_angle_value_properties():
@@ -354,7 +353,7 @@ class Explainer:
                                     {'pt0': pt, 'pt1': vec0.points[0], 'pt2': vec0.points[1], 'angle0': angle, 'angle1': base}
                                 )
                                 zero = base.vertex.angle(vec0.end, pt)
-                                yield (AngleValueProperty(zero, 0), comment, [col, ka2, ka])
+                                yield (AngleValueProperty(zero, 0), None, comment, [col, ka2, ka])
                             break
 
             for aa0, aa1 in itertools.combinations([a for a in self.context.list(AngleKindProperty) if a.angle.vertex and a.kind == AngleKindProperty.Kind.acute], 2):
@@ -373,6 +372,7 @@ class Explainer:
                     continue
                 yield (
                     AngleValueProperty(other0.angle(other1), 0),
+                    None,
                     Comment(
                         'both $%{angle:angle0}$ and $%{angle:angle1}$ are acute',
                         {'angle0': aa0.angle, 'angle1': aa1.angle}
@@ -396,16 +396,19 @@ class Explainer:
 #                            continue
 #                        yield (
 #                            PointsCollinearityProperty(*vec0.points, vec1.points[j], False),
+#                            None,
 #                            'Transitivity',
 #                            [ncl, zero, ne]
 #                        )
 #                        yield (
 #                            PointsCollinearityProperty(*vec1.points, vec0.points[i], False),
+#                            None,
 #                            'Transitivity',
 #                            [ncl, zero, ne]
 #                        )
 #                        yield (
 #                            PointsCollinearityProperty(*vec1.points, vec0.points[j], False),
+#                            None,
 #                            'Transitivity',
 #                            [ncl, zero, ne]
 #                        )
@@ -427,25 +430,25 @@ class Explainer:
                 premises = [zero, ncl, ne]
                 yield (
                     SameOrOppositeSideProperty(ang.vectors[0].as_segment, *ang.vectors[1].points, True),
-                    comment, premises
+                    None, comment, premises
                 )
                 yield (
                     SameOrOppositeSideProperty(ang.vectors[1].as_segment, *ang.vectors[0].points, True),
-                    comment, premises
+                    None, comment, premises
                 )
                 yield (
                     SameOrOppositeSideProperty(
                         ang.vectors[0].start.segment(ang.vectors[1].end),
                         ang.vectors[0].end, ang.vectors[1].start, False
                     ),
-                    comment, premises
+                    None, comment, premises
                 )
                 yield (
                     SameOrOppositeSideProperty(
                         ang.vectors[1].start.segment(ang.vectors[0].end),
                         ang.vectors[1].end, ang.vectors[0].start, False
                     ),
-                    comment, premises
+                    None, comment, premises
                 )
 
             for sos in self.context.list(SameOrOppositeSideProperty):
@@ -458,6 +461,7 @@ class Explainer:
                             continue
                         yield (
                             SameOrOppositeSideProperty(other.segment(pt), *sos.points, sos.same),
+                            None,
                             Comment(
                                 '$%{line:line0}$ is the same line as $%{line:line1}$',
                                 {'line0': other.segment(pt), 'line1': sos.segment}
@@ -466,14 +470,13 @@ class Explainer:
                         )
 
         for prop, comment in enumerate_predefined_properties(self.scene, max_layer=self.__max_layer):
-            prop.rule = PredefinedPropertyRule.instance()
-            self.__reason(prop, comment, [])
+            self.__reason(prop, PredefinedPropertyRule.instance(), comment, [])
 
         self.__iteration_step_count = 0
         while itertools.count():
             explained_size = len(self.context)
-            for prop, comment, premises in iteration():
-                self.__reason(prop, comment, premises)
+            for prop, rule, comment, premises in iteration():
+                self.__reason(prop, rule, comment, premises)
             for prop in self.context.all:
                 prop.reason.obsolete = prop.reason.generation < self.__iteration_step_count - 1
             self.__iteration_step_count += 1
