@@ -125,6 +125,7 @@ class Explainer:
             PointInsideAngleAndPointOnSideRule(self.context),
             PerpendicularToSideOfObtuseAngledRule(self.context),
             PerpendicularInAcuteAngleRule(self.context),
+            PerpendicularInAcuteAngleRule2(self.context),
 
             EquilateralTriangleByThreeSidesRule(self.context),
             EquilateralTriangleByConrguentLegsAndAngleRule(self.context),

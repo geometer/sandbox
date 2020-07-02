@@ -9,12 +9,20 @@ from .abstract import Rule, SingleSourceRule
 class PerpendicularInAcuteAngleRule(SingleSourceRule):
     property_type = AngleKindProperty
 
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
     def accepts(self, prop):
         return prop.angle.vertex and prop.kind == AngleKindProperty.Kind.acute
 
     def apply(self, prop):
         for v0, v1 in (prop.angle.vectors, reversed(prop.angle.vectors)):
             for pt in self.context.collinear_points(v0.as_segment):
+                key = (prop, pt)
+                if key in self.processed:
+                    continue
+
                 foot, premises = self.context.foot_of_perpendicular(pt, v1.as_segment)
                 if foot is None:
                     continue
@@ -26,6 +34,9 @@ class PerpendicularInAcuteAngleRule(SingleSourceRule):
                         continue
                     premises = premises + [av]
                     degree = av.degree
+
+                self.processed.add(key)
+
                 co = self.context.collinearity_property(pt, *v0.points)
                 if degree == 0:
                     pattern = '$%{angle:angle}$ is acute, foot of the perpendicular from $%{point:pt}$ to line $%{line:side}$ lies on ray $%{ray:side}$'
@@ -35,6 +46,51 @@ class PerpendicularInAcuteAngleRule(SingleSourceRule):
                     AngleValueProperty(v0.start.angle(pt, v0.end), degree),
                     Comment(pattern, {'angle': prop.angle, 'pt': pt, 'side': v1}),
                     [prop, co] + premises
+                )
+
+class PerpendicularInAcuteAngleRule2(SingleSourceRule):
+    property_type = AngleKindProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop.angle.vertex and prop.kind == AngleKindProperty.Kind.acute
+
+    def apply(self, prop):
+        for v0, v1 in (prop.angle.vectors, reversed(prop.angle.vectors)):
+            for pt in [v0.end, *self.context.collinear_points(v0.as_segment)]:
+                key = (prop, pt)
+                if key in self.processed:
+                    continue
+
+                foot, premises = self.context.foot_of_perpendicular(pt, v1.as_segment)
+                if foot is None:
+                    continue
+                if foot == v1.end:
+                    self.processed.add(key)
+                    continue
+
+                if pt == v0.end:
+                    degree = 0
+                else:
+                    av = self.context.angle_value_property(v0.start.angle(pt, v0.end))
+                    if av is None:
+                        continue
+                    premises = premises + [av]
+                    degree = av.degree
+
+                self.processed.add(key)
+
+                if degree == 0:
+                    pattern = '$%{angle:angle}$ is acute, $%{point:pt}$ lies on $%{ray:side0}$, $%{point:foot}$ is the foot of the perpendicular from $%{point:pt}$ to $%{line:side1}$'
+                else:
+                    pattern = '$%{angle:angle}$ is acute, $%{point:pt}$ lies on line $%{line:side0}$ outside of ray $%{ray:side0}$, $%{point:foot}$ is the foot of the perpendicular from $%{point:pt}$ to $%{line:side1}$'
+                yield (
+                    AngleValueProperty(v1.start.angle(foot, v1.end), degree),
+                    Comment(pattern, {'angle': prop.angle, 'pt': pt, 'foot': foot, 'side0': v0, 'side1': v1}),
+                    [prop] + premises
                 )
 
 class PointInsideAngleAndSecantRule(SingleSourceRule):
