@@ -39,4 +39,11 @@ class SingleSourceRule(Rule):
         return True
 
     def sources(self):
-        return [p for p in self.context.list(type(self).property_type) if self.accepts(p)]
+        ptype = type(self).property_type
+        if isinstance(ptype, tuple):
+            full = []
+            for t in ptype:
+                full += [p for p in self.context.list(t) if self.accepts(p)]
+            return full
+        else:
+            return [p for p in self.context.list(ptype) if self.accepts(p)]

@@ -109,13 +109,15 @@ class SumOfAnglesOfConvexQuadrilateralRule(SingleSourceRule):
             [prop]
         )
 
-class ConvexQuadrilateralRule(Rule):
+class ConvexQuadrilateralRule(SingleSourceRule):
+    property_type = (ConvexQuadrilateralProperty, NondegenerateSquareProperty)
+
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
 
-    def sources(self):
-        return [p for p in self.context.list(ConvexQuadrilateralProperty) + self.context.list(NondegenerateSquareProperty) if p not in self.processed]
+    def accepts(self, prop):
+        return prop not in self.processed
 
     def apply(self, prop):
         self.processed.add(prop)
@@ -143,13 +145,15 @@ class ConvexQuadrilateralRule(Rule):
                 [prop]
             )
 
-class SquareRule(Rule):
+class SquareRule(SingleSourceRule):
+    property_type = (SquareProperty, NondegenerateSquareProperty)
+
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
 
-    def sources(self):
-        return [p for p in self.context.list(SquareProperty) + self.context.list(NondegenerateSquareProperty) if p not in self.processed]
+    def accepts(self, prop):
+        return prop not in self.processed
 
     def apply(self, prop):
         self.processed.add(prop)
