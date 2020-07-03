@@ -2311,7 +2311,7 @@ class KnownAnglesWithCommonSideRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
-class SameSideToInsideAngleRule(SingleSourceRule):
+class OppositeSidesToInsideTriangleRule(SingleSourceRule):
     property_type = SameOrOppositeSideProperty
 
     def __init__(self, context):
@@ -2342,25 +2342,21 @@ class SameSideToInsideAngleRule(SingleSourceRule):
                     continue
                 triangle = Scene.Triangle(pt0, pt1, pt2)
                 comment = Comment(
-                    'line $%{line:line0}$ separates $%{point:pt0}$ and $%{point:pt1}$, line $%{line:line1}$ separates $%{point:pt2}$ and $%{point:pt3}$ => the intersection $%{point:crossing}$ lies inside $%{triangle:triangle}$',
+                    'line $%{line:line0}$ separates $%{point:pt0}$ and $%{point:pt1}$, line $%{line:line1}$ separates $%{point:pt2}$ and $%{point:pt3}$',
                     {
                         'line0': prop.segment,
                         'pt0': prop.points[0],
                         'pt1': prop.points[1],
                         'line1': prop1.segment,
                         'pt2': prop1.points[0],
-                        'pt3': prop1.points[1],
-                        'crossing': centre,
-                        'triangle': triangle
+                        'pt3': prop1.points[1]
                     }
                 )
-                angles = triangle.angles
-                for i in range(0, 3):
-                    yield (
-                        PointInsideAngleProperty(centre, angles[i]),
-                        comment,
-                        [prop, prop1]
-                    )
+                yield (
+                    PointInsideTriangleProperty(centre, triangle),
+                    comment,
+                    [prop, prop1]
+                )
         if mask != original:
             self.processed[prop] = mask
 

@@ -389,6 +389,72 @@ class EquilateralTriangleRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
+class PointInsideTwoAnglesRule(SingleSourceRule):
+    property_type = PointInsideAngleProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def apply(self, prop):
+        angle = prop.angle
+        triangle = Scene.Triangle(angle.vertex, *angle.endpoints)
+        for second_angle in triangle.angles[1:]:
+            key = (prop.point, angle, second_angle)
+            if key in self.processed:
+                continue
+            # TODO: do not use index access directly
+            second = self.context[PointInsideAngleProperty(prop.point, second_angle)]
+            if second is None:
+                continue
+            self.processed.add(key)
+            self.processed.add((prop.point, second_angle, angle))
+            yield (
+                PointInsideTriangleProperty(prop.point, triangle),
+                Comment(
+                    '$%{point:pt}$ lies inside both $%{angle:a0}$ and $%{angle:a1}$',
+                    {'pt': prop.point, 'a0': angle, 'a1': second_angle}
+                ),
+                [prop, second]
+            )
+
+class PointInsideTriangleRule(SingleSourceRule):
+    property_type = PointInsideTriangleProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
+    def apply(self, prop):
+        self.processed.add(prop)
+
+        comment = Comment(
+            '$%{point:pt}$ lies inside $%{triangle:triangle}$',
+            {'pt': prop.point, 'triangle': prop.triangle}
+        )
+        new_properties = []
+        verts = prop.triangle.points
+        for angle in prop.triangle.angles:
+            new_properties.append(PointInsideAngleProperty(prop.point, angle))
+        for pt, side in zip(verts, prop.triangle.sides):
+            new_properties.append(SameOrOppositeSideProperty(pt.segment(prop.point), *side.points, False))
+            new_properties.append(SameOrOppositeSideProperty(side, pt, prop.point, True))
+        cycles = (
+            Cycle(*verts),
+            Cycle(verts[0], verts[1], prop.point),
+            Cycle(verts[1], verts[2], prop.point),
+            Cycle(verts[2], verts[0], prop.point)
+        )
+        for c0, c1 in itertools.combinations(cycles, 2):
+            new_properties.append(SameCyclicOrderProperty(c0, c1))
+            new_properties.append(SameCyclicOrderProperty(c0.reversed, c1.reversed))
+
+        for p in new_properties:
+            yield (p, comment, [prop])
+
 class CentreOfEquilateralTriangleRule(SingleSourceRule):
     property_type = CentreOfEquilateralTriangleProperty
 
@@ -434,20 +500,15 @@ class CentreOfEquilateralTriangleRule(SingleSourceRule):
                 pattern = '$%{point:centre}$ is the centre of degenerate equilateral $%{triangle:triangle}$'
             else:
                 pattern = '$%{point:centre}$ is the centre of non-degenerate equilateral $%{triangle:triangle}$'
+                new_properties.append(PointInsideTriangleProperty(centre, prop.triangle))
                 for v0, v1 in itertools.combinations(vertices, 2):
                     new_properties.append(AngleValueProperty(centre.angle(v0, v1), 120))
                     new_properties.append(AngleValueProperty(v0.angle(centre, v1), 30))
                     new_properties.append(AngleValueProperty(v1.angle(centre, v0), 30))
                 for v0, v1, v2 in itertools.permutations(vertices, 3):
                     new_properties.append(AngleValueProperty(centre.vector(v0).angle(v1.vector(v2)), 90))
-                for angle in prop.triangle.angles:
-                    new_properties.append(PointInsideAngleProperty(centre, angle))
                 for radius, side in itertools.product(radiuses, prop.triangle.sides):
                     new_properties.append(ProportionalLengthsProperty(side, radius, sp.sqrt(3)))
-                for radius, side in zip(radiuses, prop.triangle.sides):
-                    new_properties.append(SameOrOppositeSideProperty(radius, *side.points, False))
-                for v, side in zip(vertices, prop.triangle.sides):
-                    new_properties.append(SameOrOppositeSideProperty(side, v, centre, True))
 
             comment = Comment(pattern, {'centre': centre, 'triangle': prop.triangle})
             for p in new_properties:

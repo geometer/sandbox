@@ -350,8 +350,6 @@ class CoreScene:
                 self.scene.constraint(Constraint.Kind.inside_segment, self, obj, **kwargs)
             elif isinstance(obj, CoreScene.Angle) and obj.vertex:
                 self.scene.constraint(Constraint.Kind.inside_angle, self, obj, **kwargs)
-                from .property import PointInsideAngleProperty
-                self.scene.add_property(PointInsideAngleProperty(self, obj))
             else:
                 assert False, 'Cannot declare point lying inside %s' % obj
 
@@ -769,6 +767,8 @@ class CoreScene:
             angle1 = self.vectors[1].angle(bisector)
             if self.vertex:
                 point.inside_constraint(self, **kwargs)
+                from .property import PointInsideAngleProperty
+                self.scene.add_property(PointInsideAngleProperty(point, self))
             self.ratio_constraint(angle0, 2, **kwargs)
             self.ratio_constraint(angle1, 2, **kwargs)
             angle0.ratio_constraint(angle1, 1, **kwargs)
