@@ -797,6 +797,12 @@ class AngleRatioPropertySet:
             prop = AngleValueProperty(angle, self.degree * ratio)
             return _synthetic_property(prop, comment, premises)
 
+        def values(self):
+            pairs = []
+            for angle, ratio in self.angle_to_ratio.items():
+                pairs.append((angle, self.degree * ratio))
+            return pairs
+
         def value_properties(self):
             properties = []
             for angle, ratio in self.angle_to_ratio.items():
@@ -919,6 +925,10 @@ class AngleRatioPropertySet:
         if prop:
             self.__value_cache[angle] = prop
         return prop
+
+    def values(self):
+        fam = self.family_with_degree
+        return fam.values() if fam else []
 
     def value_properties(self):
         fam = self.family_with_degree
@@ -1436,6 +1446,9 @@ class PropertySet(LineSet):
     def angle_kind_property(self, angle):
         return self.__angle_kinds.get(angle)
 
+    def nondegenerate_angle_values(self):
+        return self.__angle_ratios.values()
+
     def nondegenerate_angle_value_properties(self):
         return self.__angle_ratios.value_properties()
 
@@ -1443,6 +1456,12 @@ class PropertySet(LineSet):
         if degree == 0:
             return [p.angle for p in self.list(AngleValueProperty) if p.degree == 0]
         return self.__angle_ratios.angles_for_degree(degree)
+
+    def angle_values(self):
+        return [(p.angle, 0) for p in self.list(AngleValueProperty) if p.degree == 0] + self.nondegenerate_angle_values()
+
+    def angle_value_properties(self):
+        return [p for p in self.list(AngleValueProperty) if p.degree == 0] + self.nondegenerate_angle_value_properties()
 
     def angle_value_properties_for_degree(self, degree, condition=None):
         if degree == 0:
@@ -1455,8 +1474,8 @@ class PropertySet(LineSet):
     def points_inside_segment(self, segment):
         return [pt for pt in self.collinear_points(segment) if self.__angle_ratios.value(pt.angle(*segment.points)) == 180]
 
-    def angle_value_properties(self):
-        return [p for p in self.list(AngleValueProperty) if p.degree == 0] + self.nondegenerate_angle_value_properties()
+    def points_on_ray(self, vector):
+        return [pt for pt in self.collinear_points(vector.as_segment) if self.__angle_ratios.value(vector.start.angle(pt, vector.end)) == 0]
 
     def angle_ratio_property(self, angle0, angle1):
         return self.__angle_ratios.ratio_property(angle0, angle1)
