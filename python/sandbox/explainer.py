@@ -11,6 +11,7 @@ from .rules.abstract import PredefinedPropertyRule, SyntheticPropertyRule
 from .rules.advanced import *
 from .rules.basic import *
 from .rules.circle import *
+from .rules.cycle import *
 from .rules.line import *
 from .rules.linear import *
 from .rules.quadrilateral import *
