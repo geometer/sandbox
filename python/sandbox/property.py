@@ -386,7 +386,7 @@ class SameOrOppositeSideProperty(Property):
 
 class PointInsideAngleProperty(Property):
     """
-    A point lies inside an angle
+    Point lies inside an angle
     """
     def __init__(self, point, angle):
         self.point = point
@@ -403,6 +403,23 @@ class PointInsideAngleProperty(Property):
 
     def keys(self):
         return [self.point, self.angle]
+
+class PointInsideTriangleProperty(Property):
+    """
+    Point lies inside a triangle
+    """
+    def __init__(self, point, triangle):
+        self.point = point
+        self.triangle = triangle
+        super().__init__((point, frozenset(triangle.points)), {point, *triangle.points})
+
+    @property
+    def __priority__(self):
+        return 2
+
+    @property
+    def description(self):
+        return Comment('$%{point:pt}$ lies inside $%{triangle:triangle}$', {'pt': self.point, 'triangle': self.triangle})
 
 class EquilateralTriangleProperty(Property):
     """

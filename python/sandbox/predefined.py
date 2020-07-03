@@ -89,15 +89,6 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
         if all(all_visible(param.points) for param in cnstr.params):
             yield (ParallelVectorsProperty(*cnstr.params), cnstr.comment)
 
-    for cnstr in scene.constraints(Constraint.Kind.inside_angle):
-        point = cnstr.params[0]
-        angle = cnstr.params[1]
-        if is_visible(point) and all_visible(angle.point_set):
-            yield (
-                PointInsideAngleProperty(point, angle),
-                cnstr.comment
-            )
-
     for cnstr in scene.constraints(Constraint.Kind.inside_segment):
         if all_visible((cnstr.params[0], *cnstr.params[1].points)):
             yield (

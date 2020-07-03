@@ -350,6 +350,8 @@ class CoreScene:
                 self.scene.constraint(Constraint.Kind.inside_segment, self, obj, **kwargs)
             elif isinstance(obj, CoreScene.Angle) and obj.vertex:
                 self.scene.constraint(Constraint.Kind.inside_angle, self, obj, **kwargs)
+                from .property import PointInsideAngleProperty
+                self.scene.add_property(PointInsideAngleProperty(self, obj))
             else:
                 assert False, 'Cannot declare point lying inside %s' % obj
 
@@ -365,7 +367,9 @@ class CoreScene:
                     {'pt': self, 'triangle': triangle}
                 )
             for angle in triangle.angles:
-                self.inside_constraint(angle, **kwargs)
+                self.scene.constraint(Constraint.Kind.inside_angle, self, angle, **kwargs)
+            from .property import PointInsideTriangleProperty
+            self.scene.add_property(PointInsideTriangleProperty(self, triangle))
             from .property import SameOrOppositeSideProperty
             for vertex, side in zip(triangle.points, triangle.sides):
                 self.scene.add_property(SameOrOppositeSideProperty(side, vertex, self, True))
