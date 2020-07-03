@@ -361,7 +361,8 @@ class LineSet:
         elif isinstance(prop, PointOnLineProperty):
             self.__add_point_on_line_property(prop)
         elif isinstance(prop, PointsCollinearityProperty):
-            self.__collinearity[prop.property_key] = prop
+            #self.__collinearity[prop.property_key] = prop
+            pass
         elif isinstance(prop, PointsCoincidenceProperty):
             self.__coincidence[prop.property_key] = prop
         elif isinstance(prop, CircleCoincidenceProperty):
@@ -425,11 +426,12 @@ class LineSet:
         if cached:
             return cached
 
+        candidates = []
+
         pt_patterns = ['$%{point:' + str(i) + '}$' for i in range(0, len(pts))]
         pattern = ', '.join(pt_patterns[:-1]) + ', and ' + pt_patterns[-1] + ' belong to $%{line:line}$'
         common_params = dict((str(index), pt) for index, pt in enumerate(pts))
 
-        candidates = []
         for line in self.__all_lines:
             if any(pt not in line.points_on for pt in pts):
                 continue
@@ -470,10 +472,11 @@ class LineSet:
             common_params = {'pt0': points_on[0], 'pt1': points_on[1], 'pt2': point_not_on}
             for seg in line.segments:
                 premises = []
-                for pt in points_on:
+                premises2 = []
+                for pt in [*points_on, point_not_on]:
                     if pt not in seg.points:
                         premises.append(line.point_on_line_property(seg, pt))
-                premises.append(line.point_on_line_property(seg, point_not_on))
+                        premises2.append(self.__collinearity.get(frozenset([*seg.points, pt])))
 
                 prop = PointsCollinearityProperty(*pts, False)
                 params = dict(common_params)
@@ -481,6 +484,11 @@ class LineSet:
                 candidates.append(_synthetic_property(
                     prop, Comment(pattern, params), premises
                 ))
+                if None not in premises2:
+                    prop = PointsCollinearityProperty(*pts, False)
+                    candidates.append(_synthetic_property(
+                        prop, Comment(pattern, params), premises2
+                    ))
 
         triangle = Scene.Triangle(*pts)
         lines = [(triangle.sides[i], self.__segment_to_line.get(triangle.sides[i]), triangle.points[i]) for i in range(0, 3)]
@@ -1468,28 +1476,31 @@ class PropertySet(LineSet):
         return self.__indexes.get(prop)
 
     def __getitem__(self, prop):
-        existing = self.__full_set.get(prop)
-        if not existing:
-            if isinstance(prop, AngleRatioProperty):
-                existing = self.angle_ratio_property(prop.angle0, prop.angle1)
-            elif isinstance(prop, AngleValueProperty):
-                existing = self.angle_value_property(prop.angle)
-            elif isinstance(prop, SameCyclicOrderProperty):
-                existing = self.same_cyclic_order_property(prop.cycle0, prop.cycle1)
-            #elif isinstance(prop, PointAndCircleProperty):
-            #    existing = self.point_and_circle_property(prop.point, prop.circle_key)
-            elif isinstance(prop, PointsCollinearityProperty):
-                existing = self.collinearity_property(*prop.points)
-            elif isinstance(prop, MultiPointsCollinearityProperty):
-                existing = self.collinearity_property(*prop.points)
-            elif isinstance(prop, PointOnLineProperty):
-                existing = self.point_on_line_property(prop.segment, prop.point)
-            elif isinstance(prop, SumOfAnglesProperty):
-                existing = self.sum_of_angles_property(*prop.angles)
-            elif isinstance(prop, ConcyclicPointsProperty):
-                existing = self.concyclicity_property(*prop.points)
+        if isinstance(prop, AngleRatioProperty):
+            existing = self.angle_ratio_property(prop.angle0, prop.angle1)
+        elif isinstance(prop, AngleValueProperty):
+            existing = self.angle_value_property(prop.angle)
+        elif isinstance(prop, SameCyclicOrderProperty):
+            existing = self.same_cyclic_order_property(prop.cycle0, prop.cycle1)
+        #elif isinstance(prop, PointAndCircleProperty):
+        #    existing = self.point_and_circle_property(prop.point, prop.circle_key)
+        elif isinstance(prop, PointsCollinearityProperty):
+            existing = self.collinearity_property(*prop.points)
+        elif isinstance(prop, MultiPointsCollinearityProperty):
+            existing = self.collinearity_property(*prop.points)
+        elif isinstance(prop, PointOnLineProperty):
+            existing = self.point_on_line_property(prop.segment, prop.point)
+        elif isinstance(prop, SumOfAnglesProperty):
+            existing = self.sum_of_angles_property(*prop.angles)
+        elif isinstance(prop, ConcyclicPointsProperty):
+            existing = self.concyclicity_property(*prop.points)
         #TODO: LengthRatioProperty
         #TODO: EqualLengthRatiosProperty
+        else:
+            existing = None
+
+        if existing is None:
+            existing = self.__full_set.get(prop)
         if existing and not existing.compare_values(prop):
             raise ContradictionError('different values: `%s` vs `%s`' % (prop, existing))
         return existing
@@ -1540,6 +1551,18 @@ class PropertySet(LineSet):
             else:
                 return [p for p in self.list(AngleValueProperty) if p.degree == 0]
         return self.__angle_ratios.value_properties_for_degree(degree, condition)
+
+    def collinearity_property(self, *pts):
+        prop = super().collinearity_property(*pts)
+        if prop is None:
+            return None
+        existing = self.__full_set.get(prop)
+        if existing:
+            if existing.reason.cost > prop.reason.cost:
+                existing.reason = prop.reason
+            return existing
+        else:
+            return prop
 
     def points_inside_segment(self, segment):
         return [pt for pt in self.collinear_points(segment) if self.__angle_ratios.value(pt.angle(*segment.points)) == 180]
