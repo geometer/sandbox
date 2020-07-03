@@ -760,10 +760,13 @@ class AngleRatioPropertySet:
             return Comment(''.join(pattern), params)
 
     class Family:
-        def __init__(self):
+        def __init__(self, angle=None):
             self.angle_to_ratio = {}
             self.premises_graph = nx.Graph()
             self.degree = None
+            if angle:
+                self.angle_to_ratio[angle] = 1
+            self.sum_props = set()
 
         def explanation_from_path(self, path, multiplier):
             premises = [self.premises_graph.get_edge_data(i, j)['prop'] for i, j in zip(path[:-1], path[1:])]
@@ -911,6 +914,7 @@ class AngleRatioPropertySet:
         self.__value_cache = {} # angle => prop
         self.__ratio_cache = {} # {angle, angle} => prop
         self.__sum_of_angles = {} # (angle, angle, ...) => prop
+        self.__sum_of_angles_2 = {} # ((fam, ratio), (fam, ratio), ...) => prop
 
     def value(self, angle):
         fam = self.family_with_degree
@@ -982,8 +986,27 @@ class AngleRatioPropertySet:
         elif isinstance(prop, AngleValueProperty):
             self.__add_value_property(prop)
         elif isinstance(prop, SumOfAnglesProperty):
-            for perm in itertools.permutations(prop.angles, len(prop.angles)):
-                self.__sum_of_angles[perm] = prop
+            self.__add_sum_property(prop)
+
+    def __add_sum_property(self, prop):
+        for perm in itertools.permutations(prop.angles, len(prop.angles)):
+            self.__sum_of_angles[perm] = prop
+        def pair(angle):
+            fam = self.angle_to_family.get(angle)
+            if fam:
+                return (fam, fam.angle_to_ratio[angle])
+            fam = AngleRatioPropertySet.Family(angle)
+            self.angle_to_family[angle] = fam
+            return (fam, 1)
+        key = [pair(angle) for angle in prop.angles]
+        for perm in itertools.permutations(key, len(key)):
+            ar = self.__sum_of_angles_2.get(perm)
+            if ar:
+                ar.append(prop)
+            else:
+                self.__sum_of_angles_2[perm] = [prop]
+        for fam, _ in key:
+            fam.sum_props.add(prop)
 
     def __add_value_property(self, prop):
         self.__value_cache[prop.angle] = prop
@@ -1002,6 +1025,8 @@ class AngleRatioPropertySet:
                     if self.angle_to_family[key] == fam:
                         self.angle_to_family[key] = self.family_with_degree
                 self.family_with_degree.premises_graph.add_edges_from(fam.premises_graph.edges(data=True))
+                for sum_prop in fam.sum_props:
+                    self.__add_sum_property(sum_prop)
         elif fam:
             self.family_with_degree = fam
         elif self.family_with_degree:
@@ -1030,6 +1055,8 @@ class AngleRatioPropertySet:
                     if self.angle_to_family[key] == fam1:
                         self.angle_to_family[key] = fam0
                 fam0.premises_graph.add_edges_from(fam1.premises_graph.edges(data=True))
+                for sum_prop in fam1.sum_props:
+                    self.__add_sum_property(sum_prop)
         elif fam0:
             fam0.add_ratio_property(prop)
             self.angle_to_family[prop.angle1] = fam0
@@ -1047,37 +1074,53 @@ class AngleRatioPropertySet:
         if cached:
             return cached.degree
 
-        congruents = [set([ngl] + list(self.congruent_angles_for(ngl))) for ngl in angles]
-        for key, value in self.__sum_of_angles.items():
-            if len(key) == len(angles) and all(key[i] in congruents[i] for i in range(0, len(key))):
-                return value.degree
-        return None
+        key = []
+        for a in angles:
+            fam = self.angle_to_family.get(a)
+            if fam is None:
+                return None
+            key.append((fam, fam.angle_to_ratio[a]))
+        ar = self.__sum_of_angles_2.get(tuple(key))
+        return ar[0].degree if ar else None
 
     def sum_of_angles_property(self, *angles):
         cached = self.__sum_of_angles.get(angles)
         if cached:
             return cached
 
-        candidates = []
+        key = []
+        for a in angles:
+            fam = self.angle_to_family.get(a)
+            if fam is None:
+                return None
+            key.append((fam, fam.angle_to_ratio[a]))
+        ar = self.__sum_of_angles_2.get(tuple(key))
+        if ar is None:
+            return None
+
         p0 = ['%{angle:a' + str(i) + '}' for i in range(0, len(angles))]
         p1 = ['%{angle:' + str(i) + '}' for i in range(0, len(angles))]
         pattern = '$' + ' + '.join(p0) + ' = ' + ' + '.join(p1) + ' = %{degree:sum}$'
         common_params = {'a' + str(i): angle for i, angle in enumerate(angles)}
 
-        congruents = [set([ngl] + list(self.congruent_angles_for(ngl))) for ngl in angles]
-
-        for key, known in self.__sum_of_angles.items():
-            if len(key) == len(angles) and all(key[i] in congruents[i] for i in range(0, len(key))):
-                prop = SumOfAnglesProperty(*angles, degree=known.degree)
-                params = dict(common_params)
-                params.update({str(i): a for i, a in enumerate(key)})
-                params['sum'] = known.degree
-                comment = Comment(pattern, params)
-                premises = [known]
-                for angle, a in zip(angles, key):
-                    if angle != a:
-                        premises.append(self.ratio_property(angle, a))
-                candidates.append(_synthetic_property(prop, comment, premises))
+        candidates = []
+        for known in ar:
+            prop = SumOfAnglesProperty(*angles, degree=known.degree)
+            params = dict(common_params)
+            params.update({str(i): a for i, a in enumerate(known.angles)})
+            params['sum'] = known.degree
+            comment = Comment(pattern, params)
+            premises = [known]
+            ka = list(known.angles)
+            known_angles = []
+            for fam, ratio in key:
+                a = next(a for a in ka if fam.angle_to_ratio.get(a) == ratio)
+                ka.remove(a)
+                known_angles.append(a)
+            for angle, a in zip(angles, known_angles):
+                if angle != a:
+                    premises.append(self.ratio_property(angle, a))
+            candidates.append(_synthetic_property(prop, comment, premises))
 
         return PropertySet.best_candidate(candidates)
 
