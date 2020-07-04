@@ -2596,3 +2596,38 @@ class MiddleOfSegmentRule(SingleSourceRule):
 
         if mask != original:
             self.processed[prop] = mask
+
+class PointOnSegmentWithEndpointsOnSidesOfAngleRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        return self.context.angle_value_properties_for_degree(180, lambda a: a.vertex)
+
+    def apply(self, prop):
+        segment = prop.angle.endpoints[0].segment(prop.angle.endpoints[1])
+        for vertex in self.context.not_collinear_points(segment):
+            key = (prop, vertex)
+            if key in self.processed:
+                continue
+            self.processed.add(key)
+
+            ncl = self.context.collinearity_property(vertex, *segment.points)
+            angle = vertex.angle(*prop.angle.endpoints)
+            yield (
+                PointInsideAngleProperty(prop.angle.vertex, angle),
+                Comment(
+                    '$%{point:vertex}$ lies on a segment with endpoints on sides of $%{angle:angle}$',
+                    {'vertex': prop.angle.vertex, 'angle': angle}
+                ),
+                [prop, ncl]
+            )
+            yield (
+                SameOrOppositeSideProperty(prop.angle.vertex.segment(vertex), *prop.angle.endpoints, False),
+                Comment(
+                    '$%{point:pt_on}$ lies on segment $%{segment:segment}$, and $%{point:pt_not_on}$ is not on the line $%{line:segment}$',
+                    {'pt_on': prop.angle.vertex, 'pt_not_on': vertex, 'segment': segment}
+                ),
+                [prop, ncl]
+            )
