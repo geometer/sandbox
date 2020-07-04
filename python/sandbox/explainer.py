@@ -107,6 +107,7 @@ class Explainer:
             PartOfAcuteAngleIsAcuteRule(self.context),
             TwoPointsInsideSegmentRule(self.context),
             TwoPointsOnRayRule(self.context),
+            FourPointsOnLineRule(self.context),
             SameAngleRule(self.context),
             SameAngleRule2(self.context),
             SameAngleRule3(self.context),

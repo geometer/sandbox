@@ -431,6 +431,16 @@ class CeviansIntersectionRule(Rule):
             comment,
             [av0, av1, ncl] + reasons
         )
+        yield (
+            AngleValueProperty(crossing.angle(*segment0.points), 180),
+            comment,
+            [av0, av1, ncl] + reasons
+        )
+        yield (
+            AngleValueProperty(crossing.angle(*segment1.points), 180),
+            comment,
+            [av0, av1, ncl] + reasons
+        )
 
 class PointOnCevianRule(Rule):
     def __init__(self, context):

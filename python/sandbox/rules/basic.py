@@ -6,6 +6,43 @@ from ..util import LazyComment, Comment, divide, common_endpoint, other_point
 
 from .abstract import Rule, SingleSourceRule
 
+class FourPointsOnLineRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        props = self.context.angle_value_properties_for_degree(180, lambda a: a.vertex)
+        for p0, p1 in itertools.combinations(props, 2):
+            if p0.angle.vertex in p1.angle.endpoints and p1.angle.vertex in p0.angle.endpoints:
+                yield (p0, p1)
+
+    def apply(self, src):
+        if src in self.processed:
+            return
+
+        prop0, prop1 = src
+        self.processed.add(src)
+        self.processed.add((prop1, prop0))
+
+        end0 = other_point(prop0.angle.endpoints, prop1.angle.vertex)
+        end1 = other_point(prop1.angle.endpoints, prop0.angle.vertex)
+
+        comment = Comment(
+            'four points $%{point:e0}$, $%{point:v0}$, $%{point:v1}$, and $%{point:e1}$ lie on a straight line in this order',
+            {'e0': end0, 'e1': end1, 'v0': prop0.angle.vertex, 'v1': prop1.angle.vertex}
+        )
+
+        for p in (
+            AngleValueProperty(prop0.angle.vertex.angle(end0, end1), 180),
+            AngleValueProperty(prop1.angle.vertex.angle(end0, end1), 180),
+            AngleValueProperty(end0.angle(prop0.angle.vertex, end1), 0),
+            AngleValueProperty(end0.angle(prop1.angle.vertex, end1), 0),
+            AngleValueProperty(end1.angle(prop0.angle.vertex, end0), 0),
+            AngleValueProperty(end1.angle(prop1.angle.vertex, end0), 0)
+        ):
+            yield (p, comment, [prop0, prop1])
+
 class PerpendicularInAcuteAngleRule(SingleSourceRule):
     property_type = AngleKindProperty
 
