@@ -4,11 +4,10 @@ import sympy as sp
 from ..property import *
 from ..util import Comment
 
-from .abstract import Rule, SingleSourceRule
+from .abstract import Rule, source_type
 
-class SideProductsInSimilarTrianglesRule(SingleSourceRule):
-    property_type = SimilarTrianglesProperty
-
+@source_type(SimilarTrianglesProperty)
+class SideProductsInSimilarTrianglesRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = {}
@@ -46,9 +45,8 @@ class SideProductsInSimilarTrianglesRule(SingleSourceRule):
         if original != mask:
             self.processed[prop] = mask
 
-class CorrespondingAnglesInSimilarTrianglesRule(SingleSourceRule):
-    property_type = SimilarTrianglesProperty
-
+@source_type(SimilarTrianglesProperty)
+class CorrespondingAnglesInSimilarTrianglesRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = {}
@@ -98,9 +96,8 @@ class CorrespondingAnglesInSimilarTrianglesRule(SingleSourceRule):
         if original != mask:
             self.processed[prop] = mask
 
-class CorrespondingAnglesInSimilarTrianglesRule2(SingleSourceRule):
-    property_type = SimilarTrianglesProperty
-
+@source_type(SimilarTrianglesProperty)
+class CorrespondingAnglesInSimilarTrianglesRule2(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
@@ -133,9 +130,8 @@ class CorrespondingAnglesInSimilarTrianglesRule2(SingleSourceRule):
                 [prop, ncl0, ncl1]
             )
 
-class BaseAnglesOfIsoscelesRule(SingleSourceRule):
-    property_type = IsoscelesTriangleProperty
-
+@source_type(IsoscelesTriangleProperty)
+class BaseAnglesOfIsoscelesRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
@@ -160,9 +156,8 @@ class BaseAnglesOfIsoscelesRule(SingleSourceRule):
             [prop, neq]
         )
 
-class BaseAnglesOfIsoscelesWithKnownApexAngleRule(SingleSourceRule):
-    property_type = IsoscelesTriangleProperty
-
+@source_type(IsoscelesTriangleProperty)
+class BaseAnglesOfIsoscelesWithKnownApexAngleRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
@@ -191,9 +186,8 @@ class BaseAnglesOfIsoscelesWithKnownApexAngleRule(SingleSourceRule):
                 [prop, av]
             )
 
-class LegsOfIsoscelesRule(SingleSourceRule):
-    property_type = IsoscelesTriangleProperty
-
+@source_type(IsoscelesTriangleProperty)
+class LegsOfIsoscelesRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
@@ -214,9 +208,8 @@ class LegsOfIsoscelesRule(SingleSourceRule):
             [prop]
         )
 
-class CorrespondingAnglesInCongruentTrianglesRule(SingleSourceRule):
-    property_type = CongruentTrianglesProperty
-
+@source_type(CongruentTrianglesProperty)
+class CorrespondingAnglesInCongruentTrianglesRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = {}
@@ -253,9 +246,8 @@ class CorrespondingAnglesInCongruentTrianglesRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
-class CorrespondingSidesInCongruentTrianglesRule(SingleSourceRule):
-    property_type = CongruentTrianglesProperty
-
+@source_type(CongruentTrianglesProperty)
+class CorrespondingSidesInCongruentTrianglesRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
@@ -281,9 +273,8 @@ class CorrespondingSidesInCongruentTrianglesRule(SingleSourceRule):
                     [prop]
                 )
 
-class CorrespondingSidesInSimilarTrianglesRule(SingleSourceRule):
-    property_type = SimilarTrianglesProperty
-
+@source_type(SimilarTrianglesProperty)
+class CorrespondingSidesInSimilarTrianglesRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = {}
@@ -329,9 +320,8 @@ class CorrespondingSidesInSimilarTrianglesRule(SingleSourceRule):
         if original != mask:
             self.processed[prop] = mask
 
-class EquilateralTriangleRule(SingleSourceRule):
-    property_type = EquilateralTriangleProperty
-
+@source_type(EquilateralTriangleProperty)
+class EquilateralTriangleRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = {}
@@ -473,9 +463,8 @@ class PointOnCevianRule(Rule):
                     [inside_prop, prop, ncl]
                 )
 
-class PointInsideTwoAnglesRule(SingleSourceRule):
-    property_type = PointInsideAngleProperty
-
+@source_type(PointInsideAngleProperty)
+class PointInsideTwoAnglesRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
@@ -502,9 +491,8 @@ class PointInsideTwoAnglesRule(SingleSourceRule):
                 [prop, second]
             )
 
-class PointInsideTriangleRule(SingleSourceRule):
-    property_type = PointInsideTriangleProperty
-
+@source_type(PointInsideTriangleProperty)
+class PointInsideTriangleRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
@@ -539,9 +527,8 @@ class PointInsideTriangleRule(SingleSourceRule):
         for p in new_properties:
             yield (p, comment, [prop])
 
-class CentreOfEquilateralTriangleRule(SingleSourceRule):
-    property_type = CentreOfEquilateralTriangleProperty
-
+@source_type(CentreOfEquilateralTriangleProperty)
+class CentreOfEquilateralTriangleRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = {}

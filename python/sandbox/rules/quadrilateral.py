@@ -4,11 +4,10 @@ import sympy as sp
 from ..property import *
 from ..util import Comment
 
-from .abstract import Rule, SingleSourceRule
+from .abstract import Rule, Rule, source_type, source_types
 
-class PointInsideHalfOfSquareRule(SingleSourceRule):
-    property_type = (SquareProperty, NondegenerateSquareProperty)
-
+@source_types(SquareProperty, NondegenerateSquareProperty)
+class PointInsideHalfOfSquareRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
@@ -31,9 +30,8 @@ class PointInsideHalfOfSquareRule(SingleSourceRule):
                     [prop, triangle_prop]
                 )
 
-class PointInsideSquareRule(SingleSourceRule):
-    property_type = PointInsideSquareProperty
-
+@source_type(PointInsideSquareProperty)
+class PointInsideSquareRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
@@ -72,9 +70,8 @@ class PointInsideSquareRule(SingleSourceRule):
         for p in new_properties:
             yield (p, comment, [prop])
 
-class KnownAnglesToConvexQuadrilateralRule(SingleSourceRule):
-    property_type = SameOrOppositeSideProperty
-
+@source_type(SameOrOppositeSideProperty)
+class KnownAnglesToConvexQuadrilateralRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = {}
@@ -156,9 +153,8 @@ class PointsToConvexQuadrilateralRule(Rule):
             [prop0, prop1]
         )
 
-class SumOfAnglesOfConvexQuadrilateralRule(SingleSourceRule):
-    property_type = ConvexQuadrilateralProperty
-
+@source_type(ConvexQuadrilateralProperty)
+class SumOfAnglesOfConvexQuadrilateralRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
@@ -175,9 +171,8 @@ class SumOfAnglesOfConvexQuadrilateralRule(SingleSourceRule):
             [prop]
         )
 
-class ConvexQuadrilateralRule(SingleSourceRule):
-    property_type = (ConvexQuadrilateralProperty, NondegenerateSquareProperty)
-
+@source_types(ConvexQuadrilateralProperty, NondegenerateSquareProperty)
+class ConvexQuadrilateralRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
@@ -211,9 +206,8 @@ class ConvexQuadrilateralRule(SingleSourceRule):
                 [prop]
             )
 
-class SquareRule(SingleSourceRule):
-    property_type = (SquareProperty, NondegenerateSquareProperty)
-
+@source_types(SquareProperty, NondegenerateSquareProperty)
+class SquareRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
@@ -264,9 +258,8 @@ class SquareRule(SingleSourceRule):
                 [prop]
             )
 
-class SquareDegeneracyRule(SingleSourceRule):
-    property_type = SquareProperty
-
+@source_type(SquareProperty)
+class SquareDegeneracyRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = {}
@@ -311,9 +304,8 @@ class SquareDegeneracyRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
-class NondegenerateSquareRule(SingleSourceRule):
-    property_type = NondegenerateSquareProperty
-
+@source_type(NondegenerateSquareProperty)
+class NondegenerateSquareRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()

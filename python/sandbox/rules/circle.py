@@ -4,7 +4,7 @@ from ..figure import Circle
 from ..property import *
 from ..util import LazyComment, Comment
 
-from .abstract import Rule, SingleSourceRule
+from .abstract import Rule, source_type
 
 class CyclicQuadrilateralRule(Rule):
     def __init__(self, context):
@@ -55,9 +55,8 @@ class CyclicQuadrilateralRule(Rule):
             [perp0, perp1]
         )
 
-class CyclicQuadrilateralRule2(SingleSourceRule):
-    property_type = SameOrOppositeSideProperty
-
+@source_type(SameOrOppositeSideProperty)
+class CyclicQuadrilateralRule2(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
@@ -91,9 +90,8 @@ class CyclicQuadrilateralRule2(SingleSourceRule):
             [sum_prop, prop]
         )
 
-class ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule(SingleSourceRule):
-    property_type = ConcyclicPointsProperty
-
+@source_type(ConcyclicPointsProperty)
+class ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
@@ -132,9 +130,8 @@ class ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule(SingleSourceRule):
                 premises
             )
 
-class PointsOnCircleRule(SingleSourceRule):
-    property_type = ConcyclicPointsProperty
-
+@source_type(ConcyclicPointsProperty)
+class PointsOnCircleRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = {}
@@ -166,9 +163,8 @@ class PointsOnCircleRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
-class ConcyclicToSameCircleRule(SingleSourceRule):
-    property_type = ConcyclicPointsProperty
-
+@source_type(ConcyclicPointsProperty)
+class ConcyclicToSameCircleRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = {}

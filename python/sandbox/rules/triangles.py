@@ -4,7 +4,7 @@ from .. import Scene
 from ..property import *
 from ..util import LazyComment, Comment, common_endpoint, other_point
 
-from .abstract import Rule, SingleSourceRule
+from .abstract import Rule, source_type
 
 class SimilarTrianglesByTwoAnglesRule(Rule):
     def __init__(self, context):
@@ -299,9 +299,8 @@ class SimilarTrianglesByAngleAndTwoSidesRule2(Rule):
                     [elr, ca]
                 )
 
-class SimilarTrianglesWithCongruentSideRule(SingleSourceRule):
-    property_type = SimilarTrianglesProperty
-
+@source_type(SimilarTrianglesProperty)
+class SimilarTrianglesWithCongruentSideRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()

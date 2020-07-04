@@ -3,11 +3,10 @@ import itertools
 from ..property import *
 from ..util import Comment, divide
 
-from .abstract import Rule, SingleSourceRule
+from .abstract import Rule, source_type
 
-class EliminateAngleFromSumRule(SingleSourceRule):
-    property_type = SumOfAnglesProperty
-
+@source_type(SumOfAnglesProperty)
+class EliminateAngleFromSumRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = {}
@@ -46,9 +45,8 @@ class EliminateAngleFromSumRule(SingleSourceRule):
         if len(processed_angles) != length:
             self.processed[angle] = processed_angles
 
-class AngleBySumOfThreeRule(SingleSourceRule):
-    property_type = SumOfAnglesProperty
-
+@source_type(SumOfAnglesProperty)
+class AngleBySumOfThreeRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = {}
@@ -97,12 +95,11 @@ class AngleBySumOfThreeRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
-class SumAndRatioOfTwoAnglesRule(SingleSourceRule):
+@source_type(SumOfAnglesProperty)
+class SumAndRatioOfTwoAnglesRule(Rule):
     """
     If the sum and the ratio of two angles are known, we can find the values
     """
-    property_type = SumOfAnglesProperty
-
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()

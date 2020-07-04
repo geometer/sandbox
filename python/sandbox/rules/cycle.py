@@ -1,11 +1,10 @@
 from ..property import *
 from ..util import Comment
 
-from .abstract import Rule, SingleSourceRule
+from .abstract import Rule, source_type
 
-class CyclicOrderRule(SingleSourceRule):
-    property_type = SameOrOppositeSideProperty
-
+@source_type(SameOrOppositeSideProperty)
+class CyclicOrderRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()

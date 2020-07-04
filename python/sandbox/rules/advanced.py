@@ -4,14 +4,13 @@ from .. import Scene
 from ..property import AngleValueProperty, IsoscelesTriangleProperty, LengthRatioProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, PointsCollinearityProperty
 from ..util import Comment
 
-from .abstract import SingleSourceRule
+from .abstract import Rule, source_type
 
-class RightAngledTriangleMedianRule(SingleSourceRule):
+@source_type(PerpendicularSegmentsProperty)
+class RightAngledTriangleMedianRule(Rule):
     """
     In a right-angled triangle, the median to the hypotenuse is equal to half of the hypotenuse
     """
-    property_type = PerpendicularSegmentsProperty
-
     def apply(self, prop):
         vertex = next((pt for pt in prop.segments[0].points if pt in prop.segments[1].points), None)
         if vertex is None:
@@ -36,12 +35,11 @@ class RightAngledTriangleMedianRule(SingleSourceRule):
                 [prop, col, half0, half1]
             )
 
-class Triangle30_60_90SidesRule(SingleSourceRule):
+@source_type(AngleValueProperty)
+class Triangle30_60_90SidesRule(Rule):
     """
     Sides ratios in a right-angled triangle with angles 60º and 30º
     """
-    property_type = AngleValueProperty
-
     def __init__(self, context):
         super().__init__(context)
         self.processed = {}
@@ -105,12 +103,11 @@ class Triangle30_60_90SidesRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
-class Triangle30_30_120SidesRule(SingleSourceRule):
+@source_type(IsoscelesTriangleProperty)
+class Triangle30_30_120SidesRule(Rule):
     """
     Sides ratios in an isosceles triangle with base angles 30º
     """
-    property_type = IsoscelesTriangleProperty
-
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
@@ -135,12 +132,11 @@ class Triangle30_30_120SidesRule(SingleSourceRule):
                 [prop, value]
             )
 
-class Triangle72_72_36SidesRule(SingleSourceRule):
+@source_type(IsoscelesTriangleProperty)
+class Triangle72_72_36SidesRule(Rule):
     """
     Sides ratios in an isosceles triangle with base angles 72º
     """
-    property_type = IsoscelesTriangleProperty
-
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
@@ -165,12 +161,11 @@ class Triangle72_72_36SidesRule(SingleSourceRule):
                 [prop, value]
             )
 
-class Triangle36_36_108SidesRule(SingleSourceRule):
+@source_type(IsoscelesTriangleProperty)
+class Triangle36_36_108SidesRule(Rule):
     """
     Sides ratios in an isosceles triangle with base angles 36º
     """
-    property_type = IsoscelesTriangleProperty
-
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()

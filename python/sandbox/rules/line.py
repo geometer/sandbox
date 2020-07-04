@@ -3,11 +3,10 @@ import itertools
 from .. import Scene
 from ..property import *
 
-from .abstract import Rule, SingleSourceRule
+from .abstract import Rule, source_type
 
-class CollinearityToSameLineRule(SingleSourceRule):
-    property_type = PointsCollinearityProperty
-
+@source_type(PointsCollinearityProperty)
+class CollinearityToSameLineRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = {}
@@ -43,9 +42,8 @@ class CollinearityToSameLineRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
-class CollinearityToPointOnLineRule(SingleSourceRule):
-    property_type = PointsCollinearityProperty
-
+@source_type(PointsCollinearityProperty)
+class CollinearityToPointOnLineRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = {}
@@ -82,9 +80,8 @@ class CollinearityToPointOnLineRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
-class NonCollinearityToDifferentLinesRule(SingleSourceRule):
-    property_type = PointsCollinearityProperty
-
+@source_type(PointsCollinearityProperty)
+class NonCollinearityToDifferentLinesRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
@@ -106,9 +103,8 @@ class NonCollinearityToDifferentLinesRule(SingleSourceRule):
                 [prop]
             )
 
-class NonCollinearityToPointNotOnLineRule(SingleSourceRule):
-    property_type = PointsCollinearityProperty
-
+@source_type(PointsCollinearityProperty)
+class NonCollinearityToPointNotOnLineRule(Rule):
     def __init__(self, context):
         super().__init__(context)
         self.processed = set()
