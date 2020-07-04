@@ -28,7 +28,10 @@ C.angle(B, A).is_acute_constraint(comment='assumption')
 
 props = (
 #    ConcyclicPointsProperty(A, B, C, A2, B2, C2),
-    PointsCollinearityProperty(A, B, C2, False),
+#    PointsCollinearityProperty(A, B, C2, False),
+    AngleRatioProperty(H.angle(A, B), H.angle(A1, B1), 1),
+#    B1.angle(H, B2),
+#    H.angle(B, B2),
 )
 
 run_sample(scene, *props)
