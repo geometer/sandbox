@@ -156,9 +156,9 @@ class AngleTypeAndPerpendicularRule(SingleSourceRule):
     def apply(self, prop):
         angle = prop.angle
         if prop.kind == AngleKindProperty.Kind.acute:
-            pattern = '$%{point:foot}$ is the foot of perpendicular from point $%{point:pt}$ on side of acute $%{angle:angle}$ to another side'
+            pattern = '$%{point:foot}$ is the foot of perpendicular from point $%{point:pt}$ on side of acute $%{angle:angle}$ to the second side'
         else:
-            pattern = '$%{point:foot}$ is the foot of perpendicular from point $%{point:pt}$ on side of obtuse $%{angle:angle}$ to extension of another side'
+            pattern = '$%{point:foot}$ is the foot of perpendicular from point $%{point:pt}$ on side of obtuse $%{angle:angle}$ to extension of the second side'
         for vec0, vec1 in (angle.vectors, reversed(angle.vectors)):
             key = (prop, vec0.end)
             if key in self.processed:
