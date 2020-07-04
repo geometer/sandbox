@@ -2018,11 +2018,11 @@ class SameAngleRule(Rule):
         yield (
             AngleRatioProperty(angle0, angle1, 1, same=True),
             Comment(
-                '$%{vector:vec0} \\uparrow\\!\\!\\!\\uparrow %{vector:vec1}$ and $%{vector:vec2} \\uparrow\\!\\!\\!\\uparrow %{vector:vec3}$',
+                '$%{point:pt0}$ lies on $%{ray:vec1}$ and $%{point:pt2}$ lies on $%{ray:vec3}$',
                 {
-                    'vec0': ng0.vectors[0],
+                    'pt0': ng0.vectors[0].end,
                     'vec1': ng0.vectors[1],
-                    'vec2': ng1.vectors[0],
+                    'pt2': ng1.vectors[0].end,
                     'vec3': ng1.vectors[1]
                 }
             ),
