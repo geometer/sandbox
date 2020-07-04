@@ -85,6 +85,8 @@ class Explainer:
             SquareRule(self.context),
             SquareDegeneracyRule(self.context),
             NondegenerateSquareRule(self.context),
+            PointInsideHalfOfSquareRule(self.context),
+            PointInsideSquareRule(self.context),
             EquilateralTriangleRule(self.context),
             PointInsideTwoAnglesRule(self.context),
             PointInsideTriangleRule(self.context),

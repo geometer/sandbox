@@ -421,6 +421,23 @@ class PointInsideTriangleProperty(Property):
     def description(self):
         return Comment('$%{point:pt}$ lies inside $%{triangle:triangle}$', {'pt': self.point, 'triangle': self.triangle})
 
+class PointInsideSquareProperty(Property):
+    """
+    Point lies inside a square
+    """
+    def __init__(self, point, square):
+        self.point = point
+        self.square = square
+        super().__init__((point, frozenset(square.points)), {point, *square.points})
+
+    @property
+    def __priority__(self):
+        return 2
+
+    @property
+    def description(self):
+        return Comment('$%{point:pt}$ lies inside square $%{polygon:square}$', {'pt': self.point, 'square': self.square})
+
 class EquilateralTriangleProperty(Property):
     """
     Equilateral triangle

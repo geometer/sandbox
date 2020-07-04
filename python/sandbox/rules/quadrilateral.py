@@ -6,6 +6,72 @@ from ..util import Comment
 
 from .abstract import Rule, SingleSourceRule
 
+class PointInsideHalfOfSquareRule(SingleSourceRule):
+    property_type = (SquareProperty, NondegenerateSquareProperty)
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def apply(self, prop):
+        for triple in itertools.combinations(prop.square.points, 3):
+            triangle = Scene.Triangle(*triple)
+            for pt in self.context.points_inside_triangle(triangle):
+                key = (pt, frozenset(triple))
+                if key in self.processed:
+                    continue
+                self.processed.add(key)
+                triangle_prop = self.context[PointInsideTriangleProperty(pt, triangle)]
+                yield (
+                    PointInsideSquareProperty(pt, prop.square),
+                    Comment(
+                        '$%{point:pt}$ lies inside $%{triangle:triangle}$ that is part of $%{polygon:square}$',
+                        {'pt': pt, 'triangle': triangle, 'square': prop.square}
+                    ),
+                    [prop, triangle_prop]
+                )
+
+class PointInsideSquareRule(SingleSourceRule):
+    property_type = PointInsideSquareProperty
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def accepts(self, prop):
+        return prop not in self.processed
+
+    def apply(self, prop):
+        self.processed.add(prop)
+
+        comment = Comment(
+            '$%{point:pt}$ lies inside square $%{polygon:square}$',
+            {'pt': prop.point, 'square': prop.square}
+        )
+        new_properties = []
+        verts = prop.square.points
+        for angle in prop.square.angles:
+            new_properties.append(PointInsideAngleProperty(prop.point, angle))
+
+        verts2 = verts * 2
+        for i in range(0, 4):
+            side = verts2[i].segment(verts2[i + 1])
+            new_properties.append(SameOrOppositeSideProperty(side, prop.point, verts2[i + 2], True))
+            new_properties.append(SameOrOppositeSideProperty(side, prop.point, verts2[i + 3], True))
+
+        cycles = (
+            Cycle(verts[0], verts[1], prop.point),
+            Cycle(verts[1], verts[2], prop.point),
+            Cycle(verts[2], verts[3], prop.point),
+            Cycle(verts[3], verts[0], prop.point)
+        )
+        for c0, c1 in itertools.combinations(cycles, 2):
+            new_properties.append(SameCyclicOrderProperty(c0, c1))
+            new_properties.append(SameCyclicOrderProperty(c0.reversed, c1.reversed))
+
+        for p in new_properties:
+            yield (p, comment, [prop])
+
 class KnownAnglesToConvexQuadrilateralRule(SingleSourceRule):
     property_type = SameOrOppositeSideProperty
 

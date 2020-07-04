@@ -1379,6 +1379,7 @@ class PropertySet(LineSet):
         self.__cyclic_orders = CyclicOrderPropertySet()
         self.__similar_triangles = {} # (three points) => {(three points)}
         self.__two_points_relative_to_line = {} # key => SameOrOppositeSideProperty
+        self.__points_inside_triangle = {} # {vertices} => [points]
 
     def add(self, prop):
         def put(key):
@@ -1426,6 +1427,13 @@ class PropertySet(LineSet):
                     triples.add(key0)
                 else:
                     self.__similar_triangles[key1] = {key0}
+        elif type_key == PointInsideTriangleProperty:
+            key = frozenset(prop.triangle.points)
+            ar = self.__points_inside_triangle.get(key)
+            if ar:
+                ar.append(prop.point)
+            else:
+                self.__points_inside_triangle[key] = [prop.point]
 
     def equal_length_ratios_with_common_denominator(self):
         pairs = []
@@ -1569,6 +1577,10 @@ class PropertySet(LineSet):
 
     def points_on_ray(self, vector):
         return [pt for pt in self.collinear_points(vector.as_segment) if self.__angle_ratios.value(vector.start.angle(pt, vector.end)) == 0]
+
+    def points_inside_triangle(self, triangle):
+        ar = self.__points_inside_triangle.get(frozenset(triangle.points))
+        return ar if ar else []
 
     def angle_ratio_property(self, angle0, angle1):
         return self.__angle_ratios.ratio_property(angle0, angle1)
