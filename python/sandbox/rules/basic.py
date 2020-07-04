@@ -2072,58 +2072,6 @@ class PlanePositionsToLinePositionsRule(SingleSourceRule):
             [prop] + reasons
         )
 
-class CeviansIntersectionRule(Rule):
-    def sources(self):
-        return itertools.combinations(self.context.angle_value_properties_for_degree(180, lambda a: a.vertex), 2)
-
-    def apply(self, src):
-        av0, av1 = src
-        ends0 = (av0.angle.vectors[0].end, av0.angle.vectors[1].end)
-        ends1 = (av1.angle.vectors[0].end, av1.angle.vectors[1].end)
-        vertex = next((pt for pt in ends0 if pt in ends1), None)
-        if vertex is None:
-            return
-        pt0 = next(pt for pt in ends0 if pt != vertex)
-        pt1 = next(pt for pt in ends1 if pt != vertex)
-        if pt0 == pt1:
-            return
-        ncl = self.context.collinearity_property(vertex, pt0, pt1)
-        if ncl is None or ncl.collinear:
-            return
-        segment0 = pt0.segment(av1.angle.vertex)
-        segment1 = pt1.segment(av0.angle.vertex)
-        crossing, reasons = self.context.intersection_of_lines(segment0, segment1)
-        if crossing is None:
-            return
-        if av0.reason.obsolete and av1.reason.obsolete and ncl.reason.obsolete and all(r.reason.obsolete for r in reasons):
-            return
-        comment = Comment(
-            '$%{point:crossing}$ is the intersection of cevians $%{segment:cevian0}$ and $%{segment:cevian1}$ with feet $%{point:foot0}$ and $%{point:foot1}$ on sides of $%{triangle:triangle}$',
-            {
-                'crossing': crossing,
-                'cevian0': segment0,
-                'cevian1': segment1,
-                'foot0': av1.angle.vertex,
-                'foot1': av0.angle.vertex,
-                'triangle': Scene.Triangle(vertex, pt0, pt1)
-            }
-        )
-        yield (
-            PointInsideAngleProperty(crossing, vertex.angle(pt0, pt1)),
-            comment,
-            [ncl, av0, av1] + reasons
-        )
-        yield (
-            PointInsideAngleProperty(crossing, pt0.angle(vertex, pt1)),
-            comment,
-            [ncl, av0, av1] + reasons
-        )
-        yield (
-            PointInsideAngleProperty(crossing, pt1.angle(vertex, pt0)),
-            comment,
-            [ncl, av0, av1] + reasons
-        )
-
 class TwoAnglesWithCommonSideRule(SingleSourceRule):
     property_type = PointInsideAngleProperty
 
