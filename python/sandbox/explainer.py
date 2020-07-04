@@ -119,6 +119,7 @@ class Explainer:
             PointInsideAngleConfigurationRule(self.context),
             PointInsideAngleAndPointOnSideRule(self.context),
             PerpendicularToSideOfObtuseAngledRule(self.context),
+            PointOnSegmentWithEndpointsOnSidesOfAngleRule(self.context),
 
             EquilateralTriangleByThreeSidesRule(self.context),
             EquilateralTriangleByConrguentLegsAndAngleRule(self.context),
@@ -227,31 +228,6 @@ class Explainer:
                             LazyComment('%s, %s', av, nc), #TODO: better comment
                             [av, nc]
                         )
-
-            for av in [av for av in angle_values if av.degree == 180]:
-                av_is_too_old = av.reason.obsolete
-                segment = av.angle.vectors[0].end.segment(av.angle.vectors[1].end)
-                for vertex in self.context.not_collinear_points(segment):
-                    ncl = self.context.collinearity_property(vertex, *segment.points)
-                    if av_is_too_old and ncl.reason.obsolete:
-                        continue
-                    angle = vertex.angle(*segment.points)
-                    yield (
-                        PointInsideAngleProperty(av.angle.vertex, angle),
-                        Comment(
-                            '$%{point:vertex}$ lies on a segment with endpoints on sides of $%{angle:angle}$',
-                            {'vertex': av.angle.vertex, 'angle': angle}
-                        ),
-                        [av, ncl]
-                    )
-                    yield (
-                        SameOrOppositeSideProperty(av.angle.vertex.segment(vertex), *segment.points, False),
-                        Comment(
-                            '$%{point:pt_on}$ lies on segment $%{segment:segment}$, and $%{point:pt_not_on}$ is not on the line $%{line:segment}$',
-                            {'pt_on': av.angle.vertex, 'pt_not_on': vertex, 'segment': segment}
-                        ),
-                        [av, ncl]
-                    )
 
             for aa in [p for p in self.context.list(AngleKindProperty) if p.kind == AngleKindProperty.Kind.acute]:
                 base = aa.angle
