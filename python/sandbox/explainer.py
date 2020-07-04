@@ -116,6 +116,7 @@ class Explainer:
             CyclicOrderRule(self.context),
             PlanePositionsToLinePositionsRule(self.context),
             CeviansIntersectionRule(self.context),
+            PointOnCevianRule(self.context),
             OppositeSidesToInsideTriangleRule(self.context),
             TwoAnglesWithCommonSideRule(self.context),
             TwoAnglesWithCommonSideDegreeRule(self.context),

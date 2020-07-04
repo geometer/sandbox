@@ -432,6 +432,37 @@ class CeviansIntersectionRule(Rule):
             [av0, av1, ncl] + reasons
         )
 
+class PointOnCevianRule(Rule):
+    def __init__(self, context):
+        super().__init__(context)
+        self.processed = set()
+
+    def sources(self):
+        return self.context.angle_value_properties_for_degree(180, lambda a: a.vertex)
+
+    def apply(self, prop):
+        segment = prop.angle.endpoints[0].segment(prop.angle.endpoints[1])
+        for pt in self.context.not_collinear_points(segment):
+            ncl = None
+            triangle = Scene.Triangle(pt, *segment.points)
+            cevian = pt.segment(prop.angle.vertex)
+            for inside in self.context.points_inside_segment(cevian):
+                key = (prop.angle, pt, inside)
+                if key in self.processed:
+                    continue
+                self.processed.add(key)
+                if ncl is None:
+                    ncl = self.context.collinearity_property(pt, *segment.points)
+                inside_prop = self.context.angle_value_property(inside.angle(*cevian.points))
+                yield (
+                    PointInsideTriangleProperty(inside, triangle),
+                    Comment(
+                        '$%{point:inside}$ lies on cevian $%{segment:cevian}$ of non-degenerate $%{triangle:triangle}$',
+                        {'inside': inside, 'cevian': cevian, 'triangle': triangle}
+                    ),
+                    [inside_prop, prop, ncl]
+                )
+
 class PointInsideTwoAnglesRule(SingleSourceRule):
     property_type = PointInsideAngleProperty
 
