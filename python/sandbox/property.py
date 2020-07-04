@@ -411,7 +411,7 @@ class PointInsideTriangleProperty(Property):
     def __init__(self, point, triangle):
         self.point = point
         self.triangle = triangle
-        super().__init__((point, frozenset(triangle.points)), {point, *triangle.points})
+        super().__init__((point, triangle.symmetric_key), {point, *triangle.points})
 
     @property
     def __priority__(self):
@@ -444,7 +444,7 @@ class EquilateralTriangleProperty(Property):
     """
     def __init__(self, points):
         self.triangle = points if isinstance(points, Scene.Triangle) else Scene.Triangle(*points)
-        super().__init__(frozenset(self.triangle.points), {*self.triangle.points})
+        super().__init__(self.triangle.symmetric_key, {*self.triangle.points})
 
     def keys(self, lengths=None):
         return keys_for_triangle(self.triangle, lengths)
@@ -528,7 +528,7 @@ class CentreOfEquilateralTriangleProperty(Property):
     def __init__(self, centre, triangle):
         self.centre = centre
         self.triangle = triangle
-        super().__init__((centre, frozenset(triangle.points)), {centre, *self.triangle.points})
+        super().__init__((centre, triangle.symmetric_key), {centre, *self.triangle.points})
 
     @property
     def __priority__(self):

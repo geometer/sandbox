@@ -810,6 +810,7 @@ class CoreScene:
             self.__sides = None
             self.__angles = None
             self.__permutations = None
+            self.__symmetric_key = None
 
         @property
         def scene(self):
@@ -855,6 +856,12 @@ class CoreScene:
                     (self.points[2], self.points[1], self.points[0])
                 )
             return self.__permutations
+
+        @property
+        def symmetric_key(self):
+            if self.__symmetric_key is None:
+                self.__symmetric_key = frozenset(self.points)
+            return self.__symmetric_key
 
         def __str__(self):
             return '\\bigtriangleup %s %s %s' % self.points

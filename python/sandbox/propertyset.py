@@ -1428,7 +1428,7 @@ class PropertySet(LineSet):
                 else:
                     self.__similar_triangles[key1] = {key0}
         elif type_key == PointInsideTriangleProperty:
-            key = frozenset(prop.triangle.points)
+            key = prop.triangle.symmetric_key
             ar = self.__points_inside_triangle.get(key)
             if ar:
                 ar.append(prop.point)
@@ -1579,7 +1579,7 @@ class PropertySet(LineSet):
         return [pt for pt in self.collinear_points(vector.as_segment) if self.__angle_ratios.value(vector.start.angle(pt, vector.end)) == 0]
 
     def points_inside_triangle(self, triangle):
-        ar = self.__points_inside_triangle.get(frozenset(triangle.points))
+        ar = self.__points_inside_triangle.get(triangle.symmetric_key)
         return ar if ar else []
 
     def angle_ratio_property(self, angle0, angle1):
