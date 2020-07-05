@@ -64,7 +64,7 @@ class LineSet:
             if len(premises) == 1:
                 return premises[0]
             return _synthetic_property(
-                LineCoincidenceProperty(segment0, segment1, True), comment, premises
+                LinesCoincidenceProperty(segment0, segment1, True), comment, premises
             )
 
         def point_on_line_property(self, segment, point):
@@ -359,7 +359,7 @@ class LineSet:
             storage[prop.point] = {prop}
 
     def add(self, prop):
-        if isinstance(prop, LineCoincidenceProperty):
+        if isinstance(prop, LinesCoincidenceProperty):
             if prop.coincident:
                 self.__add_same_line_property(prop)
             else:
@@ -654,7 +654,7 @@ class LineSet:
                 comment = LazyComment('%s and %s are different lines, %s is the same as %s, and %s is the same as %s', segment0, segment1, seg0, segment0, seg1, segment1)
                 premises.append(line0.same_line_property(seg0, segment0))
                 premises.append(line1.same_line_property(seg1, segment1))
-            prop = LineCoincidenceProperty(segment0, segment1, False)
+            prop = LinesCoincidenceProperty(segment0, segment1, False)
             candidates.append(_synthetic_property(prop, comment, premises))
 
         return LineSet.best_candidate(candidates)
@@ -1460,7 +1460,7 @@ class PropertySet(LineSet):
             self.__length_ratios.add(prop)
         elif type_key == SameCyclicOrderProperty:
             self.__cyclic_orders.add(prop)
-        elif type_key in (PointsCoincidenceProperty, LineCoincidenceProperty, PointOnLineProperty, PointsCollinearityProperty, CircleCoincidenceProperty, PointAndCircleProperty, ConcyclicPointsProperty):
+        elif type_key in (PointsCoincidenceProperty, LinesCoincidenceProperty, PointOnLineProperty, PointsCollinearityProperty, CircleCoincidenceProperty, PointAndCircleProperty, ConcyclicPointsProperty):
             super().add(prop)
         elif type_key == SameOrOppositeSideProperty:
             self.__two_points_relative_to_line[prop.property_key] = prop
@@ -1547,7 +1547,7 @@ class PropertySet(LineSet):
             existing = self.collinearity_property(*prop.points)
         elif isinstance(prop, PointOnLineProperty):
             existing = self.point_on_line_property(prop.segment, prop.point)
-        elif isinstance(prop, LineCoincidenceProperty):
+        elif isinstance(prop, LinesCoincidenceProperty):
             existing = self.lines_coincidence_property(*prop.segments)
         elif isinstance(prop, SumOfAnglesProperty):
             existing = self.sum_of_angles_property(*prop.angles)
