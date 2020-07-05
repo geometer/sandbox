@@ -3,14 +3,11 @@ import itertools
 from .. import Scene
 from ..property import *
 
-from .abstract import Rule, source_type
+from .abstract import Rule, processed_cache, source_type
 
 @source_type(PointsCollinearityProperty)
+@processed_cache({})
 class CollinearityToSameLineRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
     def accepts(self, prop):
         return prop.collinear
 
@@ -43,11 +40,8 @@ class CollinearityToSameLineRule(Rule):
             self.processed[prop] = mask
 
 @source_type(PointsCollinearityProperty)
+@processed_cache({})
 class CollinearityToPointOnLineRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
     def accepts(self, prop):
         return prop.collinear
 
@@ -81,11 +75,8 @@ class CollinearityToPointOnLineRule(Rule):
             self.processed[prop] = mask
 
 @source_type(PointsCollinearityProperty)
+@processed_cache(set())
 class NonCollinearityToDifferentLinesRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def accepts(self, prop):
         return not prop.collinear and prop not in self.processed
 
@@ -104,11 +95,8 @@ class NonCollinearityToDifferentLinesRule(Rule):
             )
 
 @source_type(PointsCollinearityProperty)
+@processed_cache(set())
 class NonCollinearityToPointNotOnLineRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def accepts(self, prop):
         return not prop.collinear and prop not in self.processed
 

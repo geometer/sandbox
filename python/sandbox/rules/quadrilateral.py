@@ -4,14 +4,11 @@ import sympy as sp
 from ..property import *
 from ..util import Comment
 
-from .abstract import Rule, Rule, source_type, source_types
+from .abstract import Rule, Rule, accepts_auto, processed_cache, source_type, source_types
 
 @source_types(SquareProperty, NondegenerateSquareProperty)
+@processed_cache(set())
 class PointInsideHalfOfSquareRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def apply(self, prop):
         for triple in itertools.combinations(prop.square.points, 3):
             triangle = Scene.Triangle(*triple)
@@ -31,14 +28,9 @@ class PointInsideHalfOfSquareRule(Rule):
                 )
 
 @source_type(PointInsideSquareProperty)
+@processed_cache(set())
+@accepts_auto
 class PointInsideSquareRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
-    def accepts(self, prop):
-        return prop not in self.processed
-
     def apply(self, prop):
         self.processed.add(prop)
 
@@ -71,11 +63,8 @@ class PointInsideSquareRule(Rule):
             yield (p, comment, [prop])
 
 @source_type(SameOrOppositeSideProperty)
+@processed_cache({})
 class KnownAnglesToConvexQuadrilateralRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
     def accepts(self, prop):
         return prop.same
 
@@ -122,11 +111,8 @@ class KnownAnglesToConvexQuadrilateralRule(Rule):
         if mask != original:
             self.processed[prop] = mask
 
+@processed_cache(set())
 class PointsToConvexQuadrilateralRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         oppos = [p for p in self.context.list(SameOrOppositeSideProperty) if not p.same]
         for p0, p1 in itertools.combinations(oppos, 2):
@@ -154,14 +140,9 @@ class PointsToConvexQuadrilateralRule(Rule):
         )
 
 @source_type(ConvexQuadrilateralProperty)
+@processed_cache(set())
+@accepts_auto
 class SumOfAnglesOfConvexQuadrilateralRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
-    def accepts(self, prop):
-        return prop not in self.processed
-
     def apply(self, prop):
         self.processed.add(prop)
 
@@ -172,14 +153,9 @@ class SumOfAnglesOfConvexQuadrilateralRule(Rule):
         )
 
 @source_types(ConvexQuadrilateralProperty, NondegenerateSquareProperty)
+@processed_cache(set())
+@accepts_auto
 class ConvexQuadrilateralRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
-    def accepts(self, prop):
-        return prop not in self.processed
-
     def apply(self, prop):
         self.processed.add(prop)
 
@@ -207,14 +183,9 @@ class ConvexQuadrilateralRule(Rule):
             )
 
 @source_types(SquareProperty, NondegenerateSquareProperty)
+@processed_cache(set())
+@accepts_auto
 class SquareRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
-    def accepts(self, prop):
-        return prop not in self.processed
-
     def apply(self, prop):
         self.processed.add(prop)
 
@@ -259,11 +230,8 @@ class SquareRule(Rule):
             )
 
 @source_type(SquareProperty)
+@processed_cache({})
 class SquareDegeneracyRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
     def apply(self, prop):
         mask = self.processed.get(prop, 0)
         if mask == 0xF:
@@ -305,14 +273,9 @@ class SquareDegeneracyRule(Rule):
             self.processed[prop] = mask
 
 @source_type(NondegenerateSquareProperty)
+@processed_cache(set())
+@accepts_auto
 class NondegenerateSquareRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
-    def accepts(self, prop):
-        return prop not in self.processed
-
     def apply(self, prop):
         self.processed.add(prop)
 

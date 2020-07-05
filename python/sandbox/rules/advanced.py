@@ -4,7 +4,7 @@ from .. import Scene
 from ..property import AngleValueProperty, IsoscelesTriangleProperty, LengthRatioProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, PointsCollinearityProperty
 from ..util import Comment
 
-from .abstract import Rule, source_type
+from .abstract import Rule, accepts_auto, processed_cache, source_type
 
 @source_type(PerpendicularSegmentsProperty)
 class RightAngledTriangleMedianRule(Rule):
@@ -35,17 +35,13 @@ class RightAngledTriangleMedianRule(Rule):
                 [prop, col, half0, half1]
             )
 
-@source_type(AngleValueProperty)
+@processed_cache({})
 class Triangle30_60_90SidesRule(Rule):
     """
     Sides ratios in a right-angled triangle with angles 60º and 30º
     """
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
-    def accepts(self, prop):
-        return prop.degree == 90 and prop.angle.vertex
+    def sources(self):
+        return self.context.angle_value_properties_for_degree(90, lambda a: a.vertex)
 
     def apply(self, prop):
         mask = self.processed.get(prop, 0)
@@ -104,17 +100,12 @@ class Triangle30_60_90SidesRule(Rule):
             self.processed[prop] = mask
 
 @source_type(IsoscelesTriangleProperty)
+@processed_cache(set())
+@accepts_auto
 class Triangle30_30_120SidesRule(Rule):
     """
     Sides ratios in an isosceles triangle with base angles 30º
     """
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
-    def accepts(self, prop):
-        return prop not in self.processed
-
     def apply(self, prop):
         value = self.context.angle_value_property(prop.apex.angle(*prop.base.points))
         if value is None:
@@ -133,17 +124,12 @@ class Triangle30_30_120SidesRule(Rule):
             )
 
 @source_type(IsoscelesTriangleProperty)
+@processed_cache(set())
+@accepts_auto
 class Triangle72_72_36SidesRule(Rule):
     """
     Sides ratios in an isosceles triangle with base angles 72º
     """
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
-    def accepts(self, prop):
-        return prop not in self.processed
-
     def apply(self, prop):
         value = self.context.angle_value_property(prop.apex.angle(*prop.base.points))
         if value is None:
@@ -162,17 +148,12 @@ class Triangle72_72_36SidesRule(Rule):
             )
 
 @source_type(IsoscelesTriangleProperty)
+@processed_cache(set())
+@accepts_auto
 class Triangle36_36_108SidesRule(Rule):
     """
     Sides ratios in an isosceles triangle with base angles 36º
     """
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
-    def accepts(self, prop):
-        return prop not in self.processed
-
     def apply(self, prop):
         value = self.context.angle_value_property(prop.apex.angle(*prop.base.points))
         if value is None:

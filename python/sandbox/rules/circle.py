@@ -4,13 +4,10 @@ from ..figure import Circle
 from ..property import *
 from ..util import LazyComment, Comment
 
-from .abstract import Rule, source_type
+from .abstract import Rule, processed_cache, source_type
 
+@processed_cache(set())
 class CyclicQuadrilateralRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         right_angles = [prop for prop in self.context.list(PerpendicularSegmentsProperty) if len(set((*prop.segments[0].points, *prop.segments[1].points))) == 3]
         return itertools.combinations(right_angles, 2)
@@ -56,11 +53,8 @@ class CyclicQuadrilateralRule(Rule):
         )
 
 @source_type(SameOrOppositeSideProperty)
+@processed_cache(set())
 class CyclicQuadrilateralRule2(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def accepts(self, prop):
         return not prop.same and prop not in self.processed
 
@@ -91,11 +85,8 @@ class CyclicQuadrilateralRule2(Rule):
         )
 
 @source_type(ConcyclicPointsProperty)
+@processed_cache(set())
 class ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def apply(self, prop):
         pair_to_ne = {}
         def ne(pair):
@@ -131,11 +122,8 @@ class ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule(Rule):
             )
 
 @source_type(ConcyclicPointsProperty)
+@processed_cache({})
 class PointsOnCircleRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
     def apply(self, prop):
         mask = self.processed.get(prop, 0)
         if mask == 0xF:
@@ -164,11 +152,8 @@ class PointsOnCircleRule(Rule):
             self.processed[prop] = mask
 
 @source_type(ConcyclicPointsProperty)
+@processed_cache({})
 class ConcyclicToSameCircleRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
     def apply(self, prop):
         mask = self.processed.get(prop, 0)
         if mask == 0x3F:
@@ -204,11 +189,8 @@ class ConcyclicToSameCircleRule(Rule):
         if mask != original:
             self.processed[prop] = mask
 
+@processed_cache(set())
 class ThreeCollinearPointsOnCircleRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return [triple[0] for triple in self.context.n_concyclic_points(3)]
 
@@ -235,11 +217,8 @@ class ThreeCollinearPointsOnCircleRule(Rule):
                     [col, ne0, ne1]
                 )
 
+@processed_cache(set())
 class TwoChordsIntersectionRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         for circle in self.context.circles:
             for four in itertools.combinations(circle.points_on, 4):
@@ -319,11 +298,8 @@ class PointsOnChordRule(Rule):
                     [pc] + premises
                 )
 
+@processed_cache({})
 class InscribedAnglesWithCommonCircularArcRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
     def sources(self):
         for circle in self.context.circles:
             for four in itertools.combinations(circle.points_on, 4):

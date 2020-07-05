@@ -45,6 +45,7 @@ class source_type:
         self.property_type = property_type
 
     def __call__(self, clazz):
+        assert not hasattr(clazz, 'sources'), 'Cannot use @%s on class with sources() method' % type(self).__name__
         return type(
             clazz.__name__,
             (clazz,),
@@ -64,8 +65,28 @@ class source_types:
         return full
 
     def __call__(self, clazz):
+        assert not hasattr(clazz, 'sources'), 'Cannot use @%s on class with sources() method' % type(self).__name__
         return type(
             clazz.__name__,
             (clazz,),
             {'sources': lambda inst: self.sources(inst)}
         )
+
+class processed_cache:
+    def __init__(self, cache_object):
+        self.cache_object = cache_object
+
+    def __call__(self, clazz):
+        return type(
+            clazz.__name__,
+            (clazz,),
+            {'processed': self.cache_object}
+        )
+
+def accepts_auto(clazz):
+    #assert not hasattr(clazz, 'accepts'), 'Cannot use @accepts_auto on class with accepts()'
+    return type(
+        clazz.__name__,
+        (clazz,),
+        {'accepts': lambda inst, src: src not in inst.processed}
+    )

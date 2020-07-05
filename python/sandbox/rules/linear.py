@@ -3,14 +3,11 @@ import itertools
 from ..property import *
 from ..util import Comment, divide
 
-from .abstract import Rule, source_type
+from .abstract import Rule, processed_cache, source_type
 
 @source_type(SumOfAnglesProperty)
+@processed_cache({})
 class EliminateAngleFromSumRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
     def apply(self, prop):
         processed_angles = self.processed.get(prop, set())
         length = len(processed_angles)
@@ -46,11 +43,8 @@ class EliminateAngleFromSumRule(Rule):
             self.processed[angle] = processed_angles
 
 @source_type(SumOfAnglesProperty)
+@processed_cache({})
 class AngleBySumOfThreeRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
     def accepts(self, prop):
         return len(prop.angles) == 3
 
@@ -96,14 +90,11 @@ class AngleBySumOfThreeRule(Rule):
             self.processed[prop] = mask
 
 @source_type(SumOfAnglesProperty)
+@processed_cache(set())
 class SumAndRatioOfTwoAnglesRule(Rule):
     """
     If the sum and the ratio of two angles are known, we can find the values
     """
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def accepts(self, prop):
         return len(prop.angles) == 2 and prop not in self.processed
 
@@ -140,11 +131,8 @@ class SumAndRatioOfTwoAnglesRule(Rule):
         yield (AngleValueProperty(ar.angle0, value0), comment0, [prop, ar])
         yield (AngleValueProperty(ar.angle1, value1), comment1, [prop, ar])
 
+@processed_cache({})
 class EqualSumsOfAnglesRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {} # prop => bit mask
-
     def sources(self):
         sums_of_two = [p for p in self.context.list(SumOfAnglesProperty) if len(p.angles) == 2]
         return [(s0, s1) for (s0, s1) in itertools.combinations(sums_of_two, 2) if s0.degree == s1.degree]
