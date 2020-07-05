@@ -240,6 +240,11 @@ class LineSet:
                         known.update(data)
                     else:
                         line0.points_not_on[pt] = data
+                for key in list(self.__different_lines.keys()):
+                    if line1 in key:
+                        new_key = frozenset([next(l for l in key if l != line1), line0])
+                        self.__different_lines[new_key] = self.__different_lines.pop(key)
+
                 self.__all_lines.remove(line1)
             line0.add(prop)
         elif line0:
