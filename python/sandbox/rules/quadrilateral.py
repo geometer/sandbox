@@ -111,32 +111,33 @@ class KnownAnglesToConvexQuadrilateralRule(Rule):
         if mask != original:
             self.processed[prop] = mask
 
+@source_type(SameOrOppositeSideProperty)
 @processed_cache(set())
 class PointsToConvexQuadrilateralRule(Rule):
-    def sources(self):
-        oppos = [p for p in self.context.list(SameOrOppositeSideProperty) if not p.same]
-        for p0, p1 in itertools.combinations(oppos, 2):
-            if set(p0.points) == set(p1.segment.points) and set(p1.points) == set(p0.segment.points):
-                yield (p0, p1)
+    def accepts(self, prop):
+        return not prop.same and prop not in self.processed
 
-    def apply(self, src):
-        if src in self.processed:
+    def apply(self, prop):
+        alt = self.context.two_points_relative_to_line_property(
+            prop.points[0].segment(prop.points[1]), *prop.segment.points
+        )
+        if alt is None:
             return
+        self.processed.add(prop)
+        if alt.same:
+            return
+        self.processed.add(alt)
 
-        prop0, prop1 = src
-        self.processed.add(src)
-        self.processed.add((prop1, prop0))
-
-        p0 = prop0.points
-        p1 = prop0.segment.points
+        p0 = prop.points
+        p1 = alt.points
         quad = Scene.Polygon(p0[0], p1[0], p0[1], p1[1])
         yield (
             ConvexQuadrilateralProperty(quad),
             Comment(
                 'both diagonals $%{segment:d0}$ and $%{segment:d1}$ divide quadrilateral $%{polygon:quad}$',
-                {'d0': prop0.segment, 'd1': prop1.segment, 'quad': quad}
+                {'d0': prop.segment, 'd1': alt.segment, 'quad': quad}
             ),
-            [prop0, prop1]
+            [prop, alt]
         )
 
 @source_type(ConvexQuadrilateralProperty)
