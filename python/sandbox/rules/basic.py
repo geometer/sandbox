@@ -299,29 +299,51 @@ class SegmentWithEndpointsOnAngleSidesRule(Rule):
         yield (AngleValueProperty(C.angle(B, X), 0), comment, [prop] + reasons)
         yield (AngleValueProperty(X.angle(B, C), 180), comment, [prop] + reasons)
 
+@source_type(SameOrOppositeSideProperty)
 @processed_cache(set())
-class SumOfAngles180DegreeRule(Rule):
-    def sources(self):
-        return [p for p in self.context.list(SumOfAnglesProperty) if len(p.angles) == 2 and p.angles[0].vertex is not None and p.angles[0].vertex == p.angles[1].vertex and p.degree == 180 and p not in self.processed]
+@accepts_auto
+class LineAndTwoPointsToNoncollinearityRule(Rule):
+    def apply(self, prop):
+        self.processed.add(prop)
+        for pt in prop.points:
+            yield (
+                PointsCollinearityProperty(pt, *prop.segment.points, False),
+                Comment(
+                    '$%{point:pt}$ does not lie on $%{line:line}$',
+                    {'pt': pt, 'line': prop.segment}
+                ),
+                [prop]
+            )
+
+@source_type(SameOrOppositeSideProperty)
+@processed_cache(set())
+class KnownSumOfAnglesWithCommonSideRule(Rule):
+    def accepts(self, prop):
+        return not prop.same
 
     def apply(self, prop):
-        common = next((pt for pt in prop.angles[0].endpoints if pt in prop.angles[1].endpoints), None)
-        if common is None:
-            self.processed.add(prop)
-            return
-        pt0 = next(pt for pt in prop.angles[0].endpoints if pt != common)
-        pt1 = next(pt for pt in prop.angles[1].endpoints if pt != common)
-        oppo = self.context.two_points_relative_to_line_property(prop.angles[0].vertex.segment(common), pt0, pt1)
-        if oppo is None:
-            return
-        self.processed.add(prop)
-        if oppo.same:
-            return
-        yield (
-            AngleValueProperty(prop.angles[0].vertex.angle(pt0, pt1), 180),
-            LazyComment('%s + %s', prop.angles[0], prop.angles[1]),
-            [prop, oppo]
-        )
+        for pt0, pt1 in (prop.segment.points, reversed(prop.segment.points)):
+            key = (prop, pt0)
+            if key in self.processed:
+                continue
+            summand0 = pt0.angle(prop.points[0], pt1)
+            summand1 = pt0.angle(pt1, prop.points[1])
+            sum_prop = self.context.sum_of_angles_property(summand0, summand1)
+            if sum_prop is None:
+                continue
+            big_angle = pt0.angle(*prop.points)
+            self.processed.add(key)
+            if sum_prop.degree <= 180:
+                degree = sum_prop.degree
+                pattern = '$%{angle:big}$ consists of $%{angle:summand0}$ and $%{angle:summand1}$'
+            else:
+                degree = 360 - sum_prop.degree
+                pattern = 'complement of $%{angle:big}$ consists of $%{angle:summand0}$ and $%{angle:summand1}$'
+            yield (
+                AngleValueProperty(big_angle, degree),
+                Comment(pattern, {'big': big_angle, 'summand0': summand0, 'summand1': summand1}),
+                [sum_prop, prop]
+            )
 
 @source_type(ProportionalLengthsProperty)
 @processed_cache({})

@@ -30,6 +30,7 @@ class Explainer:
         self.__explanation_time = None
         self.__iteration_step_count = -1
         self.__rules = [
+            LineAndTwoPointsToNoncollinearityRule(self.context),
             SegmentWithEndpointsOnAngleSidesRule(self.context),
             CollinearityToSameLineRule(self.context),
             NonCollinearityToDifferentLinesRule(self.context),
@@ -50,7 +51,6 @@ class Explainer:
             EliminateAngleFromSumRule(self.context),
             SumAndRatioOfTwoAnglesRule(self.context),
             EqualSumsOfAnglesRule(self.context),
-            #SumOfAngles180DegreeRule(self.context),
             AngleTypeAndPerpendicularRule(self.context),
             CoincidenceTransitivityRule(self.context),
             TwoPointsBelongsToTwoLinesRule(self.context),
@@ -123,6 +123,7 @@ class Explainer:
             CeviansIntersectionRule(self.context),
             PointOnCevianRule(self.context),
             OppositeSidesToInsideTriangleRule(self.context),
+            KnownSumOfAnglesWithCommonSideRule(self.context),
             TwoAnglesWithCommonSideRule(self.context),
             TwoAnglesWithCommonSideDegreeRule(self.context),
             KnownAnglesWithCommonSideRule(self.context),
