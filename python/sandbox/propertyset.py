@@ -471,27 +471,16 @@ class LineSet:
                 prop = PointsCollinearityProperty(pt0, pt1, pt2, True)
                 candidates.append(_synthetic_property(prop, comment, premises))
                 continue
-            data = self.__different_lines.get(frozenset((line0, line1)))
-            if data:
-                for prop in data:
-                    seg0, seg1 = prop.segments
-                    if self.__segment_to_line[seg0] == line1:
-                        seg0, seg1 = seg1, seg0
-                    premises = [prop]
-                    if seg0 == segment0 and seg1 == segment1:
-                        comment = LazyComment('%s and %s are different lines', segment0, segment1)
-                    elif seg0 == segment0:
-                        comment = LazyComment('%s and %s are different lines, %s is the same as %s', segment0, segment1, seg1, segment1)
-                        premises.append(line1.same_line_property(seg1, segment1))
-                    elif seg1 == segment1:
-                        comment = LazyComment('%s and %s are different lines, %s is the same as %s', segment0, segment1, seg0, segment0)
-                        premises.append(line0.same_line_property(seg0, segment0))
-                    else:
-                        comment = LazyComment('%s and %s are different lines, %s is the same as %s, and %s is the same as %s', segment0, segment1, seg0, segment0, seg1, segment1)
-                        premises.append(line0.same_line_property(seg0, segment0))
-                        premises.append(line1.same_line_property(seg1, segment1))
-                    prop = PointsCollinearityProperty(pt0, pt1, pt2, False)
-                    candidates.append(_synthetic_property(prop, comment, premises))
+            different_lines = self.lines_coincidence_property(segment0, segment1)
+            if different_lines:
+                candidates.append(_synthetic_property(
+                    PointsCollinearityProperty(pt0, pt1, pt2, False),
+                    Comment(
+                        '$lines %{line:line0}$ and $%{line:line1}$ are different',
+                        {'line0': segment0, 'line1': segment1}
+                    ),
+                    [different_lines]
+                ))
 
         prop = LineSet.best_candidate(candidates)
         if prop:
@@ -564,6 +553,60 @@ class LineSet:
     def not_collinear_points(self, segment):
         line = self.__segment_to_line.get(segment)
         return list(line.points_not_on.keys()) if line else []
+
+    def lines_coincidence(self, segment0, segment1):
+        line0 = self.__segment_to_line.get(segment0)
+        if line0 is None:
+            return None
+        line1 = self.__segment_to_line.get(segment1)
+        if line1 is None:
+            return None
+
+        if line0 == line1:
+            return True
+        if self.__different_lines(frozenset([line0, line1])):
+            return False
+        return None
+
+    def lines_coincidence_property(self, segment0, segment1):
+        line0 = self.__segment_to_line.get(segment0)
+        if line0 is None:
+            return None
+        line1 = self.__segment_to_line.get(segment1)
+        if line1 is None:
+            return None
+
+        if line0 == line1:
+            return line0.same_line_property(segment0, segment1)
+
+        known = self.__different_lines.get(frozenset([line0, line1]))
+        if known is None:
+            return None
+
+        for prop in known:
+            if segment0 in prop.segments and segment1 in prop.segments:
+                return prop
+
+        candidates = []
+        for prop in known:
+            seg0, seg1 = prop.segments
+            if self.__segment_to_line[seg0] == line1:
+                seg0, seg1 = seg1, seg0
+            premises = [prop]
+            if seg0 == segment0:
+                comment = LazyComment('%s and %s are different lines, %s is the same as %s', segment0, segment1, seg1, segment1)
+                premises.append(line1.same_line_property(seg1, segment1))
+            elif seg1 == segment1:
+                comment = LazyComment('%s and %s are different lines, %s is the same as %s', segment0, segment1, seg0, segment0)
+                premises.append(line0.same_line_property(seg0, segment0))
+            else:
+                comment = LazyComment('%s and %s are different lines, %s is the same as %s, and %s is the same as %s', segment0, segment1, seg0, segment0, seg1, segment1)
+                premises.append(line0.same_line_property(seg0, segment0))
+                premises.append(line1.same_line_property(seg1, segment1))
+            prop = LineCoincidenceProperty(segment0, segment1, False)
+            candidates.append(_synthetic_property(prop, comment, premises))
+
+        return LineSet.best_candidate(candidates)
 
 class CyclicOrderPropertySet:
     class Family:
@@ -1293,6 +1336,8 @@ class PropertySet(LineSet):
                 existing = self.collinearity_property(*prop.points)
             elif isinstance(prop, PointOnLineProperty):
                 existing = self.point_on_line_property(prop.segment, prop.point)
+            elif isinstance(prop, LineCoincidenceProperty):
+                existing = self.lines_coincidence_property(*prop.segments)
             elif isinstance(prop, SumOfTwoAnglesProperty):
                 existing = self.sum_of_two_angles_property(*prop.angles)
         #TODO: LengthRatioProperty
