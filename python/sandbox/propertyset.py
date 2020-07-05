@@ -476,13 +476,13 @@ class LineSet:
                     if seg0 == segment0 and seg1 == segment1:
                         comment = LazyComment('%s and %s are different lines', segment0, segment1)
                     elif seg0 == segment0:
-                        comment = LazyComment('%s and %s are different lines, %s is the same as %s', segment0, segment1, seg1, segment1) 
+                        comment = LazyComment('%s and %s are different lines, %s is the same as %s', segment0, segment1, seg1, segment1)
                         premises.append(line1.same_line_property(seg1, segment1))
                     elif seg1 == segment1:
-                        comment = LazyComment('%s and %s are different lines, %s is the same as %s', segment0, segment1, seg0, segment0) 
+                        comment = LazyComment('%s and %s are different lines, %s is the same as %s', segment0, segment1, seg0, segment0)
                         premises.append(line0.same_line_property(seg0, segment0))
                     else:
-                        comment = LazyComment('%s and %s are different lines, %s is the same as %s, and %s is the same as %s', segment0, segment1, seg0, segment0, seg1, segment1) 
+                        comment = LazyComment('%s and %s are different lines, %s is the same as %s, and %s is the same as %s', segment0, segment1, seg0, segment0, seg1, segment1)
                         premises.append(line0.same_line_property(seg0, segment0))
                         premises.append(line1.same_line_property(seg1, segment1))
                     prop = PointsCollinearityProperty(pt0, pt1, pt2, False)
