@@ -33,6 +33,7 @@ class Explainer:
             SegmentWithEndpointsOnAngleSidesRule(self.context),
             CollinearityToSameLineRule(self.context),
             NonCollinearityToDifferentLinesRule(self.context),
+            NonCollinearityToDifferentLinesRule2(self.context),
             CollinearityToPointOnLineRule(self.context),
             NonCollinearityToPointNotOnLineRule(self.context),
             MissingLineKeysRule(self.context),
