@@ -75,15 +75,31 @@ class CollinearityToPointOnLineRule(Rule):
         if mask != original:
             self.processed[prop] = mask
 
-@source_type(PointsCollinearityProperty)
 @processed_cache(set())
 class NonCollinearityToDifferentLinesRule(Rule):
-    def accepts(self, prop):
-        return not prop.collinear and prop not in self.processed
+    def sources(self):
+        props = []
+        for p in self.context.list(PointsCollinearityProperty):
+            if p.collinear:
+                continue
+            key = frozenset(p.points) # same as p.property_key
+            if key in self.processed:
+                continue
+            self.processed.add(key)
+            props.append(p)
+
+        for line in self.context.lines:
+            for pt0, pt1 in itertools.combinations(line.points_on, 2):
+                for pt2 in line.points_not_on:
+                    key = frozenset((pt0, pt1, pt2))
+                    if key in self.processed:
+                        continue
+                    self.processed.add(key)
+                    props.append(self.context.collinearity_property(pt0, pt1, pt2))
+
+        return props
 
     def apply(self, prop):
-        self.processed.add(prop)
-
         sides = Scene.Triangle(*prop.points).sides
         for side0, side1 in itertools.combinations(sides, 2):
             yield (
