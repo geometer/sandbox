@@ -28,7 +28,7 @@ class CollinearityToSameLineRule(Rule):
             if eq0.coincident or eq1.coincident:
                 continue
             yield (
-                LineCoincidenceProperty(side0, side1, True),
+                LinesCoincidenceProperty(side0, side1, True),
                 Comment(
                     'points $%{point:pt0}$, $%{point:pt1}$, and $%{point:pt2}$ are collinear',
                     {'pt0': prop.points[0], 'pt1': prop.points[1], 'pt2': prop.points[2]}
@@ -86,7 +86,7 @@ class NonCollinearityToDifferentLinesRule(Rule):
         sides = Scene.Triangle(*prop.points).sides
         for side0, side1 in itertools.combinations(sides, 2):
             yield (
-                LineCoincidenceProperty(side0, side1, False),
+                LinesCoincidenceProperty(side0, side1, False),
                 Comment(
                     'points $%{point:pt0}$, $%{point:pt1}$, and $%{point:pt2}$ are not collinear',
                     {'pt0': prop.points[0], 'pt1': prop.points[1], 'pt2': prop.points[2]}
@@ -134,7 +134,7 @@ class MissingLineKeysRule(Rule):
                 if pt1 not in seg.points:
                     premises.append(self.context.point_on_line_property(seg, pt1))
                 yield (
-                    LineCoincidenceProperty(key, seg, True),
+                    LinesCoincidenceProperty(key, seg, True),
                     Comment(
                         'non-coincident points $%{point:pt0}$ and $%{point:pt1}$ belong to $%{line:line}$',
                         {'pt0': pt0, 'pt1': pt1, 'line': seg}

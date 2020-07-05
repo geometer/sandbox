@@ -177,7 +177,7 @@ class PointOnLineProperty(Property):
     def compare_values(self, other):
         return self.on_line == other.on_line
 
-class LineCoincidenceProperty(Property):
+class LinesCoincidenceProperty(Property):
     """
     Two lines (defined by segments) are [not] coincident
     """
