@@ -644,18 +644,19 @@ class LineSet:
             if self.__segment_to_line[seg0] == line1:
                 seg0, seg1 = seg1, seg0
             premises = [prop]
+            params = {'line0': seg0, 'line1': seg1, 'given0': segment0, 'given1': segment1}
             if seg0 == segment0:
-                comment = LazyComment('%s and %s are different lines, %s is the same as %s', segment0, segment1, seg1, segment1)
+                pattern = '$%{line:given0}$ and $%{line:line1}$ are different lines, $%{line:line1}$ is the same as $%{line:given1}$'
                 premises.append(line1.same_line_property(seg1, segment1))
             elif seg1 == segment1:
-                comment = LazyComment('%s and %s are different lines, %s is the same as %s', segment0, segment1, seg0, segment0)
+                pattern = '$%{line:given1}$ and $%{line:line0}$ are different lines, $%{line:line0}$ is the same as $%{line:given0}$'
                 premises.append(line0.same_line_property(seg0, segment0))
             else:
-                comment = LazyComment('%s and %s are different lines, %s is the same as %s, and %s is the same as %s', segment0, segment1, seg0, segment0, seg1, segment1)
+                pattern = '$%{line:line0}$ and $%{line:line1}$ are different lines, $%{line:line0}$ is the same as $%{line:given0}$, and $%{line:line1}$ is the same as $%{line:given1}$'
                 premises.append(line0.same_line_property(seg0, segment0))
                 premises.append(line1.same_line_property(seg1, segment1))
             prop = LinesCoincidenceProperty(segment0, segment1, False)
-            candidates.append(_synthetic_property(prop, comment, premises))
+            candidates.append(_synthetic_property(prop, Comment(pattern, params), premises))
 
         return LineSet.best_candidate(candidates)
 
