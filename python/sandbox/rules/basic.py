@@ -796,10 +796,9 @@ class Degree90ToPerpendicularSegmentsRule2(Rule):
                     [prop, self.context.point_on_line_property(seg1, pt)]
                 )
 
-@source_type(AngleValueProperty)
 class CommonPerpendicularRule(Rule):
-    def accepts(self, prop):
-        return prop.degree == 0
+    def sources(self):
+        return self.context.angle_value_properties_for_degree(0)
 
     def apply(self, prop):
         segments = (prop.angle.vectors[0].as_segment, prop.angle.vectors[1].as_segment)
@@ -1634,10 +1633,9 @@ class CorrespondingAndAlternateAnglesRule(Rule):
         if mask != original:
             self.processed[prop] = mask
 
-@source_type(AngleValueProperty)
 class SupplementaryAnglesRule(Rule):
-    def accepts(self, prop):
-        return prop.angle.vertex and prop.degree == 180
+    def sources(self):
+        return self.context.angle_value_properties_for_degree(180, lambda a: a.vertex)
 
     def apply(self, prop):
         ang = prop.angle
