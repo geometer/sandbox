@@ -4,15 +4,11 @@ from ..property import *
 from ..scene import Scene
 from ..util import LazyComment, Comment, divide, common_endpoint, other_point
 
-from .abstract import Rule, SingleSourceRule
+from .abstract import Rule, accepts_auto, processed_cache, source_type
 
-class PointInsideAngleAndPointOnSideRule(SingleSourceRule):
-    property_type = PointInsideAngleProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
+@source_type(PointInsideAngleProperty)
+@processed_cache(set())
+class PointInsideAngleAndPointOnSideRule(Rule):
     def apply(self, prop):
         for vec in prop.angle.vectors:
             for pt in self.context.collinear_points(vec.as_segment):
@@ -29,13 +25,9 @@ class PointInsideAngleAndPointOnSideRule(SingleSourceRule):
                     [prop, self.context.collinearity_property(*vec.points, pt)]
                 )
 
-class AngleTypeAndPerpendicularRule(SingleSourceRule):
-    property_type = AngleKindProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
+@source_type(AngleKindProperty)
+@processed_cache(set())
+class AngleTypeAndPerpendicularRule(Rule):
     def accepts(self, prop):
         return prop.angle.vertex and prop.kind != AngleKindProperty.Kind.right
 
@@ -66,16 +58,10 @@ class AngleTypeAndPerpendicularRule(SingleSourceRule):
             for p in new_props:
                 yield (p, comment, [prop] + premises)
 
-class PointInsideAngleConfigurationRule(SingleSourceRule):
-    property_type = PointInsideAngleProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
-    def accepts(self, prop):
-        return prop not in self.processed
-
+@source_type(PointInsideAngleProperty)
+@processed_cache(set())
+@accepts_auto
+class PointInsideAngleConfigurationRule(Rule):
     def apply(self, prop):
         self.processed.add(prop)
 
@@ -115,16 +101,10 @@ class PointInsideAngleConfigurationRule(SingleSourceRule):
             [prop]
         )
 
-class SegmentWithEndpointsOnAngleSidesRule(SingleSourceRule):
-    property_type = PointInsideAngleProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
-    def accepts(self, prop):
-        return prop not in self.processed
-
+@source_type(PointInsideAngleProperty)
+@processed_cache(set())
+@accepts_auto
+class SegmentWithEndpointsOnAngleSidesRule(Rule):
     def apply(self, prop):
         A = prop.angle.vertex
         B = prop.angle.vectors[0].end
@@ -148,11 +128,8 @@ class SegmentWithEndpointsOnAngleSidesRule(SingleSourceRule):
         yield (AngleValueProperty(C.angle(B, X), 0), comment, [prop] + reasons)
         yield (AngleValueProperty(X.angle(B, C), 180), comment, [prop] + reasons)
 
+@processed_cache(set())
 class SumOfAngles180DegreeRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return [p for p in self.context.list(SumOfTwoAnglesProperty) if p.angles[0].vertex is not None and p.angles[0].vertex == p.angles[1].vertex and p.degree == 180 and p not in self.processed]
 
@@ -175,13 +152,9 @@ class SumOfAngles180DegreeRule(Rule):
             [prop, oppo]
         )
 
-class ProportionalLengthsToLengthsRatioRule(SingleSourceRule):
-    property_type = ProportionalLengthsProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
+@source_type(ProportionalLengthsProperty)
+@processed_cache({})
+class ProportionalLengthsToLengthsRatioRule(Rule):
     def apply(self, prop):
         mask = self.processed.get(prop, 0)
         if mask == 0x3:
@@ -206,11 +179,8 @@ class ProportionalLengthsToLengthsRatioRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
+@processed_cache(set())
 class LengthRatiosWithCommonDenominatorRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return self.context.equal_length_ratios_with_common_denominator()
 
@@ -228,6 +198,7 @@ class LengthRatiosWithCommonDenominatorRule(Rule):
             ratio_prop.reason.premises
         )
 
+@processed_cache(set())
 class LengthRatioTransitivityRule(Rule):
     """
     For three segments seg0, seg1, and seg2, from
@@ -235,10 +206,6 @@ class LengthRatioTransitivityRule(Rule):
         |seg1| = B |seg2|
     we conclude that |seg0| = A B |seg2|
     """
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return itertools.combinations(self.context.length_ratio_properties(allow_zeroes=True), 2)
 
@@ -295,11 +262,8 @@ class LengthRatioTransitivityRule(Rule):
                 [lr0, lr1]
             )
 
+@processed_cache(set())
 class CoincidenceTransitivityRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         #TODO: use self.context.non_coincident_points()
         return itertools.combinations(self.context.list(PointsCoincidenceProperty), 2)
@@ -324,13 +288,12 @@ class CoincidenceTransitivityRule(Rule):
             [co0, co1]
         )
 
-class TwoPointsBelongsToTwoLinesRule(SingleSourceRule):
+@source_type(PointsCollinearityProperty)
+class TwoPointsBelongsToTwoLinesRule(Rule):
     """
     If two points both belong to two different lines,
     the points are coincident
     """
-    property_type = PointsCollinearityProperty
-
     def accepts(self, prop):
         return prop.collinear
 
@@ -377,11 +340,8 @@ class TwoPointsBelongsToTwoLinesRule(SingleSourceRule):
                         )
                         break
 
+@processed_cache({})
 class AngleInTriangleWithTwoKnownAnglesRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
     def sources(self):
         return [p for p in self.context.angle_value_properties() if p.angle.vertex and p.degree not in (0, 180)];
 
@@ -418,11 +378,8 @@ class AngleInTriangleWithTwoKnownAnglesRule(Rule):
         if mask != original:
             self.processed[prop] = mask
 
+@processed_cache(set())
 class SumOfTwoAnglesInTriangleRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return [p for p in self.context.angle_value_properties() if p.angle.vertex and p.degree not in (0, 180)];
 
@@ -446,11 +403,8 @@ class SumOfTwoAnglesInTriangleRule(Rule):
             [prop]
         )
 
+@processed_cache(set())
 class SumOfThreeAnglesInTriangleRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         for pt in self.context.points:
             for pair in itertools.combinations(self.context.non_coincident_points(pt), 2):
@@ -477,11 +431,8 @@ class SumOfThreeAnglesInTriangleRule(Rule):
             [ne0, ne1, ne2]
         )
 
+@processed_cache(set())
 class SumOfThreeAnglesOnLineRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         avs = self.context.angle_value_properties_for_degree(0, lambda angle: angle.vertex)
         for av0, av1 in itertools.combinations(avs, 2):
@@ -506,11 +457,8 @@ class SumOfThreeAnglesOnLineRule(Rule):
             [av0, av1]
         )
 
+@processed_cache(set())
 class SumOfThreeAnglesOnLineRule2(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return self.context.angle_value_properties_for_degree(
             180, lambda angle: angle.vertex and angle not in self.processed
@@ -529,9 +477,8 @@ class SumOfThreeAnglesOnLineRule2(Rule):
                 [prop]
             )
 
-class LengthRatioRule(SingleSourceRule):
-    property_type = ProportionalLengthsProperty
-
+@source_type(ProportionalLengthsProperty)
+class LengthRatioRule(Rule):
     def apply(self, prop):
         seg0 = prop.segment0
         seg1 = prop.segment1
@@ -576,9 +523,8 @@ class LengthRatioRule(SingleSourceRule):
                 [prop, ne]
             )
 
-class ParallelVectorsRule(SingleSourceRule):
-    property_type = ParallelVectorsProperty
-
+@source_type(ParallelVectorsProperty)
+class ParallelVectorsRule(Rule):
     def apply(self, para):
         vec0 = para.vectors[0]
         vec1 = para.vectors[1]
@@ -598,16 +544,10 @@ class ParallelVectorsRule(SingleSourceRule):
                 [para, ne0, ne1]
             )
 
-class PerpendicularSegmentsRule(SingleSourceRule):
-    property_type = PerpendicularSegmentsProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
-    def accepts(self, prop):
-        return prop not in self.processed
-
+@source_type(PerpendicularSegmentsProperty)
+@processed_cache(set())
+@accepts_auto
+class PerpendicularSegmentsRule(Rule):
     def apply(self, pv):
         seg0 = pv.segments[0]
         seg1 = pv.segments[1]
@@ -630,11 +570,8 @@ class PerpendicularSegmentsRule(SingleSourceRule):
                 [pv, ne0, ne1]
             )
 
+@processed_cache(set())
 class Degree90ToPerpendicularSegmentsRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return self.context.angle_value_properties_for_degree(
             90, lambda angle: angle not in self.processed
@@ -649,11 +586,8 @@ class Degree90ToPerpendicularSegmentsRule(Rule):
             prop.reason.premises
         )
 
+@processed_cache(set())
 class Degree90ToPerpendicularSegmentsRule2(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return self.context.angle_value_properties_for_degree(90)
 
@@ -691,9 +625,8 @@ class Degree90ToPerpendicularSegmentsRule2(Rule):
                     [prop, self.context.point_on_line_property(seg1, pt)]
                 )
 
-class CommonPerpendicularRule(SingleSourceRule):
-    property_type = AngleValueProperty
-
+@source_type(AngleValueProperty)
+class CommonPerpendicularRule(Rule):
     def accepts(self, prop):
         return prop.degree == 0
 
@@ -715,11 +648,8 @@ class CommonPerpendicularRule(SingleSourceRule):
                     [perp, prop]
                 )
 
+@processed_cache(set())
 class TwoPointsBelongsToTwoPerpendicularsRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return itertools.combinations(self.context.list(PerpendicularSegmentsProperty), 2)
 
@@ -750,11 +680,8 @@ class TwoPointsBelongsToTwoPerpendicularsRule(Rule):
             [perp0, perp1, ncl]
         )
 
+@processed_cache(set())
 class PerpendicularTransitivityRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return itertools.combinations(self.context.list(PerpendicularSegmentsProperty), 2)
 
@@ -795,9 +722,8 @@ class PerpendicularTransitivityRule(Rule):
             [perp0, perp1, ne]
         )
 
-class PerpendicularToEquidistantRule(SingleSourceRule):
-    property_type = PerpendicularSegmentsProperty
-
+@source_type(PerpendicularSegmentsProperty)
+class PerpendicularToEquidistantRule(Rule):
     def apply(self, prop):
         if len({*prop.segments[0].points, *prop.segments[1].points}) != 4:
             return
@@ -867,13 +793,9 @@ class EquidistantToPerpendicularRule(Rule):
             [cs0, cs1, ne0, ne1]
         )
 
-class EqualAnglesToCollinearityRule(SingleSourceRule):
-    property_type = SameOrOppositeSideProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
+@source_type(SameOrOppositeSideProperty)
+@processed_cache({})
+class EqualAnglesToCollinearityRule(Rule):
     def accepts(self, prop):
         return prop.same
 
@@ -911,13 +833,9 @@ class EqualAnglesToCollinearityRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
-class AngleInsideBiggerOneRule(SingleSourceRule):
-    property_type = SameOrOppositeSideProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
+@source_type(SameOrOppositeSideProperty)
+@processed_cache({})
+class AngleInsideBiggerOneRule(Rule):
     def accepts(self, prop):
         return prop.same
 
@@ -978,16 +896,12 @@ class AngleInsideBiggerOneRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
-class PointsSeparatedByLineAreNotCoincidentRule(SingleSourceRule):
+@source_type(SameOrOppositeSideProperty)
+@processed_cache(set())
+class PointsSeparatedByLineAreNotCoincidentRule(Rule):
     """
     If two points are separated by a line, the points are not coincident
     """
-    property_type = SameOrOppositeSideProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def accepts(self, prop):
         return not prop.same and prop not in self.processed
 
@@ -1000,17 +914,13 @@ class PointsSeparatedByLineAreNotCoincidentRule(SingleSourceRule):
             [prop]
         )
 
-class SameSidePointInsideSegmentRule(SingleSourceRule):
+@source_type(SameOrOppositeSideProperty)
+@processed_cache(set())
+class SameSidePointInsideSegmentRule(Rule):
     """
     If endpoints of a segment are on the same side of a line,
     then any point inside the segment in on the same side too
     """
-    property_type = SameOrOppositeSideProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def accepts(self, prop):
         return prop.same
 
@@ -1032,13 +942,9 @@ class SameSidePointInsideSegmentRule(SingleSourceRule):
                     [prop, inside_prop]
                 )
 
-class PointInsideSegmentRelativeToLineRule(SingleSourceRule):
-    property_type = SameOrOppositeSideProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
+@source_type(SameOrOppositeSideProperty)
+@processed_cache(set())
+class PointInsideSegmentRelativeToLineRule(Rule):
     def apply(self, prop):
         for index, (pt_on, pt_not_on) in enumerate(itertools.product(prop.segment.points, prop.points)):
             segment = pt_on.segment(pt_not_on)
@@ -1067,12 +973,11 @@ class PointInsideSegmentRelativeToLineRule(SingleSourceRule):
                     [prop, inside_prop]
                 )
 
-class TwoPerpendicularsRule(SingleSourceRule):
+@source_type(SameOrOppositeSideProperty)
+class TwoPerpendicularsRule(Rule):
     """
     Two perpendiculars to the same line are parallel
     """
-    property_type = SameOrOppositeSideProperty
-
     def apply(self, prop):
         foot0, reasons0 = self.context.foot_of_perpendicular(prop.points[0], prop.segment)
         if foot0 is None:
@@ -1091,14 +996,11 @@ class TwoPerpendicularsRule(SingleSourceRule):
             premises
         )
 
+@processed_cache(set())
 class TwoPerpendicularsRule2(Rule):
     """
     Two perpendiculars to the same line are parallel
     """
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return itertools.combinations(self.context.list(PerpendicularSegmentsProperty), 2)
 
@@ -1127,13 +1029,9 @@ class TwoPerpendicularsRule2(Rule):
             [perp0, perp1, ne]
         )
 
-class ParallelSameSideRule(SingleSourceRule):
-    property_type = ParallelSegmentsProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
+@source_type(ParallelSegmentsProperty)
+@processed_cache({})
+class ParallelSameSideRule(Rule):
     def apply(self, prop):
         mask = self.processed.get(prop, 0)
         if mask == 0x3:
@@ -1163,13 +1061,9 @@ class ParallelSameSideRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
-class LengthProductEqualityToRatioRule(SingleSourceRule):
-    property_type = EqualLengthProductsProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
+@source_type(EqualLengthProductsProperty)
+@processed_cache({})
+class LengthProductEqualityToRatioRule(Rule):
     def apply(self, prop):
         mask = self.processed.get(prop, 0)
         if mask == 0xF:
@@ -1214,13 +1108,9 @@ class LengthProductEqualityToRatioRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
-class PointInsidePartOfAngleRule(SingleSourceRule):
-    property_type = PointInsideAngleProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
+@source_type(PointInsideAngleProperty)
+@processed_cache(set())
+class PointInsidePartOfAngleRule(Rule):
     def apply(self, prop):
         for pt in prop.angle.endpoints:
             part = prop.angle.vertex.angle(pt, prop.point)
@@ -1245,9 +1135,8 @@ class PointInsidePartOfAngleRule(SingleSourceRule):
                     [prop1, prop]
                 )
 
-class PartOfAcuteAngleIsAcuteRule(SingleSourceRule):
-    property_type = PointInsideAngleProperty
-
+@source_type(PointInsideAngleProperty)
+class PartOfAcuteAngleIsAcuteRule(Rule):
     def apply(self, prop):
         kind = self.context.angle_kind_property(prop.angle)
         if kind is None or prop.reason.obsolete and kind.reason.obsolete:
@@ -1311,13 +1200,9 @@ class PointsCollinearityByAngleDegreeRule(Rule):
             [prop]
         )
 
-class RightAngleDegreeRule(SingleSourceRule):
-    property_type = AngleKindProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
+@source_type(AngleKindProperty)
+@processed_cache(set())
+class RightAngleDegreeRule(Rule):
     def accepts(self, prop):
         return prop.kind == AngleKindProperty.Kind.right and prop not in self.processed
 
@@ -1330,13 +1215,9 @@ class RightAngleDegreeRule(SingleSourceRule):
             prop.reason.premises
         )
 
-class AngleTypesInObtuseangledTriangleRule(SingleSourceRule):
-    property_type = AngleKindProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
+@source_type(AngleKindProperty)
+@processed_cache(set())
+class AngleTypesInObtuseangledTriangleRule(Rule):
     def accepts(self, prop):
         return prop.angle.vertex and prop.kind != AngleKindProperty.Kind.acute and prop not in self.processed
 
@@ -1397,11 +1278,8 @@ class VerticalAnglesRule(Rule):
             [av0, av1]
         )
 
+@processed_cache({})
 class ReversedVerticalAnglesRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {} # pair (prop, oppo) => mask
-
     def sources(self):
         return self.context.angle_value_properties_for_degree(180, lambda a: a.vertex)
 
@@ -1438,13 +1316,9 @@ class ReversedVerticalAnglesRule(Rule):
             if mask != original:
                 self.processed[key] = mask
 
-class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
-    property_type = SameOrOppositeSideProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
+@source_type(SameOrOppositeSideProperty)
+@processed_cache({})
+class CorrespondingAndAlternateAnglesRule(Rule):
     def apply(self, prop):
         mask = self.processed.get(prop, 0)
         if mask == 0x3:
@@ -1495,9 +1369,8 @@ class CorrespondingAndAlternateAnglesRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
-class SupplementaryAnglesRule(SingleSourceRule):
-    property_type = AngleValueProperty
-
+@source_type(AngleValueProperty)
+class SupplementaryAnglesRule(Rule):
     def accepts(self, prop):
         return prop.angle.vertex and prop.degree == 180
 
@@ -1583,11 +1456,8 @@ class TransversalRule(Rule):
                 comment = Comment(pattern, {'common': vec, 'vec0': vec0, 'vec1': vec1})
                 yield (new_prop, comment, [prop, ne])
 
+@processed_cache(set())
 class TwoPointsInsideSegmentRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         segment_to_props = {}
         for av in self.context.angle_value_properties_for_degree(180, lambda a: a.vertex):
@@ -1620,11 +1490,8 @@ class TwoPointsInsideSegmentRule(Rule):
                 [av0, av1]
             )
 
+@processed_cache(set())
 class TwoPointsOnRayRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return self.context.angle_value_properties_for_degree(0, lambda a: a.vertex)
 
@@ -1701,11 +1568,8 @@ class TwoPointsOnRayRule(Rule):
                     [prop, value0, value1]
                 )
 
+@processed_cache(set())
 class SameAngleRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 0], 2)
 
@@ -1738,11 +1602,8 @@ class SameAngleRule(Rule):
             [av0, av1]
         )
 
+@processed_cache(set())
 class SameAngleRule2(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return self.context.angle_value_properties_for_degree(180, lambda a: a.vertex)
 
@@ -1788,11 +1649,8 @@ class SameAngleRule2(Rule):
                         [prop, value]
                     )
 
+@processed_cache(set())
 class SameAngleDegreeRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return self.context.nondegenerate_angle_value_properties()
 
@@ -1816,9 +1674,8 @@ class SameAngleDegreeRule(Rule):
                     [prop, inside_prop]
                 )
 
-class PlanePositionsToLinePositionsRule(SingleSourceRule):
-    property_type = SameOrOppositeSideProperty
-
+@source_type(SameOrOppositeSideProperty)
+class PlanePositionsToLinePositionsRule(Rule):
     def apply(self, prop):
         pt0 = prop.points[0]
         pt1 = prop.points[1]
@@ -1891,9 +1748,8 @@ class CeviansIntersectionRule(Rule):
             [ncl, av0, av1] + reasons
         )
 
-class TwoAnglesWithCommonSideRule(SingleSourceRule):
-    property_type = PointInsideAngleProperty
-
+@source_type(PointInsideAngleProperty)
+class TwoAnglesWithCommonSideRule(Rule):
     def apply(self, prop):
         av = self.context.angle_value_property(prop.angle)
         if av is None or prop.reason.obsolete and av.reason.obsolete:
@@ -1909,13 +1765,9 @@ class TwoAnglesWithCommonSideRule(SingleSourceRule):
             [prop, av]
         )
 
-class TwoAnglesWithCommonSideDegreeRule(SingleSourceRule):
-    property_type = PointInsideAngleProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
+@source_type(PointInsideAngleProperty)
+@processed_cache({})
+class TwoAnglesWithCommonSideDegreeRule(Rule):
     def apply(self, prop):
         mask = self.processed.get(prop, 0)
         if mask == 0x7:
@@ -1965,13 +1817,9 @@ class TwoAnglesWithCommonSideDegreeRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
-class SameSideToInsideAngleRule(SingleSourceRule):
-    property_type = SameOrOppositeSideProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
+@source_type(SameOrOppositeSideProperty)
+@processed_cache({})
+class SameSideToInsideAngleRule(Rule):
     def accepts(self, prop):
         return not prop.same
 
@@ -2018,11 +1866,8 @@ class SameSideToInsideAngleRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
+@processed_cache(set())
 class TwoPointsRelativeToLineTransitivityRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         for p0 in self.context.list(SameOrOppositeSideProperty):
             for p1 in self.context.list(SameOrOppositeSideProperty, [p0.segment]):
@@ -2071,11 +1916,8 @@ class TwoPointsRelativeToLineTransitivityRule(Rule):
             premises
         )
 
+@processed_cache(set())
 class CongruentAnglesDegeneracyRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return self.context.congruent_angles_with_vertex()
 
@@ -2102,13 +1944,9 @@ class CongruentAnglesDegeneracyRule(Rule):
                 [ca, col]
             )
 
-class PointAndAngleRule(SingleSourceRule):
-    property_type = SameOrOppositeSideProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
+@source_type(SameOrOppositeSideProperty)
+@processed_cache({})
+class PointAndAngleRule(Rule):
     def apply(self, prop):
         mask = self.processed.get(prop, 0)
         if mask == 0x0F:
@@ -2168,13 +2006,9 @@ class PointAndAngleRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
-class PerpendicularToSideOfObtuseAngledRule(SingleSourceRule):
-    property_type = AngleKindProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
+@source_type(AngleKindProperty)
+@processed_cache(set())
+class PerpendicularToSideOfObtuseAngledRule(Rule):
     def accepts(self, prop):
         return prop.angle.vertex and prop.kind == AngleKindProperty.Kind.obtuse
 
@@ -2217,13 +2051,9 @@ class PerpendicularToSideOfObtuseAngledRule(SingleSourceRule):
                     )
                     break
 
-class MiddleOfSegmentRule(SingleSourceRule):
-    property_type = MiddleOfSegmentProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
+@source_type(MiddleOfSegmentProperty)
+@processed_cache({})
+class MiddleOfSegmentRule(Rule):
     def apply(self, prop):
         mask = self.processed.get(prop, 0)
         if mask == 0xF:

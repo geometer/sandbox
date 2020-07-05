@@ -29,14 +29,64 @@ class Rule(AbstractRule):
     def __init__(self, context):
         self.context = context
 
-    def generate(self):
-        for src in self.sources():
-            for reason in self.apply(src):
-                yield reason
-
-class SingleSourceRule(Rule):
-    def accepts(self, prop):
+    def accepts(self, src):
         return True
 
-    def sources(self):
-        return [p for p in self.context.list(type(self).property_type) if self.accepts(p)]
+    def generate(self):
+        for src in self.sources():
+            if self.accepts(src):
+                for reason in self.apply(src):
+                    yield reason
+
+class source_type:
+    def __init__(self, property_type):
+        from ..property import Property
+        assert issubclass(property_type, Property), 'Source type must be subclass of Property'
+        self.property_type = property_type
+
+    def __call__(self, clazz):
+        assert not hasattr(clazz, 'sources'), 'Cannot use @%s on class with sources() method' % type(self).__name__
+        return type(
+            clazz.__name__,
+            (clazz,),
+            {'sources': lambda inst: inst.context.list(self.property_type)}
+        )
+
+class source_types:
+    def __init__(self, *property_types):
+        from ..property import Property
+        assert all(issubclass(t, Property) for t in property_types), 'Source type must be subclass of Property'
+        self.property_types = property_types
+
+    def sources(self, inst):
+        full = []
+        for t in self.property_types:
+            full += inst.context.list(t)
+        return full
+
+    def __call__(self, clazz):
+        assert not hasattr(clazz, 'sources'), 'Cannot use @%s on class with sources() method' % type(self).__name__
+        return type(
+            clazz.__name__,
+            (clazz,),
+            {'sources': lambda inst: self.sources(inst)}
+        )
+
+class processed_cache:
+    def __init__(self, cache_object):
+        self.cache_object = cache_object
+
+    def __call__(self, clazz):
+        return type(
+            clazz.__name__,
+            (clazz,),
+            {'processed': self.cache_object}
+        )
+
+def accepts_auto(clazz):
+    #assert not hasattr(clazz, 'accepts'), 'Cannot use @accepts_auto on class with accepts()'
+    return type(
+        clazz.__name__,
+        (clazz,),
+        {'accepts': lambda inst, src: src not in inst.processed}
+    )

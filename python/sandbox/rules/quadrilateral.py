@@ -4,13 +4,10 @@ import sympy as sp
 from ..property import *
 from ..util import Comment
 
-from .abstract import Rule, SingleSourceRule
+from .abstract import Rule, accepts_auto, processed_cache, source_type
 
+@processed_cache(set())
 class ConvexQuadrilateralRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return [p for p in self.context.list(NondegenerateSquareProperty) if p not in self.processed]
 
@@ -34,11 +31,8 @@ class ConvexQuadrilateralRule(Rule):
                 [prop]
             )
 
+@processed_cache(set())
 class SquareRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return [p for p in self.context.list(SquareProperty) + self.context.list(NondegenerateSquareProperty) if p not in self.processed]
 
@@ -85,13 +79,9 @@ class SquareRule(Rule):
                 [prop]
             )
 
-class SquareDegeneracyRule(SingleSourceRule):
-    property_type = SquareProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
+@source_type(SquareProperty)
+@processed_cache({})
+class SquareDegeneracyRule(Rule):
     def apply(self, prop):
         mask = self.processed.get(prop, 0)
         if mask == 0xF:
@@ -132,16 +122,10 @@ class SquareDegeneracyRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
-class NondegenerateSquareRule(SingleSourceRule):
-    property_type = NondegenerateSquareProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
-    def accepts(self, prop):
-        return prop not in self.processed
-
+@source_type(NondegenerateSquareProperty)
+@processed_cache(set())
+@accepts_auto
+class NondegenerateSquareRule(Rule):
     def apply(self, prop):
         self.processed.add(prop)
 

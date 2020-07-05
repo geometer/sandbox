@@ -5,16 +5,13 @@ from ..property import ProportionalLengthsProperty
 from ..scene import Scene
 from ..util import Comment
 
-from .abstract import Rule
+from .abstract import Rule, processed_cache
 
+@processed_cache(set())
 class LawOfSinesRule(Rule):
     """
     The law of sines
     """
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return [p for p in self.context.nondegenerate_angle_value_properties() if p.angle.vertex and p.degree not in (0, 180) and p not in self.processed]
 

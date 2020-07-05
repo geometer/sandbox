@@ -3,15 +3,11 @@ import itertools
 from .. import Scene
 from ..property import *
 
-from .abstract import Rule, SingleSourceRule
+from .abstract import Rule, processed_cache, source_type
 
-class CollinearityToSameLineRule(SingleSourceRule):
-    property_type = PointsCollinearityProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
+@source_type(PointsCollinearityProperty)
+@processed_cache({})
+class CollinearityToSameLineRule(Rule):
     def accepts(self, prop):
         return prop.collinear
 
@@ -43,13 +39,9 @@ class CollinearityToSameLineRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
-class CollinearityToPointOnLineRule(SingleSourceRule):
-    property_type = PointsCollinearityProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
+@source_type(PointsCollinearityProperty)
+@processed_cache({})
+class CollinearityToPointOnLineRule(Rule):
     def accepts(self, prop):
         return prop.collinear
 
@@ -82,13 +74,9 @@ class CollinearityToPointOnLineRule(SingleSourceRule):
         if mask != original:
             self.processed[prop] = mask
 
-class NonCollinearityToDifferentLinesRule(SingleSourceRule):
-    property_type = PointsCollinearityProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
+@source_type(PointsCollinearityProperty)
+@processed_cache(set())
+class NonCollinearityToDifferentLinesRule(Rule):
     def accepts(self, prop):
         return not prop.collinear and prop not in self.processed
 
@@ -106,13 +94,9 @@ class NonCollinearityToDifferentLinesRule(SingleSourceRule):
                 [prop]
             )
 
-class NonCollinearityToPointNotOnLineRule(SingleSourceRule):
-    property_type = PointsCollinearityProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
+@source_type(PointsCollinearityProperty)
+@processed_cache(set())
+class NonCollinearityToPointNotOnLineRule(Rule):
     def accepts(self, prop):
         return not prop.collinear and prop not in self.processed
 

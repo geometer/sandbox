@@ -4,13 +4,10 @@ from .. import Scene
 from ..property import *
 from ..util import LazyComment, Comment, common_endpoint, other_point
 
-from .abstract import Rule, SingleSourceRule
+from .abstract import Rule, accepts_auto, processed_cache, source_type
 
+@processed_cache(set())
 class SimilarTrianglesByTwoAnglesRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         groups = {}
         for a0, a1 in self.context.congruent_angles_with_vertex():
@@ -123,11 +120,8 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
             [ca0, ca1, ncl]
         )
 
+@processed_cache({})
 class CongruentTrianglesByAngleAndTwoSidesRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = {}
-
     def sources(self):
         return self.context.congruent_angles_with_vertex()
 
@@ -210,11 +204,8 @@ class CongruentTrianglesByAngleAndTwoSidesRule(Rule):
         if original != mask:
             self.processed[src] = mask
 
+@processed_cache(set())
 class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return [(a0, a1) for a0, a1 in self.context.congruent_angles_with_vertex() if a0.point_set != a1.point_set and (a0, a1) not in self.processed]
 
@@ -245,16 +236,10 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
                     [elr, ca]
                 )
 
-class SimilarTrianglesWithCongruentSideRule(SingleSourceRule):
-    property_type = SimilarTrianglesProperty
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
-    def accepts(self, prop):
-        return prop not in self.processed
-
+@source_type(SimilarTrianglesProperty)
+@processed_cache(set())
+@accepts_auto
+class SimilarTrianglesWithCongruentSideRule(Rule):
     def apply(self, prop):
         sides0 = prop.triangle0.sides
         sides1 = prop.triangle1.sides
@@ -350,11 +335,8 @@ class CongruentTrianglesByThreeSidesRule(Rule):
                         [cs0, cs1, cs2]
                     )
 
+@processed_cache(set())
 class SimilarTrianglesByThreeSidesRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return itertools.combinations(self.context.length_ratios(allow_zeroes=True), 2)
 
@@ -433,11 +415,8 @@ class EquilateralTriangleByThreeSidesRule(Rule):
                 [prop, cs2]
             )
 
+@processed_cache(set())
 class EquilateralTriangleByConrguentLegsAndAngleRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return self.context.angle_value_properties_for_degree(
             60, lambda angle: angle.vertex and angle not in self.processed
@@ -461,11 +440,8 @@ class EquilateralTriangleByConrguentLegsAndAngleRule(Rule):
             [ratio, prop]
         )
 
+@processed_cache(set())
 class IsoscelesTriangleByConrguentLegsRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return [p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1 and p not in self.processed]
 
@@ -487,11 +463,8 @@ class IsoscelesTriangleByConrguentLegsRule(Rule):
             [prop]
         )
 
+@processed_cache(set())
 class IsoscelesTriangleByConrguentBaseAnglesRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return self.context.congruent_angles_with_vertex()
 

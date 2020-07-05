@@ -3,13 +3,10 @@ import itertools
 from ..property import *
 from ..util import LazyComment, Comment
 
-from .abstract import Rule
+from .abstract import Rule, processed_cache
 
+@processed_cache(set())
 class CyclicQuadrilateralRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         right_angles = self.context.angle_value_properties_for_degree(90, lambda a: a.vertex)
         return itertools.combinations(right_angles, 2)

@@ -1,14 +1,15 @@
 from ..property import *
 from ..util import Comment
 
-from .abstract import Rule, SingleSourceRule
+from .abstract import Rule, accepts_auto, processed_cache, source_type
 
-class CyclicOrderRule(SingleSourceRule):
-    property_type = SameOrOppositeSideProperty
-
+@source_type(SameOrOppositeSideProperty)
+@processed_cache(set())
+@accepts_auto
+class CyclicOrderRule(Rule):
     def apply(self, prop):
-        if prop.reason.obsolete:
-            return
+        self.processed.add(prop)
+
         cycle0 = Cycle(*prop.segment.points, prop.points[0])
         cycle1 = Cycle(*prop.segment.points, prop.points[1])
         if not prop.same:
@@ -20,11 +21,8 @@ class CyclicOrderRule(SingleSourceRule):
         yield (SameCyclicOrderProperty(cycle0, cycle1), comment, [prop])
         yield (SameCyclicOrderProperty(cycle0.reversed, cycle1.reversed), comment, [prop])
 
+@processed_cache(set())
 class RotatedAngleRule(Rule):
-    def __init__(self, context):
-        super().__init__(context)
-        self.processed = set()
-
     def sources(self):
         return [(a0, a1) for a0, a1 in self.context.congruent_angles_with_vertex() if a0.vertex == a1.vertex and (a0, a1) not in self.processed]
 
