@@ -213,7 +213,7 @@ class LineSet:
         self.__key_to_circle = {}
         self.__all_lines = []
         self.__all_circles = []
-        self.__different_lines_graph = nx.Graph()
+        self.__different_lines = {} # {line, line} => [props]
         self.__coincidence = {}   # {point, point} => prop
         self.__collinearity = {}  # {point, point, point} => prop
         self.__concyclicity = {}  # {point, point, point, point} => prop
@@ -321,11 +321,12 @@ class LineSet:
     def __add_different_lines_property(self, prop):
         line0 = self.__line_by_segment(prop.segments[0])
         line1 = self.__line_by_segment(prop.segments[1])
-        edge = self.__different_lines_graph.get_edge_data(line0, line1)
-        if edge is None:
-            self.__different_lines_graph.add_edge(line0, line1, props={prop})
+        key = frozenset((line0, line1))
+        ar = self.__different_lines.get(key)
+        if ar:
+            ar.append(prop)
         else:
-            edge['props'].add(prop)
+            self.__different_lines[key] = [prop]
 
     def __add_point_on_line_property(self, prop):
         self.__point_on_line[(prop.point, prop.segment)] = prop
@@ -516,9 +517,9 @@ class LineSet:
                 prop = PointsCollinearityProperty(*pts, True)
                 candidates.append(_synthetic_property(prop, comment, premises))
                 continue
-            data = self.__different_lines_graph.get_edge_data(line0, line1)
+            data = self.__different_lines.get(frozenset((line0, line1)))
             if data:
-                for prop in data['props']:
+                for prop in data:
                     seg0, seg1 = prop.segments
                     if self.__segment_to_line[seg0] == line1:
                         seg0, seg1 = seg1, seg0
@@ -567,7 +568,7 @@ class LineSet:
         if line0 is None:
             return (None, [])
         line1 = self.__segment_to_line.get(segment1)
-        #if line1 is None or line1 == line0 or self.__different_lines_graph.get_edge_data(line0, line1) is None:
+        #if line1 is None or line1 == line0 or self.__different_lines.get(frozenset((line0, line1))) is None:
         if line1 is None or line1 == line0:
             return (None, [])
         pt = next((pt for pt in line0.points_on if pt in line1.points_on), None)
