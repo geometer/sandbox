@@ -1,5 +1,5 @@
 from sandbox import Scene
-from sandbox.property import PointInsideAngleProperty
+from sandbox.property import LineCoincidenceProperty, PointInsideAngleProperty
 
 from .base import ExplainerTest
 
@@ -18,7 +18,10 @@ class InsideTriangle1(ExplainerTest):
         A = self.scene.get('A')
         B = self.scene.get('B')
         C = self.scene.get('C')
+        D = self.scene.get('D')
+        E = self.scene.get('E')
         X = self.scene.get('X')
+        self.assertIn(LineCoincidenceProperty(C.segment(D), B.segment(E), False), self.explainer.context)
         self.assertIn(PointInsideAngleProperty(X, A.angle(B, C)), self.explainer.context)
         self.assertIn(PointInsideAngleProperty(X, B.angle(C, A)), self.explainer.context)
         self.assertIn(PointInsideAngleProperty(X, C.angle(A, B)), self.explainer.context)
@@ -39,7 +42,11 @@ class InsideTriangle2(ExplainerTest):
         A = self.scene.get('A')
         B = self.scene.get('B')
         C = self.scene.get('C')
+        D = self.scene.get('D')
+        E = self.scene.get('E')
+        F = self.scene.get('F')
         X = self.scene.get('X')
+        self.assertIn(LineCoincidenceProperty(D.segment(E), A.segment(F), False), self.explainer.context)
         self.assertIn(PointInsideAngleProperty(X, A.angle(B, C)), self.explainer.context)
         self.assertIn(PointInsideAngleProperty(X, B.angle(C, A)), self.explainer.context)
         self.assertIn(PointInsideAngleProperty(X, C.angle(A, B)), self.explainer.context)
