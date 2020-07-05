@@ -2,6 +2,7 @@ import itertools
 
 from .. import Scene
 from ..property import *
+from ..util import other_point
 
 from .abstract import Rule, processed_cache, source_type
 
@@ -93,6 +94,34 @@ class NonCollinearityToDifferentLinesRule(Rule):
                 ),
                 [prop]
             )
+
+@source_type(PointsCollinearityProperty)
+@processed_cache(set())
+class NonCollinearityToDifferentLinesRule2(Rule):
+    def accepts(self, prop):
+        return not prop.collinear
+
+    def apply(self, prop):
+        triangle = Scene.Triangle(*prop.points)
+        for pt, segment in zip(triangle.points, triangle.sides):
+            for nc in self.context.list(PointsCoincidenceProperty, [pt]):
+                if nc.coincident:
+                    continue
+                other = other_point(nc.points, pt)
+                if other in segment.points:
+                    continue
+                key = (prop, nc)
+                if key in self.processed:
+                    continue
+                self.processed.add(key)
+                yield (
+                    LinesCoincidenceProperty(segment, pt.segment(other), False),
+                    Comment(
+                        'points $%{point:pt0}$, $%{point:pt1}$, and $%{point:pt2}$ are not collinear',
+                        {'pt0': segment.points[0], 'pt1': segment.points[1], 'pt2': pt}
+                    ),
+                    [prop]
+                )
 
 @source_type(PointsCollinearityProperty)
 @processed_cache(set())
