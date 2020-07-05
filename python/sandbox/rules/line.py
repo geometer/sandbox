@@ -89,13 +89,13 @@ class NonCollinearityToDifferentLinesRule(Rule):
             props.append(p)
 
         for line in self.context.lines:
-            for pt0, pt1 in itertools.combinations(line.points_on, 2):
-                for pt2 in line.points_not_on:
-                    key = frozenset((pt0, pt1, pt2))
+            for seg in line.segments:
+                for pt in line.points_not_on:
+                    key = frozenset((*seg.points, pt))
                     if key in self.processed:
                         continue
                     self.processed.add(key)
-                    props.append(self.context.collinearity_property(pt0, pt1, pt2))
+                    props.append(self.context.collinearity_property(*seg.points, pt))
 
         return props
 
