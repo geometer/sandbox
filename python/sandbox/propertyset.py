@@ -501,7 +501,7 @@ class LineSet:
         return best
 
     def intersection_of_lines(self, segment0, segment1):
-        if segment0 == segment1:
+        if segment0 == segment1 or self.lines_coincidence(segment0, segment1) != False:
             return (None, [])
         common = next((pt for pt in segment0.points if pt in segment1.points), None)
         if common:
@@ -511,8 +511,7 @@ class LineSet:
         if line0 is None:
             return (None, [])
         line1 = self.__segment_to_line.get(segment1)
-        #if line1 is None or line1 == line0 or self.__different_lines.get(frozenset((line0, line1))) is None:
-        if line1 is None or line1 == line0:
+        if line1 is None:
             return (None, [])
         pt = next((pt for pt in line0.points_on if pt in line1.points_on), None)
         if pt is None:
@@ -522,6 +521,7 @@ class LineSet:
             premises.append(self.collinearity_property(pt, *segment0.points))
         if pt not in segment1.points:
             premises.append(self.collinearity_property(pt, *segment1.points))
+        # TODO: add line-non-coincidence property (?)
         return (pt, premises)
 
     @property
@@ -564,7 +564,7 @@ class LineSet:
 
         if line0 == line1:
             return True
-        if self.__different_lines(frozenset([line0, line1])):
+        if self.__different_lines.get(frozenset([line0, line1])):
             return False
         return None
 
