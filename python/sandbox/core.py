@@ -176,10 +176,16 @@ class CoreScene:
             )
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment('perpendicular from %s to %s', self, line.label)
+                kwargs['comment'] = Comment(
+                    'perpendicular from $%{point:pt}$ to $%{line:line}$',
+                    {'pt': self, 'line': line}
+                )
             new_line = self.line_through(new_point, **kwargs)
             if self not in line:
-                crossing = new_line.intersection_point(line, layer='auxiliary', comment=LazyComment('foot of the perpendicular from %s to %s', self, line.label))
+                crossing = new_line.intersection_point(line, layer='auxiliary', comment=Comment(
+                    'foot of the perpendicular from $%{point:pt}$ to $%{line:line}$',
+                    {'pt': self, 'line': line}
+                ))
             line.perpendicular_constraint(new_line, guaranteed=True)
             self.__perpendiculars[line] = new_line
             return new_line
@@ -388,7 +394,7 @@ class CoreScene:
         def free_point(self, **kwargs):
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment('point on line %s', self.label)
+                kwargs['comment'] = Comment('point on line $%{line:line}$', {'line': self})
             point = CoreScene.Point(self.scene, CoreScene.Point.Origin.line, line=self, **kwargs)
             point.belongs_to(self)
             return point
@@ -600,7 +606,7 @@ class CoreScene:
         def free_point(self, **kwargs):
             if 'comment' not in kwargs:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment('point on segment %s', self)
+                kwargs['comment'] = Comment('point on segment $%{segment:seg}$', {'seg': self})
             point = self.line_through(layer='auxiliary').free_point(**kwargs)
             point.inside_constraint(self)
             return point
@@ -616,9 +622,15 @@ class CoreScene:
             line = self.line_through(layer='auxiliary')
             if kwargs.get('comment') is None:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment('perpendicular bisector of %s', self)
+                kwargs['comment'] = Comment(
+                    'perpendicular bisector of $%{segment:seg}$',
+                    {'seg': self}
+                )
             bisector = middle.perpendicular_line(line, **kwargs)
-            comment=LazyComment('%s is the perpendicular bisector of %s', bisector, self)
+            comment=Comment(
+                '$%{line:bisector}$ is the perpendicular bisector of $%{segment:seg}$',
+                {'bisector': bisector, 'seg': self}
+            )
             bisector.perpendicular_constraint(line, comment=comment)
             return bisector
 
@@ -747,7 +759,7 @@ class CoreScene:
             self.point_on_bisector_constraint(Y, guaranteed=True)
             if kwargs.get('comment') is None:
                 kwargs = dict(kwargs)
-                kwargs['comment'] = LazyComment('bisector of %s', self)
+                kwargs['comment'] = Comment('bisector of $%{angle:angle}$', {'angle': self})
             self.__bisector = v.line_through(Y, **kwargs)
             return self.__bisector
 
