@@ -135,7 +135,7 @@ class Comment:
                 elif kind == 'point':
                     assert isinstance(obj, Scene.Point), 'Parameter `%s` of type `%s`, expected `%s`' % (name, type(obj), kind)
                 elif kind in ('segment', 'line'):
-                    assert isinstance(obj, (Scene.Segment, Scene.Vector)), 'Parameter `%s` of type `%s`, expected `%s`' % (name, type(obj), kind)
+                    assert isinstance(obj, (Scene.Segment, Scene.Vector, Scene.Line)), 'Parameter `%s` of type `%s`, expected `%s`' % (name, type(obj), kind)
                 elif kind in ('vector', 'ray'):
                     assert isinstance(obj, Scene.Vector), 'Parameter `%s` of type `%s`, expected `%s`' % (name, type(obj), kind)
                 elif kind in ('angle', 'anglemeasure'):
