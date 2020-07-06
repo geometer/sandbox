@@ -128,6 +128,7 @@ class Explainer:
             TwoAnglesWithCommonSideDegreeRule(self.context),
             KnownAnglesWithCommonSideRule(self.context),
             TwoPointsRelativeToLineTransitivityRule(self.context),
+            TwoPointsRelativeToLineTransitivityRule2(self.context),
             CongruentAnglesDegeneracyRule(self.context),
             CongruentAnglesKindRule(self.context),
             PointAndAngleRule(self.context),
@@ -435,24 +436,6 @@ class Explainer:
                     ),
                     None, comment, premises
                 )
-
-            for sos in self.context.list(SameOrOppositeSideProperty):
-                for other in self.context.collinear_points(sos.segment):
-                    col = self.context.collinearity_property(other, *sos.segment.points)
-                    too_old = sos.reason.obsolete and col.reason.obsolete
-                    for pt in sos.segment.points:
-                        ne = self.context.not_equal_property(other, pt)
-                        if ne is None or too_old and ne.reason.obsolete:
-                            continue
-                        yield (
-                            SameOrOppositeSideProperty(other.segment(pt), *sos.points, sos.same),
-                            None,
-                            Comment(
-                                '$%{line:line0}$ is the same line as $%{line:line1}$',
-                                {'line0': other.segment(pt), 'line1': sos.segment}
-                            ),
-                            [sos, col, ne]
-                        )
 
         for prop, comment in enumerate_predefined_properties(self.scene, max_layer=self.__max_layer):
             self.__reason(prop, PredefinedPropertyRule.instance(), comment, [])

@@ -2273,6 +2273,33 @@ class TwoPointsRelativeToLineTransitivityRule(Rule):
             premises
         )
 
+@source_type(SameOrOppositeSideProperty)
+@processed_cache(set())
+class TwoPointsRelativeToLineTransitivityRule2(Rule):
+    def apply(self, prop):
+        for other in self.context.collinear_points(prop.segment):
+            colli = None
+            for pt in prop.segment.points:
+                key = (prop, other, pt)
+                if key in self.processed:
+                    continue
+                ne = self.context.coincidence_property(other, pt)
+                if ne is None:
+                    continue
+                self.processed.add(key)
+                if ne.coincident:
+                    continue
+                if colli is None:
+                    colli = self.context.collinearity_property(other, *prop.segment.points)
+                yield (
+                    SameOrOppositeSideProperty(other.segment(pt), *prop.points, prop.same),
+                    Comment(
+                        '$%{line:line0}$ is the same line as $%{line:line1}$',
+                        {'line0': other.segment(pt), 'line1': prop.segment}
+                    ),
+                    [colli, ne, prop]
+                )
+
 @processed_cache(set())
 class CongruentAnglesDegeneracyRule(Rule):
     def sources(self):
