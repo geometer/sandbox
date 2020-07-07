@@ -367,8 +367,7 @@ class LineSet:
         elif isinstance(prop, PointOnLineProperty):
             self.__add_point_on_line_property(prop)
         elif isinstance(prop, PointsCollinearityProperty):
-            #self.__collinearity[prop.property_key] = prop
-            pass
+            self.__collinearity[prop.property_key] = prop
         elif isinstance(prop, PointsCoincidenceProperty):
             self.__coincidence[prop.property_key] = prop
         elif isinstance(prop, CircleCoincidenceProperty):
@@ -395,10 +394,12 @@ class LineSet:
             candidates.append(_synthetic_property(prop, comment, [col, ncol]))
         return candidates
 
-    def coincidence_property(self, pt0, pt1):
-        cached = self.__coincidence.get(frozenset([pt0, pt1]))
-        if cached:
-            return cached
+    def coincidence_property(self, pt0, pt1, use_cache=True):
+        if use_cache:
+            key = frozenset([pt0, pt1])
+            cached = self.__coincidence.get(key)
+            if cached:
+                return cached
         candidates = []
         for line in self.__all_lines:
             if pt0 in line.points_on and pt1 in line.points_not_on:
@@ -407,7 +408,11 @@ class LineSet:
             elif pt1 in line.points_on and pt0 in line.points_not_on:
                 candidates.append(line.non_coincidence_property(pt1, pt0))
                 candidates += self.__non_coincidence_property_candidates(line, pt1, pt0)
-        return LineSet.best_candidate(candidates)
+
+        best = LineSet.best_candidate(candidates)
+        if use_cache and best:
+            self.__coincidence[key] = best
+        return best
 
     def point_on_line_property(self, segment, point):
         prop = self.__point_on_line.get((point, segment))
@@ -426,11 +431,12 @@ class LineSet:
                 return circle.concyclicity_property(*pts)
         return None
 
-    def collinearity_property(self, *pts):
-        key = frozenset(pts)
-        cached = self.__collinearity.get(key)
-        if cached:
-            return cached
+    def collinearity_property(self, *pts, use_cache=True):
+        if use_cache:
+            key = frozenset(pts)
+            cached = self.__collinearity.get(key)
+            if cached:
+                return cached
 
         candidates = []
 
@@ -459,7 +465,7 @@ class LineSet:
 
         if len(pts) > 3:
             prop = LineSet.best_candidate(candidates)
-            if prop:
+            if use_cache and prop:
                 self.__collinearity[key] = prop
             return prop
 
@@ -534,7 +540,7 @@ class LineSet:
                 ))
 
         prop = LineSet.best_candidate(candidates)
-        if prop:
+        if use_cache and prop:
             self.__collinearity[key] = prop
         return prop
 
@@ -1533,6 +1539,20 @@ class PropertySet(LineSet):
     def index_of(self, prop):
         return self.__indexes.get(prop)
 
+    def add_synthetics(self):
+        changed = False
+        for prop in self.all:
+            if isinstance(prop, PointsCoincidenceProperty):
+                extra = self.coincidence_property(*prop.points, use_cache=False)
+            elif isinstance(prop, PointsCollinearityProperty):
+                extra = self.collinearity_property(*prop.points, use_cache=False)
+            else:
+                continue
+            if extra and extra.reason.cost < prop.reason.cost:
+                changed = True
+                prop.reason = extra.reason
+        return changed
+
     def __getitem__(self, prop):
         if isinstance(prop, AngleRatioProperty):
             existing = self.angle_ratio_property(prop.angle0, prop.angle1)
@@ -1613,18 +1633,6 @@ class PropertySet(LineSet):
             else:
                 return [p for p in self.list(AngleValueProperty) if p.degree == 0]
         return self.__angle_ratios.value_properties_for_degree(degree, condition)
-
-    def collinearity_property(self, *pts):
-        prop = super().collinearity_property(*pts)
-        if prop is None:
-            return None
-        existing = self.__full_set.get(prop)
-        if existing:
-            if existing.reason.cost > prop.reason.cost:
-                existing.reason = prop.reason
-            return existing
-        else:
-            return prop
 
     def points_inside_segment(self, segment):
         return [pt for pt in self.collinear_points(segment) if self.__angle_ratios.value(pt.angle(*segment.points)) == 180]

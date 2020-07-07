@@ -455,7 +455,7 @@ class Explainer:
 
         changed = True
         while changed:
-            changed = False
+            changed = self.context.add_synthetics()
             for prop in self.context.all:
                 candidate = None
                 cost = prop.reason.cost
