@@ -14,6 +14,15 @@ class Property:
         self.point_set = point_set
         self.__hash = None
         self.__reason = None
+        self.alternate_reasons = []
+
+    def __acceptable_reason(self, value):
+        while self in value.all_premises:
+            # TODO: select the best variant
+            for prop in value.all_premises:
+                if prop == self:
+                    value = prop.reason
+        return value
 
     @property
     def reason(self):
@@ -24,15 +33,24 @@ class Property:
         if self.__reason:
             for pre in self.__reason.premises:
                 pre.implications = [p for p in pre.implications if p is not self]
-        while self in value.all_premises:
-            # TODO: select the best variant
-            for prop in value.all_premises:
-                if prop == self:
-                    value = prop.reason
+
+        value = self.__acceptable_reason(value)
+
+        if self.__reason == value:
+            return
+        if self.__reason:
+            self.add_alternate_reason(self.__reason)
+
         self.__reason = value
         for pre in self.__reason.premises:
             pre.implications.append(self)
         self.fire_premises_change()
+
+    def add_alternate_reason(self, value):
+        value = self.__acceptable_reason(value)
+
+        if value not in self.alternate_reasons:
+            self.alternate_reasons.append(value)
 
     @property
     def priority(self):

@@ -206,6 +206,8 @@ class Explainer:
             existing.reason = reason
             if was_synthetic or self.context.index_of(existing) is None:
                 insert(existing)
+        else:
+            existing.add_alternate_reason(reason)
 
     def explain(self):
         start = time.time()
