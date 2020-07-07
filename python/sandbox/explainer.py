@@ -194,20 +194,21 @@ class Explainer:
             prop.reason = reason
             prop.reason.obsolete = False
             insert(prop)
-        elif reason.cost < existing.reason.cost:
+        else:
             #### +++ HACK +++
             # TODO: move this hack outside of explainer
             if isinstance(prop, AngleRatioProperty) and prop.same:
                 existing.same = True
             #### --- HACK ---
-            prop.reason = reason
             reason.obsolete = existing.reason.obsolete
             was_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
-            existing.reason = reason
-            if was_synthetic or self.context.index_of(existing) is None:
+            if reason.cost < existing.reason.cost:
+                existing.reason = reason
+            else:
+                existing.add_alternate_reason(reason)
+            is_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
+            if was_synthetic and not is_synthetic or self.context.index_of(existing) is None:
                 insert(existing)
-        else:
-            existing.add_alternate_reason(reason)
 
     def explain(self):
         start = time.time()
