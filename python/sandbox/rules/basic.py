@@ -1068,6 +1068,7 @@ class SameSidePointInsideSegmentRule(Rule):
             for new_prop in (
                 SameOrOppositeSideProperty(prop.segment, prop.points[0], inside, True),
                 SameOrOppositeSideProperty(prop.segment, prop.points[1], inside, True),
+                PointsCollinearityProperty(inside, *prop.segment.points, False),
             ):
                 yield (new_prop, comment, [prop, inside_prop])
 
