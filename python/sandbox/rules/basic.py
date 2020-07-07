@@ -1060,16 +1060,16 @@ class SameSidePointInsideSegmentRule(Rule):
             if key in self.processed:
                 continue
             self.processed.add(key)
+            comment = Comment(
+                'segment $%{segment:segment}$ contains $%{point:inside}$ and does not cross line $%{line:line}$',
+                {'segment': segment, 'line': prop.segment, 'inside': inside}
+            )
             inside_prop = self.context.angle_value_property(inside.angle(*prop.points))
-            for endpoint in prop.points:
-                yield (
-                    SameOrOppositeSideProperty(prop.segment, endpoint, inside, True),
-                    Comment(
-                        'segment $%{segment:segment}$ does not cross line $%{line:line}$',
-                        {'segment': segment, 'line': prop.segment}
-                    ),
-                    [prop, inside_prop]
-                )
+            for new_prop in (
+                SameOrOppositeSideProperty(prop.segment, prop.points[0], inside, True),
+                SameOrOppositeSideProperty(prop.segment, prop.points[1], inside, True),
+            ):
+                yield (new_prop, comment, [prop, inside_prop])
 
 @source_type(SameOrOppositeSideProperty)
 @processed_cache(set())
