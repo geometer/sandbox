@@ -30,16 +30,14 @@ class Property:
 
     @reason.setter
     def reason(self, value):
+        value = self.__acceptable_reason(value)
+        if self.__reason == value:
+            return
+
         if self.__reason:
             for pre in self.__reason.premises:
                 pre.implications = [p for p in pre.implications if p is not self]
-
-        value = self.__acceptable_reason(value)
-
-        if self.__reason == value:
-            return
-        if self.__reason:
-            self.add_alternate_reason(self.__reason)
+            self.alternate_reasons.append(self.__reason)
 
         self.__reason = value
         for pre in self.__reason.premises:
