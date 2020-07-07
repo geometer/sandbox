@@ -215,6 +215,7 @@ class LineSet:
         self.__all_circles = []
         self.__different_lines = {} # {line, line} => [props]
         self.__coincidence = {}   # {point, point} => prop
+        self.__lines_coincidence = {} # {segment, segment} => prop
         self.__collinearity = {}  # {point, point, point} => prop
         self.__concyclicity = {}  # {point, point, point, point} => prop
         self.__point_on_line = {} # (point, segment) => prop
@@ -360,6 +361,7 @@ class LineSet:
 
     def add(self, prop):
         if isinstance(prop, LinesCoincidenceProperty):
+            self.__lines_coincidence[prop.property_key] = prop
             if prop.coincident:
                 self.__add_same_line_property(prop)
             else:
@@ -625,7 +627,19 @@ class LineSet:
             return False
         return None
 
-    def lines_coincidence_property(self, segment0, segment1):
+    def lines_coincidence_property(self, segment0, segment1, use_cache=True):
+        if use_cache:
+            key = frozenset([segment0, segment1])
+            cached = self.__lines_coincidence.get(key)
+            if cached:
+                return cached
+
+        prop = self.__lines_coincidence_property(segment0, segment1)
+        if use_cache and prop:
+            self.__lines_coincidence[key] = prop
+        return prop
+
+    def __lines_coincidence_property(self, segment0, segment1):
         line0 = self.__segment_to_line.get(segment0)
         if line0 is None:
             return None
@@ -1213,7 +1227,11 @@ class AngleRatioPropertySet:
                     premises.append(self.ratio_property(angle, a))
             candidates.append(_synthetic_property(prop, comment, premises))
 
-        return PropertySet.best_candidate(candidates)
+        best = PropertySet.best_candidate(candidates)
+        if best:
+            for perm in itertools.permutations(angles, len(angles)):
+                self.__sum_of_angles[perm] = best
+        return best
 
 class LengthRatioPropertySet:
     class Family:
