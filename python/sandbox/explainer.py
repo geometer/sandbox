@@ -461,6 +461,7 @@ class Explainer:
                 candidate = None
                 cost = prop.reason.cost
                 for reason in prop.alternate_reasons:
+                    reason.reset_premises()
                     if reason.cost < cost:
                         cost = reason.cost
                         candidate = reason
