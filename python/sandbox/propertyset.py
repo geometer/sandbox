@@ -1542,6 +1542,8 @@ class PropertySet(LineSet):
             existing = self.same_cyclic_order_property(prop.cycle0, prop.cycle1)
         #elif isinstance(prop, PointAndCircleProperty):
         #    existing = self.point_and_circle_property(prop.point, prop.circle_key)
+        elif isinstance(prop, PointsCoincidenceProperty):
+            existing = self.coincidence_property(*prop.points)
         elif isinstance(prop, PointsCollinearityProperty):
             existing = self.collinearity_property(*prop.points)
         elif isinstance(prop, MultiPointsCollinearityProperty):
