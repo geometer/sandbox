@@ -118,7 +118,7 @@ def run_sample(scene, *props):
                 all_premises(explanation).stats().dump()
                 rules_map = {}
                 for prop in explanation.reason.all_premises:
-                    key = type(prop.rule).__name__ if hasattr(prop, 'rule') else 'Unknown'
+                    key = type(prop.reason.rule).__name__ if prop.reason.rule else 'Unknown'
                     rules_map[key] = rules_map.get(key, 0) + 1
                 items = list(rules_map.items())
                 items.sort(key=lambda pair: -pair[1])
