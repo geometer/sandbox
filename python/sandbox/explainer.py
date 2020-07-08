@@ -275,10 +275,8 @@ class Explainer:
                                 yield (AngleValueProperty(zero, 0), None, comment, [col, aa, ka])
                             break
 
-            for aa in self.context.angle_value_properties_for_degree(90):
+            for aa in self.context.angle_value_properties_for_degree(90, lambda a: a.vertex):
                 base = aa.angle
-                if base.vertex is None:
-                    continue
                 for vec0, vec1 in [base.vectors, reversed(base.vectors)]:
                     for perp in self.context.list(PerpendicularSegmentsProperty, [vec0.as_segment]):
                         other = perp.segments[0] if vec0.as_segment == perp.segments[1] else perp.segments[1]
@@ -402,7 +400,7 @@ class Explainer:
 #                            [ncl, zero, ne]
 #                        )
 
-            for zero in [p for p in self.context.list(AngleValueProperty) if p.angle.vertex is None and p.degree == 0]:
+            for zero in self.context.angle_value_properties_for_degree(0, lambda a: a.vertex is None):
                 ang = zero.angle
                 ncl = self.context.collinearity_property(*ang.vectors[0].points, ang.vectors[1].points[0])
                 if ncl is None or ncl.collinear:
