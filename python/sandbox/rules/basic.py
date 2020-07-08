@@ -475,9 +475,13 @@ class CoincidenceTransitivityRule(Rule):
             return
         pt0 = next(pt for pt in co0.points if pt != common)
         pt1 = next(pt for pt in co1.points if pt != common)
+
+        def eqsign(coincidence_prop):
+            return '=' if coincidence_prop.coincident else '\\neq'
+        pattern = '$%{point:pt0} ' + eqsign(co0) + ' %{point:common} ' + eqsign(co1) + ' %{point:pt1}$'
         yield (
             PointsCoincidenceProperty(pt0, pt1, co0.coincident and co1.coincident),
-            LazyComment('%s %s %s %s %s', pt0, '=' if co0.coincident else '!=', common, '=' if co1.coincident else '!=', pt1),
+            Comment(pattern, {'pt0': pt0, 'pt1': pt1, 'common': common}),
             [co0, co1]
         )
 
@@ -528,7 +532,10 @@ class TwoPointsBelongsToTwoLinesRule(Rule):
                         lines = [pt.segment(side.points[0]) for pt in triple]
                         yield (
                             PointsCoincidenceProperty(*side.points, True),
-                            LazyComment('%s and %s belong to three lines %s, %s, and %s, at least two of them are different', *side.points, *lines),
+                            Comment(
+                                '$%{point:pt0}$ and $%{point:pt1}$ belong to three lines $%{line:line0}$, $%{line:line1}$, and $%{line:line2}$, at least two of them are different',
+                                {'pt0': side.points[0], 'pt1': side.points[0], 'line0': lines[0], 'line1': lines[1], 'line2': lines[2]}
+                            ),
                             cls + [ncl]
                         )
                         break
@@ -868,7 +875,10 @@ class TwoPointsBelongsToTwoPerpendicularsRule(Rule):
             return
         yield (
             PointsCoincidenceProperty(*common.points, True),
-            LazyComment('%s and %s both lie on perpendiculars to non-parallel lines %s and %s', *common.points, seg0, seg1),
+            Comment(
+                '$%{point:pt0}$ and $%{point:pt1}$ both lie on perpendiculars to non-parallel $%{line:line0}$ and $%{line:line1}$',
+                {'pt0': common.points[0], 'pt1': common.points[1], 'line0': seg0, 'line1': seg1}
+            ),
             [perp0, perp1, ncl]
         )
 
