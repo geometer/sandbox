@@ -229,10 +229,7 @@ class Explainer:
                 for prop, comment, premises in rule.generate():
                     yield (prop, rule, comment, premises)
 
-            angle_values = [prop for prop in self.context.angle_value_properties() \
-                if prop.angle.vertex is not None]
-
-            for av in [av for av in angle_values if av.degree == 0]:
+            for av in self.context.angle_value_properties_for_degree(0, lambda a: a.vertex):
                 av_is_too_old = av.reason.obsolete
                 vertex = av.angle.vertex
                 pt0 = av.angle.vectors[0].end
