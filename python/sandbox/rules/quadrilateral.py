@@ -62,6 +62,46 @@ class PointInsideSquareRule(Rule):
         for p in new_properties:
             yield (p, comment, [prop])
 
+@source_type(ConvexQuadrilateralProperty)
+@processed_cache(set())
+@accepts_auto
+class IntersectionOfDiagonalsOfConvexQuadrilateralRule(Rule):
+    def apply(self, prop):
+        quad = prop.quadrilateral
+        diagonals = (
+            quad.points[0].segment(quad.points[2]),
+            quad.points[1].segment(quad.points[3])
+        )
+        crossing, premises = self.context.intersection_of_lines(*diagonals)
+        if crossing is None:
+            return
+        self.processed.add(prop)
+        comment = Comment(
+            '$%{point:crossing}$ in the intersection of diagonals $%{segment:d0}$ and $%{segment:d1}$ of convex $%{polygon:quad}$',
+            {'crossing': crossing, 'd0': diagonals[0], 'd1': diagonals[1], 'quad': quad}
+        )
+        for d in diagonals:
+            yield (AngleValueProperty(crossing.angle(*d.points), 180), comment, premises + [prop])
+
+@source_type(ConvexQuadrilateralProperty)
+@processed_cache(set())
+class PartOfConvexQuadrilateralIsConvexRule(Rule):
+    def apply(self, prop):
+        for side in prop.quadrilateral.sides:
+            for pt in self.context.points_inside_segment(side):
+                key = (prop, pt)
+                if key in self.processed:
+                    continue
+                self.processed.add(key)
+                comment = Comment(
+                    '$%{point:pt}$ lies on side of convex $%{polygon:quad}$',
+                    {'pt': pt, 'quad': prop.quadrilateral}
+                )
+                premises = [self.context.angle_value_property(pt.angle(*side.points)), prop]
+                for repl in side.points:
+                    pts = [pt if p == repl else p for p in prop.quadrilateral.points]
+                    yield (ConvexQuadrilateralProperty(Scene.Polygon(*pts)), comment, premises)
+
 @source_type(SameOrOppositeSideProperty)
 @processed_cache({})
 class KnownAnglesToConvexQuadrilateralRule(Rule):
