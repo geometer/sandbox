@@ -198,11 +198,6 @@ class Explainer:
             prop.reason.obsolete = False
             insert(prop)
         else:
-            #### +++ HACK +++
-            # TODO: move this hack outside of explainer
-            if isinstance(prop, AngleRatioProperty) and prop.same:
-                existing.same = True
-            #### --- HACK ---
             reason.obsolete = existing.reason.obsolete
             was_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
             if reason.cost < existing.reason.cost:
