@@ -1564,6 +1564,8 @@ class PropertySet(LineSet):
                 extra = self.coincidence_property(*prop.points, use_cache=False)
             elif isinstance(prop, PointsCollinearityProperty):
                 extra = self.collinearity_property(*prop.points, use_cache=False)
+            elif isinstance(prop, LinesCoincidenceProperty):
+                extra = self.lines_coincidence_property(*prop.segments, use_cache=False)
             else:
                 continue
             if extra and extra.reason.cost < prop.reason.cost:
@@ -1613,16 +1615,7 @@ class PropertySet(LineSet):
         return self.__angle_ratios.value(angle)
 
     def angle_value_property(self, angle):
-        prop = self.__angle_ratios.value_property(angle)
-        if prop is None:
-            return None
-        existing = self.__full_set.get(prop)
-        if existing:
-            if existing.reason.cost > prop.reason.cost:
-                existing.reason = prop.reason
-            return existing
-        else:
-            return prop
+        return self.__angle_ratios.value_property(angle)
 
     def angle_kind_property(self, angle):
         return self.__angle_kinds.get(angle)
