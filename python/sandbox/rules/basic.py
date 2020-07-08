@@ -2423,6 +2423,32 @@ class PointAndAngleRule(Rule):
 
 @source_type(AngleKindProperty)
 @processed_cache(set())
+class PerpendicularToSideOfObtuseAngleRule(Rule):
+    def accepts(self, prop):
+        return prop.angle.vertex and prop.kind == AngleKindProperty.Kind.obtuse
+
+    def apply(self, prop):
+        for vec0, vec1 in (prop.angle.vectors, reversed(prop.angle.vectors)):
+            for perp in self.context.list(PerpendicularSegmentsProperty, [vec0.as_segment]):
+                other = next(seg for seg in perp.segments if seg != vec0.as_segment)
+                if vec0.end not in other.points or self.context.line_for_segment(other) is None:
+                    continue
+                key = (prop.angle, other)
+                if key in self.processed:
+                    continue
+                self.processed.add(key)
+                ne = self.context.coincidence_property(*other.points)
+                yield (
+                    SameOrOppositeSideProperty(other, *vec1.points, True),
+                    Comment(
+                        '$%{line:perp} \\perp %{segment:side}$ and $%{angle:obtuse}$ is obtuse',
+                        {'perp': other, 'side': vec0, 'obtuse': prop.angle}
+                    ),
+                    [perp, prop, ne]
+                )
+
+@source_type(AngleKindProperty)
+@processed_cache(set())
 class PerpendicularToSideOfObtuseAngledRule(Rule):
     def accepts(self, prop):
         return prop.angle.vertex and prop.kind == AngleKindProperty.Kind.obtuse

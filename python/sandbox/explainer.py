@@ -136,6 +136,7 @@ class Explainer:
             PointAndAngleRule(self.context),
             PointInsideAngleConfigurationRule(self.context),
             PointInsideAngleAndPointOnSideRule(self.context),
+            PerpendicularToSideOfObtuseAngleRule(self.context),
             PerpendicularToSideOfObtuseAngledRule(self.context),
             PerpendicularInAcuteAngleRule(self.context),
             PerpendicularInAcuteAngleRule2(self.context),

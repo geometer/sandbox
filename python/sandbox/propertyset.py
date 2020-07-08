@@ -592,6 +592,9 @@ class LineSet:
     def lines(self):
         return list(self.__all_lines)
 
+    def line_for_segment(self, segment):
+        return self.__segment_to_line.get(segment)
+
     @property
     def circles(self):
         return list(self.__all_circles)
