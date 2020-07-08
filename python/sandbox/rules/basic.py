@@ -410,9 +410,6 @@ class LengthRatioTransitivityRule(Rule):
 
         lr0, lr1 = src
 
-        def _cs(coef):
-            return '' if coef == 1 else ('%s ' % coef)
-
         def comment(seg0, seg1, seg2, coef1, coef2):
             if coef1 == 1:
                 if coef2 == 1:
