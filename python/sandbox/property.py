@@ -49,7 +49,7 @@ class Property:
     def add_alternate_reason(self, value):
         value = self.__acceptable_reason(value)
 
-        if value not in self.alternate_reasons:
+        if value != self.__reason and value not in self.alternate_reasons:
             self.alternate_reasons.append(value)
 
     @property
