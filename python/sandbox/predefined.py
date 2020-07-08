@@ -105,7 +105,7 @@ def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
             if all_visible(pts):
                 yield (
                     PointsCollinearityProperty(*pts, True),
-                    LazyComment('three points on the line %s', line)
+                    Comment('three points on $%{line:line}$', {'line': line})
                 )
 
     for circle in scene.circles(max_layer='user'):
