@@ -735,7 +735,7 @@ class SumOfAnglesProperty(LinearAngleProperty):
     """
     Sum of angles is equal to degree
     """
-    def __init__(self, *angles, degree=None):
+    def __init__(self, *angles, degree):
         self.angles = angles
         self.degree = degree
         points = set()
