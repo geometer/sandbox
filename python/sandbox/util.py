@@ -47,25 +47,26 @@ def simplify(num):
     if cached_value:
         return cached_value
     result = sp.simplify(num)
+    if result.is_integer:
+        result = int(result)
     simplification.cache[num] = result
     simplification.cache[result] = result
     return result
 
 def divide(num0, num1):
-    if isinstance(num0, int) and isinstance(num1, int):
-        quot = num0 // num1
-        if quot * num1 == num0:
-            return quot
-    ratio = simplify(sp.sympify(num0) / num1)
-    return int(ratio) if ratio.is_integer else ratio
+    if isinstance(num1, int):
+        if num1 == 1:
+            return num0
+        if isinstance(num0, int) and num0 % num1 == 0:
+            return num0 // num1
+    return simplify(sp.sympify(num0) / num1)
 
 def normalize_number(num):
     if isinstance(num, int):
         return num
     if num.is_integer:
         return int(num)
-    num = simplify(num)
-    return int(num) if num.is_integer else num
+    return simplify(num)
 
 class LazyComment:
     def __init__(self, format_string, *params):
