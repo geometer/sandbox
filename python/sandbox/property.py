@@ -39,6 +39,8 @@ class Property:
                 pre.implications = [p for p in pre.implications if p is not self]
             self.alternate_reasons.append(self.__reason)
 
+        if value in self.alternate_reasons:
+            self.alternate_reasons.remove(value)
         self.__reason = value
         for pre in self.__reason.premises:
             pre.implications.append(self)
