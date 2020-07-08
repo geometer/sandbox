@@ -416,12 +416,17 @@ class LineSet:
             self.__coincidence[key] = best
         return best
 
-    def point_on_line_property(self, segment, point):
-        prop = self.__point_on_line.get((point, segment))
-        if prop:
-            return prop
+    def point_on_line_property(self, segment, point, use_cache=True):
+        if use_cache:
+            key = (point, segment)
+            prop = self.__point_on_line.get(key)
+            if prop:
+                return prop
         line = self.__segment_to_line.get(segment)
-        return line.point_on_line_property(segment, point) if line else None
+        prop = line.point_on_line_property(segment, point) if line else None
+        if use_cache and prop:
+            self.__point_on_line[key] = prop
+        return prop
 
     def concyclicity_property(self, *pts):
         key = frozenset(pts)
@@ -1564,6 +1569,8 @@ class PropertySet(LineSet):
                 extra = self.coincidence_property(*prop.points, use_cache=False)
             elif isinstance(prop, PointsCollinearityProperty):
                 extra = self.collinearity_property(*prop.points, use_cache=False)
+            elif isinstance(prop, PointOnLineProperty):
+                extra = self.point_on_line_property(prop.segment, prop.point, use_cache=False)
             elif isinstance(prop, LinesCoincidenceProperty):
                 extra = self.lines_coincidence_property(*prop.segments, use_cache=False)
             else:
