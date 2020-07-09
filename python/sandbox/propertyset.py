@@ -1364,7 +1364,7 @@ class LengthRatioPropertySet:
             self.ratio_to_family[ratio1] = fam
 
     def add(self, prop):
-        if prop.reason and prop.reason.rule == SyntheticPropertyRule.instance():
+        if prop.reason.rule == SyntheticPropertyRule.instance():
             return
         if isinstance(prop, EqualLengthRatiosProperty):
             self.__add_elr(prop)
