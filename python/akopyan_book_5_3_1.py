@@ -12,6 +12,6 @@ B.inside_constraint(A.segment(K))
 N = A.line_through(C).intersection_point(E.line_through(K), label='N')
 M = A.line_through(E).intersection_point(C.line_through(K), label='M')
 
-prop = MultiPointsCollinearityProperty(D, N, M, F)
+prop = lambda: (MultiPointsCollinearityProperty(D, N, M, F),)
 
 run_sample(scene, prop)
