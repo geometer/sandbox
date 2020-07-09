@@ -1008,12 +1008,13 @@ class EqualAnglesToCollinearityRule(Rule):
             if mask & bit:
                 continue
             angles = [p0.angle(p1, pt) for pt in prop.points]
-            ca = self.context.angle_ratio_property(*angles)
-            if ca is None:
+            ratio = self.context.angle_ratio(*angles)
+            if ratio is None:
                 continue
             mask |= bit
-            if ca.value != 1:
+            if ratio != 1:
                 continue
+            ca = self.context.angle_ratio_property(*angles)
             comment = Comment(
                 '$%{anglemeasure:angle0} = %{anglemeasure:angle1}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$',
                 {'angle0': angles[0], 'angle1': angles[1], 'pt0': prop.points[0], 'pt1': prop.points[1], 'line': prop.segment}
