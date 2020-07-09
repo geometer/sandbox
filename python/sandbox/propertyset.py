@@ -1249,9 +1249,6 @@ class AngleRatioPropertySet:
         for known in ar:
             prop = SumOfAnglesProperty(*angles, degree=known.degree)
             params = dict(common_params)
-            params.update({str(i): a for i, a in enumerate(known.angles)})
-            params['sum'] = known.degree
-            comment = Comment(pattern, params)
             premises = [known]
             ka = list(known.angles)
             known_angles = []
@@ -1259,6 +1256,9 @@ class AngleRatioPropertySet:
                 a = next(a for a in ka if fam.angle_to_ratio.get(a) == ratio)
                 ka.remove(a)
                 known_angles.append(a)
+            params.update({str(i): a for i, a in enumerate(known_angles)})
+            params['sum'] = known.degree
+            comment = Comment(pattern, params)
             for angle, a in zip(angles, known_angles):
                 if angle != a:
                     premises.append(self.ratio_property(angle, a))
