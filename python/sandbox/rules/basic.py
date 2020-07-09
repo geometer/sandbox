@@ -2384,10 +2384,12 @@ class CongruentAnglesDegeneracyRule(Rule):
             if key in self.processed:
                 continue
             ang0, ang1 = key
-            col = self.context.collinearity_property(*ang0.point_set)
-            if col is None:
+            collinearity = self.context.collinearity(*ang0.point_set)
+            if collinearity is None:
                 continue
             self.processed.add(key)
+
+            col = self.context.collinearity_property(*ang0.point_set)
             if ca is None:
                 ca = self.context.angle_ratio_property(ang0, ang1)
             if col.collinear:

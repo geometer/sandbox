@@ -441,6 +441,22 @@ class LineSet:
                 return circle.concyclicity_property(*pts)
         return None
 
+    def collinearity(self, pt0, pt1, pt2):
+        triangle = Scene.Triangle(pt0, pt1, pt2)
+        for vertex, side in zip(triangle.points, triangle.sides):
+            line = self.__segment_to_line.get(side)
+            if line:
+                if vertex in line.points_on:
+                    return True
+                if vertex in line.points_not_on:
+                    return False
+
+        for line in self.__all_lines:
+            if pt0 in line.points_on and pt1 in line.points_on and pt2 in line.points_on:
+                return True
+
+        return None
+        
     def collinearity_property(self, *pts, use_cache=True):
         if use_cache:
             key = frozenset(pts)
