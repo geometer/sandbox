@@ -1033,13 +1033,14 @@ class AngleRatioPropertySet:
         fam = self.family_with_degree
         return fam.value(angle) if fam else None
 
-    def value_property(self, angle):
-        prop = self.__value_cache.get(angle)
-        if prop:
-            return prop
+    def value_property(self, angle, use_cache=True):
+        if use_cache:
+            prop = self.__value_cache.get(angle)
+            if prop:
+                return prop
         fam = self.family_with_degree
         prop = fam.value_property(angle) if fam else None
-        if prop:
+        if use_cache and prop:
             self.__value_cache[angle] = prop
         return prop
 
@@ -1568,7 +1569,9 @@ class PropertySet(LineSet):
     def add_synthetics(self):
         changed = False
         for prop in self.all:
-            if isinstance(prop, PointsCoincidenceProperty):
+            if isinstance(prop, AngleValueProperty):
+                extra = self.angle_value_property(prop.angle, use_cache=False)
+            elif isinstance(prop, PointsCoincidenceProperty):
                 extra = self.coincidence_property(*prop.points, use_cache=False)
             elif isinstance(prop, PointsCollinearityProperty):
                 extra = self.collinearity_property(*prop.points, use_cache=False)
@@ -1624,8 +1627,8 @@ class PropertySet(LineSet):
     def angle_value(self, angle):
         return self.__angle_ratios.value(angle)
 
-    def angle_value_property(self, angle):
-        return self.__angle_ratios.value_property(angle)
+    def angle_value_property(self, angle, use_cache=True):
+        return self.__angle_ratios.value_property(angle, use_cache=use_cache)
 
     def angle_kind_property(self, angle):
         return self.__angle_kinds.get(angle)
