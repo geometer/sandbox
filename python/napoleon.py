@@ -21,6 +21,7 @@ napoleonic(A, B, C)
 napoleonic(C, A, B)
 napoleonic(B, C, A)
 
-prop = EquilateralTriangleProperty((scene.get('A_2'), scene.get('B_2'), scene.get('C_2')))
+def props():
+    return EquilateralTriangleProperty((scene.get('A_2'), scene.get('B_2'), scene.get('C_2'))),
 
-run_sample(scene, prop)
+run_sample(scene, props)

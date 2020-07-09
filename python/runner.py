@@ -7,7 +7,7 @@ from sandbox.explainer import Explainer
 from sandbox.hunter import Hunter
 from sandbox.propertyset import PropertySet
 
-def run_sample(scene, *props):
+def run_sample(scene, props_generator):
     parser = argparse.ArgumentParser()
     parser.add_argument('--max-layer', default='user', choices=CoreScene.layers)
     parser.add_argument('--dump', nargs='+', choices=('scene', 'constraints', 'stats', 'result', 'properties', 'explanation'), default=('stats', 'result'))
@@ -28,17 +28,6 @@ def run_sample(scene, *props):
     else:
         properties = []
 
-    if args.run_verifier:
-        attempts = 20
-        counts = [0] * len(props)
-        for _ in range(0, attempts):
-            placement = iterative_placement(scene)
-            for index, prop in enumerate(props):
-                if prop.verify(placement):
-                    counts[index] += 1
-        for prop, count in zip(props, counts):
-            print('\tVerified %d/%d: %s' % (count, attempts, prop))
-
     options = { 'max_layer': args.max_layer }
     for extra in args.extra_rules:
         options[extra] = True
@@ -51,8 +40,21 @@ def run_sample(scene, *props):
         try:
             explainer.explain()
         except Exception as e:
-            explainer.dump()
+            #explainer.dump()
             raise e
+
+    props = props_generator()
+    if args.run_verifier:
+        attempts = 20
+        counts = [0] * len(props)
+        for _ in range(0, attempts):
+            placement = iterative_placement(scene)
+            for index, prop in enumerate(props):
+                if prop.verify(placement):
+                    counts[index] += 1
+        for prop, count in zip(props, counts):
+            print('\tVerified %d/%d: %s' % (count, attempts, prop))
+
     if 'properties' in args.dump:
         explainer.dump(properties)
     if 'stats' in args.dump:
@@ -76,7 +78,7 @@ def run_sample(scene, *props):
         def depth(prop):
             if prop.reason.premises:
                 return 1 + max(depth(p) for p in prop.reason.premises)
-            return 0
+            return 1
 
         def full_size(prop):
             if prop.reason.premises:
@@ -117,7 +119,7 @@ def run_sample(scene, *props):
                 print('Props = %d (%s)' % (count_all, ', '.join(['%.3f: %d' % p for p in pairs])))
                 all_premises(explanation).stats().dump()
                 rules_map = {}
-                for prop in explanation.reason.all_premises:
+                for prop in list(explanation.reason.all_premises) + [explanation]:
                     key = type(prop.reason.rule).__name__ if prop.reason.rule else 'Unknown'
                     rules_map[key] = rules_map.get(key, 0) + 1
                 items = list(rules_map.items())
