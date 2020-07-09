@@ -173,13 +173,14 @@ class EqualSumsOfAnglesRule(Rule):
                     [sum0, sum1]
                 )
             else:
-                ca = self.context.angle_ratio_property(eq0, eq1)
-                if ca is None:
+                ratio = self.context.angle_ratio(eq0, eq1)
+                if ratio is None:
                     continue
                 mask |= bit
-                if ca.value != 1:
+                if ratio != 1:
                     mask |= 8 // bit # 0x1 <=> 0x8, 0x2 <=> 0x4
                     continue
+                ca = self.context.angle_ratio_property(eq0, eq1)
                 sign = '\\equiv' if ca.same else '='
                 yield (
                     AngleRatioProperty(other0, other1, 1),
