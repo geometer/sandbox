@@ -17,7 +17,7 @@ class Reason:
 
     @property
     def cost(self):
-        return self.unique_nodes
+        return self.total_nodes
 
     @property
     def depth(self):
