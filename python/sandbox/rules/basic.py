@@ -1663,6 +1663,7 @@ class CorrespondingAndAlternateAnglesRule(Rule):
         if mask != original:
             self.processed[prop] = mask
 
+@processed_cache(set())
 class SupplementaryAnglesRule(Rule):
     def sources(self):
         return self.context.angle_value_properties_for_degree(180, lambda a: a.vertex)
@@ -1672,82 +1673,146 @@ class SupplementaryAnglesRule(Rule):
         for pt in self.context.non_coincident_points(ang.vertex):
             if pt in ang.endpoints:
                 continue
-            ne = self.context.coincidence_property(pt, ang.vertex)
-            if prop.reason.obsolete and ne.reason.obsolete:
+            key = (ang, pt)
+            if key in self.processed:
                 continue
+            self.processed.add(key)
+
+            neq = self.context.coincidence_property(ang.vertex, pt)
+            angle0 = ang.vertex.angle(ang.endpoints[0], pt)
+            angle1 = ang.vertex.angle(ang.endpoints[1], pt)
             yield (
-                SumOfAnglesProperty(
-                    ang.vertex.angle(ang.vectors[0].end, pt),
-                    ang.vertex.angle(pt, ang.vectors[1].end),
-                    degree=180
+                SumOfAnglesProperty(angle0, angle1, degree=180),
+                Comment(
+                    'supplementary angles: common side $%{ray:common}$, and $%{ray:vec0} \\uparrow\\!\\!\\!\\downarrow %{ray:vec1}$',
+                    {'common': ang.vertex.vector(pt), 'vec0': ang.vectors[0], 'vec1': ang.vectors[1]}
                 ),
-                LazyComment('supplementary angles'),
-                [prop, ne]
+                [prop, neq]
             )
 
-class TransversalRule(Rule):
+@processed_cache(set())
+class ZeroDegreeTransitivityRule(Rule):
     def sources(self):
-        return self.context.angle_value_properties_for_degree(0) + self.context.angle_value_properties_for_degree(180)
+        angles = self.context.angle_value_properties_for_degree(0)
+        return itertools.combinations(angles, 2)
+
+    def apply(self, src):
+        prop0, prop1 = src
+        common = next((v for v in prop0.angle.vectors if v in prop1.angle.vectors), None)
+        if common is None:
+            return
+        key = frozenset((prop0.angle, prop1.angle))
+        if key in self.processed:
+            return
+        self.processed.add(key)
+        v0 = next(v for v in prop0.angle.vectors if v != common)
+        v1 = next(v for v in prop1.angle.vectors if v != common)
+        yield (
+            AngleValueProperty(v0.angle(v1), 0),
+            Comment(
+                '$%{vector:vec0} \\uparrow\\!\\!\\!\\uparrow %{vector:common} \\uparrow\\!\\!\\!\\uparrow %{vector:vec1}$',
+                {'vec0': v0, 'vec1': v1, 'common': common}
+            ),
+            [prop0, prop1]
+        )
+        yield (
+            AngleValueProperty(v0.reversed.angle(v1.reversed), 0),
+            Comment(
+                '$%{vector:vec0} \\uparrow\\!\\!\\!\\uparrow %{vector:common} \\uparrow\\!\\!\\!\\uparrow %{vector:vec1}$',
+                {'vec0': v0.reversed, 'vec1': v1.reversed, 'common': common.reversed}
+            ),
+            [prop0, prop1]
+        )
+        yield (
+            AngleValueProperty(v0.angle(v1.reversed), 180),
+            Comment(
+                '$%{vector:vec0} \\uparrow\\!\\!\\!\\uparrow %{vector:common} \\uparrow\\!\\!\\!\\downarrow %{vector:vec1}$',
+                {'vec0': v0, 'vec1': v1.reversed, 'common': common}
+            ),
+            [prop0, prop1]
+        )
+        yield (
+            AngleValueProperty(v0.reversed.angle(v1), 180),
+            Comment(
+                '$%{vector:vec0} \\uparrow\\!\\!\\!\\downarrow %{vector:common} \\uparrow\\!\\!\\!\\uparrow %{vector:vec1}$',
+                {'vec0': v0.reversed, 'vec1': v1, 'common': common}
+            ),
+            [prop0, prop1]
+        )
+
+@processed_cache(set())
+class CorrespondingAnglesRule(Rule):
+    def sources(self):
+        return self.context.angle_value_properties_for_degree(0, lambda a: len(a.point_set) == 4)
 
     def apply(self, prop):
         ang = prop.angle
-        for point in ang.point_set:
-            for nep in self.context.non_coincident_points(point):
-                common0 = next((pt for pt in (point, nep) if pt in ang.vectors[0].points), None)
-                if common0 is None:
-                    continue
-                common1 = next((pt for pt in (point, nep) if pt in ang.vectors[1].points), None)
-                if common1 is None:
-                    continue
-                vec = common0.vector(next(pt for pt in (point, nep) if pt != common0))
-                if vec.as_segment in (ang.vectors[0].as_segment, ang.vectors[1].as_segment):
-                    continue
+        starts = tuple(vec.start for vec in ang.vectors)
+        segment = starts[0].segment(starts[1])
+        for pt in self.context.collinear_points(segment):
+            if pt in ang.point_set:
+                continue
+            key = (prop, pt)
+            if key in self.processed:
+                continue
+            av = self.context.angle_value_property(pt.angle(*starts))
+            if av is None:
+                continue
+            self.processed.add(key)
+            if av.degree == 180:
+                continue
+            vec0 = starts[0].vector(pt)
+            angle0 = ang.vectors[0].angle(vec0)
+            vec1 = starts[1].vector(pt)
+            angle1 = ang.vectors[1].angle(vec1)
+            yield (
+                AngleRatioProperty(angle0, angle1, 1),
+                Comment(
+                    'corresponding angles: transversal $%{line:common}$, and $%{ray:vec0} \\uparrow\\!\\!\\!\\uparrow %{ray:vec1}$',
+                    {'common': segment, 'vec0': vec0, 'vec1': vec1}
+                ),
+                [prop, av]
+            )
 
-                ne = self.context.coincidence_property(point, nep)
-                if prop.reason.obsolete and ne.reason.obsolete:
-                    continue
+@processed_cache(set())
+@accepts_auto
+class ConsecutiveInteriorAnglesRule(Rule):
+    def sources(self):
+        return self.context.angle_value_properties_for_degree(0, lambda a: len(a.point_set) == 4)
 
-                rev = prop.degree == 180
-                if ang.vectors[0].start == common0:
-                    vec0 = ang.vectors[0]
-                else:
-                    vec0 = ang.vectors[0].reversed
-                    rev = not rev
-                ngl0 = vec.angle(vec0)
+    def apply(self, prop):
+        self.processed.add(prop)
+        vecs = prop.angle.vectors
+        angle0 = vecs[0].start.angle(vecs[0].end, vecs[1].start)
+        angle1 = vecs[1].start.angle(vecs[1].end, vecs[0].start)
+        yield (
+            SumOfAnglesProperty(angle0, angle1, degree=180),
+            Comment(
+                'consecutive interior angles: transversal $%{line:common}$, and $%{ray:vec0} \\uparrow\\!\\!\\!\\uparrow %{ray:vec1}$',
+                {'common': vecs[0].start.segment(vecs[1].start), 'vec0': vecs[0], 'vec1': vecs[1]}
+            ),
+            [prop]
+        )
 
-                if common0 == common1:
-                    if ang.vectors[1].start == common1:
-                        vec1 = ang.vectors[1]
-                    else:
-                        vec1 = ang.vectors[1].reversed
-                        rev = not rev
-                    ngl1 = vec.angle(vec1)
-                else:
-                    if ang.vectors[1].start == common1:
-                        vec1 = ang.vectors[1]
-                        rev = not rev
-                    else:
-                        vec1 = ang.vectors[1].reversed
-                    ngl1 = vec.reversed.angle(vec1)
+@processed_cache(set())
+@accepts_auto
+class AlternateInteriorAnglesRule(Rule):
+    def sources(self):
+        return self.context.angle_value_properties_for_degree(180, lambda a: len(a.point_set) == 4)
 
-                if ang.vertex is None and (vec0 == ang.vectors[0]) != (vec1 == ang.vectors[1]):
-                    continue
-
-                if rev:
-                    new_prop = SumOfAnglesProperty(ngl0, ngl1, degree=180)
-                    if common0 == common1:
-                        pattern = 'supplementary angles: common side $%{ray:common}$, and $%{ray:vec0} \\uparrow\\!\\!\\!\\downarrow %{ray:vec1}$'
-                    else:
-                        pattern = 'consecutive angles: common line $%{line:common}$, and $%{ray:vec0} \\uparrow\\!\\!\\!\\uparrow %{ray:vec1}$'
-                else:
-                    if common0 == common1:
-                        new_prop = AngleRatioProperty(ngl0, ngl1, 1, same=True)
-                        pattern = 'same angle: common ray $%{ray:common}$, and $%{ray:vec0}$ coincides with $%{ray:vec1}$'
-                    else:
-                        new_prop = AngleRatioProperty(ngl0, ngl1, 1)
-                        pattern = 'alternate angles: common line $%{line:common}$, and $%{ray:vec0} \\uparrow\\!\\!\\!\\downarrow %{ray:vec1}$'
-                comment = Comment(pattern, {'common': vec, 'vec0': vec0, 'vec1': vec1})
-                yield (new_prop, comment, [prop, ne])
+    def apply(self, prop):
+        self.processed.add(prop)
+        vecs = prop.angle.vectors
+        angle0 = vecs[0].start.angle(vecs[0].end, vecs[1].start)
+        angle1 = vecs[1].start.angle(vecs[1].end, vecs[0].start)
+        yield (
+            AngleRatioProperty(angle0, angle1, 1),
+            Comment(
+                'alternate interior angles: transversal $%{line:common}$, and $%{ray:vec0} \\uparrow\\!\\!\\!\\downarrow %{ray:vec1}$',
+                {'common': vecs[0].start.segment(vecs[1].start), 'vec0': vecs[0], 'vec1': vecs[1]}
+            ),
+            [prop]
+        )
 
 @processed_cache(set())
 class TwoPointsInsideSegmentRule(Rule):

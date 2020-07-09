@@ -115,7 +115,10 @@ class Explainer:
             SameAngleRule(self.context),
             SameAngleRule2(self.context),
             SameAngleRule3(self.context),
-            TransversalRule(self.context),
+            ZeroDegreeTransitivityRule(self.context),
+            CorrespondingAnglesRule(self.context),
+            ConsecutiveInteriorAnglesRule(self.context),
+            AlternateInteriorAnglesRule(self.context),
             SupplementaryAnglesRule(self.context),
             VerticalAnglesRule(self.context),
             ReversedVerticalAnglesRule(self.context),
@@ -397,7 +400,8 @@ class Explainer:
 
             for zero in self.context.angle_value_properties_for_degree(0, lambda a: a.vertex is None):
                 ang = zero.angle
-                ncl = self.context.collinearity_property(*ang.vectors[0].points, ang.vectors[1].points[0])
+                third = next(pt for pt in ang.vectors[1].points if pt not in ang.vectors[0].points)
+                ncl = self.context.collinearity_property(*ang.vectors[0].points, third)
                 if ncl is None or ncl.collinear:
                     continue
                 ne = self.context.not_equal_property(*ang.vectors[1].points)
