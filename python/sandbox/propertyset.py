@@ -11,6 +11,9 @@ from .rules.abstract import SyntheticPropertyRule
 from .stats import Stats
 from .util import LazyComment, Comment, divide
 
+def _edge_comp(v0, v1, edge):
+    return edge['prop'].reason.cost
+
 def _synthetic_property(prop, comment, premises):
     prop.reason = Reason(
         SyntheticPropertyRule.instance(),
@@ -52,7 +55,7 @@ class LineSet:
                     ),
                     [prop]
                 )
-            path = nx.algorithms.shortest_path(self.premises_graph, segment0, segment1)
+            path = nx.algorithms.dijkstra_path(self.premises_graph, segment0, segment1, weight=_edge_comp)
             pattern = ' = '.join(['%s'] * len(path))
             return (
                 LazyComment(pattern, *path),
@@ -159,7 +162,7 @@ class LineSet:
                     LazyComment('%s and %s are the same circle', key0, key1),
                     [prop]
                 )
-            path = nx.algorithms.shortest_path(self.premises_graph, key0, key1)
+            path = nx.algorithms.dijkstra_path(self.premises_graph, key0, key1, weight=_edge_comp)
             pattern = ' = '.join(['%s'] * len(path))
             return (
                 LazyComment(pattern, *path),
@@ -698,7 +701,7 @@ class CyclicOrderPropertySet:
             if cycle0 not in self.cycle_set or cycle1 not in self.cycle_set:
                 return (None, None)
 
-            path = nx.algorithms.shortest_path(self.premises_graph, cycle0, cycle1)
+            path = nx.algorithms.dijkstra_path(self.premises_graph, cycle0, cycle1, weight=_edge_comp)
             pattern = []
             params = {}
             for index, v in enumerate(path):
@@ -889,7 +892,7 @@ class AngleRatioPropertySet:
             edge = self.premises_graph.get_edge_data(angle0, angle1)
             if edge:
                 return edge['prop']
-            path = nx.algorithms.shortest_path(self.premises_graph, angle0, angle1)
+            path = nx.algorithms.dijkstra_path(self.premises_graph, angle0, angle1, weight=_edge_comp)
             coef = self.angle_to_ratio[angle0]
             comment, premises = self.explanation_from_path(path, coef)
             value = divide(coef, self.angle_to_ratio[angle1])
@@ -908,7 +911,7 @@ class AngleRatioPropertySet:
             edge = self.premises_graph.get_edge_data(angle, self.degree)
             if edge:
                 return edge['prop']
-            path = nx.algorithms.shortest_path(self.premises_graph, angle, self.degree)
+            path = nx.algorithms.dijkstra_path(self.premises_graph, angle, self.degree, weight=_edge_comp)
             comment, premises = self.explanation_from_path(path, ratio)
             prop = AngleValueProperty(angle, self.degree * ratio)
             return _synthetic_property(prop, comment, premises)
@@ -926,7 +929,7 @@ class AngleRatioPropertySet:
                 if edge:
                     properties.append(edge['prop'])
                     continue
-                path = nx.algorithms.shortest_path(self.premises_graph, angle, self.degree)
+                path = nx.algorithms.dijkstra_path(self.premises_graph, angle, self.degree, weight=_edge_comp)
                 comment, premises = self.explanation_from_path(path, ratio)
                 prop = AngleValueProperty(angle, self.degree * ratio)
                 properties.append(_synthetic_property(prop, comment, premises))
@@ -950,7 +953,7 @@ class AngleRatioPropertySet:
                 if edge:
                     properties.append(edge['prop'])
                     continue
-                path = nx.algorithms.shortest_path(self.premises_graph, angle, self.degree)
+                path = nx.algorithms.dijkstra_path(self.premises_graph, angle, self.degree, weight=_edge_comp)
                 comment, premises = self.explanation_from_path(path, ratio)
                 prop = AngleValueProperty(angle, degree)
                 properties.append(_synthetic_property(prop, comment, premises))
@@ -987,7 +990,7 @@ class AngleRatioPropertySet:
                     if edge:
                         yield edge['prop']
                         continue
-                    path = nx.algorithms.shortest_path(self.premises_graph, angle0, angle1)
+                    path = nx.algorithms.dijkstra_path(self.premises_graph, angle0, angle1, weight=_edge_comp)
                     comment, premises = self.explanation_from_path(path, ratio0)
                     prop = AngleRatioProperty(angle0, angle1, divide(ratio0, ratio1))
                     yield _synthetic_property(prop, comment, premises)
@@ -1270,7 +1273,7 @@ class LengthRatioPropertySet:
             return 0
 
         def explanation(self, ratio0, ratio1):
-            path = nx.algorithms.shortest_path(self.premises_graph, ratio0, ratio1)
+            path = nx.algorithms.dijkstra_path(self.premises_graph, ratio0, ratio1, weight=_edge_comp)
             pattern = []
             params = {}
             for index, v in enumerate(path):
