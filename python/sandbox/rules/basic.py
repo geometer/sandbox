@@ -2522,51 +2522,6 @@ class PerpendicularToSideOfObtuseAngleRule(Rule):
                     [perp, prop, ne]
                 )
 
-@source_type(AngleKindProperty)
-@processed_cache(set())
-class PerpendicularToSideOfObtuseAngledRule(Rule):
-    def accepts(self, prop):
-        return prop.angle.vertex and prop.kind == AngleKindProperty.Kind.obtuse
-
-    def apply(self, prop):
-        long_side = prop.angle.endpoints[0].segment(prop.angle.endpoints[1])
-        for seg in [v.as_segment for v in prop.angle.vectors]:
-            for inside in self.context.points_inside_segment(seg):
-                key = (prop.angle, inside)
-                if key in self.processed:
-                    continue
-                inside_prop = self.context.angle_value_property(inside.angle(*seg.points))
-                for pt in self.context.collinear_points(long_side):
-                    perp_line = pt.segment(inside)
-                    perp = self.context[PerpendicularSegmentsProperty(seg, perp_line)]
-                    if perp is None:
-                        continue
-                    self.processed.add(key)
-                    comment = Comment(
-                        '$%{triangle:triangle}$ is obtuse-angled with the vertex $%{point:vertex}$, $%{point:inside}$ is inside $%{segment:side}$, $%{point:pt} \\in %{line:long}$, and $%{line:perp} \\perp %{line:side}$',
-                        {
-                            'triangle': Scene.Triangle(*prop.angle.point_set),
-                            'vertex': prop.angle.vertex,
-                            'inside': inside,
-                            'side': seg,
-                            'pt': pt,
-                            'long': long_side,
-                            'perp': perp_line
-                        }
-                    )
-                    for ep in prop.angle.endpoints:
-                        yield (
-                            PointsCoincidenceProperty(pt, ep, False),
-                            comment,
-                            [prop, inside_prop, perp]
-                        )
-                    yield (
-                        AngleValueProperty(pt.angle(*prop.angle.endpoints), 180),
-                        comment,
-                        [prop, inside_prop, perp]
-                    )
-                    break
-
 @source_type(MiddleOfSegmentProperty)
 @processed_cache({})
 class MiddleOfSegmentRule(Rule):
