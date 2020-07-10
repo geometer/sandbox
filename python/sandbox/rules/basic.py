@@ -2053,15 +2053,18 @@ class SameAngleRule3(Rule):
                 )
 
 @source_type(SameOrOppositeSideProperty)
+@processed_cache(set())
+@accepts_auto
 class PlanePositionsToLinePositionsRule(Rule):
     def apply(self, prop):
         pt0 = prop.points[0]
         pt1 = prop.points[1]
-        crossing, reasons = self.context.intersection_of_lines(prop.segment, pt0.segment(pt1))
+        segment = pt0.segment(pt1)
+        crossing = self.context.intersection(prop.segment, segment)
         if not crossing:
             return
-        if prop.reason.obsolete and all(p.reason.obsolete for p in reasons):
-            return
+        crossing_prop = self.context.intersection_property(prop.segment, segment)
+        self.processed.add(prop)
         if prop.same:
             pattern = '$%{point:crossing}$ is the intersection of lines $%{line:line0}$ and $%{line:line1}$'
             new_prop = AngleValueProperty(crossing.angle(pt0, pt1), 0)
@@ -2071,7 +2074,7 @@ class PlanePositionsToLinePositionsRule(Rule):
         yield (
             new_prop,
             Comment(pattern, {'crossing': crossing, 'line0': pt0.segment(pt1), 'line1': prop.segment}),
-            [prop] + reasons
+            [crossing_prop, prop]
         )
 
 @source_type(PointInsideAngleProperty)

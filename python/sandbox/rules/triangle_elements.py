@@ -339,38 +339,36 @@ class EquilateralTriangleRule(Rule):
         if mask != original:
             self.processed[prop] = mask
 
+@processed_cache(set())
 class CeviansIntersectionRule(Rule):
     def sources(self):
-        return itertools.combinations(self.context.angle_value_properties_for_degree(180, lambda a: a.vertex), 2)
+        avs = self.context.angle_value_properties_for_degree(180, lambda a: a.vertex)
+        for a0, a1 in itertools.combinations(avs, 2):
+            vertex = next((p for p in a0.angle.endpoints if p in a1.angle.endpoints), None)
+            if vertex and len(a0.angle.point_set.union(a1.angle.point_set)) == 5:
+                yield (a0, a1, vertex)
 
     def apply(self, src):
-        av0, av1 = src
-        ends0 = (av0.angle.vectors[0].end, av0.angle.vectors[1].end)
-        ends1 = (av1.angle.vectors[0].end, av1.angle.vectors[1].end)
-        vertex = next((pt for pt in ends0 if pt in ends1), None)
-        if vertex is None:
+        av0, av1, vertex = src
+        key = frozenset((av0.angle, av1.angle))
+        if key in self.processed:
             return
-        pt0 = next(pt for pt in ends0 if pt != vertex)
-        pt1 = next(pt for pt in ends1 if pt != vertex)
-        if pt0 == pt1:
-            return
-        ncl = self.context.collinearity_property(vertex, pt0, pt1)
-        if ncl is None or ncl.collinear:
-            return
-        segment0 = pt0.segment(av1.angle.vertex)
-        segment1 = pt1.segment(av0.angle.vertex)
-        crossing, reasons = self.context.intersection_of_lines(segment0, segment1)
+        pt0 = next(pt for pt in av0.angle.endpoints if pt != vertex)
+        pt1 = next(pt for pt in av1.angle.endpoints if pt != vertex)
+        cevian0 = pt0.segment(av1.angle.vertex)
+        cevian1 = pt1.segment(av0.angle.vertex)
+        crossing = self.context.intersection(cevian0, cevian1)
         if crossing is None:
             return
-        if av0.reason.obsolete and av1.reason.obsolete and ncl.reason.obsolete and all(r.reason.obsolete for r in reasons):
-            return
+        self.processed.add(key)
+        crossing_prop = self.context.intersection_property(cevian0, cevian1)
         triangle = Scene.Triangle(vertex, pt0, pt1)
         comment = Comment(
-            '$%{point:crossing}$ is the intersection of cevians $%{segment:cevian0}$ and $%{segment:cevian1}$ with feet $%{point:foot0}$ and $%{point:foot1}$ on sides of non-degenerate $%{triangle:triangle}$',
+            '$%{point:crossing}$ is the intersection of cevians $%{segment:cevian0}$ and $%{segment:cevian1}$ with feet $%{point:foot0}$ and $%{point:foot1}$ on sides of $%{triangle:triangle}$',
             {
                 'crossing': crossing,
-                'cevian0': segment0,
-                'cevian1': segment1,
+                'cevian0': cevian0,
+                'cevian1': cevian1,
                 'foot0': av1.angle.vertex,
                 'foot1': av0.angle.vertex,
                 'triangle': triangle
@@ -379,17 +377,17 @@ class CeviansIntersectionRule(Rule):
         yield (
             PointInsideTriangleProperty(crossing, triangle),
             comment,
-            [av0, av1, ncl] + reasons
+            [crossing_prop, av0, av1]
         )
         yield (
-            AngleValueProperty(crossing.angle(*segment0.points), 180),
+            AngleValueProperty(crossing.angle(*cevian0.points), 180),
             comment,
-            [av0, av1, ncl] + reasons
+            [crossing_prop, av0, av1]
         )
         yield (
-            AngleValueProperty(crossing.angle(*segment1.points), 180),
+            AngleValueProperty(crossing.angle(*cevian1.points), 180),
             comment,
-            [av0, av1, ncl] + reasons
+            [crossing_prop, av0, av1]
         )
 
 @processed_cache(set())

@@ -233,7 +233,7 @@ class TwoChordsIntersectionRule(Rule):
             key = frozenset([chord0, chord1])
             if key in self.processed:
                 return
-            crossing, premises = self.context.intersection_of_lines(chord0, chord1)
+            crossing = self.context.intersection(chord0, chord1)
             if crossing is None:
                 continue
             if crossing in points:
@@ -242,6 +242,7 @@ class TwoChordsIntersectionRule(Rule):
             av = self.context.angle_value_property(crossing.angle(pt0, pt1))
             if av is None:
                 continue
+            crossing_prop = self.context.intersection_property(chord0, chord1)
             self.processed.add(key)
 
             circle = Circle(*points)
@@ -259,7 +260,7 @@ class TwoChordsIntersectionRule(Rule):
                     pattern,
                     {'crossing': crossing, 'chord0': chord0, 'chord1': chord1, 'circle': circle}
                 ),
-                [prop, av] + premises
+                [prop, crossing_prop, av]
             )
 
 class PointsOnChordRule(Rule):

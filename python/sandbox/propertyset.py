@@ -9,7 +9,7 @@ from .property import *
 from .reason import Reason
 from .rules.abstract import SyntheticPropertyRule
 from .stats import Stats
-from .util import LazyComment, Comment, divide
+from .util import LazyComment, Comment, common_endpoint, divide
 
 def _edge_comp(v0, v1, edge):
     return edge['prop'].reason.cost
@@ -606,6 +606,74 @@ class LineSet:
             premises.append(self.collinearity_property(pt, *segment1.points))
         # TODO: add line-non-coincidence property (?)
         return (pt, premises)
+
+    def intersection(self, segment0, segment1):
+        if segment0 == segment1 or self.lines_coincidence(segment0, segment1) != False:
+            return None
+        common = common_endpoint(segment0, segment1)
+        if common:
+            return common
+
+        line0 = self.__segment_to_line.get(segment0)
+        if line0 is None:
+            return None
+        line1 = self.__segment_to_line.get(segment1)
+        if line1 is None:
+            return None
+
+        return next((pt for pt in line0.points_on if pt in line1.points_on), None)
+
+    def intersection_property(self, segment0, segment1):
+        if segment0 == segment1 or self.lines_coincidence(segment0, segment1) != False:
+            return None
+        common = common_endpoint(segment0, segment1)
+        if common:
+            comment = Comment(
+                '$%{point:common}$ is common point of different lines $%{line:line0}$ and $%{line:line1}$',
+                {'common': common, 'line0': segment0, 'line1': segment1}
+            )
+            prop = IntersectionOfLinesProperty(common, segment0, segment1)
+            colli = self.collinearity_property(*set(segment0.points + segment1.points))
+            prop.add_reason(Reason(
+                SyntheticPropertyRule.instance(),
+                colli.reason.generation + 1,
+                comment,
+                [colli]
+            ))
+            ncl = self.lines_coincidence_property(segment0, segment1)
+            prop.add_reason(Reason(
+                SyntheticPropertyRule.instance(),
+                ncl.reason.generation + 1,
+                comment,
+                [ncl]
+            ))
+            return prop
+
+        line0 = self.__segment_to_line.get(segment0)
+        if line0 is None:
+            return None
+        line1 = self.__segment_to_line.get(segment1)
+        if line1 is None:
+            return None
+
+        pt = next((pt for pt in line0.points_on if pt in line1.points_on), None)
+        if pt is None:
+            return None
+
+        premises = []
+        if pt not in segment0.points:
+            premises.append(self.collinearity_property(pt, *segment0.points))
+        if pt not in segment1.points:
+            premises.append(self.collinearity_property(pt, *segment1.points))
+        premises.append(self.lines_coincidence_property(segment0, segment1))
+        return _synthetic_property(
+            IntersectionOfLinesProperty(pt, segment0, segment1),
+            Comment(
+                '$%{point:pt}$ belongs to both $%{line:line0}$ and $%{line:line1}$',
+                {'pt': pt, 'line0': segment0, 'line1': segment1}
+            ),
+            premises
+        )
 
     @property
     def lines(self):

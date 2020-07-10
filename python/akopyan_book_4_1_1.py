@@ -34,7 +34,9 @@ props = lambda: (
 #    H.angle(B, B2),
 #    SameOrOppositeSideProperty(B.segment(C), A, A2, False),
 #    SameOrOppositeSideProperty(B.segment(C), H, A2, False),
-    SameOrOppositeSideProperty(B.segment(C), H, A, True),
+#    SameOrOppositeSideProperty(B.segment(C), H, A, True),
+    ConcyclicPointsProperty(A, B, C, A2, B2, C2),
+#    PointInsideTriangleProperty(H, triangle),
     #A1.angle(A, A2),
 #    H.angle(A, A1),
 )
