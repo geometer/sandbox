@@ -990,3 +990,23 @@ class SameCyclicOrderProperty(Property):
             '$%{cycle:cycle0}$ and $%{cycle:cycle1}$ have the same order',
             {'cycle0': self.cycle0, 'cycle1': self.cycle1}
         )
+
+class IntersectionOfLinesProperty(Property):
+    """
+    Point is the intersection of two different lines
+    """
+    def __init__(self, point, segment0, segment1):
+        self.point = point
+        self.segments = (segment0, segment1)
+        super().__init__((point, frozenset([segment0, segment1])), {point, *segment0.points, *segment1.points})
+
+    @property
+    def __priority__(self):
+        return 2
+
+    @property
+    def description(self):
+        return Comment(
+            '$%{point:point}$ is the intersection of $%{line:line0}$ and $%{line:line1}$',
+            {'point': self.point, 'line0': self.segments[0], 'line1': self.segments[1]}
+        )
