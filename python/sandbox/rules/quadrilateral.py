@@ -72,16 +72,17 @@ class IntersectionOfDiagonalsOfConvexQuadrilateralRule(Rule):
             quad.points[0].segment(quad.points[2]),
             quad.points[1].segment(quad.points[3])
         )
-        crossing, premises = self.context.intersection_of_lines(*diagonals)
+        crossing = self.context.intersection(*diagonals)
         if crossing is None:
             return
         self.processed.add(prop)
+        crossing_prop = self.context.intersection_property(*diagonals)
         comment = Comment(
             '$%{point:crossing}$ in the intersection of diagonals $%{segment:d0}$ and $%{segment:d1}$ of convex $%{polygon:quad}$',
             {'crossing': crossing, 'd0': diagonals[0], 'd1': diagonals[1], 'quad': quad}
         )
         for d in diagonals:
-            yield (AngleValueProperty(crossing.angle(*d.points), 180), comment, premises + [prop])
+            yield (AngleValueProperty(crossing.angle(*d.points), 180), comment, [crossing_prop, prop])
 
 @source_type(ConvexQuadrilateralProperty)
 @processed_cache(set())

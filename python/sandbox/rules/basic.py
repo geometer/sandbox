@@ -283,21 +283,22 @@ class SegmentWithEndpointsOnAngleSidesRule(Rule):
         D = prop.point
         AD = A.segment(D)
         BC = B.segment(C)
-        X, reasons = self.context.intersection_of_lines(AD, BC)
+        X = self.context.intersection(AD, BC)
         if X is None:
             return
         self.processed.add(prop)
         if X in (A, B, C, D):
             return
 
+        X_prop = self.context.intersection_property(AD, BC)
         comment = Comment(
             '$%{point:X}$ is the intersection of ray $%{ray:ray}$ and segment $%{segment:segment}$',
             {'X': X, 'ray': A.vector(D), 'segment': B.segment(C)}
         )
-        yield (AngleValueProperty(A.angle(D, X), 0), comment, [prop] + reasons)
-        yield (AngleValueProperty(B.angle(C, X), 0), comment, [prop] + reasons)
-        yield (AngleValueProperty(C.angle(B, X), 0), comment, [prop] + reasons)
-        yield (AngleValueProperty(X.angle(B, C), 180), comment, [prop] + reasons)
+        yield (AngleValueProperty(A.angle(D, X), 0), comment, [X_prop, prop])
+        yield (AngleValueProperty(B.angle(C, X), 0), comment, [X_prop, prop])
+        yield (AngleValueProperty(C.angle(B, X), 0), comment, [X_prop, prop])
+        yield (AngleValueProperty(X.angle(B, C), 180), comment, [X_prop, prop])
 
 @source_type(SameOrOppositeSideProperty)
 @processed_cache(set())
