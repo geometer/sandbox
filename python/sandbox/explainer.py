@@ -202,10 +202,7 @@ class Explainer:
         else:
             reason.obsolete = existing.reason.obsolete
             was_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
-            if reason.cost < existing.reason.cost:
-                existing.reason = reason
-            else:
-                existing.add_alternate_reason(reason)
+            existing.add_reason(reason)
             is_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
             if was_synthetic and not is_synthetic or self.context.index_of(existing) is None:
                 insert(existing)

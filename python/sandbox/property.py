@@ -46,11 +46,16 @@ class Property:
             pre.implications.append(self)
         self.fire_premises_change()
 
-    def add_alternate_reason(self, value):
-        value = self.__acceptable_reason(value)
-
-        if value != self.__reason and value not in self.alternate_reasons:
-            self.alternate_reasons.append(value)
+    def add_reason(self, reason):
+        reason = self.__acceptable_reason(reason)
+        if self.__reason is None:
+            self.reason = reason
+        elif reason == self.__reason:
+            return
+        elif reason.cost < self.__reason.cost:
+            self.reason = reason
+        elif reason not in self.alternate_reasons:
+            self.alternate_reasons.append(reason)
 
     @property
     def priority(self):
