@@ -447,20 +447,22 @@ class Explainer:
             if len(self.context) == explained_size:
                 break
 
-        changed = True
-        while changed:
-            changed = self.context.add_synthetics()
-            for prop in self.context.all:
-                candidate = None
-                cost = prop.reason.cost
-                for reason in prop.alternate_reasons:
-                    reason.reset_premises()
-                    if reason.cost < cost:
-                        cost = reason.cost
-                        candidate = reason
-                if candidate:
-                    prop.reason = candidate
-                    changed = True
+        def adjust():
+            changed = True
+            while changed:
+                changed = self.context.add_synthetics()
+                for prop in self.context.all:
+                    candidate = None
+                    cost = prop.reason.cost
+                    for reason in prop.alternate_reasons:
+                        reason.reset_premises()
+                        if reason.cost < cost:
+                            cost = reason.cost
+                            candidate = reason
+                    if candidate:
+                        prop.reason = candidate
+                        changed = True
+        adjust()
 
     def dump(self, properties_to_explain=[]):
         def to_string(reason):
