@@ -216,6 +216,11 @@ class ConvexQuadrilateralRule(Rule):
                 comment,
                 [prop]
             )
+            yield (
+                PointInsideAngleProperty(pts[0], pts[2].angle(pts[1], pts[3])),
+                comment,
+                [prop]
+            )
         for i in range(0, 2):
             pts = [points[j] for j in range(i, i + 4)]
             yield (
