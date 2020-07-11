@@ -14,7 +14,7 @@ class Property:
         self.point_set = point_set
         self.__hash = None
         self.__reason = None
-        self.alternate_reasons = []
+        self.__alternate_reasons = []
 
     def __acceptable_reason(self, value):
         while self in value.all_premises:
@@ -28,6 +28,10 @@ class Property:
     def reason(self):
         return self.__reason
 
+    @property
+    def alternate_reasons(self):
+        return self.__alternate_reasons
+
     @reason.setter
     def reason(self, value):
         value = self.__acceptable_reason(value)
@@ -37,10 +41,10 @@ class Property:
         if self.__reason:
             for pre in self.__reason.premises:
                 pre.implications = [p for p in pre.implications if p is not self]
-            self.alternate_reasons.append(self.__reason)
+            self.__alternate_reasons.append(self.__reason)
 
-        if value in self.alternate_reasons:
-            self.alternate_reasons.remove(value)
+        if value in self.__alternate_reasons:
+            self.__alternate_reasons.remove(value)
         self.__reason = value
         for pre in self.__reason.premises:
             pre.implications.append(self)
@@ -55,7 +59,7 @@ class Property:
         elif reason.cost < self.__reason.cost:
             self.reason = reason
         elif reason not in self.alternate_reasons:
-            self.alternate_reasons.append(reason)
+            self.__alternate_reasons.append(reason)
 
     @property
     def priority(self):
