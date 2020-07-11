@@ -4,7 +4,7 @@ from .. import Scene
 from ..property import *
 from ..util import LazyComment, Comment, common_endpoint, other_point
 
-from .abstract import Rule, accepts_auto, processed_cache, source_type
+from .abstract import Rule, accepts_auto, processed_cache, source_type, source_types
 
 @processed_cache(set())
 class SimilarTrianglesByTwoAnglesRule(Rule):
@@ -107,7 +107,7 @@ class SimilarTrianglesByTwoAnglesRule(Rule):
             break
 
         yield (
-            SimilarTrianglesProperty(tr0, tr1),
+            SimilarNondegenerateTrianglesProperty(tr0, tr1),
             Comment(
                 'congruent angles $%{anglemeasure:angle0_0}=%{anglemeasure:angle1_0}$ and $%{anglemeasure:angle0_1}=%{anglemeasure:angle1_1}$',
                 {
@@ -287,7 +287,7 @@ class SimilarTrianglesByAngleAndTwoSidesRule2(Rule):
                     [elr, ca]
                 )
 
-@source_type(SimilarTrianglesProperty)
+@source_types(SimilarNondegenerateTrianglesProperty, SimilarTrianglesProperty)
 @processed_cache(set())
 @accepts_auto
 class SimilarTrianglesWithCongruentSideRule(Rule):

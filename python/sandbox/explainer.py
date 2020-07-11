@@ -74,6 +74,7 @@ class Explainer:
             ParallelSameSideRule(self.context),
             CommonPerpendicularRule(self.context),
             SideProductsInSimilarTrianglesRule(self.context),
+            SideRatiosInNondegenerateSimilarTrianglesRule(self.context),
             CorrespondingAnglesInCongruentTrianglesRule(self.context),
             CorrespondingAnglesInSimilarTrianglesRule(self.context),
             CorrespondingAnglesInSimilarTrianglesRule2(self.context),

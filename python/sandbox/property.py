@@ -927,6 +927,27 @@ class SimilarTrianglesProperty(Property):
 
     @property
     def __priority__(self):
+        return 4
+
+    @property
+    def description(self):
+        return Comment('$%{triangle:t0} \\sim %{triangle:t1}$', {'t0': self.triangle0, 't1': self.triangle1})
+
+class SimilarNondegenerateTrianglesProperty(Property):
+    """
+    Two non-degenerate triangles are similar
+    """
+    def __init__(self, points0, points1):
+        self.triangle0 = points0 if isinstance(points0, Scene.Triangle) else Scene.Triangle(*points0)
+        self.triangle1 = points1 if isinstance(points1, Scene.Triangle) else Scene.Triangle(*points1)
+        pairs = [frozenset(perms) for perms in zip(self.triangle0.permutations, self.triangle1.permutations)]
+        super().__init__(frozenset(pairs), {*self.triangle0.points, *self.triangle1.points})
+
+    def keys(self, lengths=None):
+        return keys_for_triangle(self.triangle0, lengths) + keys_for_triangle(self.triangle1, lengths)
+
+    @property
+    def __priority__(self):
         return 5
 
     @property

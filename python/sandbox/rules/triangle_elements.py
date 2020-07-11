@@ -4,7 +4,7 @@ import sympy as sp
 from ..property import *
 from ..util import Comment
 
-from .abstract import Rule, accepts_auto, processed_cache, source_type
+from .abstract import Rule, accepts_auto, processed_cache, source_type, source_types
 
 @source_type(SimilarTrianglesProperty)
 @processed_cache({})
@@ -42,7 +42,42 @@ class SideProductsInSimilarTrianglesRule(Rule):
         if original != mask:
             self.processed[prop] = mask
 
-@source_type(SimilarTrianglesProperty)
+@source_type(SimilarNondegenerateTrianglesProperty)
+@processed_cache(set())
+@accepts_auto
+class SideRatiosInNondegenerateSimilarTrianglesRule(Rule):
+    def apply(self, prop):
+        sides0 = prop.triangle0.sides
+        sides1 = prop.triangle1.sides
+        for i, j in itertools.permutations(range(0, 3), 2):
+            yield (
+                EqualLengthRatiosProperty(sides0[i], sides0[j], sides1[i], sides1[j]),
+                Comment(
+                    'ratios of sides in non-degenerate similar $%{triangle:tr0}$ and $%{triangle:tr1}$',
+                    {'tr0': prop.triangle0, 'tr1': prop.triangle1}
+                ),
+                [prop]
+            )
+        for i, j in itertools.combinations(range(0, 3), 2):
+            if sides0[i] != sides1[i] and sides0[j] != sides1[j]:
+                yield (
+                    EqualLengthRatiosProperty(sides0[i], sides1[i], sides0[j], sides1[j]),
+                    Comment(
+                        'ratios of sides in non-degenerate similar $%{triangle:tr0}$ and $%{triangle:tr1}$',
+                        {'tr0': prop.triangle0, 'tr1': prop.triangle1}
+                    ),
+                    [prop]
+                )
+                yield (
+                    EqualLengthRatiosProperty(sides1[i], sides0[i], sides1[j], sides0[j]),
+                    Comment(
+                        'ratios of sides in non-degenerate similar $%{triangle:tr0}$ and $%{triangle:tr1}$',
+                        {'tr0': prop.triangle0, 'tr1': prop.triangle1}
+                    ),
+                    [prop]
+                )
+
+@source_types(SimilarNondegenerateTrianglesProperty, SimilarTrianglesProperty)
 @processed_cache({})
 class CorrespondingAnglesInSimilarTrianglesRule(Rule):
     def apply(self, prop):
@@ -90,7 +125,7 @@ class CorrespondingAnglesInSimilarTrianglesRule(Rule):
         if original != mask:
             self.processed[prop] = mask
 
-@source_type(SimilarTrianglesProperty)
+@source_types(SimilarNondegenerateTrianglesProperty, SimilarTrianglesProperty)
 @processed_cache(set())
 @accepts_auto
 class CorrespondingAnglesInSimilarTrianglesRule2(Rule):
@@ -239,7 +274,7 @@ class CorrespondingSidesInCongruentTrianglesRule(Rule):
                     [prop]
                 )
 
-@source_type(SimilarTrianglesProperty)
+@source_types(SimilarNondegenerateTrianglesProperty, SimilarTrianglesProperty)
 @processed_cache({})
 class CorrespondingSidesInSimilarTrianglesRule(Rule):
     def apply(self, prop):
