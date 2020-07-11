@@ -333,15 +333,19 @@ class SimilarTrianglesWithCongruentSideRule(Rule):
             )
             return
 
+@processed_cache(set())
 class CongruentTrianglesByThreeSidesRule(Rule):
     def sources(self):
         congruent_segments = [p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1]
         return itertools.combinations(congruent_segments, 2)
 
     def apply(self, src):
-        cs0, cs1 = src
-        if cs0.reason.obsolete and cs1.reason.obsolete:
+        key = frozenset(src)
+        if key in self.processed:
             return
+        self.processed.add(key)
+
+        cs0, cs1 = src
 
         for seg0, seg1 in [(cs0.segment0, cs0.segment1), (cs0.segment1, cs0.segment0)]:
             points0 = set((*seg0.points, *cs1.segment0.points))
@@ -443,13 +447,14 @@ class SimilarTrianglesByThreeSidesRule(Rule):
             [ps0, ps1, ps2, ncl]
         )
 
+@processed_cache(set())
+@accepts_auto
 class EquilateralTriangleByThreeSidesRule(Rule):
     def sources(self):
         return [p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1]
 
     def apply(self, prop):
-        if prop.reason.obsolete:
-            return
+        self.processed.add(prop)
         common = next((p for p in prop.segment0.points if p in prop.segment1.points), None)
         if common is None:
             return
