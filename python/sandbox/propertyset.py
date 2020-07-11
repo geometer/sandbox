@@ -1664,7 +1664,7 @@ class PropertySet(LineSet):
                 continue
             if extra and extra.reason.cost < prop.reason.cost:
                 changed = True
-                prop.reason = extra.reason
+                prop.merge(extra)
         return changed
 
     def __getitem__(self, prop):

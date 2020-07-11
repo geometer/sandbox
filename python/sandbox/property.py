@@ -50,6 +50,12 @@ class Property:
             pre.implications.append(self)
         self.fire_premises_change()
 
+    def merge(self, other_prop):
+        assert self == other_prop
+        self.add_reason(other_prop.reason)
+        for reason in other_prop.__alternate_reasons:
+            self.add_reason(reason)
+
     def add_reason(self, reason):
         reason = self.__acceptable_reason(reason)
         if self.__reason is None:

@@ -190,7 +190,7 @@ class Explainer:
         return self.__options.get('max_layer', 'user')
 
     def __reason(self, prop, rule, comment, premises=None):
-        reason = Reason(rule, self.__iteration_step_count, comment, premises)
+        prop.reason = Reason(rule, self.__iteration_step_count, comment, premises)
         def insert(pro):
             for pre in pro.reason.premises:
                 if self.context.index_of(pre) is None:
@@ -199,13 +199,12 @@ class Explainer:
 
         existing = self.context[prop]
         if existing is None:
-            prop.reason = reason
             prop.reason.obsolete = False
             insert(prop)
         else:
-            reason.obsolete = existing.reason.obsolete
+            prop.reason.obsolete = existing.reason.obsolete
             was_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
-            existing.add_reason(reason)
+            existing.merge(prop)
             is_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
             if was_synthetic and not is_synthetic or self.context.index_of(existing) is None:
                 insert(existing)
