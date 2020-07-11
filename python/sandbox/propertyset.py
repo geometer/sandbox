@@ -1770,6 +1770,10 @@ class PropertySet(LineSet):
     def sum_of_angles_property(self, *angles):
         return self.__angle_ratios.sum_of_angles_property(*angles)
 
+    def congruent_segments_for(self, segment):
+        fam = self.__length_ratios.ratio_to_family.get(1)
+        return [n for n, d in fam.ratio_set if d == segment] if fam else []
+
     def length_ratios(self, allow_zeroes):
         if allow_zeroes:
             collection = []
@@ -1815,6 +1819,9 @@ class PropertySet(LineSet):
 
     def two_points_relative_to_line_property(self, segment, point0, point1):
         return self.__two_points_relative_to_line.get(SameOrOppositeSideProperty.unique_key(segment, point0, point1))
+
+    def ratios_in_use(self):
+        return list(self.__length_ratios.ratio_to_family)
 
     def length_ratios_are_equal(self, segment0, segment1, segment2, segment3):
         return self.__length_ratios.contains((segment0, segment1), (segment2, segment3))
