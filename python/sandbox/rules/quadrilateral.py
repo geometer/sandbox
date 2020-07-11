@@ -84,24 +84,29 @@ class IntersectionOfDiagonalsOfConvexQuadrilateralRule(Rule):
         for d in diagonals:
             yield (AngleValueProperty(crossing.angle(*d.points), 180), comment, [crossing_prop, prop])
 
-@source_type(ConvexQuadrilateralProperty)
+@source_types(ConvexQuadrilateralProperty, NondegenerateSquareProperty)
 @processed_cache(set())
-class PartOfConvexQuadrilateralIsConvexRule(Rule):
+class PointOnSideOfConvexQuadrialteralRule(Rule):
     def apply(self, prop):
-        for side in prop.quadrilateral.sides:
+        if isinstance(prop, NondegenerateSquareProperty):
+            quad = prop.square
+            pattern = '$%{point:pt}$ lies on side of non-degenerate square $%{polygon:quad}$'
+        else:
+            quad = prop.quadrilateral
+            pattern = '$%{point:pt}$ lies on side of convex $%{polygon:quad}$'
+        for side in quad.sides:
             for pt in self.context.points_inside_segment(side):
                 key = (prop, pt)
                 if key in self.processed:
                     continue
                 self.processed.add(key)
-                comment = Comment(
-                    '$%{point:pt}$ lies on side of convex $%{polygon:quad}$',
-                    {'pt': pt, 'quad': prop.quadrilateral}
-                )
+                comment = Comment(pattern, {'pt': pt, 'quad': quad})
                 premises = [self.context.angle_value_property(pt.angle(*side.points)), prop]
                 for repl in side.points:
-                    pts = [pt if p == repl else p for p in prop.quadrilateral.points]
+                    pts = [pt if p == repl else p for p in quad.points]
                     yield (ConvexQuadrilateralProperty(Scene.Polygon(*pts)), comment, premises)
+                for angle in [a for a in quad.angles if a.vertex not in side.points]:
+                    yield (PointInsideAngleProperty(pt, angle), comment, premises)
 
 @source_type(SameOrOppositeSideProperty)
 @processed_cache({})

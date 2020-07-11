@@ -84,7 +84,7 @@ class Explainer:
             MiddleOfSegmentRule(self.context),
             KnownAnglesToConvexQuadrilateralRule(self.context),
             PointsToConvexQuadrilateralRule(self.context),
-            PartOfConvexQuadrilateralIsConvexRule(self.context),
+            PointOnSideOfConvexQuadrialteralRule(self.context),
             ConvexQuadrilateralRule(self.context),
             SumOfAnglesOfConvexQuadrilateralRule(self.context),
             IntersectionOfDiagonalsOfConvexQuadrilateralRule(self.context),
