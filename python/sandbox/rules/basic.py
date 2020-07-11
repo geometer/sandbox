@@ -768,6 +768,32 @@ class PerpendicularSegmentsRule(Rule):
                 [pv, ne0, ne1]
             )
 
+@source_type(PerpendicularSegmentsProperty)
+@processed_cache(set())
+@accepts_auto
+class PerpendicularSegmentsRule2(Rule):
+    def apply(self, pv):
+        seg0 = pv.segments[0]
+        seg1 = pv.segments[1]
+        common = common_endpoint(seg0, seg1)
+        if common is None:
+            return
+        other0 = other_point(seg0.points, common)
+        other1 = other_point(seg1.points, common)
+        ncl = self.context.collinearity_property(common, other0, other1)
+        if ncl is None:
+            return
+        if ncl.collinear:
+            return
+        yield (
+            AngleValueProperty(common.angle(other0, other1), 90),
+            Comment(
+                'non-zero perpendicular segments $%{segment:seg0}$ and $%{segment:seg1}$',
+                {'seg0': seg0, 'seg1': seg1}
+            ),
+            [pv, ncl]
+        )
+
 @processed_cache(set())
 class Degree90ToPerpendicularSegmentsRule(Rule):
     def sources(self):

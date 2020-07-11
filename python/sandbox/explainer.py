@@ -59,6 +59,7 @@ class Explainer:
             LengthRatioRule(self.context),
             ParallelVectorsRule(self.context),
             PerpendicularSegmentsRule(self.context),
+            PerpendicularSegmentsRule2(self.context),
             Degree90ToPerpendicularSegmentsRule(self.context),
             Degree90ToPerpendicularSegmentsRule2(self.context),
             PerpendicularTransitivityRule(self.context),
