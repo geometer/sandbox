@@ -952,7 +952,7 @@ class SimilarNondegenerateTrianglesProperty(Property):
 
     @property
     def description(self):
-        return Comment('$%{triangle:t0} \\sim %{triangle:t1}$', {'t0': self.triangle0, 't1': self.triangle1})
+        return Comment('$%{triangle:t0}$ and $%{triangle:t1}$ are similar non-degenerate triangles', {'t0': self.triangle0, 't1': self.triangle1})
 
 class CongruentTrianglesProperty(Property):
     """
