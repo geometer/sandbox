@@ -766,11 +766,10 @@ class CyclicOrderPropertySet:
             self.cycle_set = set()
             self.premises_graph = nx.Graph()
 
-        def explanation(self, cycle0, cycle1):
-            if cycle0 not in self.cycle_set or cycle1 not in self.cycle_set:
-                return (None, None)
-
+        def same_order_property(self, cycle0, cycle1):
             path = nx.algorithms.dijkstra_path(self.premises_graph, cycle0, cycle1, weight=_edge_comp)
+            if len(path) == 1:
+                return self.premises_graph.get_edge_data(cycle0, cycle1)['prop']
             pattern = []
             params = {}
             for index, v in enumerate(path):
@@ -778,10 +777,11 @@ class CyclicOrderPropertySet:
                 params['c%d' % index] = v
             comment = Comment('$' + ' =\,\!\! '.join(pattern) + '$', params)
             premises = [self.premises_graph.get_edge_data(i, j)['prop'] for i, j in zip(path[:-1], path[1:])]
-            return (comment, premises)
+            return _synthetic_property(SameCyclicOrderProperty(cycle0, cycle1), comment, premises)
 
     def __init__(self):
         self.families = []
+        self.cache = {} # (cycle, cycle) => prop
 
     def __find_by_cycle(self, cycle):
         for fam in self.families:
@@ -792,6 +792,8 @@ class CyclicOrderPropertySet:
     def add(self, prop):
         if prop.reason and prop.reason.rule == SyntheticPropertyRule.instance():
             return
+        self.cache[(prop.cycle0, prop.cycle1)] = prop
+        self.cache[(prop.cycle1, prop.cycle0)] = prop
         fam0 = self.__find_by_cycle(prop.cycle0)
         fam1 = self.__find_by_cycle(prop.cycle1)
         if fam0 and fam1:
@@ -813,9 +815,21 @@ class CyclicOrderPropertySet:
             self.families.append(fam)
         fam.premises_graph.add_edge(prop.cycle0, prop.cycle1, prop=prop)
 
-    def explanation(self, cycle0, cycle1):
+    def same_order_property(self, cycle0, cycle1, use_cache=True):
+        if use_cache:
+            key = (cycle0, cycle1)
+            cached = self.cache.get(key)
+            if cached:
+                return cached
+
         fam = self.__find_by_cycle(cycle0)
-        return fam.explanation(cycle0, cycle1) if fam else (None, None)
+        if fam is None or cycle1 not in fam.cycle_set:
+            return None
+        prop = fam.same_order_property(cycle0, cycle1)
+        if use_cache:
+            self.cache[key] = prop
+            self.cache[(cycle1, cycle0)] = prop
+        return prop
 
 class LinearAngleSet:
     def __init__(self):
@@ -1650,6 +1664,8 @@ class PropertySet(LineSet):
         for prop in self.all:
             if isinstance(prop, AngleValueProperty):
                 extra = self.angle_value_property(prop.angle, use_cache=False)
+            elif isinstance(prop, SameCyclicOrderProperty):
+                extra = self.same_cyclic_order_property(prop.cycle0, prop.cycle1, use_cache=False)
             elif isinstance(prop, PointsCoincidenceProperty):
                 extra = self.coincidence_property(*prop.points, use_cache=False)
             elif isinstance(prop, PointsCollinearityProperty):
@@ -1835,15 +1851,8 @@ class PropertySet(LineSet):
         prop = EqualLengthRatiosProperty(segment0, segment1, segment2, segment3)
         return _synthetic_property(prop, comment, premises)
 
-    def same_cyclic_order_property(self, cycle0, cycle1):
-        prop = SameCyclicOrderProperty(cycle0, cycle1)
-        existing = self.__full_set.get(prop)
-        if existing:
-            return existing[0]
-        comment, premises = self.__cyclic_orders.explanation(cycle0, cycle1)
-        if comment:
-            return _synthetic_property(prop, comment, premises)
-        return None
+    def same_cyclic_order_property(self, cycle0, cycle1, use_cache=True):
+        return self.__cyclic_orders.same_order_property(cycle0, cycle1, use_cache=use_cache)
 
     def foot_of_perpendicular(self, point, segment):
         #TODO: cache not-None values (?)
