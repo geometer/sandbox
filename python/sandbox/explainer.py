@@ -469,9 +469,10 @@ class Explainer:
                 break
 
         def adjust():
-            changed = True
+            changed = {'*'}
             while changed:
-                changed = self.context.add_synthetics()
+                self.context.add_synthetics(changed)
+                changed = set()
                 for prop in self.context.all:
                     candidate = None
                     cost = prop.reason.cost
@@ -482,7 +483,7 @@ class Explainer:
                             candidate = reason
                     if candidate:
                         prop.reason = candidate
-                        changed = True
+                        changed.add(type(prop))
         adjust()
 
     def dump(self, properties_to_explain=[]):
