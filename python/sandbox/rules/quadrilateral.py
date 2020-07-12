@@ -90,23 +90,27 @@ class PointOnSideOfConvexQuadrialteralRule(Rule):
     def apply(self, prop):
         if isinstance(prop, NondegenerateSquareProperty):
             quad = prop.square
-            pattern = '$%{point:pt}$ lies on side of non-degenerate square $%{polygon:quad}$'
+            pattern = '$%{point:pt}$ lies on side $%{segment:side}$ of non-degenerate square $%{polygon:quad}$'
         else:
             quad = prop.quadrilateral
-            pattern = '$%{point:pt}$ lies on side of convex $%{polygon:quad}$'
+            pattern = '$%{point:pt}$ lies on side $%{segment:side}$ of convex $%{polygon:quad}$'
         for side in quad.sides:
             for pt in self.context.points_inside_segment(side):
                 key = (prop, pt)
                 if key in self.processed:
                     continue
                 self.processed.add(key)
-                comment = Comment(pattern, {'pt': pt, 'quad': quad})
+                comment = Comment(pattern, {'pt': pt, 'quad': quad, 'side': side})
                 premises = [self.context.angle_value_property(pt.angle(*side.points)), prop]
                 for repl in side.points:
                     pts = [pt if p == repl else p for p in quad.points]
                     yield (ConvexQuadrilateralProperty(Scene.Polygon(*pts)), comment, premises)
                 for angle in [a for a in quad.angles if a.vertex not in side.points]:
                     yield (PointInsideAngleProperty(pt, angle), comment, premises)
+                for v0, v1 in itertools.combinations(quad.points, 2):
+                    if v0 in side.points and v1 in side.points:
+                        continue
+                    yield (PointsCollinearityProperty(pt, v0, v1, False), comment, premises)
 
 @source_type(SameOrOppositeSideProperty)
 @processed_cache({})
@@ -212,27 +216,32 @@ class ConvexQuadrilateralRule(Rule):
         else:
             quad = prop.quadrilateral
             pattern = '$%{polygon:quad}$ is a convex quadrilateral'
+
+        new_properties = []
+        for pt0, pt1 in itertools.combinations(quad.points, 2):
+            new_properties.append(PointsCoincidenceProperty(pt0, pt1, False))
+
         points = quad.points * 2
-        comment = Comment(pattern, {'quad': quad})
         for i in range(0, 4):
             pts = [points[j] for j in range(i, i + 4)]
-            yield (
-                SameOrOppositeSideProperty(pts[0].segment(pts[1]), pts[2], pts[3], True),
-                comment,
-                [prop]
+            new_properties.append(
+                PointsCollinearityProperty(*pts[:3], False)
             )
-            yield (
-                PointInsideAngleProperty(pts[0], pts[2].angle(pts[1], pts[3])),
-                comment,
-                [prop]
+            new_properties.append(
+                SameOrOppositeSideProperty(pts[0].segment(pts[1]), pts[2], pts[3], True)
+            )
+            new_properties.append(
+                PointInsideAngleProperty(pts[0], pts[2].angle(pts[1], pts[3]))
             )
         for i in range(0, 2):
             pts = [points[j] for j in range(i, i + 4)]
-            yield (
-                SameOrOppositeSideProperty(pts[0].segment(pts[2]), pts[1], pts[3], False),
-                comment,
-                [prop]
+            new_properties.append(
+                SameOrOppositeSideProperty(pts[0].segment(pts[2]), pts[1], pts[3], False)
             )
+
+        comment = Comment(pattern, {'quad': quad})
+        for p in new_properties:
+            yield (p, comment, [prop])
 
 @source_types(SquareProperty, NondegenerateSquareProperty)
 @processed_cache(set())
@@ -334,16 +343,7 @@ class NondegenerateSquareRule(Rule):
         sq = prop.square
         pts = sq.points * 2
         params = {'square': sq}
-        diagonals = [pts[0].segment(pts[2]), pts[1].segment(pts[3])]
 
-        comment = Comment('vertices of non-degenerate square $%{polygon:square}$', params)
-        for pt0, pt1, pt2 in itertools.combinations(sq.points, 3):
-            yield (PointsCollinearityProperty(pt0, pt1, pt2, False), comment, [prop])
-        for side in sq.sides:
-            yield (PointsCoincidenceProperty(*side.points, False), comment, [prop])
-        comment = Comment('diagonals of non-degenerate square $%{polygon:square}$', params)
-        for diagonal in diagonals:
-            yield (PointsCoincidenceProperty(*diagonal.points, False), comment, [prop])
         comment = Comment('angle of non-degenerate square $%{polygon:square}$', params)
         for angle in sq.angles:
             yield (AngleValueProperty(angle, 90), comment, [prop])
