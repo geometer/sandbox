@@ -13,7 +13,7 @@ def run_sample(scene, props_generator):
     parser.add_argument('--dump', nargs='+', choices=('scene', 'constraints', 'stats', 'result', 'properties', 'explanation'), default=('stats', 'result'))
     parser.add_argument('--run-hunter', action='store_true')
     parser.add_argument('--run-verifier', action='store_true')
-    parser.add_argument('--extra-rules', nargs='+', choices=('advanced', 'circles', 'trigonometric'), default=())
+    parser.add_argument('--extra-rules', nargs='+', choices=('advanced', 'circles', 'cyclic', 'trigonometric'), default=())
     parser.add_argument('--profile', action='store_true')
     args = parser.parse_args()
 

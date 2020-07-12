@@ -104,7 +104,6 @@ class Explainer:
             TwoAcuteOrRightAnglesWithCommonSideRule(self.context),
             CongruentAnglesWithCommonPartRule(self.context),
             RotatedAngleSimplifiedRule(self.context),
-            RotatedAngleRule(self.context),
             AngleTypeByDegreeRule(self.context),
             PointsCollinearityByAngleDegreeRule(self.context),
             EqualAnglesToCollinearityRule(self.context),
@@ -127,7 +126,6 @@ class Explainer:
             VerticalAnglesRule(self.context),
             ReversedVerticalAnglesRule(self.context),
             CorrespondingAndAlternateAnglesRule(self.context),
-            CyclicOrderRule(self.context),
             PlanePositionsToLinePositionsRule(self.context),
             CeviansIntersectionRule(self.context),
             PointOnCevianRule(self.context),
@@ -160,6 +158,12 @@ class Explainer:
             SimilarTrianglesByThreeSidesRule(self.context),
             SimilarTrianglesWithCongruentSideRule(self.context),
         ]
+
+        if options.get('cyclic'):
+            self.__rules += [
+                CyclicOrderRule(self.context),
+                RotatedAngleRule(self.context),
+            ]
 
         if options.get('circles'):
             self.__rules += [
