@@ -62,7 +62,7 @@ class Property:
         self.fire_premises_change()
 
     def merge(self, other_prop):
-        assert self == other_prop
+        assert self == other_prop, '`%s` != `%s`' % (self, other_prop)
         self.add_reason(other_prop.reason)
         for reason in other_prop.__alternate_reasons:
             self.add_reason(reason)
@@ -1016,7 +1016,7 @@ class Cycle(Figure):
         return '\\circlearrowleft %s %s %s' % self.points
 
     def __eq__(self, other):
-        return self.__key == other.__key
+        return other and self.__key == other.__key
 
     def __hash__(self):
         return hash(self.__key)
@@ -1026,6 +1026,8 @@ class SameCyclicOrderProperty(Property):
     Two triples of points have the same cyclic order
     """
     def __init__(self, cycle0, cycle1):
+        assert isinstance(cycle0, Cycle)
+        assert isinstance(cycle1, Cycle)
         self.cycle0 = cycle0
         self.cycle1 = cycle1
         super().__init__(frozenset([cycle0, cycle1]), {*cycle0.points, *cycle1.points})

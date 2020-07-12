@@ -765,12 +765,17 @@ class CyclicOrderPropertySet:
         def __init__(self):
             self.cycle_set = set()
             self.premises_graph = nx.Graph()
+            self.path_table = None
 
-        def same_order_property(self, cycle0, cycle1, quick):
-            if quick:
-                path = nx.algorithms.shortest_path(self.premises_graph, cycle0, cycle1)
+        def create_path_table(self):
+            self.path_table = dict(nx.algorithms.all_pairs_dijkstra_path(self.premises_graph, weight=_edge_comp))
+
+        def same_order_property(self, cycle0, cycle1):
+            if self.path_table:
+                path = self.path_table[cycle0][cycle1]
             else:
-                path = nx.algorithms.dijkstra_path(self.premises_graph, cycle0, cycle1, weight=_edge_comp)
+                path = nx.algorithms.shortest_path(self.premises_graph, cycle0, cycle1)
+                #path = nx.algorithms.dijkstra_path(self.premises_graph, cycle0, cycle1, weight=_edge_comp)
             if len(path) == 1:
                 return self.premises_graph.get_edge_data(cycle0, cycle1)['prop']
             pattern = []
@@ -785,6 +790,10 @@ class CyclicOrderPropertySet:
     def __init__(self):
         self.families = []
         self.cache = {} # (cycle, cycle) => prop
+
+    def create_path_table(self):
+        for fam in self.families:
+            fam.create_path_table()
 
     def __find_by_cycle(self, cycle):
         for fam in self.families:
@@ -818,8 +827,8 @@ class CyclicOrderPropertySet:
             self.families.append(fam)
         fam.premises_graph.add_edge(prop.cycle0, prop.cycle1, prop=prop)
 
-    def same_order_property(self, cycle0, cycle1, quick=True):
-        if quick:
+    def same_order_property(self, cycle0, cycle1, use_cache=True):
+        if use_cache:
             key = (cycle0, cycle1)
             cached = self.cache.get(key)
             if cached:
@@ -828,8 +837,8 @@ class CyclicOrderPropertySet:
         fam = self.__find_by_cycle(cycle0)
         if fam is None or cycle1 not in fam.cycle_set:
             return None
-        prop = fam.same_order_property(cycle0, cycle1, quick=quick)
-        if quick:
+        prop = fam.same_order_property(cycle0, cycle1)
+        if use_cache:
             self.cache[key] = prop
             self.cache[(cycle1, cycle0)] = prop
         return prop
@@ -1691,8 +1700,14 @@ class PropertySet(LineSet):
         if update_length_ratios:
             self.__length_ratios.create_path_table()
 
+        update_cyclic_order = \
+            '*' in changeable or SameCyclicOrderProperty in changeable
+        if update_cyclic_order:
+            self.__cyclic_orders.create_path_table()
+
         changed = False
         for prop in self.all:
+            extra = None
             if isinstance(prop, AngleValueProperty):
                 extra = self.angle_value_property(prop.angle, use_cache=False)
             elif isinstance(prop, PointsCoincidenceProperty):
@@ -1706,13 +1721,12 @@ class PropertySet(LineSet):
             elif isinstance(prop, EqualLengthRatiosProperty):
                 if update_length_ratios:
                     extra = self.equal_length_ratios_property(*prop.segments, use_cache=False)
+            elif isinstance(prop, SameCyclicOrderProperty):
+                if update_cyclic_order:
+                    extra = self.same_cyclic_order_property(prop.cycle0, prop.cycle1, use_cache=False)
             else:
-                if '*' not in changeable and type(prop) not in changeable:
-                    continue
-                if isinstance(prop, SameCyclicOrderProperty):
-                    extra = self.same_cyclic_order_property(prop.cycle0, prop.cycle1, quick=False)
-                else:
-                    continue
+                continue
+
             if extra and extra.reason.cost < prop.reason.cost:
                 changed = True
                 prop.merge(extra)
@@ -1882,8 +1896,8 @@ class PropertySet(LineSet):
     def equal_length_ratios_property(self, segment0, segment1, segment2, segment3, use_cache=True):
         return self.__length_ratios.equality_property((segment0, segment1), (segment2, segment3), use_cache=use_cache)
 
-    def same_cyclic_order_property(self, cycle0, cycle1, quick=True):
-        return self.__cyclic_orders.same_order_property(cycle0, cycle1, quick=quick)
+    def same_cyclic_order_property(self, cycle0, cycle1, use_cache=True):
+        return self.__cyclic_orders.same_order_property(cycle0, cycle1, use_cache=use_cache)
 
     def foot_of_perpendicular(self, point, segment):
         #TODO: cache not-None values (?)

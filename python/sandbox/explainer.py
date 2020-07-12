@@ -468,22 +468,37 @@ class Explainer:
             if len(self.context) == explained_size:
                 break
 
+        def adjust0():
+            changed = set()
+            for prop in self.context.all:
+                candidate = None
+                cost = prop.reason.cost
+                for reason in prop.alternate_reasons:
+                    reason.reset_premises()
+                    if reason.cost < cost:
+                        cost = reason.cost
+                        candidate = reason
+                if candidate:
+                    prop.reason = candidate
+                    changed.add(type(prop))
+            return changed
+
+        def adjust1():
+            changed = set()
+            while True:
+                changed_diff = adjust0()
+                if changed_diff:
+                    changed.update(changed_diff)
+                else:
+                    break
+
         def adjust():
+            adjust1()
             changed = {'*'}
             while changed:
                 self.context.add_synthetics(changed)
-                changed = set()
-                for prop in self.context.all:
-                    candidate = None
-                    cost = prop.reason.cost
-                    for reason in prop.alternate_reasons:
-                        reason.reset_premises()
-                        if reason.cost < cost:
-                            cost = reason.cost
-                            candidate = reason
-                    if candidate:
-                        prop.reason = candidate
-                        changed.add(type(prop))
+                changed = adjust1()
+
         adjust()
 
     def dump(self, properties_to_explain=[]):
