@@ -15,6 +15,7 @@ class Property:
         self.__hash = None
         self.__reason = None
         self.__alternate_reasons = []
+        self.bases = []
 
     def __acceptable_reason(self, value):
         while self in value.all_premises:
@@ -24,12 +25,22 @@ class Property:
                     value = prop.reason
         return value
 
+    def add_base(self, base):
+        if base not in self.bases:
+            self.bases.append(base)
+
     @property
     def reason(self):
         return self.__reason
 
     @property
     def alternate_reasons(self):
+        if self.bases:
+            alt = set(self.__alternate_reasons)
+            for base in self.bases:
+                alt.add(base.reason)
+                alt.update(set(base.alternate_reasons))
+            return list(alt)
         return self.__alternate_reasons
 
     @reason.setter
@@ -55,6 +66,9 @@ class Property:
         self.add_reason(other_prop.reason)
         for reason in other_prop.__alternate_reasons:
             self.add_reason(reason)
+        if other_prop.bases:
+            for base in other_prop.bases:
+                self.add_base(base)
 
     def add_reason(self, reason):
         reason = self.__acceptable_reason(reason)

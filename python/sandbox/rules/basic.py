@@ -804,8 +804,10 @@ class Degree90ToPerpendicularSegmentsRule(Rule):
     def apply(self, prop):
         self.processed.add(prop.angle)
 
+        new_prop = PerpendicularSegmentsProperty(prop.angle.vectors[0].as_segment, prop.angle.vectors[1].as_segment)
+        new_prop.add_base(prop)
         yield (
-            PerpendicularSegmentsProperty(prop.angle.vectors[0].as_segment, prop.angle.vectors[1].as_segment),
+            new_prop,
             prop.reason.comment,
             prop.reason.premises
         )

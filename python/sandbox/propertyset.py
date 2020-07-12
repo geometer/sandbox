@@ -1534,8 +1534,7 @@ class PropertySet(LineSet):
         super().__init__()
         self.points = list(points)
         self.__combined = {} # (type, key) => [prop] and type => prop
-        self.__full_set = {} # prop => prop
-        self.__indexes = {} # prop => number
+        self.__full_set = {} # prop => (prop, index)
         self.__angle_kinds = {} # angle => prop
         self.__linear_angles = LinearAngleSet()
         self.__angle_ratios = AngleRatioPropertySet()
@@ -1558,8 +1557,7 @@ class PropertySet(LineSet):
             put(type_key)
             for key in prop.keys():
                 put((type_key, key))
-            self.__full_set[prop] = prop
-            self.__indexes[prop] = len(self.__indexes)
+            self.__full_set[prop] = (prop, len(self.__full_set))
 
         if isinstance(prop, LinearAngleProperty):
             self.__linear_angles.add(prop)
@@ -1644,8 +1642,8 @@ class PropertySet(LineSet):
         #TODO: SameCyclicOrderProperty
         return False
 
-    def index_of(self, prop):
-        return self.__indexes.get(prop)
+    def prop_and_index(self, prop):
+        return self.__full_set.get(prop)
 
     def add_synthetics(self):
         changed = False
@@ -1696,7 +1694,9 @@ class PropertySet(LineSet):
             existing = None
 
         if existing is None:
-            existing = self.__full_set.get(prop)
+            prop_and_index = self.__full_set.get(prop)
+            if prop_and_index:
+                existing = prop_and_index[0]
         if existing and not existing.compare_values(prop):
             raise ContradictionError('different values: `%s` vs `%s`' % (prop, existing))
         return existing
@@ -1839,7 +1839,7 @@ class PropertySet(LineSet):
         prop = SameCyclicOrderProperty(cycle0, cycle1)
         existing = self.__full_set.get(prop)
         if existing:
-            return existing
+            return existing[0]
         comment, premises = self.__cyclic_orders.explanation(cycle0, cycle1)
         if comment:
             return _synthetic_property(prop, comment, premises)

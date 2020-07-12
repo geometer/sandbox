@@ -191,10 +191,24 @@ class Explainer:
 
     def __reason(self, prop, rule, comment, premises=None):
         prop.reason = Reason(rule, self.__iteration_step_count, comment, premises)
+
+        def insert_or_update(pro):
+            prop_and_index = self.context.prop_and_index(pro)
+            if prop_and_index:
+                if pro is prop_and_index[0]:
+                    return pro
+                prop_and_index[0].merge(pro)
+                return prop_and_index[0]
+            else:
+                self.context.add(pro)
+                return pro
+
         def insert(pro):
-            for pre in pro.reason.premises:
-                if self.context.index_of(pre) is None:
-                    insert(pre)
+            for index, pre in enumerate(pro.reason.premises):
+                pro.reason.premises[index] = insert_or_update(pre)
+            for index, base in enumerate(pro.bases):
+                pro.bases[index] = insert_or_update(base)
+            pro.reason.reset_premises()
             self.context.add(pro)
 
         existing = self.context[prop]
@@ -206,7 +220,7 @@ class Explainer:
             was_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
             existing.merge(prop)
             is_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
-            if was_synthetic and not is_synthetic or self.context.index_of(existing) is None:
+            if was_synthetic and not is_synthetic or self.context.prop_and_index(existing) is None:
                 insert(existing)
 
     def explain(self):
@@ -471,7 +485,7 @@ class Explainer:
             if reason.premises:
                 return '%s (%s)' % (
                     reason.comment,
-                    ', '.join(['*%s' % self.context.index_of(prop) for prop in reason.premises])
+                    ', '.join(['*%s' % self.context.prop_and_index(prop)[1] for prop in reason.premises])
                 )
             else:
                 return reason.comment
@@ -479,9 +493,9 @@ class Explainer:
         if len(self.context) > 0:
             print('Explained:')
             explained = self.context.all
-            explained.sort(key=lambda p: self.context.index_of(p))
+            explained.sort(key=lambda p: self.context.prop_and_index(p)[1])
             for prop in explained:
-                print('\t%2d (%d): %s [%s]' % (self.context.index_of(prop), prop.reason.generation, prop, to_string(prop.reason)))
+                print('\t%2d (%d): %s [%s]' % (self.context.prop_and_index(prop)[1], prop.reason.generation, prop, to_string(prop.reason)))
         if properties_to_explain:
             unexplained = [prop for prop in properties_to_explain if prop not in self.context]
             if len(unexplained) > 0:
