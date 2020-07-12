@@ -972,10 +972,9 @@ class AngleRatioPropertySet:
             return (AngleRatioPropertySet.CommentFromPath(path, premises, multiplier, self.angle_to_ratio), premises)
 
         def ratio_property(self, angle0, angle1):
-            edge = self.premises_graph.get_edge_data(angle0, angle1)
-            if edge:
-                return edge['prop']
             path = nx.algorithms.dijkstra_path(self.premises_graph, angle0, angle1, weight=_edge_comp)
+            if len(path) == 1:
+                return self.premises_graph.get_edge_data(angle0, angle1)['prop']
             coef = self.angle_to_ratio[angle0]
             comment, premises = self.explanation_from_path(path, coef)
             value = divide(coef, self.angle_to_ratio[angle1])
@@ -991,10 +990,9 @@ class AngleRatioPropertySet:
             ratio = self.angle_to_ratio.get(angle)
             if ratio is None:
                 return None
-            edge = self.premises_graph.get_edge_data(angle, self.degree)
-            if edge:
-                return edge['prop']
             path = nx.algorithms.dijkstra_path(self.premises_graph, angle, self.degree, weight=_edge_comp)
+            if len(path) == 1:
+                return self.premises_graph.get_edge_data(angle, self.degree)['prop']
             comment, premises = self.explanation_from_path(path, ratio)
             prop = AngleValueProperty(angle, self.degree * ratio)
             return _synthetic_property(prop, comment, premises)
