@@ -1344,6 +1344,7 @@ class LengthRatioPropertySet:
             self.ratio_value = None
             self.ratio_set = set()
             self.premises_graph = nx.Graph()
+            self.path_table = None
 
         def add_ratio(self, ratio):
             self.ratio_set.add(ratio)
@@ -1365,11 +1366,15 @@ class LengthRatioPropertySet:
                 return -1
             return 0
 
-        def explanation(self, ratio0, ratio1, quick):
-            if quick:
-                path = nx.algorithms.shortest_path(self.premises_graph, ratio0, ratio1)
+        def create_path_table(self):
+            self.path_table = dict(nx.algorithms.all_pairs_dijkstra_path(self.premises_graph, weight=_edge_comp))
+
+        def explanation(self, ratio0, ratio1):
+            if self.path_table:
+                path = self.path_table[ratio0][ratio1]
             else:
-                path = nx.algorithms.dijkstra_path(self.premises_graph, ratio0, ratio1, weight=_edge_comp)
+                path = nx.algorithms.shortest_path(self.premises_graph, ratio0, ratio1)
+
             pattern = []
             params = {}
             for index, v in enumerate(path):
@@ -1384,7 +1389,7 @@ class LengthRatioPropertySet:
             return (Comment('$' + ' = '.join(pattern) + '$', params), premises)
 
         def value_explanation(self, ratio):
-            return self.explanation(ratio, (self.ratio_value, ), quick=False)
+            return self.explanation(ratio, (self.ratio_value, ))
 
     def __init__(self):
         self.families = []
@@ -1392,6 +1397,10 @@ class LengthRatioPropertySet:
         self.__cache = {} # (segment, segment) => (prop, value)
         self.__ratio_cache = {} # (ratio, ratio) => EqualLengthRatiosProperty
         self.proportional_lengths = {} # {segment, segment} => ProportionalLengthsProperty
+
+    def create_path_table(self):
+        for fam in self.families:
+            fam.create_path_table()
 
     def __add_lr(self, prop, ratio, value):
         def add_property_to(fam):
@@ -1482,8 +1491,8 @@ class LengthRatioPropertySet:
         fam = self.ratio_to_family.get(ratio0)
         return fam and ratio1 in fam.ratio_set
 
-    def equality_property(self, ratio0, ratio1, quick=True):
-        if quick:
+    def equality_property(self, ratio0, ratio1, use_cache=True):
+        if use_cache:
             key = frozenset((ratio0, ratio1))
             cached = self.__ratio_cache.get(key)
             if cached:
@@ -1491,7 +1500,7 @@ class LengthRatioPropertySet:
         fam = self.ratio_to_family.get(ratio0)
         if fam is None or ratio1 not in fam.ratio_set:
             return None
-        comment, premises = fam.explanation(ratio0, ratio1, quick=quick)
+        comment, premises = fam.explanation(ratio0, ratio1)
         if len(premises) == 1:
             return premises[0]
         prop = _synthetic_property(
@@ -1499,7 +1508,7 @@ class LengthRatioPropertySet:
             comment,
             premises
         )
-        if quick:
+        if use_cache:
             self.__ratio_cache[key] = prop
         return prop
 
@@ -1600,11 +1609,7 @@ class PropertySet(LineSet):
             self.__angle_ratios.add(prop)
         elif type_key == AngleKindProperty:
             self.__angle_kinds[prop.angle] = prop
-        elif type_key == ProportionalLengthsProperty:
-            self.__length_ratios.add(prop)
-        elif type_key == LengthRatioProperty:
-            self.__length_ratios.add(prop)
-        elif type_key == EqualLengthRatiosProperty:
+        elif type_key in (EqualLengthRatiosProperty, LengthRatioProperty, ProportionalLengthsProperty):
             self.__length_ratios.add(prop)
         elif type_key == SameCyclicOrderProperty:
             self.__cyclic_orders.add(prop)
@@ -1681,6 +1686,11 @@ class PropertySet(LineSet):
         return self.__full_set.get(prop)
 
     def add_synthetics(self, changeable):
+        update_length_ratios = \
+            '*' in changeable or EqualLengthRatiosProperty in changeable or LengthRatioProperty in changeable
+        if update_length_ratios:
+            self.__length_ratios.create_path_table()
+
         changed = False
         for prop in self.all:
             if isinstance(prop, AngleValueProperty):
@@ -1693,13 +1703,14 @@ class PropertySet(LineSet):
                 extra = self.point_on_line_property(prop.segment, prop.point, use_cache=False)
             elif isinstance(prop, LinesCoincidenceProperty):
                 extra = self.lines_coincidence_property(*prop.segments, use_cache=False)
+            elif isinstance(prop, EqualLengthRatiosProperty):
+                if update_length_ratios:
+                    extra = self.equal_length_ratios_property(*prop.segments, use_cache=False)
             else:
                 if '*' not in changeable and type(prop) not in changeable:
                     continue
                 if isinstance(prop, SameCyclicOrderProperty):
                     extra = self.same_cyclic_order_property(prop.cycle0, prop.cycle1, quick=False)
-                elif isinstance(prop, EqualLengthRatiosProperty):
-                    extra = self.equal_length_ratios_property(*prop.segments, quick=False)
                 else:
                     continue
             if extra and extra.reason.cost < prop.reason.cost:
@@ -1868,8 +1879,8 @@ class PropertySet(LineSet):
     def length_ratios_are_equal(self, segment0, segment1, segment2, segment3):
         return self.__length_ratios.contains((segment0, segment1), (segment2, segment3))
 
-    def equal_length_ratios_property(self, segment0, segment1, segment2, segment3, quick=True):
-        return self.__length_ratios.equality_property((segment0, segment1), (segment2, segment3), quick=quick)
+    def equal_length_ratios_property(self, segment0, segment1, segment2, segment3, use_cache=True):
+        return self.__length_ratios.equality_property((segment0, segment1), (segment2, segment3), use_cache=use_cache)
 
     def same_cyclic_order_property(self, cycle0, cycle1, quick=True):
         return self.__cyclic_orders.same_order_property(cycle0, cycle1, quick=quick)
