@@ -388,8 +388,11 @@ class LengthRatiosWithCommonDenominatorRule(Rule):
         ratio_prop = self.context.equal_length_ratios_property(*ratio0, *ratio1)
         yield (
             ProportionalLengthsProperty(ratio0[0], ratio1[0], 1),
-            ratio_prop.reason.comment,
-            ratio_prop.reason.premises
+            Comment(
+                '$|%{segment:num0}| / |%{segment:denom}| = |%{segment:num1}| / |%{segment:denom}|$',
+                {'num0': ratio0[0], 'num1': ratio1[0], 'denom': ratio0[1]}
+            ),
+            [ratio_prop]
         )
 
 @processed_cache(set())
