@@ -978,13 +978,20 @@ class AngleRatioPropertySet:
             if angle:
                 self.angle_to_ratio[angle] = 1
             self.sum_props = set()
+            self.path_table = None
+
+        def create_path_table(self):
+            self.path_table = dict(nx.algorithms.all_pairs_dijkstra_path(self.premises_graph, weight=_edge_comp))
 
         def explanation_from_path(self, path, multiplier):
             premises = [self.premises_graph.get_edge_data(i, j)['prop'] for i, j in zip(path[:-1], path[1:])]
             return (AngleRatioPropertySet.CommentFromPath(path, premises, multiplier, self.angle_to_ratio), premises)
 
         def ratio_property(self, angle0, angle1):
-            path = nx.algorithms.dijkstra_path(self.premises_graph, angle0, angle1, weight=_edge_comp)
+            if self.path_table:
+                path = self.path_table[angle0][angle1]
+            else:
+                path = nx.algorithms.shortest_path(self.premises_graph, angle0, angle1)
             if len(path) == 1:
                 return self.premises_graph.get_edge_data(angle0, angle1)['prop']
             coef = self.angle_to_ratio[angle0]
@@ -1002,7 +1009,10 @@ class AngleRatioPropertySet:
             ratio = self.angle_to_ratio.get(angle)
             if ratio is None:
                 return None
-            path = nx.algorithms.dijkstra_path(self.premises_graph, angle, self.degree, weight=_edge_comp)
+            if self.path_table:
+                path = self.path_table[angle][self.degree]
+            else:
+                path = nx.algorithms.shortest_path(self.premises_graph, angle, self.degree)
             if len(path) == 1:
                 return self.premises_graph.get_edge_data(angle, self.degree)['prop']
             comment, premises = self.explanation_from_path(path, ratio)
@@ -1125,6 +1135,10 @@ class AngleRatioPropertySet:
         self.__sum_of_angles = {} # (angle, angle, ...) => prop
         self.__sum_of_angles_2 = {} # ((fam, ratio), (fam, ratio), ...) => prop
 
+    def create_path_table(self):
+        for fam in set(self.angle_to_family.values()):
+            fam.create_path_table()
+
     def value(self, angle):
         fam = self.family_with_degree
         return fam.value(angle) if fam else None
@@ -1165,16 +1179,17 @@ class AngleRatioPropertySet:
             return None
         return divide(fam.angle_to_ratio[angle0], ratio1)
 
-    def ratio_property(self, angle0, angle1):
-        key = (angle0, angle1)
-        cached = self.__ratio_cache.get(key)
-        if cached:
-            return cached
+    def ratio_property(self, angle0, angle1, use_cache=True):
+        if use_cache:
+            key = (angle0, angle1)
+            cached = self.__ratio_cache.get(key)
+            if cached:
+                return cached
         fam = self.angle_to_family.get(angle0)
         if fam is None or angle1 not in fam.angle_to_ratio:
             return None
         prop = fam.ratio_property(angle0, angle1)
-        if prop:
+        if use_cache and prop:
             self.__ratio_cache[key] = prop
             self.__ratio_cache[(angle1, angle0)] = prop
         return prop
@@ -1695,6 +1710,11 @@ class PropertySet(LineSet):
         return self.__full_set.get(prop)
 
     def add_synthetics(self, changeable):
+        update_angles = \
+            '*' in changeable or AngleRatioProperty in changeable or AngleValueProperty in changeable
+        if update_angles:
+            self.__angle_ratios.create_path_table()
+
         update_length_ratios = \
             '*' in changeable or EqualLengthRatiosProperty in changeable or LengthRatioProperty in changeable
         if update_length_ratios:
@@ -1708,8 +1728,12 @@ class PropertySet(LineSet):
         changed = False
         for prop in self.all:
             extra = None
-            if isinstance(prop, AngleValueProperty):
-                extra = self.angle_value_property(prop.angle, use_cache=False)
+            if isinstance(prop, AngleRatioProperty):
+                if update_angles:
+                    extra = self.angle_ratio_property(prop.angle0, prop.angle1, use_cache=False)
+            elif isinstance(prop, AngleValueProperty):
+                if update_angles:
+                    extra = self.angle_value_property(prop.angle, use_cache=False)
             elif isinstance(prop, PointsCoincidenceProperty):
                 extra = self.coincidence_property(*prop.points, use_cache=False)
             elif isinstance(prop, PointsCollinearityProperty):
@@ -1819,8 +1843,8 @@ class PropertySet(LineSet):
     def angle_ratio(self, angle0, angle1):
         return self.__angle_ratios.ratio(angle0, angle1)
 
-    def angle_ratio_property(self, angle0, angle1):
-        return self.__angle_ratios.ratio_property(angle0, angle1)
+    def angle_ratio_property(self, angle0, angle1, use_cache=True):
+        return self.__angle_ratios.ratio_property(angle0, angle1, use_cache=use_cache)
 
     def same_triple_angle_ratio_properties(self):
         return self.__angle_ratios.same_triple_ratio_properties()
