@@ -7,7 +7,7 @@ from .predefined import enumerate_predefined_properties
 from .property import *
 from .propertyset import PropertySet
 from .reason import Reason
-from .rules.abstract import PredefinedPropertyRule, SyntheticPropertyRule
+from .rules.abstract import PredefinedPropertyRule, SyntheticPropertyRule, verify_rule
 from .rules.advanced import *
 from .rules.basic import *
 from .rules.circle import *
@@ -185,6 +185,9 @@ class Explainer:
             self.__rules += [
                 LawOfSinesRule(self.context),
             ]
+
+        for rule in self.__rules:
+            verify_rule(rule)
 
     @property
     def __max_layer(self):

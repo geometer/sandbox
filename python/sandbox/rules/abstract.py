@@ -90,3 +90,7 @@ def accepts_auto(clazz):
         (clazz,),
         {'accepts': lambda inst, src: src not in inst.processed}
     )
+
+def verify_rule(obj):
+    if not hasattr(obj, 'processed'):
+        print('WARNING: Rule %s has no attribute `processed`' % type(obj).__name__)
