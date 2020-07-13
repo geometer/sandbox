@@ -102,4 +102,4 @@ class LengthRatioPropertySetTest(unittest.TestCase):
         prop = ratios.equality_property((self.EF, self.GH), (self.GH, self.EF))
 
         self.assertEqual(str(prop.reason.comment), '|E F| / |G H| = |A B| / |C D| = 1 = |C D| / |A B| = |G H| / |E F|')
-        self.assertEqual(len(prop.reason.premises), 4)
+        self.assertEqual(len(prop.reason.premises), 3)
