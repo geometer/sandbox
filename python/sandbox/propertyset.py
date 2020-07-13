@@ -775,7 +775,6 @@ class CyclicOrderPropertySet:
                 path = self.path_table[cycle0][cycle1]
             else:
                 path = nx.algorithms.shortest_path(self.premises_graph, cycle0, cycle1)
-                #path = nx.algorithms.dijkstra_path(self.premises_graph, cycle0, cycle1, weight=_edge_comp)
             if len(path) == 1:
                 return self.premises_graph.get_edge_data(cycle0, cycle1)['prop']
             pattern = []
@@ -1032,7 +1031,7 @@ class AngleRatioPropertySet:
                 if edge:
                     properties.append(edge['prop'])
                     continue
-                path = nx.algorithms.dijkstra_path(self.premises_graph, angle, self.degree, weight=_edge_comp)
+                path = nx.algorithms.shortest_path(self.premises_graph, angle, self.degree)
                 comment, premises = self.explanation_from_path(path, ratio)
                 prop = AngleValueProperty(angle, self.degree * ratio)
                 properties.append(_synthetic_property(prop, comment, premises))
@@ -1056,7 +1055,7 @@ class AngleRatioPropertySet:
                 if edge:
                     properties.append(edge['prop'])
                     continue
-                path = nx.algorithms.dijkstra_path(self.premises_graph, angle, self.degree, weight=_edge_comp)
+                path = nx.algorithms.shortest_path(self.premises_graph, angle, self.degree)
                 comment, premises = self.explanation_from_path(path, ratio)
                 prop = AngleValueProperty(angle, degree)
                 properties.append(_synthetic_property(prop, comment, premises))
@@ -1093,7 +1092,7 @@ class AngleRatioPropertySet:
                     if edge:
                         yield edge['prop']
                         continue
-                    path = nx.algorithms.dijkstra_path(self.premises_graph, angle0, angle1, weight=_edge_comp)
+                    path = nx.algorithms.shortest_path(self.premises_graph, angle0, angle1)
                     comment, premises = self.explanation_from_path(path, ratio0)
                     prop = AngleRatioProperty(angle0, angle1, divide(ratio0, ratio1))
                     yield _synthetic_property(prop, comment, premises)
