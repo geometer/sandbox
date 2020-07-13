@@ -34,6 +34,10 @@ class Property:
         return self.__reason
 
     @property
+    def proper_reasons(self):
+        return [self.__reason] + self.__alternate_reasons
+
+    @property
     def alternate_reasons(self):
         if self.bases:
             alt = set(self.__alternate_reasons)

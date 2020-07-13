@@ -195,38 +195,40 @@ class Explainer:
         return self.__options.get('max_layer', 'user')
 
     def __reason(self, prop, rule, comment, premises=None):
-        prop.reason = Reason(rule, self.__iteration_step_count, comment, premises)
+        def normalize_prop(prop):
+            for base in prop.bases:
+                normalize_prop(base)
+            for r in prop.proper_reasons:
+                normalize(r)
+            prop.reason = prop.reason
 
-        def insert_or_update(pro):
-            prop_and_index = self.context.prop_and_index(pro)
-            if prop_and_index:
-                if pro is prop_and_index[0]:
-                    return pro
-                prop_and_index[0].merge(pro)
-                return prop_and_index[0]
-            else:
-                self.context.add(pro)
-                return pro
+        def normalize(reason):
+            for index, pre in enumerate(reason.premises):
+                prop_and_index = self.context.prop_and_index(pre)
+                existing = prop_and_index[0] if prop_and_index else None
+                if existing is None:
+                    normalize_prop(pre)
+                    self.context.add(pre)
+                elif pre is not existing:
+                    normalize_prop(pre)
+                    existing.merge(pre)
+                    reason.premises[index] = existing
 
-        def insert(pro):
-            for index, pre in enumerate(pro.reason.premises):
-                pro.reason.premises[index] = insert_or_update(pre)
-            for index, base in enumerate(pro.bases):
-                pro.bases[index] = insert_or_update(base)
-            pro.reason.reset_premises()
-            self.context.add(pro)
+        reason = Reason(rule, self.__iteration_step_count, comment, premises)
+        normalize(reason)
+        prop.reason = reason
 
         existing = self.context[prop]
         if existing is None:
             prop.reason.obsolete = False
-            insert(prop)
+            self.context.add(prop)
         else:
             prop.reason.obsolete = existing.reason.obsolete
             was_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
             existing.merge(prop)
             is_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
             if was_synthetic and not is_synthetic or self.context.prop_and_index(existing) is None:
-                insert(existing)
+                self.context.add(existing)
 
     def explain(self):
         start = time.time()
