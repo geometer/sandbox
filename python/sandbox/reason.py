@@ -40,7 +40,7 @@ class Reason:
     @property
     def all_premises(self):
         if self.__all_premises is None:
-            self.__all_premises = set(self.premises)
+            self.__all_premises = {p: p for p in self.premises}
             for p in self.premises:
                 self.__all_premises.update(p.reason.all_premises)
         return self.__all_premises

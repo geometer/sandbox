@@ -18,12 +18,12 @@ class Property:
         self.bases = []
 
     def __acceptable_reason(self, value):
-        while self in value.all_premises:
-            # TODO: select the best variant
-            for prop in value.all_premises:
-                if prop == self:
-                    value = prop.reason
-        return value
+        while True:
+            lesser = value.all_premises.get(self)
+            if lesser:
+                value = lesser.reason
+            else:
+                return value
 
     def add_base(self, base):
         if base not in self.bases:
