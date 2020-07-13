@@ -1316,10 +1316,11 @@ class AngleRatioPropertySet:
         ar = self.__sum_of_angles_2.get(tuple(key))
         return ar[0].degree if ar else None
 
-    def sum_of_angles_property(self, *angles):
-        cached = self.__sum_of_angles.get(angles)
-        if cached:
-            return cached
+    def sum_of_angles_property(self, *angles, use_cache=True):
+        if use_cache:
+            cached = self.__sum_of_angles.get(angles)
+            if cached:
+                return cached
 
         key = []
         for a in angles:
@@ -1356,7 +1357,7 @@ class AngleRatioPropertySet:
             candidates.append(_synthetic_property(prop, comment, premises))
 
         best = PropertySet.best_candidate(candidates)
-        if best:
+        if use_cache and best:
             for perm in itertools.permutations(angles, len(angles)):
                 self.__sum_of_angles[perm] = best
         return best
@@ -1714,6 +1715,8 @@ class PropertySet(LineSet):
         if update_angles:
             self.__angle_ratios.create_path_table()
 
+        update_sums_of_angles = update_angles or SumOfAnglesProperty in changeable
+
         update_length_ratios = \
             '*' in changeable or EqualLengthRatiosProperty in changeable or LengthRatioProperty in changeable
         if update_length_ratios:
@@ -1733,6 +1736,9 @@ class PropertySet(LineSet):
             elif isinstance(prop, AngleValueProperty):
                 if update_angles:
                     extra = self.angle_value_property(prop.angle, use_cache=False)
+            elif isinstance(prop, SumOfAnglesProperty):
+                if update_sums_of_angles:
+                    extra = self.sum_of_angles_property(*prop.angles, use_cache=False)
             elif isinstance(prop, PointsCoincidenceProperty):
                 extra = self.coincidence_property(*prop.points, use_cache=False)
             elif isinstance(prop, PointsCollinearityProperty):
@@ -1857,8 +1863,8 @@ class PropertySet(LineSet):
     def sum_of_angles(self, *angles):
         return self.__angle_ratios.sum_of_angles(*angles)
 
-    def sum_of_angles_property(self, *angles):
-        return self.__angle_ratios.sum_of_angles_property(*angles)
+    def sum_of_angles_property(self, *angles, use_cache=True):
+        return self.__angle_ratios.sum_of_angles_property(*angles, use_cache=use_cache)
 
     def congruent_segments_for(self, segment):
         fam = self.__length_ratios.ratio_to_family.get(1)
