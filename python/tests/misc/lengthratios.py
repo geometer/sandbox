@@ -12,6 +12,8 @@ class FakeReason:
         self.premises = []
         self.all_premises = []
         self.rule = PredefinedPropertyRule.instance()
+        self.generation = 0
+        self.obsolete = False
 
     def reset_premises(self):
         pass
@@ -44,9 +46,9 @@ class LengthRatioPropertySetTest(unittest.TestCase):
         ratios = LengthRatioPropertySet()
         add_ratio(ratios, EqualLengthRatiosProperty(self.AB, self.CD, self.EF, self.GH))
         add_ratio(ratios, EqualLengthRatiosProperty(self.AB, self.CD, self.GH, self.EF))
-        comment, premises = ratios.explanation((self.GH, self.EF), (self.EF, self.GH))
-        self.assertEqual(str(comment), '|G H| / |E F| = |A B| / |C D| = |E F| / |G H|')
-        self.assertEqual(len(premises), 2)
+        prop = ratios.equality_property((self.GH, self.EF), (self.EF, self.GH))
+        self.assertEqual(str(prop.reason.comment), '|G H| / |E F| = |A B| / |C D| = |E F| / |G H|')
+        self.assertEqual(len(prop.reason.premises), 2)
 
     def test2(self):
         ratios = LengthRatioPropertySet()
@@ -70,9 +72,9 @@ class LengthRatioPropertySetTest(unittest.TestCase):
         add_ratio(ratios, EqualLengthRatiosProperty(self.AB, self.CD, self.EF, self.GH))
         add_ratio(ratios, EqualLengthRatiosProperty(self.CD, self.AB, self.GH, self.EF))
         add_ratio(ratios, EqualLengthRatiosProperty(self.AB, self.CD, self.GH, self.EF))
-        comment, premises = ratios.explanation((self.CD, self.AB), (self.EF, self.GH))
-        self.assertEqual(str(comment), '|C D| / |A B| = |G H| / |E F| = |A B| / |C D| = |E F| / |G H|')
-        self.assertEqual(len(premises), 3)
+        prop = ratios.equality_property((self.CD, self.AB), (self.EF, self.GH))
+        self.assertEqual(str(prop.reason.comment), '|C D| / |A B| = |G H| / |E F| = |A B| / |C D| = |E F| / |G H|')
+        self.assertEqual(len(prop.reason.premises), 3)
 
     def test5_1(self):
         ratios = LengthRatioPropertySet()
@@ -97,7 +99,7 @@ class LengthRatioPropertySetTest(unittest.TestCase):
         add_ratio(ratios, EqualLengthRatiosProperty(self.AB, self.CD, self.EF, self.GH))
         add_ratio(ratios, EqualLengthRatiosProperty(self.CD, self.AB, self.GH, self.EF))
         add_ratio(ratios, LengthRatioProperty(self.AB, self.CD, 1))
-        comment, premises = ratios.explanation((self.EF, self.GH), (self.GH, self.EF))
+        prop = ratios.equality_property((self.EF, self.GH), (self.GH, self.EF))
 
-        self.assertEqual(str(comment), '|E F| / |G H| = |A B| / |C D| = 1 = |C D| / |A B| = |G H| / |E F|')
-        self.assertEqual(len(premises), 4)
+        self.assertEqual(str(prop.reason.comment), '|E F| / |G H| = |A B| / |C D| = 1 = |C D| / |A B| = |G H| / |E F|')
+        self.assertEqual(len(prop.reason.premises), 4)

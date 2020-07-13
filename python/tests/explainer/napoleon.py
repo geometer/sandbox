@@ -5,6 +5,9 @@ from sandbox.util import Comment
 from .base import ExplainerTest
 
 class NapoleonOutward(ExplainerTest):
+    def explainer_options(self):
+        return {'cyclic': True}
+
     def createScene(self):
         scene = Scene()
 
@@ -30,6 +33,9 @@ class NapoleonOutward(ExplainerTest):
         self.assertIn(prop, self.explainer.context)
 
 class NapoleonInward(ExplainerTest):
+    def explainer_options(self):
+        return {'cyclic': True}
+
     def createScene(self):
         scene = Scene()
 
@@ -56,7 +62,7 @@ class NapoleonInward(ExplainerTest):
 
 class NapoleonInwardPlusTrigonometry(NapoleonInward):
     def explainer_options(self):
-        return {'trigonometric': True}
+        return {'cyclic': True, 'trigonometric': True}
 
     def testEquilateral(self):
         prop = EquilateralTriangleProperty((self.scene.get('A2'), self.scene.get('B2'), self.scene.get('C2')))
@@ -64,7 +70,7 @@ class NapoleonInwardPlusTrigonometry(NapoleonInward):
 
 class NapoleonInwardPlusAdvanced(NapoleonInward):
     def explainer_options(self):
-        return {'advanced': True}
+        return {'cyclic': True, 'advanced': True}
 
     def testEquilateral(self):
         prop = EquilateralTriangleProperty((self.scene.get('A2'), self.scene.get('B2'), self.scene.get('C2')))
