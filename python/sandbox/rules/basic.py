@@ -725,15 +725,23 @@ class LengthRatioRule(Rule):
             )
 
 @source_type(ParallelVectorsProperty)
+@processed_cache(set())
+@accepts_auto
 class ParallelVectorsRule(Rule):
     def apply(self, para):
         vec0 = para.vectors[0]
         vec1 = para.vectors[1]
-        ne0 = self.context.not_equal_property(*vec0.points)
-        ne1 = self.context.not_equal_property(*vec1.points)
-        if ne0 is None or ne1 is None:
+        ne0 = self.context.coincidence_property(*vec0.points)
+        if ne0 is None:
             return
-        if para.reason.obsolete and ne0.reason.obsolete and ne1.reason.obsolete:
+        if ne0.coincident:
+            self.processed.add(para)
+            return
+        ne1 = self.context.coincidence_property(*vec1.points)
+        if ne1 is None:
+            return
+        self.processed.add(para)
+        if ne1.coincident:
             return
         for prop in AngleValueProperty.generate(vec0, vec1, 0):
             yield (
@@ -1471,11 +1479,14 @@ class PointInsidePartOfAngleRule(Rule):
                 )
 
 @source_type(PointInsideAngleProperty)
+@processed_cache(set())
+@accepts_auto
 class PartOfAcuteAngleIsAcuteRule(Rule):
     def apply(self, prop):
         kind = self.context.angle_kind_property(prop.angle)
-        if kind is None or prop.reason.obsolete and kind.reason.obsolete:
+        if kind is None:
             return
+        self.processed.add(prop)
         if kind.kind == AngleKindProperty.Kind.acute:
             pattern = '$%{angle:part}$ is a part of acute $%{angle:whole}$'
         elif kind.kind == AngleKindProperty.Kind.right:
@@ -1490,13 +1501,14 @@ class PartOfAcuteAngleIsAcuteRule(Rule):
                 [prop, kind]
             )
 
+@processed_cache(set())
+@accepts_auto
 class AngleTypeByDegreeRule(Rule):
     def sources(self):
         return self.context.nondegenerate_angle_value_properties()
 
     def apply(self, prop):
-        if prop.reason.obsolete:
-            return
+        self.processed.add(self)
         if prop.degree in (0, 180):
             return
         pattern = '$%{degree:min} < %{anglemeasure:angle} = %{degree:degree} < %{degree:max}$'
@@ -1519,13 +1531,16 @@ class AngleTypeByDegreeRule(Rule):
                 prop.reason.premises
             )
 
+@processed_cache(set())
 class PointsCollinearityByAngleDegreeRule(Rule):
     def sources(self):
         return self.context.angle_value_properties()
 
+    def accepts(self, prop):
+        return prop.angle.vertex and prop not in self.processed
+
     def apply(self, prop):
-        if prop.angle.vertex is None or prop.reason.obsolete:
-            return
+        self.processed.add(prop)
         yield (
             PointsCollinearityProperty(*prop.angle.point_set, prop.degree in (0, 180)),
             Comment(
@@ -1572,6 +1587,8 @@ class AngleTypesInObtuseangledTriangleRule(Rule):
                 [prop]
             )
 
+@processed_cache(set())
+@accepts_auto
 class VerticalAnglesRule(Rule):
     def sources(self):
         return itertools.combinations(self.context.angle_value_properties_for_degree(180, lambda a: a.vertex), 2)
@@ -1582,8 +1599,9 @@ class VerticalAnglesRule(Rule):
 
     def apply(self, src):
         av0, av1 = src
-        if av0.reason.obsolete and av1.reason.obsolete:
-            return
+        self.processed.add(src)
+        self.processed.add((av1, av0))
+
         ng0 = av0.angle
         ng1 = av1.angle
         if ng0.vertex != ng1.vertex:
@@ -2118,11 +2136,14 @@ class PlanePositionsToLinePositionsRule(Rule):
         )
 
 @source_type(PointInsideAngleProperty)
+@processed_cache(set())
+@accepts_auto
 class TwoAnglesWithCommonSideRule(Rule):
     def apply(self, prop):
         av = self.context.angle_value_property(prop.angle)
-        if av is None or prop.reason.obsolete and av.reason.obsolete:
+        if av is None:
             return
+        self.processed.add(prop)
         angle0 = prop.angle.vertex.angle(prop.angle.vectors[0].end, prop.point)
         angle1 = prop.angle.vertex.angle(prop.angle.vectors[1].end, prop.point)
         yield (
