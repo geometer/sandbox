@@ -28,8 +28,8 @@ class Explainer:
         self.scene = scene
         self.__options = options
         self.context = PropertySet(self.scene.points(max_layer=self.__max_layer))
-        self.__explanation_time = None
-        self.__optimization_time = 0
+        self.explanation_time = None
+        self.optimization_time = 0
         self.__iteration_step_count = -1
         self.__rules = [
             LineAndTwoPointsToNoncollinearityRule(self.context),
@@ -239,7 +239,7 @@ class Explainer:
         self.__explain_all()
         if not frozen:
             self.scene.unfreeze()
-        self.__explanation_time = time.time() - start
+        self.explanation_time = time.time() - start
 
     def __explain_all(self):
         def iteration():
@@ -455,7 +455,7 @@ class Explainer:
         while changed:
             self.context.add_synthetics(changed)
             changed = adjust1()
-        self.__optimization_time = time.time() - start
+        self.optimization_time = time.time() - start
 
     def dump(self, properties_to_explain=[]):
         def to_string(reason):
@@ -499,8 +499,8 @@ class Explainer:
             ('Unexplained properties', len(unexplained)),
             Stats(unexplained_by_kind),
             ('Iterations', self.__iteration_step_count),
-            ('Explanation time', '%.3f sec' % self.__explanation_time),
-            ('Optimisation time', '%.3f sec' % self.__optimization_time),
+            ('Explanation time', '%.3f sec' % self.explanation_time),
+            ('Optimisation time', '%.3f sec' % self.optimization_time),
         ], 'Explainer stats')
 
     def explained(self, obj):
