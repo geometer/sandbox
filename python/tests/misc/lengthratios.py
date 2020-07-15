@@ -10,7 +10,7 @@ class FakeReason:
     def __init__(self):
         self.cost = 1
         self.premises = []
-        self.all_premises = []
+        self.all_premises = {}
         self.rule = PredefinedPropertyRule.instance()
         self.generation = 0
         self.obsolete = False
