@@ -13,6 +13,7 @@ def run_sample(scene, props_generator):
     parser.add_argument('--dump', nargs='+', choices=('scene', 'constraints', 'stats', 'result', 'properties', 'explanation'), default=('stats', 'result'))
     parser.add_argument('--run-hunter', action='store_true')
     parser.add_argument('--run-verifier', action='store_true')
+    parser.add_argument('--dont-run-optimiser', action='store_true')
     parser.add_argument('--extra-rules', nargs='+', choices=('advanced', 'circles', 'trigonometric'), default=())
     parser.add_argument('--profile-explanation', action='store_true')
     parser.add_argument('--profile-optimisation', action='store_true')
@@ -44,11 +45,12 @@ def run_sample(scene, props_generator):
             #explainer.dump()
             raise e
 
-    if args.profile_optimisation:
-        import cProfile
-        cProfile.runctx('explainer.optimize()', {'explainer': explainer}, {})
-    else:
-        explainer.optimize()
+    if not args.dont_run_optimiser:
+        if args.profile_optimisation:
+            import cProfile
+            cProfile.runctx('explainer.optimize()', {'explainer': explainer}, {})
+        else:
+            explainer.optimize()
 
     props = props_generator()
     if args.run_verifier:

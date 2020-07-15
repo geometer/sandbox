@@ -29,7 +29,7 @@ class Explainer:
         self.__options = options
         self.context = PropertySet(self.scene.points(max_layer=self.__max_layer))
         self.__explanation_time = None
-        self.__optimization_time = None
+        self.__optimization_time = 0
         self.__iteration_step_count = -1
         self.__rules = [
             LineAndTwoPointsToNoncollinearityRule(self.context),
