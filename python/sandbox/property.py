@@ -74,6 +74,19 @@ class Property:
             for base in other_prop.bases:
                 self.add_base(base)
 
+    def optimize(self):
+        candidate = None
+        cost = self.reason.cost
+        for reason in self.alternate_reasons:
+            reason.reset_premises()
+            if reason.cost < cost:
+                cost = reason.cost
+                candidate = reason
+        if candidate:
+            self.reason = candidate
+            return True
+        return False
+
     def add_reason(self, reason):
         reason = self.__acceptable_reason(reason)
         if self.__reason is None:

@@ -434,15 +434,7 @@ class Explainer:
         def adjust0():
             changed = set()
             for prop in self.context.all:
-                candidate = None
-                cost = prop.reason.cost
-                for reason in prop.alternate_reasons:
-                    reason.reset_premises()
-                    if reason.cost < cost:
-                        cost = reason.cost
-                        candidate = reason
-                if candidate:
-                    prop.reason = candidate
+                if prop.optimize():
                     changed.add(type(prop))
             return changed
 
