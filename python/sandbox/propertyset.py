@@ -1337,9 +1337,10 @@ class AngleRatioPropertySet:
         pattern = '$' + ' + '.join(p0) + ' = ' + ' + '.join(p1) + ' = %{degree:sum}$'
         common_params = {'a' + str(i): angle for i, angle in enumerate(angles)}
 
-        candidates = []
+        prop = None
         for known in ar:
-            prop = SumOfAnglesProperty(*angles, degree=known.degree)
+            if prop is None:
+                prop = SumOfAnglesProperty(*angles, degree=known.degree)
             params = dict(common_params)
             premises = [known]
             ka = list(known.angles)
@@ -1354,13 +1355,23 @@ class AngleRatioPropertySet:
             for angle, a in zip(angles, known_angles):
                 if angle != a:
                     premises.append(self.ratio_property(angle, a))
-            candidates.append(_synthetic_property(prop, comment, premises))
+            reason = Reason(
+                SyntheticPropertyRule.instance(),
+                1 + max(p.reason.generation for p in premises),
+                comment,
+                premises
+            )
+            reason.obsolete = all(p.reason.obsolete for p in premises)
+            prop.add_reason(reason, optimize=False)
 
-        best = PropertySet.best_candidate(candidates)
-        if use_cache and best:
+        if prop:
+            prop.optimize()
+
+        if use_cache and prop:
             for perm in itertools.permutations(angles, len(angles)):
-                self.__sum_of_angles[perm] = best
-        return best
+                self.__sum_of_angles[perm] = prop
+
+        return prop
 
 class LengthRatioPropertySet:
     class Family:

@@ -87,13 +87,13 @@ class Property:
             return True
         return False
 
-    def add_reason(self, reason):
+    def add_reason(self, reason, optimize=True):
         reason = self.__acceptable_reason(reason)
         if self.__reason is None:
             self.reason = reason
         elif reason == self.__reason:
             return
-        elif reason.cost < self.__reason.cost:
+        elif optimize and reason.cost < self.__reason.cost:
             self.reason = reason
         elif reason not in self.alternate_reasons:
             self.__alternate_reasons.append(reason)
