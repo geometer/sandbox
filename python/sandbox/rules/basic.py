@@ -1199,6 +1199,61 @@ class TwoPerpendicularsRule2(Rule):
             [perp0, perp1, ne]
         )
 
+@processed_cache({})
+class ZeroAngleVectorsToPointAndLineConfigurationRule(Rule):
+    def sources(self):
+        return self.context.angle_value_properties_for_degree(0, lambda a: len(a.point_set) == 4)
+
+    def apply(self, prop):
+        mask = self.processed.get(prop, 0)
+        if mask == 0xF:
+            return
+        original = mask
+
+        ang = prop.angle
+        all_points = ang.vectors[0].points + ang.vectors[1].points
+        for index, pt in enumerate(all_points):
+            bit = 1 << index
+            if mask & bit:
+                continue
+            triple = tuple(p for p in all_points if p != pt)
+            ncl = self.context.collinearity_property(*triple)
+            if ncl is None:
+                continue
+            if ncl.collinear:
+                mask = 0xF
+                continue
+            mask |= bit
+            comment = Comment(
+                '$%{vector:vec0}$ and $%{vector:vec1}$ are parallel but not collinear',
+                {'vec0': ang.vectors[0], 'vec1': ang.vectors[1]}
+            )
+            premises = [prop, ncl]
+            for new_prop in (
+                SameOrOppositeSideProperty(ang.vectors[0].as_segment, *ang.vectors[1].points, True),
+                SameOrOppositeSideProperty(ang.vectors[1].as_segment, *ang.vectors[0].points, True),
+                SameOrOppositeSideProperty(
+                    ang.vectors[0].start.segment(ang.vectors[1].start),
+                    ang.vectors[0].end, ang.vectors[1].end, True
+                ),
+                SameOrOppositeSideProperty(
+                    ang.vectors[0].end.segment(ang.vectors[1].end),
+                    ang.vectors[0].start, ang.vectors[1].start, True
+                ),
+                SameOrOppositeSideProperty(
+                    ang.vectors[0].start.segment(ang.vectors[1].end),
+                    ang.vectors[0].end, ang.vectors[1].start, False
+                ),
+                SameOrOppositeSideProperty(
+                    ang.vectors[1].start.segment(ang.vectors[0].end),
+                    ang.vectors[1].end, ang.vectors[0].start, False
+                ),
+            ):
+                yield (new_prop, comment, premises)
+
+        if mask != original:
+            self.processed[prop] = mask
+
 @source_type(ParallelSegmentsProperty)
 @processed_cache({})
 class ParallelSameSideRule(Rule):

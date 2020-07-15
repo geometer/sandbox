@@ -71,6 +71,7 @@ class Explainer:
             SameSidePointInsideSegmentRule(self.context),
             TwoPerpendicularsRule(self.context),
             TwoPerpendicularsRule2(self.context),
+            ZeroAngleVectorsToPointAndLineConfigurationRule(self.context),
             ParallelSameSideRule(self.context),
             CommonPerpendicularRule(self.context),
             SideProductsInSimilarTrianglesRule(self.context),
@@ -415,45 +416,6 @@ class Explainer:
 #                            'Transitivity',
 #                            [ncl, zero, ne]
 #                        )
-
-            for zero in self.context.angle_value_properties_for_degree(0, lambda a: a.vertex is None):
-                ang = zero.angle
-                third = next(pt for pt in ang.vectors[1].points if pt not in ang.vectors[0].points)
-                ncl = self.context.collinearity_property(*ang.vectors[0].points, third)
-                if ncl is None or ncl.collinear:
-                    continue
-                ne = self.context.not_equal_property(*ang.vectors[1].points)
-                if ne is None:
-                    continue
-                if zero.reason.obsolete and ncl.reason.obsolete and ne.reason.obsolete:
-                    continue
-                comment = Comment(
-                    '$%{vector:vec0} \\uparrow\\!\\!\\!\\uparrow %{vector:vec1}$',
-                    {'vec0': ang.vectors[0], 'vec1': ang.vectors[1]}
-                )
-                premises = [zero, ncl, ne]
-                yield (
-                    SameOrOppositeSideProperty(ang.vectors[0].as_segment, *ang.vectors[1].points, True),
-                    None, comment, premises
-                )
-                yield (
-                    SameOrOppositeSideProperty(ang.vectors[1].as_segment, *ang.vectors[0].points, True),
-                    None, comment, premises
-                )
-                yield (
-                    SameOrOppositeSideProperty(
-                        ang.vectors[0].start.segment(ang.vectors[1].end),
-                        ang.vectors[0].end, ang.vectors[1].start, False
-                    ),
-                    None, comment, premises
-                )
-                yield (
-                    SameOrOppositeSideProperty(
-                        ang.vectors[1].start.segment(ang.vectors[0].end),
-                        ang.vectors[1].end, ang.vectors[0].start, False
-                    ),
-                    None, comment, premises
-                )
 
         for prop, comment in enumerate_predefined_properties(self.scene, max_layer=self.__max_layer):
             self.__reason(prop, PredefinedPropertyRule.instance(), comment, [])
