@@ -1222,7 +1222,7 @@ class ZeroAngleVectorsToPointAndLineConfigurationRule(Rule):
                 continue
             if ncl.collinear:
                 mask = 0xF
-                continue
+                break
             mask |= bit
             comment = Comment(
                 '$%{vector:vec0}$ and $%{vector:vec1}$ are parallel but not collinear',
