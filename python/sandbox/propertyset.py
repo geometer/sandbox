@@ -1169,6 +1169,15 @@ class AngleRatioPropertySet:
         fam = self.family_with_degree
         return fam.value_properties_for_degree(degree, condition) if fam else []
 
+    def are_congruent(self, angle0, angle1):
+        fam = self.angle_to_family.get(angle0)
+        if fam is None:
+            return None
+        ratio1 = fam.angle_to_ratio.get(angle1)
+        if ratio1 is None:
+            return None
+        return fam.angle_to_ratio[angle0] == ratio1
+
     def ratio(self, angle0, angle1):
         fam = self.angle_to_family.get(angle0)
         if fam is None:
@@ -1855,6 +1864,9 @@ class PropertySet(LineSet):
     def points_inside_triangle(self, triangle):
         ar = self.__points_inside_triangle.get(triangle.symmetric_key)
         return ar if ar else []
+
+    def angles_are_congruent(self, angle0, angle1):
+        return self.__angle_ratios.are_congruent(angle0, angle1)
 
     def angle_ratio(self, angle0, angle1):
         return self.__angle_ratios.ratio(angle0, angle1)

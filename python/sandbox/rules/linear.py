@@ -173,11 +173,11 @@ class EqualSumsOfAnglesRule(Rule):
                     [sum0, sum1]
                 )
             else:
-                ratio = self.context.angle_ratio(eq0, eq1)
-                if ratio is None:
+                congruency = self.context.angles_are_congruent(eq0, eq1)
+                if congruency is None:
                     continue
                 mask |= bit
-                if ratio != 1:
+                if not congruency:
                     mask |= 8 // bit # 0x1 <=> 0x8, 0x2 <=> 0x4
                     continue
                 ca = self.context.angle_ratio_property(eq0, eq1)
