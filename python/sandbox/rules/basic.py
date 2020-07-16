@@ -862,6 +862,7 @@ class Degree90ToPerpendicularSegmentsRule2(Rule):
                     [prop, self.context.point_on_line_property(seg1, pt)]
                 )
 
+@processed_cache(set())
 class CommonPerpendicularRule(Rule):
     def sources(self):
         return self.context.angle_value_properties_for_degree(0)
@@ -870,8 +871,11 @@ class CommonPerpendicularRule(Rule):
         segments = (prop.angle.vectors[0].as_segment, prop.angle.vectors[1].as_segment)
         for seg0, seg1 in (segments, reversed(segments)):
             for perp in self.context.list(PerpendicularSegmentsProperty, [seg0]):
-                if prop.reason.obsolete and perp.reason.obsolete:
+                key = (prop, seg0, perp)
+                if key in self.processed:
                     continue
+                self.processed.add(key)
+
                 other = perp.segments[1] if seg0 == perp.segments[0] else perp.segments[0]
                 if prop.angle.vertex:
                     pattern = '$%{line:line0}$ is the same line as $%{line:line1}$'
