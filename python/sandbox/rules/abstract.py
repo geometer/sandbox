@@ -29,9 +29,6 @@ class Rule(AbstractRule):
     def __init__(self, context):
         self.context = context
 
-    def accepts(self, src):
-        return True
-
     def generate(self):
         for src in self.sources():
             if self.accepts(src):
@@ -84,13 +81,24 @@ class processed_cache:
         )
 
 def accepts_auto(clazz):
-    #assert not hasattr(clazz, 'accepts'), 'Cannot use @accepts_auto on class with accepts()'
+    assert not hasattr(clazz, 'accepts'), 'Cannot use @accepts_auto on class with accepts()'
     return type(
         clazz.__name__,
         (clazz,),
         {'accepts': lambda inst, src: src not in inst.processed}
     )
 
-def verify_rule(obj):
-    if not hasattr(obj, 'processed'):
-        print('WARNING: Rule %s has no attribute `processed`' % type(obj).__name__)
+def create_rule(clazz, context):
+    if not hasattr(clazz, 'processed'):
+        print('WARNING: Rule %s has no attribute `processed`' % clazz.__name__)
+    if not hasattr(clazz, 'accepts'):
+        def generator(rule):
+            for src in rule.sources():
+                for reason in rule.apply(src):
+                    yield reason
+        clazz = type(
+            clazz.__name__,
+            (clazz,),
+            {'generate': lambda inst: generator(inst)}
+        )
+    return clazz(context)
