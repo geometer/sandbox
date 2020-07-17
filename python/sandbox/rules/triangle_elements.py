@@ -7,27 +7,16 @@ from ..util import Comment
 from .abstract import Rule, accepts_auto, processed_cache, source_type, source_types
 
 @source_type(SimilarTrianglesProperty)
-@processed_cache({})
+@processed_cache(set())
+@accepts_auto
 class SideProductsInSimilarTrianglesRule(Rule):
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
-        if mask == 0x7:
-            return
+        self.processed.add(prop)
 
         sides0 = prop.triangle0.sides
         sides1 = prop.triangle1.sides
-        original = mask
         for i, j in itertools.combinations(range(0, 3), 2):
-            bit = 1 << next(k for k in range(0, 3) if k not in (i, j))
-            if mask & bit:
-                continue
             segments = (sides0[i], sides0[j], sides1[i], sides1[j])
-            for inds in [(0, 1, 2, 3), (0, 2, 1, 3), (1, 0, 3, 2), (2, 0, 3, 1)]:
-                if not self.context.length_ratios_are_equal(*[segments[n] for n in inds]):
-                    break
-            else:
-                continue
-            mask |= bit
             if segments[0] != segments[1] and segments[0] != segments[2] and \
                segments[1] != segments[3] and segments[2] != segments[3]:
                 yield (
@@ -38,9 +27,6 @@ class SideProductsInSimilarTrianglesRule(Rule):
                     ),
                     [prop]
                 )
-
-        if original != mask:
-            self.processed[prop] = mask
 
 @source_type(SimilarNondegenerateTrianglesProperty)
 @processed_cache(set())
