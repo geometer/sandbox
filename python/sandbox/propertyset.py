@@ -1783,37 +1783,37 @@ class PropertySet(LineSet):
         return changed
 
     def __getitem__(self, prop):
-        if isinstance(prop, AngleRatioProperty):
-            existing = self.angle_ratio_property(prop.angle0, prop.angle1)
-        elif isinstance(prop, AngleValueProperty):
-            existing = self.angle_value_property(prop.angle)
-        elif isinstance(prop, SameCyclicOrderProperty):
-            existing = self.same_cyclic_order_property(prop.cycle0, prop.cycle1)
-        #elif isinstance(prop, PointAndCircleProperty):
-        #    existing = self.point_and_circle_property(prop.point, prop.circle_key)
-        elif isinstance(prop, PointsCoincidenceProperty):
-            existing = self.coincidence_property(*prop.points)
-        elif isinstance(prop, PointsCollinearityProperty):
-            existing = self.collinearity_property(*prop.points)
-        elif isinstance(prop, MultiPointsCollinearityProperty):
-            existing = self.collinearity_property(*prop.points)
-        elif isinstance(prop, PointOnLineProperty):
-            existing = self.point_on_line_property(prop.segment, prop.point)
-        elif isinstance(prop, LinesCoincidenceProperty):
-            existing = self.lines_coincidence_property(*prop.segments)
-        elif isinstance(prop, SumOfAnglesProperty):
-            existing = self.sum_of_angles_property(*prop.angles)
-        elif isinstance(prop, ConcyclicPointsProperty):
-            existing = self.concyclicity_property(*prop.points)
-        #TODO: LengthRatioProperty
-        #TODO: EqualLengthRatiosProperty
+        prop_and_index = self.__full_set.get(prop)
+        if prop_and_index:
+            existing = prop_and_index[0]
         else:
-            existing = None
+            if isinstance(prop, AngleRatioProperty):
+                existing = self.angle_ratio_property(prop.angle0, prop.angle1)
+            elif isinstance(prop, AngleValueProperty):
+                existing = self.angle_value_property(prop.angle)
+            elif isinstance(prop, SameCyclicOrderProperty):
+                existing = self.same_cyclic_order_property(prop.cycle0, prop.cycle1)
+            #elif isinstance(prop, PointAndCircleProperty):
+            #    existing = self.point_and_circle_property(prop.point, prop.circle_key)
+            elif isinstance(prop, PointsCoincidenceProperty):
+                existing = self.coincidence_property(*prop.points)
+            elif isinstance(prop, PointsCollinearityProperty):
+                existing = self.collinearity_property(*prop.points)
+            elif isinstance(prop, MultiPointsCollinearityProperty):
+                existing = self.collinearity_property(*prop.points)
+            elif isinstance(prop, PointOnLineProperty):
+                existing = self.point_on_line_property(prop.segment, prop.point)
+            elif isinstance(prop, LinesCoincidenceProperty):
+                existing = self.lines_coincidence_property(*prop.segments)
+            elif isinstance(prop, SumOfAnglesProperty):
+                existing = self.sum_of_angles_property(*prop.angles)
+            elif isinstance(prop, ConcyclicPointsProperty):
+                existing = self.concyclicity_property(*prop.points)
+            #TODO: LengthRatioProperty
+            #TODO: EqualLengthRatiosProperty
+            else:
+                existing = None
 
-        if existing is None:
-            prop_and_index = self.__full_set.get(prop)
-            if prop_and_index:
-                existing = prop_and_index[0]
         if existing and not existing.compare_values(prop):
             raise ContradictionError('different values: `%s` vs `%s`' % (prop, existing))
         return existing
