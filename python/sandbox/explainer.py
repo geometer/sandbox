@@ -53,6 +53,7 @@ class Explainer:
             AngleBySumOfThreeRule,
             EliminateAngleFromSumRule,
             SumAndRatioOfTwoAnglesRule,
+            EqualSumsOfAnglesWithCommonSummandRule,
             EqualSumsOfAnglesRule,
             AngleTypeAndPerpendicularRule,
             CoincidenceTransitivityRule,

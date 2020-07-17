@@ -131,11 +131,42 @@ class SumAndRatioOfTwoAnglesRule(Rule):
         yield (AngleValueProperty(ar.angle0, value0), comment0, [prop, ar])
         yield (AngleValueProperty(ar.angle1, value1), comment1, [prop, ar])
 
+@processed_cache(set())
+class EqualSumsOfAnglesWithCommonSummandRule(Rule):
+    def sources(self):
+        sums_of_two = [p for p in self.context.list(SumOfAnglesProperty) if len(p.angles) == 2]
+        for s0, s1 in itertools.combinations(sums_of_two, 2):
+            if s0.degree == s1.degree:
+                if s0.angles[0] in s1.angles:
+                    yield (s0, s1, s0.angles[0])
+                elif s0.angles[1] in s1.angles:
+                    yield (s0, s1, s0.angles[1])
+
+    def apply(self, src):
+        sum0, sum1, common = src
+        key = frozenset([sum0, sum1])
+        if key in self.processed:
+            return
+        self.processed.add(key)
+
+        other0 = next(angle for angle in sum0.angles if angle != common)
+        other1 = next(angle for angle in sum1.angles if angle != common)
+        yield (
+            AngleRatioProperty(other0, other1, 1),
+            Comment(
+                '$%{anglemeasure:other0} + %{anglemeasure:common} = %{degree:sum} = %{anglemeasure:other1} + %{anglemeasure:common}$',
+                {'other0': other0, 'other1': other1, 'common': common, 'sum': sum0.degree}
+            ),
+            [sum0, sum1]
+        )
+
 @processed_cache({})
 class EqualSumsOfAnglesRule(Rule):
     def sources(self):
         sums_of_two = [p for p in self.context.list(SumOfAnglesProperty) if len(p.angles) == 2]
-        return [(s0, s1) for (s0, s1) in itertools.combinations(sums_of_two, 2) if s0.degree == s1.degree]
+        for s0, s1 in itertools.combinations(sums_of_two, 2):
+            if s0.degree == s1.degree and s0.angles[0] not in s1.angles and s0.angles[1] not in s1.angles:
+                yield (s0, s1)
 
     def apply(self, src):
         mask = self.processed.get(src, 0)
@@ -158,38 +189,23 @@ class EqualSumsOfAnglesRule(Rule):
             else:
                 eq1, other1 = sum1.angles
 
-            if other0 == other1:
-                mask |= bit
+            congruency = self.context.angles_are_congruent(eq0, eq1)
+            if congruency is None:
                 continue
-
-            if eq0 == eq1:
-                mask |= bit
-                yield (
-                    AngleRatioProperty(other0, other1, 1),
-                    Comment(
-                        '$%{anglemeasure:other0} + %{anglemeasure:eq0} = %{degree:sum} = %{anglemeasure:other1} + %{anglemeasure:eq1}$',
-                        {'other0': other0, 'other1': other1, 'eq0': eq0, 'eq1': eq1, 'sum': sum0.degree}
-                    ),
-                    [sum0, sum1]
-                )
-            else:
-                congruency = self.context.angles_are_congruent(eq0, eq1)
-                if congruency is None:
-                    continue
-                mask |= bit
-                if not congruency:
-                    mask |= 8 // bit # 0x1 <=> 0x8, 0x2 <=> 0x4
-                    continue
-                ca = self.context.angle_ratio_property(eq0, eq1)
-                sign = '\\equiv' if ca.same else '='
-                yield (
-                    AngleRatioProperty(other0, other1, 1),
-                    Comment(
-                        '$%{anglemeasure:other0} + %{anglemeasure:eq0} = %{degree:sum} = %{anglemeasure:other1} + %{anglemeasure:eq1}$ and $%{anglemeasure:eq0} ' + sign + ' %{anglemeasure:eq1}$',
-                        {'other0': other0, 'other1': other1, 'eq0': eq0, 'eq1': eq1, 'sum': sum0.degree}
-                    ),
-                    [sum0, sum1, ca]
-                )
+            mask |= bit
+            if not congruency:
+                mask |= 8 // bit # 0x1 <=> 0x8, 0x2 <=> 0x4
+                continue
+            ca = self.context.angle_ratio_property(eq0, eq1)
+            sign = '\\equiv' if ca.same else '='
+            yield (
+                AngleRatioProperty(other0, other1, 1),
+                Comment(
+                    '$%{anglemeasure:other0} + %{anglemeasure:eq0} = %{degree:sum} = %{anglemeasure:other1} + %{anglemeasure:eq1}$ and $%{anglemeasure:eq0} ' + sign + ' %{anglemeasure:eq1}$',
+                    {'other0': other0, 'other1': other1, 'eq0': eq0, 'eq1': eq1, 'sum': sum0.degree}
+                ),
+                [sum0, sum1, ca]
+            )
 
         if original != mask:
             self.processed[src] = mask
