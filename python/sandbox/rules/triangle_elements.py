@@ -17,8 +17,7 @@ class SideProductsInSimilarTrianglesRule(Rule):
         sides1 = prop.triangle1.sides
         for i, j in itertools.combinations(range(0, 3), 2):
             segments = (sides0[i], sides0[j], sides1[i], sides1[j])
-            if segments[0] != segments[1] and segments[0] != segments[2] and \
-               segments[1] != segments[3] and segments[2] != segments[3]:
+            if segments[0] != segments[2] and segments[1] != segments[3]:
                 yield (
                     EqualLengthProductsProperty(*segments),
                     Comment(
