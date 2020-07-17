@@ -58,6 +58,7 @@ class Explainer:
             TwoPointsBelongsToTwoLinesRule(self.context),
             TwoPointsBelongsToTwoPerpendicularsRule(self.context),
             LengthRatioRule(self.context),
+            IsoscelesNonzeroBaseImpliesNonzeroLegsRule(self.context),
             ParallelVectorsRule(self.context),
             PerpendicularSegmentsRule(self.context),
             PerpendicularSegmentsRule2(self.context),

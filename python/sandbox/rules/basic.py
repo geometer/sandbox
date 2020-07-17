@@ -703,26 +703,39 @@ class LengthRatioRule(Rule):
                 Comment(pattern, {'pt0': seg1.points[0], 'pt1': seg1.points[1]}),
                 [prop, ne1]
             )
-        elif ne0 is None and ne1 is None:
-            common = next((pt for pt in seg0.points if pt in seg1.points), None)
-            if common is None:
-                return
-            pt0 = next(pt for pt in seg0.points if pt != common)
-            pt1 = next(pt for pt in seg1.points if pt != common)
-            ne = self.context.not_equal_property(pt0, pt1)
-            if ne is None or prop.reason.obsolete and ne.reason.obsolete:
-                return
-            pattern = 'otherwise, $%{point:pt0} = %{point:pt1} = %{point:pt2}$'
-            yield (
-                PointsCoincidenceProperty(*seg0.points, False),
-                Comment(pattern, {'pt0': ne.points[0], 'pt1': common, 'pt2': ne.points[1]}),
-                [prop, ne]
-            )
-            yield (
-                PointsCoincidenceProperty(*seg1.points, False),
-                Comment(pattern, {'pt0': ne.points[1], 'pt1': common, 'pt2': ne.points[0]}),
-                [prop, ne]
-            )
+
+@source_type(ProportionalLengthsProperty)
+@processed_cache(set())
+@accepts_auto
+class IsoscelesNonzeroBaseImpliesNonzeroLegsRule(Rule):
+    def apply(self, prop):
+        seg0 = prop.segment0
+        seg1 = prop.segment1
+        common = common_endpoint(seg0, seg1)
+        if common is None:
+            self.processed.add(prop)
+            return
+
+        pt0 = other_point(seg0.points, common)
+        pt1 = other_point(seg1.points, common)
+        coinc = self.context.coincidence_property(pt0, pt1)
+        if coinc is None:
+            return
+        self.processed.add(prop)
+        if coinc.coincident:
+            return
+
+        pattern = 'otherwise, $%{point:pt0} = %{point:pt1} = %{point:pt2}$'
+        yield (
+            PointsCoincidenceProperty(*seg0.points, False),
+            Comment(pattern, {'pt0': coinc.points[0], 'pt1': common, 'pt2': coinc.points[1]}),
+            [prop, coinc]
+        )
+        yield (
+            PointsCoincidenceProperty(*seg1.points, False),
+            Comment(pattern, {'pt0': coinc.points[1], 'pt1': common, 'pt2': coinc.points[0]}),
+            [prop, coinc]
+        )
 
 @source_type(ParallelVectorsProperty)
 @processed_cache(set())
