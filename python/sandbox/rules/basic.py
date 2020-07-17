@@ -679,29 +679,26 @@ class SumOfThreeAnglesOnLineRule2(Rule):
             )
 
 @source_type(ProportionalLengthsProperty)
+@processed_cache(set())
 class LengthRatioRule(Rule):
     def apply(self, prop):
-        seg0 = prop.segment0
-        seg1 = prop.segment1
+        for seg0, seg1 in [(prop.segment0, prop.segment1), (prop.segment1, prop.segment0)]:
+            key = (seg0, seg1)
+            if key in self.processed:
+                continue
+            coinc = self.context.coincidence_property(*seg0.points)
+            if coinc is None:
+                continue
+            self.processed.add(key)
 
-        ne0 = self.context.not_equal_property(*seg0.points)
-        ne1 = self.context.not_equal_property(*seg1.points)
-        pattern = 'otherwise, $%{point:pt0} = %{point:pt1}$'
-        if ne0 is not None and ne1 is None:
-            if prop.reason.obsolete and ne0.reason.obsolete:
-                return
+            if coinc.coincident:
+                pattern = 'otherwise, $%{point:pt0} = %{point:pt1}$'
+            else:
+                pattern = '$%{point:pt0} = %{point:pt1}$'
             yield (
-                PointsCoincidenceProperty(*seg1.points, False),
+                PointsCoincidenceProperty(*seg1.points, coinc.coincident),
                 Comment(pattern, {'pt0': seg0.points[0], 'pt1': seg0.points[1]}),
-                [prop, ne0]
-            )
-        elif ne1 is not None and ne0 is None:
-            if prop.reason.obsolete and ne1.reason.obsolete:
-                return
-            yield (
-                PointsCoincidenceProperty(*seg0.points, False),
-                Comment(pattern, {'pt0': seg1.points[0], 'pt1': seg1.points[1]}),
-                [prop, ne1]
+                [prop, coinc]
             )
 
 @source_type(ProportionalLengthsProperty)
