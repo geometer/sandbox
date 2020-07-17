@@ -1244,7 +1244,8 @@ class AngleRatioPropertySet:
         for perm in itertools.permutations(key, len(key)):
             ar = self.__sum_of_angles_2.get(perm)
             if ar:
-                ar.append(prop)
+                if prop not in ar:
+                    ar.append(prop)
             else:
                 self.__sum_of_angles_2[perm] = [prop]
         for fam, _ in key:
