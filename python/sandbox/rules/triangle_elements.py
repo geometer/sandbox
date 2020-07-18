@@ -32,9 +32,10 @@ class SideProductsInSimilarTrianglesRule(Rule):
 @accepts_auto
 class SideRatiosInNondegenerateSimilarTrianglesRule(Rule):
     def apply(self, prop):
+        self.processed.add(prop)
         sides0 = prop.triangle0.sides
         sides1 = prop.triangle1.sides
-        for i, j in itertools.permutations(range(0, 3), 2):
+        for i, j in itertools.combinations(range(0, 3), 2):
             yield (
                 EqualLengthRatiosProperty(sides0[i], sides0[j], sides1[i], sides1[j]),
                 Comment(
@@ -43,7 +44,14 @@ class SideRatiosInNondegenerateSimilarTrianglesRule(Rule):
                 ),
                 [prop]
             )
-        for i, j in itertools.combinations(range(0, 3), 2):
+            yield (
+                EqualLengthRatiosProperty(sides0[j], sides0[i], sides1[j], sides1[i]),
+                Comment(
+                    'ratios of sides in non-degenerate similar $%{triangle:tr0}$ and $%{triangle:tr1}$',
+                    {'tr0': prop.triangle0, 'tr1': prop.triangle1}
+                ),
+                [prop]
+            )
             if sides0[i] != sides1[i] and sides0[j] != sides1[j]:
                 yield (
                     EqualLengthRatiosProperty(sides0[i], sides1[i], sides0[j], sides1[j]),
