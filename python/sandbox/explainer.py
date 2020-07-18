@@ -388,7 +388,8 @@ class Explainer:
                 for prop, comment, premises in rule.generate():
                     yield (prop, rule, comment, premises)
 
-            obsolete_loop_step()
+            for four in obsolete_loop_step():
+                yield four
 
         for prop, comment in enumerate_predefined_properties(self.scene, max_layer=self.__max_layer):
             self.__reason(prop, PredefinedPropertyRule.instance(), comment, [])
