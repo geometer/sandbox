@@ -256,9 +256,10 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
         )
 
 @processed_cache(set())
+@accepts_auto
 class SimilarTrianglesByAngleAndTwoSidesRule2(Rule):
     def sources(self):
-        return [(a0, a1) for a0, a1 in self.context.congruent_angles_with_vertex() if a0.point_set != a1.point_set and (a0, a1) not in self.processed]
+        return [(a0, a1) for a0, a1 in self.context.congruent_angles_with_vertex() if a0.point_set != a1.point_set]
 
     def apply(self, src):
         ang0, ang1 = src
