@@ -383,39 +383,6 @@ class Explainer:
                     [aa0, aa1, col]
                 )
 
-#            for zero in [p for p in self.context.list(AngleValueProperty) if p.angle.vertex is None and p.degree == 0]:
-#                zero_is_too_old = zero.reason.obsolete
-#                ang = zero.angle
-#
-#                for vec0, vec1 in [ang.vectors, reversed(ang.vectors)]:
-#                    for i, j in [(0, 1), (1, 0)]:
-#                        ncl = self.context.collinearity(*vec0.points, vec1.points[i])
-#                        if ncl is None or ncl.collinear:
-#                            continue
-#                        ne = self.context.not_equal_property(*vec1.points)
-#                        if ne is None:
-#                            continue
-#                        if zero_is_too_old and ncl.reason.obsolete and ne.reason.obsolete:
-#                            continue
-#                        yield (
-#                            PointsCollinearityProperty(*vec0.points, vec1.points[j], False),
-#                            None,
-#                            'Transitivity',
-#                            [ncl, zero, ne]
-#                        )
-#                        yield (
-#                            PointsCollinearityProperty(*vec1.points, vec0.points[i], False),
-#                            None,
-#                            'Transitivity',
-#                            [ncl, zero, ne]
-#                        )
-#                        yield (
-#                            PointsCollinearityProperty(*vec1.points, vec0.points[j], False),
-#                            None,
-#                            'Transitivity',
-#                            [ncl, zero, ne]
-#                        )
-
         def iteration():
             for rule in self.__rules:
                 for prop, comment, premises in rule.generate():
