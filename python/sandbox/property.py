@@ -452,10 +452,14 @@ class PointInsideAngleProperty(Property):
     """
     Point lies inside an angle
     """
+    @staticmethod
+    def unique_key(point, angle):
+        return (point, angle)
+
     def __init__(self, point, angle):
         self.point = point
         self.angle = angle
-        super().__init__((point, angle), {point, *angle.point_set})
+        super().__init__(PointInsideAngleProperty.unique_key(point, angle), {point, *angle.point_set})
 
     @property
     def __priority__(self):

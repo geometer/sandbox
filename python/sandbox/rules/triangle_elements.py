@@ -456,8 +456,7 @@ class PointInsideTwoAnglesOfTriangleRule(Rule):
             key = (prop.point, angle, second_angle)
             if key in self.processed:
                 continue
-            # TODO: do not use index access directly
-            second = self.context[PointInsideAngleProperty(prop.point, second_angle)]
+            second = self.context.point_inside_angle_property(prop.point, second_angle)
             if second is None:
                 continue
             self.processed.add(key)

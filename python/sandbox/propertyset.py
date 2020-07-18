@@ -1631,6 +1631,7 @@ class PropertySet(LineSet):
         self.__cyclic_orders = CyclicOrderPropertySet()
         self.__similar_triangles = {} # (three points) => {(three points)}
         self.__two_points_relative_to_line = {} # key => SameOrOppositeSideProperty
+        self.__points_inside_angle = {} # key => PointInsideAngleProperty
         self.__points_inside_triangle = {} # {vertices} => [points]
 
     def add(self, prop):
@@ -1674,6 +1675,8 @@ class PropertySet(LineSet):
                     triples.add(key0)
                 else:
                     self.__similar_triangles[key1] = {key0}
+        elif type_key == PointInsideAngleProperty:
+            self.__points_inside_angle[prop.property_key] = prop
         elif type_key == PointInsideTriangleProperty:
             key = prop.triangle.symmetric_key
             ar = self.__points_inside_triangle.get(key)
@@ -1939,6 +1942,9 @@ class PropertySet(LineSet):
 
     def two_points_relative_to_line_property(self, segment, point0, point1):
         return self.__two_points_relative_to_line.get(SameOrOppositeSideProperty.unique_key(segment, point0, point1))
+
+    def point_inside_angle_property(self, point, angle):
+        return self.__points_inside_angle.get(PointInsideAngleProperty.unique_key(point, angle))
 
     def ratios_in_use(self):
         return list(self.__length_ratios.ratio_to_family)
