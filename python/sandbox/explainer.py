@@ -100,7 +100,7 @@ class Explainer:
             PointInsideHalfOfSquareRule,
             PointInsideSquareRule,
             EquilateralTriangleRule,
-            PointInsideTwoAnglesRule,
+            PointInsideTwoAnglesOfTriangleRule,
             PointInsideTriangleRule,
             CentreOfEquilateralTriangleRule,
             BaseAnglesOfIsoscelesWithKnownApexAngleRule,

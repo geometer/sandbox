@@ -448,7 +448,7 @@ class PointOnCevianRule(Rule):
 
 @source_type(PointInsideAngleProperty)
 @processed_cache(set())
-class PointInsideTwoAnglesRule(Rule):
+class PointInsideTwoAnglesOfTriangleRule(Rule):
     def apply(self, prop):
         angle = prop.angle
         triangle = Scene.Triangle(angle.vertex, *angle.endpoints)
