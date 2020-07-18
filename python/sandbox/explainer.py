@@ -244,11 +244,7 @@ class Explainer:
         self.explanation_time = time.time() - start
 
     def __explain_all(self):
-        def iteration():
-            for rule in self.__rules:
-                for prop, comment, premises in rule.generate():
-                    yield (prop, rule, comment, premises)
-
+        def obsolete_loop_step():
             for av in self.context.angle_value_properties_for_degree(0, lambda a: a.vertex):
                 av_is_too_old = av.reason.obsolete
                 vertex = av.angle.vertex
@@ -419,6 +415,13 @@ class Explainer:
 #                            'Transitivity',
 #                            [ncl, zero, ne]
 #                        )
+
+        def iteration():
+            for rule in self.__rules:
+                for prop, comment, premises in rule.generate():
+                    yield (prop, rule, comment, premises)
+
+            obsolete_loop_step()
 
         for prop, comment in enumerate_predefined_properties(self.scene, max_layer=self.__max_layer):
             self.__reason(prop, PredefinedPropertyRule.instance(), comment, [])
