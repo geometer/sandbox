@@ -407,11 +407,12 @@ class SimilarTrianglesByThreeSidesRule(Rule):
         if value0 == 1:
             self.processed.add(key)
             return
-        if value0 * value1 == 1:
-            num1, den1, value1 = den1, num1, value0
-        elif value0 != value1:
-            self.processed.add(key)
-            return
+        if value0 != value1:
+            if value0 * value1 == 1:
+                num1, den1, value1 = den1, num1, value0
+            else:
+                self.processed.add(key)
+                return
 
         if num0 == num1 or den0 == den1:
             self.processed.add(key)
