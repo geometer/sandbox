@@ -133,6 +133,8 @@ class Explainer:
             ReversedVerticalAnglesRule,
             CorrespondingAndAlternateAnglesRule,
             CyclicOrderRule,
+            ZeroAngleToSameSideRule,
+            Angle180ToSameOppositeSideRule,
             PlanePositionsToLinePositionsRule,
             CeviansIntersectionRule,
             PointOnCevianRule,
@@ -245,24 +247,6 @@ class Explainer:
 
     def __explain_all(self):
         def obsolete_loop_step():
-            for av in self.context.angle_value_properties_for_degree(0, lambda a: a.vertex):
-                av_is_too_old = av.reason.obsolete
-                vertex = av.angle.vertex
-                pt0 = av.angle.vectors[0].end
-                pt1 = av.angle.vectors[1].end
-                for vec in av.angle.vectors:
-                    for pt2 in self.context.not_collinear_points(vec.as_segment):
-                        nc = self.context.collinearity_property(pt2, *vec.points)
-                        if av_is_too_old and nc.reason.obsolete:
-                            continue
-                        segment = vertex.segment(pt2)
-                        yield (
-                            SameOrOppositeSideProperty(segment, pt0, pt1, True),
-                            None,
-                            LazyComment('%s, %s', av, nc), #TODO: better comment
-                            [av, nc]
-                        )
-
             for aa in [p for p in self.context.list(AngleKindProperty) if p.kind == AngleKindProperty.Kind.acute]:
                 base = aa.angle
                 if base.vertex is None:

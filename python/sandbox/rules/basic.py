@@ -2124,6 +2124,58 @@ class SameAngleRule3(Rule):
                     [prop, value]
                 )
 
+@processed_cache(set())
+class ZeroAngleToSameSideRule(Rule):
+    def sources(self):
+        return self.context.angle_value_properties_for_degree(0, lambda a: a.vertex)
+
+    def apply(self, prop):
+        angle = prop.angle
+        for pair in itertools.combinations(angle.point_set, 2):
+            segment = pair[0].segment(pair[1])
+            for pt in self.context.not_collinear_points(segment):
+                key = (prop, segment, pt)
+                if key in self.processed:
+                    continue
+                self.processed.add(key)
+                ncl = self.context.collinearity_property(*pair, pt)
+                yield (
+                    SameOrOppositeSideProperty(angle.vertex.segment(pt), *angle.endpoints, True),
+                    LazyComment('%s, %s', prop, ncl), #TODO: better comment
+                    [prop, ncl]
+                )
+
+@processed_cache(set())
+class Angle180ToSameOppositeSideRule(Rule):
+    def sources(self):
+        return self.context.angle_value_properties_for_degree(180, lambda a: a.vertex)
+
+    def apply(self, prop):
+        angle = prop.angle
+        for pair in itertools.combinations(angle.point_set, 2):
+            segment = pair[0].segment(pair[1])
+            for pt in self.context.not_collinear_points(segment):
+                key = (prop, segment, pt)
+                if key in self.processed:
+                    continue
+                self.processed.add(key)
+                ncl = self.context.collinearity_property(*pair, pt)
+                yield (
+                    SameOrOppositeSideProperty(angle.vertex.segment(pt), *angle.endpoints, False),
+                    LazyComment('%s, %s', prop, ncl), #TODO: better comment
+                    [prop, ncl]
+                )
+                yield (
+                    SameOrOppositeSideProperty(angle.endpoints[0].segment(pt), *angle.vectors[1].points, True),
+                    LazyComment('%s, %s', prop, ncl), #TODO: better comment
+                    [prop, ncl]
+                )
+                yield (
+                    SameOrOppositeSideProperty(angle.endpoints[1].segment(pt), *angle.vectors[0].points, True),
+                    LazyComment('%s, %s', prop, ncl), #TODO: better comment
+                    [prop, ncl]
+                )
+
 @source_type(SameOrOppositeSideProperty)
 @processed_cache(set())
 @accepts_auto
