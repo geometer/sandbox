@@ -3,6 +3,105 @@ from ..property import *
 from .abstract import Rule, processed_cache, source_type
 
 @processed_cache(set())
+class ZeroAngleWithLengthInequalityRule(Rule):
+    def sources(self):
+        return self.context.angle_value_properties_for_degree(0, lambda a: a.vertex and a not in self.processed)
+
+    def apply(self, prop):
+        angle = prop.angle
+        seg0 = angle.vectors[0].as_segment
+        seg1 = angle.vectors[1].as_segment
+        ineq = self.context.lengths_inequality_property(seg0, seg1)
+        if ineq is None:
+            return
+        self.processed.add(angle)
+        if seg0 == ineq.segments[0]:
+            new_angle = angle.endpoints[0].angle(angle.vertex, angle.endpoints[1])
+            params = {'long': angle.vectors[1], 'pt': angle.endpoints[0], 'short': angle.vectors[0]}
+        else:
+            new_angle = angle.endpoints[1].angle(angle.vertex, angle.endpoints[0])
+            params = {'long': angle.vectors[0], 'pt': angle.endpoints[1], 'short': angle.vectors[1]}
+        yield (
+            AngleValueProperty(new_angle, 180),
+            Comment(
+                '$%{point:pt}$ lies on ray $%{ray:long}$ and $|%{segment:short} < %{segment:long}|$',
+                params
+            ),
+            [prop, ineq]
+        )
+    
+@source_type(LengthsInequalityProperty)
+@processed_cache(set())
+class LengthsInequalityAndEqualityRule(Rule):
+    def apply(self, prop):
+        for seg in self.context.congruent_segments_for(prop.segments[0]):
+            key = (prop, seg)
+            if key in self.processed:
+                continue
+            self.processed.add(key)
+            cong = self.context.congruent_segments_property(prop.segments[0], seg, allow_zeroes=True)
+            yield (
+                LengthsInequalityProperty(seg, prop.segments[1]),
+                Comment(
+                    '$|%{segment:seg}| = |%{segment:seg0}| < |%{segment:seg1}|$',
+                    {'seg': seg, 'seg0': prop.segments[0], 'seg1': prop.segments[1]}
+                ),
+                [prop, cong]
+            )
+
+        for seg in self.context.congruent_segments_for(prop.segments[1]):
+            key = (prop, seg)
+            if key in self.processed:
+                continue
+            self.processed.add(key)
+            cong = self.context.congruent_segments_property(seg, prop.segments[1], allow_zeroes=True)
+            yield (
+                LengthsInequalityProperty(prop.segments[0], seg),
+                Comment(
+                    '$|%{segment:seg0}| < |%{segment:seg1}| = |%{segment:seg}|$',
+                    {'seg': seg, 'seg0': prop.segments[0], 'seg1': prop.segments[1]}
+                ),
+                [prop, cong]
+            )
+
+@source_type(AngleKindProperty)
+@processed_cache(set())
+class SideOppositeToNonAcuteAngleRule(Rule):
+    def accepts(self, prop):
+        return prop.kind in (AngleKindProperty.Kind.obtuse, AngleKindProperty.Kind.right) and prop.angle.vertex and prop not in self.processed
+
+    def apply(self, prop):
+        self.processed.add(prop)
+        long_side = prop.angle.endpoints[0].segment(prop.angle.endpoints[1])
+        for vec in prop.angle.vectors:
+            yield (
+                LengthsInequalityProperty(vec.as_segment, long_side),
+                Comment(
+                    '$%{segment:side}$ is opposite to the greatest angle of $%{triangle:triangle}$',
+                    {'side': long_side, 'triangle': Scene.Triangle(*prop.angle.point_set)}
+                ),
+                [prop]
+            )
+
+@processed_cache(set())
+class PointInsideSegmentToLengthsInequalityRule(Rule):
+    def sources(self):
+        return self.context.angle_value_properties_for_degree(180, lambda a: a.vertex and a not in self.processed)
+
+    def apply(self, prop):
+        self.processed.add(prop)
+        long_side = prop.angle.endpoints[0].segment(prop.angle.endpoints[1])
+        for vec in prop.angle.vectors:
+            yield (
+                LengthsInequalityProperty(vec.as_segment, long_side),
+                Comment(
+                    'part $%{segment:part}$ is shorter than whole $%{segment:whole}$',
+                    {'part': vec, 'whole': long_side}
+                ),
+                [prop]
+            )
+
+@processed_cache(set())
 class LengthEqualityToRatioEqualityRule(Rule):
     def sources(self):
         return [ra for ra in self.context.ratios_in_use() if isinstance(ra, tuple)]

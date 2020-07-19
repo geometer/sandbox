@@ -1632,6 +1632,7 @@ class PropertySet(LineSet):
         self.__similar_triangles = {} # (three points) => {(three points)}
         self.__two_points_relative_to_line = {} # key => SameOrOppositeSideProperty
         self.__points_inside_angle = {} # key => PointInsideAngleProperty
+        self.__lengths_inequlaities = {} # key => LengthsInequalityProperty
         self.__points_inside_triangle = {} # {vertices} => [points]
 
     def add(self, prop):
@@ -1675,6 +1676,8 @@ class PropertySet(LineSet):
                     triples.add(key0)
                 else:
                     self.__similar_triangles[key1] = {key0}
+        elif type_key == LengthsInequalityProperty:
+            self.__lengths_inequlaities[prop.property_key] = prop
         elif type_key == PointInsideAngleProperty:
             self.__points_inside_angle[prop.property_key] = prop
         elif type_key == PointInsideTriangleProperty:
@@ -1935,6 +1938,9 @@ class PropertySet(LineSet):
                 return prop if prop.value == 1 else None
         prop, value = self.__length_ratios.property_and_value(segment0, segment1)
         return prop if value == 1 else None
+
+    def lengths_inequality_property(self, segment0, segment1):
+        return self.__lengths_inequlaities.get(LengthsInequalityProperty.unique_key(segment0, segment1))
 
     def triangles_are_similar(self, points0, points1):
         triples = self.__similar_triangles.get(points0)

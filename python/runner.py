@@ -42,7 +42,7 @@ def run_sample(scene, props_generator):
         try:
             explainer.explain()
         except Exception as e:
-            #explainer.dump()
+            explainer.dump()
             raise e
 
     if not args.dont_run_optimiser:

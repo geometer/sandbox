@@ -166,6 +166,11 @@ class Explainer:
             SimilarTrianglesByAngleAndTwoSidesRule2,
             SimilarTrianglesByThreeSidesRule,
             SimilarTrianglesWithCongruentSideRule,
+
+            SideOppositeToNonAcuteAngleRule,
+            PointInsideSegmentToLengthsInequalityRule,
+            LengthsInequalityAndEqualityRule,
+            ZeroAngleWithLengthInequalityRule,
         ]
 
         if options.get('circles'):

@@ -1003,17 +1003,13 @@ class PerpendicularToEquidistantRule(Rule):
 
 class EquidistantToPerpendicularRule(Rule):
     def sources(self):
-        return itertools.combinations([p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1], 2)
+        return itertools.combinations([p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1 and common_endpoint(p.segment0, p.segment1) is not None], 2)
 
     def apply(self, src):
         cs0, cs1 = src
 
-        common0 = next((pt for pt in cs0.segment0.points if pt in cs0.segment1.points), None)
-        if common0 is None:
-            return
-        common1 = next((pt for pt in cs1.segment0.points if pt in cs1.segment1.points), None)
-        if common1 is None:
-            return
+        common0 = common_endpoint(cs0.segment0, cs0.segment1)
+        common1 = common_endpoint(cs1.segment0, cs1.segment1)
         pts0 = [pt for pt in cs0.segment0.points + cs0.segment1.points if pt != common0]
         pts1 = [pt for pt in cs1.segment0.points + cs1.segment1.points if pt != common1]
         if set(pts0) != set(pts1):

@@ -881,6 +881,27 @@ class ProportionalLengthsProperty(Property):
             return True
         return sp.N(self.value) == sp.N(other.value)
 
+class LengthsInequalityProperty(Property):
+    """
+    Segment is shorter than another one
+    """
+    @staticmethod
+    def unique_key(segment0, segment1):
+        return frozenset((segment0, segment1))
+
+    def __init__(self, segment0, segment1):
+        self.segments = (segment0, segment1)
+        super().__init__(LengthsInequalityProperty.unique_key(segment0, segment1), {*segment0.points, *segment1.points})
+
+    @property
+    def description(self):
+        return Comment('$|%{segment:seg0}| < |%{segment:seg1}|$', {
+            'seg0': self.segments[0], 'seg1': self.segments[1]
+        })
+
+    def compare_values(self, other):
+        return self.segments[0] == other.segments[0]
+
 class EqualLengthProductsProperty(Property):
     """
     Two segment lengths products are equal
