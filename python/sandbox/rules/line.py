@@ -159,6 +159,7 @@ class NonCollinearityToPointNotOnLineRule(Rule):
                 [prop]
             )
 
+@processed_cache(None)
 class MissingLineKeysRule(Rule):
     def sources(self):
         return self.context.lines
