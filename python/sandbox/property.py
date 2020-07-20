@@ -708,6 +708,17 @@ class AngleValueProperty(LinearAngleProperty):
                     '$%{point:pt}$ lies inside segment $%{segment:seg}$',
                     {'pt': self.angle.vertex, 'seg': self.angle.vectors[0].end.segment(self.angle.vectors[1].end)}
                 )
+        else:
+            if self.degree == 0:
+                return Comment(
+                    '$%{vector:vec0} \\uparrow\\!\\!\\!\\uparrow %{vector:vec1}$',
+                    {'vec0': self.angle.vectors[0], 'vec1': self.angle.vectors[1]}
+                )
+            elif self.degree == 180:
+                return Comment(
+                    '$%{vector:vec0} \\uparrow\\!\\!\\!\\downarrow %{vector:vec1}$',
+                    {'vec0': self.angle.vectors[0], 'vec1': self.angle.vectors[1]}
+                )
         return Comment('$%{anglemeasure:ang} = %{degree:deg}$', {'ang': self.angle, 'deg': self.degree})
 
     def compare_values(self, other):

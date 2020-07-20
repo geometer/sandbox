@@ -1838,7 +1838,7 @@ class CorrespondingAnglesRule(Rule):
                 AngleRatioProperty(angle0, angle1, 1),
                 Comment(
                     'corresponding angles: transversal $%{line:common}$, and $%{ray:vec0} \\uparrow\\!\\!\\!\\uparrow %{ray:vec1}$',
-                    {'common': segment, 'vec0': vec0, 'vec1': vec1}
+                    {'common': segment, 'vec0': ang.vectors[0], 'vec1': ang.vectors[1]}
                 ),
                 [prop, av]
             )
