@@ -68,10 +68,31 @@ class LengthsInequalityAndEqualityRule(Rule):
 @processed_cache(set())
 class SideOppositeToNonAcuteAngleRule(Rule):
     def accepts(self, prop):
-        return prop.kind in (AngleKindProperty.Kind.obtuse, AngleKindProperty.Kind.right) and prop.angle.vertex and prop not in self.processed
+        return prop.kind in (AngleKindProperty.Kind.obtuse, AngleKindProperty.Kind.right) and prop.angle.vertex and prop.angle not in self.processed
 
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.angle)
+        long_side = prop.angle.endpoints[0].segment(prop.angle.endpoints[1])
+        for vec in prop.angle.vectors:
+            yield (
+                LengthsInequalityProperty(vec.as_segment, long_side),
+                Comment(
+                    '$%{segment:side}$ is opposite to the greatest angle of $%{triangle:triangle}$',
+                    {'side': long_side, 'triangle': Scene.Triangle(*prop.angle.point_set)}
+                ),
+                [prop]
+            )
+
+@processed_cache(set())
+class SideOppositeToNonAcuteAngleRule2(Rule):
+    def sources(self):
+        return self.context.nondegenerate_angle_value_properties()
+
+    def accepts(self, prop):
+        return prop.degree >= 90 and prop.angle.vertex and prop.angle not in self.processed
+
+    def apply(self, prop):
+        self.processed.add(prop.angle)
         long_side = prop.angle.endpoints[0].segment(prop.angle.endpoints[1])
         for vec in prop.angle.vectors:
             yield (

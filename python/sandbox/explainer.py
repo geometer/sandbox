@@ -168,6 +168,7 @@ class Explainer:
             SimilarTrianglesWithCongruentSideRule,
 
             SideOppositeToNonAcuteAngleRule,
+            SideOppositeToNonAcuteAngleRule2,
             PointInsideSegmentToLengthsInequalityRule,
             LengthsInequalityAndEqualityRule,
             ZeroAngleWithLengthInequalityRule,
