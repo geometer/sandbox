@@ -152,12 +152,7 @@ class CorrespondingAnglesInSimilarTrianglesRule2(Rule):
 @accepts_auto
 class BaseAnglesOfIsoscelesRule(Rule):
     def apply(self, prop):
-        neq = self.context.coincidence_property(*prop.base.points)
-        if neq is None:
-            return
         self.processed.add(prop)
-        if neq.coincident:
-            return
         yield (
             AngleRatioProperty(
                 prop.base.points[0].angle(prop.apex, prop.base.points[1]),
@@ -165,8 +160,32 @@ class BaseAnglesOfIsoscelesRule(Rule):
                 1
             ),
             Comment('base angles of isosceles $%{triangle:tr}$', {'tr': prop.triangle}),
-            [prop, neq]
+            [prop]
         )
+
+@source_type(IsoscelesTriangleProperty)
+@processed_cache(set())
+@accepts_auto
+class SecondBaseAngleOfIsoscelesRule(Rule):
+    def apply(self, prop):
+        triangle = Scene.Triangle(prop.apex, *prop.base.points)
+        angles = triangle.angles[1:]
+        for ang0, ang1 in (angles, reversed(angles)):
+            key = (prop, ang0)
+            if key in self.processed:
+                continue
+            av = self.context.angle_value_property(ang0)
+            if av is None:
+                continue
+            self.processed.add(key)
+            yield (
+                AngleValueProperty(ang1, av.degree),
+                Comment(
+                    '$%{angle:ang1}$ is a base angle of isosceles $%{triangle:triangle}$, second base $%{anglemeasure:ang0}=%{degree:degree}$',
+                    {'triangle': triangle, 'ang0': ang0, 'ang1': ang1, 'degree': av.degree}
+                ),
+                [prop, av]
+            )
 
 @source_type(IsoscelesTriangleProperty)
 @processed_cache(set())

@@ -105,6 +105,7 @@ class Explainer:
             CentreOfEquilateralTriangleRule,
             BaseAnglesOfIsoscelesWithKnownApexAngleRule,
             BaseAnglesOfIsoscelesRule,
+            SecondBaseAngleOfIsoscelesRule,
             LegsOfIsoscelesRule,
             TwoAcuteOrRightAnglesWithCommonSideRule,
             CongruentAnglesWithCommonPartRule,
