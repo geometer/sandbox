@@ -40,7 +40,7 @@ class EliminateAngleFromSumRule(Rule):
             )
 
         if len(processed_angles) != length:
-            self.processed[angle] = processed_angles
+            self.processed[prop] = processed_angles
 
 @source_type(SumOfAnglesProperty)
 @processed_cache({})

@@ -110,7 +110,7 @@ class PointInsideSegmentToLengthsInequalityRule(Rule):
         return self.context.angle_value_properties_for_degree(180, lambda a: a.vertex and a not in self.processed)
 
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.angle)
         long_side = prop.angle.endpoints[0].segment(prop.angle.endpoints[1])
         for vec in prop.angle.vectors:
             yield (

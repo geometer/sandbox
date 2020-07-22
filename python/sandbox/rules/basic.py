@@ -804,6 +804,7 @@ class PerpendicularSegmentsRule2(Rule):
         ncl = self.context.collinearity_property(common, other0, other1)
         if ncl is None:
             return
+        self.processed.add(pv)
         if ncl.collinear:
             return
         yield (
@@ -1518,7 +1519,7 @@ class AngleTypeByDegreeRule(Rule):
         return self.context.nondegenerate_angle_value_properties()
 
     def apply(self, prop):
-        self.processed.add(self)
+        self.processed.add(prop)
         if prop.degree in (0, 180):
             return
         pattern = '$%{degree:min} < %{anglemeasure:angle} = %{degree:degree} < %{degree:max}$'
@@ -2570,7 +2571,7 @@ class PointAndAngleRule(Rule):
         original = mask
         for vertex, bit0 in zip(prop.segment.points, (0x1, 0x4)):
             pt0 = other_point(prop.segment.points, vertex)
-            for pt1, bit in zip(prop.points, (bit0, bit0 >> 1)):
+            for pt1, bit in zip(prop.points, (bit0, bit0 << 1)):
                 if mask & bit:
                     continue
                 fourth = other_point(prop.points, pt1)

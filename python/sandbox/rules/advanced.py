@@ -7,6 +7,8 @@ from ..util import Comment
 from .abstract import Rule, accepts_auto, processed_cache, source_type
 
 @source_type(PerpendicularSegmentsProperty)
+@processed_cache(set())
+@accepts_auto
 class RightAngledTriangleMedianRule(Rule):
     """
     In a right-angled triangle, the median to the hypotenuse is equal to half of the hypotenuse
@@ -21,9 +23,15 @@ class RightAngledTriangleMedianRule(Rule):
         for med in self.context.collinear_points(hypot):
             col = self.context.collinearity_property(med, *hypot.points)
             half0, value = self.context.length_ratio_property_and_value(hypot, med.segment(hypot.points[0]), True)
+            if value is None:
+                continue
             if value != 2:
+                self.processed.add(prop)
                 continue
             half1, value = self.context.length_ratio_property_and_value(hypot, med.segment(hypot.points[1]), True)
+            if value is None:
+                continue
+            self.processed.add(prop)
             if value != 2:
                 continue
             yield (
