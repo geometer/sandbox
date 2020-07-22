@@ -2004,3 +2004,9 @@ class PropertySet(LineSet):
 
     def keys_num(self):
         return len(self.__combined)
+
+    def clone(self, extra_points):
+        copy = PropertySet(self.points + extra_points)
+        for prop in self.all:
+            copy.add(prop)
+        return copy
