@@ -25,7 +25,7 @@ from .stats import Stats
 from .util import LazyComment, Comment
 
 class Explainer:
-    def __init__(self, scene, context=None, options={}):
+    def __init__(self, scene, context=None, extra_rules=set()):
         self.scene = scene
         self.explanation_time = None
         self.optimization_time = 0
@@ -183,7 +183,7 @@ class Explainer:
             LineAndAcuteAngleRule,
         ]
 
-        if options.get('circles'):
+        if 'circles' in extra_rules:
             rule_classes += [
                 #ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule,
                 CyclicQuadrilateralRule,
@@ -195,7 +195,7 @@ class Explainer:
                 TwoChordsIntersectionRule,
                 #ThreeCollinearPointsOnCircleRule,
             ]
-        if options.get('advanced'):
+        if 'advanced' in extra_rules:
             rule_classes += [
                 RightAngledTriangleMedianRule,
                 Triangle30_60_90SidesRule,
@@ -203,7 +203,7 @@ class Explainer:
                 Triangle36_36_108SidesRule,
                 Triangle72_72_36SidesRule,
             ]
-        if options.get('trigonometric'):
+        if 'trigonometric' in extra_rules:
             rule_classes += [
                 LawOfSinesRule,
             ]
