@@ -362,13 +362,14 @@ class Explainer:
 
         self.__iteration_step_count = 0
         while itertools.count():
-            explained_size = len(self.context)
+            count = 0
             for prop, rule, comment, premises in iteration():
+                count += 1
                 self.__reason(prop, rule, comment, premises)
             for prop in self.context.all:
                 prop.reason.obsolete = prop.reason.generation < self.__iteration_step_count - 1
             self.__iteration_step_count += 1
-            if len(self.context) == explained_size:
+            if count == 0:
                 break
 
     def optimize(self):
