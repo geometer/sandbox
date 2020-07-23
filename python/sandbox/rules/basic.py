@@ -2055,27 +2055,46 @@ class SameAngleRule2(Rule):
                     ),
                     [prop]
                 )
-                pattern = '$%{point:pt}$ lies on side $%{segment:side}$ of $%{angle:angle}$, $%{anglemeasure:known} = %{degree:degree}$'
-                value = self.context.angle_value_property(angle0)
-                if value:
-                    yield (
-                        AngleValueProperty(angle1, value.degree),
-                        Comment(
-                            pattern,
-                            {'pt': angle.vertex, 'side': side, 'angle': angle0, 'known': angle0, 'degree': value.degree}
-                        ),
-                        [prop, value]
-                    )
-                value = self.context.angle_value_property(angle1)
-                if value:
-                    yield (
-                        AngleValueProperty(angle0, value.degree),
-                        Comment(
-                            pattern,
-                            {'pt': angle.vertex, 'side': side, 'angle': angle0, 'known': angle1, 'degree': value.degree}
-                        ),
-                        [prop, value]
-                    )
+
+@processed_cache(set())
+class SameAngleDegreeRule2(Rule):
+    def sources(self):
+        return self.context.angle_value_properties_for_degree(180, lambda a: a.vertex)
+
+    def apply(self, prop):
+        angle = prop.angle
+        side = angle.endpoints[0].segment(angle.endpoints[1])
+        pattern = '$%{point:pt}$ lies on side $%{segment:side}$ of $%{angle:angle}$, $%{anglemeasure:known} = %{degree:degree}$'
+        for pt in self.context.not_collinear_points(side):
+            for pt0, pt1 in (angle.endpoints, reversed(angle.endpoints)):
+                angle0 = pt0.angle(pt, pt1)
+                angle1 = pt0.angle(pt, angle.vertex)
+                key = (angle, pt, pt0, 0)
+                if not key in self.processed:
+                    value = self.context.angle_value_property(angle0)
+                    if value:
+                        self.processed.add(key)
+                        yield (
+                            AngleValueProperty(angle1, value.degree),
+                            Comment(
+                                pattern,
+                                {'pt': angle.vertex, 'side': side, 'angle': angle0, 'known': angle0, 'degree': value.degree}
+                            ),
+                            [prop, value]
+                        )
+                key = (angle, pt, pt0, 1)
+                if not key in self.processed:
+                    value = self.context.angle_value_property(angle1)
+                    if value:
+                        self.processed.add(key)
+                        yield (
+                            AngleValueProperty(angle0, value.degree),
+                            Comment(
+                                pattern,
+                                {'pt': angle.vertex, 'side': side, 'angle': angle0, 'known': angle1, 'degree': value.degree}
+                            ),
+                            [prop, value]
+                        )
 
 @processed_cache(set())
 class SameAngleRule3(Rule):
@@ -2099,27 +2118,44 @@ class SameAngleRule3(Rule):
                 ),
                 [prop]
             )
-            pattern = '$%{point:pt}$ lies on side $%{ray:side}$ of $%{angle:known}$, $%{anglemeasure:known} = %{degree:degree}$'
-            value = self.context.angle_value_property(angles[0])
-            if value:
-                yield (
-                    AngleValueProperty(angles[1], value.degree),
-                    Comment(
-                        pattern,
-                        {'pt': angle.endpoints[1], 'side': angle.vectors[0], 'known': angles[0], 'degree': value.degree}
-                    ),
-                    [prop, value]
-                )
-            value = self.context.angle_value_property(angles[1])
-            if value:
-                yield (
-                    AngleValueProperty(angles[0], value.degree),
-                    Comment(
-                        pattern,
-                        {'pt': angle.endpoints[0], 'side': angle.vectors[1], 'known': angles[1], 'degree': value.degree}
-                    ),
-                    [prop, value]
-                )
+
+@processed_cache(set())
+class SameAngleDegreeRule3(Rule):
+    def sources(self):
+        return self.context.angle_value_properties_for_degree(0, lambda a: a.vertex)
+
+    def apply(self, prop):
+        angle = prop.angle
+        pattern = '$%{point:pt}$ lies on side $%{ray:side}$ of $%{angle:known}$, $%{anglemeasure:known} = %{degree:degree}$'
+        for pt in self.context.not_collinear_points(angle.vectors[0].as_segment):
+            angles = [angle.vertex.angle(pt, endpoint) for endpoint in angle.endpoints]
+
+            key = (angle, pt, 0)
+            if key not in self.processed:
+                value = self.context.angle_value_property(angles[0])
+                if value:
+                    self.processed.add(key)
+                    yield (
+                        AngleValueProperty(angles[1], value.degree),
+                        Comment(
+                            pattern,
+                            {'pt': angle.endpoints[1], 'side': angle.vectors[0], 'known': angles[0], 'degree': value.degree}
+                        ),
+                        [prop, value]
+                    )
+            key = (angle, pt, 1)
+            if key not in self.processed:
+                value = self.context.angle_value_property(angles[1])
+                if value:
+                    self.processed.add(key)
+                    yield (
+                        AngleValueProperty(angles[0], value.degree),
+                        Comment(
+                            pattern,
+                            {'pt': angle.endpoints[0], 'side': angle.vectors[1], 'known': angles[1], 'degree': value.degree}
+                        ),
+                        [prop, value]
+                    )
 
 @processed_cache(set())
 class ZeroAngleToSameSideRule(Rule):
