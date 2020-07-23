@@ -25,13 +25,17 @@ from .stats import Stats
 from .util import LazyComment, Comment
 
 class Explainer:
-    def __init__(self, scene, options={}):
+    def __init__(self, scene, context=None, options={}):
         self.scene = scene
         self.__options = options
-        self.context = PropertySet(self.scene.points(max_layer='user'))
         self.explanation_time = None
         self.optimization_time = 0
         self.__iteration_step_count = -1
+
+        if context:
+            self.context = context
+        else:
+            self.context = PropertySet(self.scene.points(max_layer='user'))
 
         rule_classes = [
             LineAndTwoPointsToNoncollinearityRule,
