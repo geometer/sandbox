@@ -232,6 +232,7 @@ class Explainer:
 
         reason = Reason(rule, self.__iteration_step_count, comment, premises)
         normalize(reason)
+        reason.obsolete = False
         prop.reason = reason
 
         existing = self.context[prop]
