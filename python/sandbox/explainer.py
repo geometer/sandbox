@@ -27,7 +27,6 @@ from .util import LazyComment, Comment
 class Explainer:
     def __init__(self, scene, context=None, options={}):
         self.scene = scene
-        self.__options = options
         self.explanation_time = None
         self.optimization_time = 0
         self.__iteration_step_count = -1
