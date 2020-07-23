@@ -11,6 +11,7 @@ from .rules.abstract import PredefinedPropertyRule, SyntheticPropertyRule, creat
 from .rules.advanced import *
 from .rules.basic import *
 from .rules.circle import *
+from .rules.complex import *
 from .rules.cycle import *
 from .rules.length import *
 from .rules.line import *
@@ -173,6 +174,8 @@ class Explainer:
             PointInsideSegmentToLengthsInequalityRule,
             LengthsInequalityAndEqualityRule,
             ZeroAngleWithLengthInequalityRule,
+
+            LineAndAcuteAngleRule,
         ]
 
         if options.get('circles'):
@@ -254,34 +257,6 @@ class Explainer:
 
     def __explain_all(self):
         def obsolete_loop_step():
-            for aa in [p for p in self.context.list(AngleKindProperty) if p.kind == AngleKindProperty.Kind.acute]:
-                base = aa.angle
-                if base.vertex is None:
-                    continue
-                for vec0, vec1 in [base.vectors, reversed(base.vectors)]:
-                    for pt in self.context.collinear_points(vec0.as_segment):
-                        col = self.context.collinearity_property(pt, *vec0.points)
-                        reasons_are_too_old = aa.reason.obsolete and col.reason.obsolete
-                        for angle in [pt.angle(vec1.end, p) for p in vec0.points]:
-                            ka = self.context.angle_value_property(angle)
-                            if ka is None or reasons_are_too_old and ka.reason.obsolete:
-                                continue
-                            if ka.degree >= 90:
-                                comment = Comment(
-                                    '$%{point:pt0}$, $%{point:pt1}$, $%{point:pt2}$ are collinear, $%{angle:base}$ is acute, and $%{anglemeasure:angle} = %{degree:degree}$',
-                                    {
-                                        'pt0': pt,
-                                        'pt1': vec0.points[0],
-                                        'pt2': vec0.points[1],
-                                        'base': base,
-                                        'angle': angle,
-                                        'degree': ka.degree
-                                    }
-                                )
-                                zero = base.vertex.angle(vec0.end, pt)
-                                yield (AngleValueProperty(zero, 0), None, comment, [col, aa, ka])
-                            break
-
             for aa in self.context.angle_value_properties_for_degree(90, lambda a: a.vertex):
                 base = aa.angle
                 for vec0, vec1 in [base.vectors, reversed(base.vectors)]:
