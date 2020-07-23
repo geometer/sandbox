@@ -30,9 +30,7 @@ def run_sample(scene, props_generator):
     else:
         properties = []
 
-    options = { 'max_layer': args.max_layer }
-    for extra in args.extra_rules:
-        options[extra] = True
+    options = {extra: True for extra in args.extra_rules}
     explainer = Explainer(scene, options=options)
 
     if args.profile_explanation:

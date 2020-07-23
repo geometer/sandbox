@@ -28,7 +28,7 @@ class Explainer:
     def __init__(self, scene, options={}):
         self.scene = scene
         self.__options = options
-        self.context = PropertySet(self.scene.points(max_layer=self.__max_layer))
+        self.context = PropertySet(self.scene.points(max_layer='user'))
         self.explanation_time = None
         self.optimization_time = 0
         self.__iteration_step_count = -1
@@ -205,10 +205,6 @@ class Explainer:
 
         self.__rules = [create_rule(clazz, self.context) for clazz in rule_classes]
 
-    @property
-    def __max_layer(self):
-        return self.__options.get('max_layer', 'user')
-
     def __reason(self, prop, rule, comment, premises=None):
         def normalize_prop(prop):
             for base in prop.bases:
@@ -357,7 +353,7 @@ class Explainer:
             for four in obsolete_loop_step():
                 yield four
 
-        for prop, comment in enumerate_predefined_properties(self.scene, max_layer=self.__max_layer):
+        for prop, comment in enumerate_predefined_properties(self.scene):
             self.__reason(prop, PredefinedPropertyRule.instance(), comment, [])
 
         self.__iteration_step_count = 0

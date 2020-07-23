@@ -2,10 +2,9 @@ from .core import Constraint, CoreScene
 from .property import *
 from .util import Comment, LazyComment
 
-def enumerate_predefined_properties(scene, max_layer, extra_points=set()):
-    layer_set = CoreScene.layers_by(max_layer)
+def enumerate_predefined_properties(scene, extra_points=set()):
     def is_visible(point):
-        return point.layer in layer_set or point in extra_points
+        return point.layer == 'user' or point in extra_points
     def all_visible(points):
         return all(is_visible(pt) for pt in points)
 
