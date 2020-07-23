@@ -496,39 +496,6 @@ class LineSet:
                 self.__collinearity[key] = prop
             return prop
 
-        pattern = '$%{point:pt0}$ and $%{point:pt1}$ are on $%{line:line}$, $%{point:pt2}$ is not'
-        for line in self.__all_lines:
-            points_on = []
-            point_not_on = None
-            for pt in pts:
-                if pt in line.points_on:
-                    points_on.append(pt)
-                elif pt in line.points_not_on:
-                    point_not_on = pt
-            if point_not_on is None or len(points_on) != 2:
-                continue
-
-            common_params = {'pt0': points_on[0], 'pt1': points_on[1], 'pt2': point_not_on}
-            for seg in line.segments:
-                premises = []
-                premises2 = []
-                for pt in [*points_on, point_not_on]:
-                    if pt not in seg.points:
-                        premises.append(line.point_on_line_property(seg, pt))
-                        premises2.append(self.__collinearity.get(frozenset([*seg.points, pt])))
-
-                prop = PointsCollinearityProperty(*pts, False)
-                params = dict(common_params)
-                params['line'] = seg
-                candidates.append(_synthetic_property(
-                    prop, Comment(pattern, params), premises
-                ))
-                if None not in premises2:
-                    prop = PointsCollinearityProperty(*pts, False)
-                    candidates.append(_synthetic_property(
-                        prop, Comment(pattern, params), premises2
-                    ))
-
         triangle = Scene.Triangle(*pts)
         lines = [(triangle.sides[i], self.__segment_to_line.get(triangle.sides[i]), triangle.points[i]) for i in range(0, 3)]
         lines = [lw for lw in lines if lw[1]]
@@ -673,8 +640,8 @@ class LineSet:
 
     def non_coincident_points(self, point):
         collection = set()
-        for key in self.__coincidence:
-            if point in key:
+        for key, value in self.__coincidence.items():
+            if point in key and not value.coincident:
                 collection.add(next(pt for pt in key if pt != point))
         for line in self.__all_lines:
             if point in line.points_on:
