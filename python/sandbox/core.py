@@ -157,7 +157,7 @@ class CoreScene:
             )
             symmetric.collinear_constraint(self, centre, guaranteed=True)
             from .property import MiddleOfSegmentProperty
-            self.scene.add_property(MiddleOfSegmentProperty(centre, self.segment(symmetric)))
+            self.scene.add_property(MiddleOfSegmentProperty(centre, self.segment(symmetric)), None)
             return symmetric
 
         def perpendicular_line(self, line, **kwargs):
@@ -373,10 +373,10 @@ class CoreScene:
             for angle in triangle.angles:
                 self.scene.constraint(Constraint.Kind.inside_angle, self, angle, **kwargs)
             from .property import PointInsideTriangleProperty
-            self.scene.add_property(PointInsideTriangleProperty(self, triangle))
+            self.scene.add_property(PointInsideTriangleProperty(self, triangle), None)
             from .property import SameOrOppositeSideProperty
             for vertex, side in zip(triangle.points, triangle.sides):
-                self.scene.add_property(SameOrOppositeSideProperty(side, vertex, self, True))
+                self.scene.add_property(SameOrOppositeSideProperty(side, vertex, self, True), None)
 
     class Line(Object):
         prefix = 'Ln_'
@@ -602,7 +602,7 @@ class CoreScene:
                 )
             middle.collinear_constraint(*self.points, guaranteed=True)
             from .property import MiddleOfSegmentProperty
-            self.scene.add_property(MiddleOfSegmentProperty(middle, self))
+            self.scene.add_property(MiddleOfSegmentProperty(middle, self), None)
             self.__middle_point = middle
             return middle
 
@@ -712,13 +712,13 @@ class CoreScene:
                     #TODO add comment
                     self.add_property(SumOfAnglesProperty(
                         angle, angle.vectors[0].reversed.angle(angle.vectors[1]), degree=180
-                    ))
+                    ), None)
                 elif angle.vectors[0].start == angle.vectors[1].end:
                     from .property import SumOfAnglesProperty
                     #TODO add comment
                     self.add_property(SumOfAnglesProperty(
                         angle, angle.vectors[0].angle(angle.vectors[1].reversed), degree=180
-                    ))
+                    ), None)
                 elif angle.vectors[0].end == angle.vectors[1].end:
                     #TODO vertical angles
                     pass
@@ -780,7 +780,7 @@ class CoreScene:
             if self.vertex:
                 point.inside_constraint(self, **kwargs)
                 from .property import PointInsideAngleProperty
-                self.scene.add_property(PointInsideAngleProperty(point, self))
+                self.scene.add_property(PointInsideAngleProperty(point, self), None)
             self.ratio_constraint(angle0, 2, **kwargs)
             self.ratio_constraint(angle1, 2, **kwargs)
             angle0.ratio_constraint(angle1, 1, **kwargs)
@@ -909,14 +909,14 @@ class CoreScene:
         self.__objects = []
         self.validation_constraints = []
         self.adjustment_constraints = []
-        self.__properties = set()
+        self.__properties = {}
         self.__frozen = False
         self.__angles = {} # {vector, vector} => angle
         self.__segments = {} # {point, point} => angle
 
-    def add_property(self, prop):
+    def add_property(self, prop, comment):
         if prop not in self.__properties:
-            self.__properties.add(prop)
+            self.__properties[prop] = comment
 
     @property
     def properties(self):
@@ -940,7 +940,7 @@ class CoreScene:
             )
         self.constraint(Constraint.Kind.equilateral, triangle, **kwargs)
         from .property import EquilateralTriangleProperty
-        self.add_property(EquilateralTriangleProperty(triangle))
+        self.add_property(EquilateralTriangleProperty(triangle), None)
 
     def quadrilateral_constraint(self, A, B, C, D, **kwargs):
         """

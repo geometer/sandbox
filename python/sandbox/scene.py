@@ -93,7 +93,7 @@ class Scene(CoreScene):
         aux = triangle.sides[0].middle_point(layer='invisible')
         centre = aux.translated_point(aux.vector(triangle.points[0]), sp.sympify(1) / 3, **kwargs)
         from .property import CentreOfEquilateralTriangleProperty
-        self.add_property(CentreOfEquilateralTriangleProperty(centre, triangle))
+        self.add_property(CentreOfEquilateralTriangleProperty(centre, triangle), None)
         return centre
 
     def incentre_point(self, triangle, **kwargs):
@@ -288,10 +288,10 @@ class Scene(CoreScene):
         square = Scene.Polygon(pt0, pt1, pt2, pt3)
         if non_degenerate:
             from .property import NondegenerateSquareProperty
-            self.add_property(NondegenerateSquareProperty(square))
+            self.add_property(NondegenerateSquareProperty(square), None)
         else:
             from .property import SquareProperty
-            self.add_property(SquareProperty(square))
+            self.add_property(SquareProperty(square), None)
         return square
 
     def parallelogram(self, labels=None):
