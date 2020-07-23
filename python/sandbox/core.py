@@ -920,7 +920,7 @@ class CoreScene:
 
     @property
     def properties(self):
-        return list(self.__properties)
+        return dict(self.__properties)
 
     def constraint(self, kind, *args, **kwargs):
         cns = Constraint(kind, self, *args, **kwargs)
