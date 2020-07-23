@@ -27,8 +27,8 @@ class GEO0369(ExplainerTest):
         self.assertNotIn(self.prop, self.explainer.context)
 
 class GEO0369Advanced(GEO0369):
-    def explainer_options(self):
-        return {'advanced': True}
+    def extra_rules(self):
+        return {'advanced'}
 
     def test(self):
         self.assertIn(self.prop, self.explainer.context)

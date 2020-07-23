@@ -30,8 +30,7 @@ def run_sample(scene, props_generator):
     else:
         properties = []
 
-    options = {extra: True for extra in args.extra_rules}
-    explainer = Explainer(scene, options=options)
+    explainer = Explainer(scene, extra_rules=set(args.extra_rules))
 
     if args.profile_explanation:
         import cProfile

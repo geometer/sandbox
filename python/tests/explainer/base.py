@@ -4,13 +4,13 @@ import unittest
 from sandbox.explainer import Explainer
 
 class ExplainerTest(unittest.TestCase):
-    def explainer_options(self):
+    def extra_rules(self):
         return {}
 
     def setUp(self):
         self.startTime = time.time()
         self.scene = self.createScene()
-        self.explainer = Explainer(self.scene, options=self.explainer_options())
+        self.explainer = Explainer(self.scene, extra_rules=self.extra_rules())
         self.explainer.explain()
 
     def tearDown(self):
