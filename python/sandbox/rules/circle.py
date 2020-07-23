@@ -299,7 +299,7 @@ class PointsOnChordRule(Rule):
                     [pc] + premises
                 )
 
-@processed_cache({})
+@processed_cache(set())
 class InscribedAnglesWithCommonCircularArcRule(Rule):
     def sources(self):
         for circle in self.context.circles:
@@ -307,6 +307,10 @@ class InscribedAnglesWithCommonCircularArcRule(Rule):
                 yield four
 
     def apply(self, points):
+        key = frozenset(points)
+        if key in self.processed:
+            return
+
         prop = None
 
         for pt0, pt1 in itertools.combinations(points, 2):
@@ -316,6 +320,7 @@ class InscribedAnglesWithCommonCircularArcRule(Rule):
             )
             if sos is None:
                 continue
+            self.processed.add(key)
             if prop is None:
                 prop = self.context.concyclicity_property(*points)
             p0 = (pt0, pt1)
