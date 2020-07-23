@@ -359,7 +359,7 @@ class Explainer:
             for four in obsolete_loop_step():
                 yield four
 
-        for prop, comment in enumerate_predefined_properties(self.scene):
+        for prop, comment in enumerate_predefined_properties(self.scene, self.context.points):
             self.__reason(prop, PredefinedPropertyRule.instance(), comment, [])
 
         self.__iteration_step_count = 0
