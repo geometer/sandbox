@@ -609,6 +609,26 @@ class CentreOfEquilateralTriangleProperty(Property):
             {'centre': self.centre, 'triangle': self.triangle}
         )
 
+class OrthocentreOfTriangleProperty(Property):
+    """
+    A point is the orthocentre of triangle
+    """
+    def __init__(self, centre, triangle):
+        self.centre = centre
+        self.triangle = triangle
+        super().__init__((centre, triangle.symmetric_key), {centre, *self.triangle.points})
+
+    @property
+    def __priority__(self):
+        return 4.5
+
+    @property
+    def description(self):
+        return Comment(
+            '$%{point:centre}$ is the orthocentre of $%{triangle:triangle}$',
+            {'centre': self.centre, 'triangle': self.triangle}
+        )
+
 class AngleKindProperty(Property):
     """
     An angle is acute/obtuse/right

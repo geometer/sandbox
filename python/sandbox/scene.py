@@ -39,6 +39,8 @@ class Scene(CoreScene):
             kwargs = dict(kwargs)
             kwargs['comment'] = Comment('The orthocentre of $%{triangle:tr}$', {'tr': triangle})
         centre = altitude0.intersection_point(altitude1, **kwargs)
+        from .property import OrthocentreOfTriangleProperty
+        self.add_property(OrthocentreOfTriangleProperty(centre, triangle), None)
         centre.belongs_to(altitude2)
         return centre
 

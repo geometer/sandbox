@@ -161,6 +161,7 @@ class Explainer:
             PerpendicularInAcuteAngleRule,
             PerpendicularInAcuteAngleRule2,
             PointOnSegmentWithEndpointsOnSidesOfAngleRule,
+            OrthocenterLiesOnAltitudeRule,
 
             EquilateralTriangleByThreeSidesRule,
             EquilateralTriangleByConrguentLegsAndAngleRule,
@@ -203,6 +204,7 @@ class Explainer:
                 Triangle30_30_120SidesRule,
                 Triangle36_36_108SidesRule,
                 Triangle72_72_36SidesRule,
+                IntersectionOfTwoAltitudesIsTheOrthocentreRule,
             ]
         if 'trigonometric' in extra_rules:
             rule_classes += [

@@ -55,7 +55,7 @@ class NapoleonInward(ExplainerTest):
         self.assertIn(prop, self.explainer.context)
 
 class NapoleonInwardPlusTrigonometry(NapoleonInward):
-    def extra_options(self):
+    def extra_rules(self):
         return {'trigonometric'}
 
     def testEquilateral(self):
@@ -63,7 +63,7 @@ class NapoleonInwardPlusTrigonometry(NapoleonInward):
         self.assertIn(prop, self.explainer.context)
 
 class NapoleonInwardPlusAdvanced(NapoleonInward):
-    def extra_options(self):
+    def extra_rules(self):
         return {'advanced'}
 
     def testEquilateral(self):

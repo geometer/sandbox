@@ -6,6 +6,27 @@ from ..util import Comment
 
 from .abstract import Rule, accepts_auto, processed_cache, source_type, source_types
 
+@source_type(OrthocentreOfTriangleProperty)
+@processed_cache(set())
+@accepts_auto
+class OrthocenterLiesOnAltitudeRule(Rule):
+    def apply(self, prop):
+        ncl = self.context.collinearity_property(*prop.triangle.points)
+        if ncl is None:
+            return
+        self.processed.add(prop)
+        if ncl.collinear:
+            return
+        for vertex, side in zip(prop.triangle.points, prop.triangle.sides):
+            yield (
+                PerpendicularSegmentsProperty(side, prop.centre.segment(vertex)),
+                Comment(
+                    'the orthocentre $%{point:centre}$ of non-degenerate $%{triangle:triangle}$ lies on the altitude from $%{point:vertex}$ to $%{segment:side}$',
+                    {'centre': prop.centre, 'triangle': prop.triangle, 'vertex': vertex, 'side': side}
+                ),
+                [prop, ncl]
+            )
+
 @source_type(SimilarTrianglesProperty)
 @processed_cache(set())
 @accepts_auto

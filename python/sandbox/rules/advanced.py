@@ -1,10 +1,57 @@
+import itertools
 import sympy as sp
 
 from .. import Scene
-from ..property import AngleValueProperty, IsoscelesTriangleProperty, LengthRatioProperty, ProportionalLengthsProperty, PerpendicularSegmentsProperty, PointsCollinearityProperty
+from ..property import *
 from ..util import Comment
 
 from .abstract import Rule, accepts_auto, processed_cache, source_type
+
+@processed_cache(set())
+class IntersectionOfTwoAltitudesIsTheOrthocentreRule(Rule):
+    def sources(self):
+        groups = {}
+        for perp in self.context.list(PerpendicularSegmentsProperty):
+            key = perp.point_set
+            if len(key) < 4:
+                continue
+            key = frozenset(key)
+            ar = groups.get(key)
+            if ar:
+                ar.append(perp)
+            else:
+                groups[key] = [perp]
+
+        for group in groups.values():
+            for pair in itertools.combinations(group, 2):
+                yield pair
+
+    def apply(self, pair):
+        p0, p1 = pair
+        for centre in p0.point_set:
+            key = (frozenset(pair), centre)
+            if key in self.processed:
+                continue
+            triple = [pt for pt in p0.point_set if pt != centre]
+            ncl = self.context.collinearity_property(*triple)
+            if ncl is None:
+                continue
+            self.processed.add(key)
+            if ncl.collinear:
+                continue
+            triangle = Scene.Triangle(*triple)
+            yield (
+                OrthocentreOfTriangleProperty(centre, triangle),
+                Comment(
+                    '$%{triangle:triangle}$ is non-degenerate, $%{line:altitude0}$ and $%{line:altitude1}$ are altitudes',
+                    {
+                        'triangle': triangle,
+                        'altitude0': next(seg for seg in p0.segments if centre in seg.points),
+                        'altitude1': next(seg for seg in p1.segments if centre in seg.points)
+                    }
+                ),
+                [ncl, p0, p1]
+            )
 
 @source_type(PerpendicularSegmentsProperty)
 @processed_cache(set())
