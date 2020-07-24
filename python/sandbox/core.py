@@ -310,8 +310,6 @@ class CoreScene:
             """
             The current point lies on the opposite side to the line than the given point.
             """
-            if isinstance(point, CoreScene.Line) and isinstance(line, CoreScene.Point):
-                point, line = line, point
             for cnstr in self.scene.constraints(Constraint.Kind.opposite_side):
                 if line == cnstr.params[2] and set(cnstr.params[0:2]) == {self, point}:
                     cnstr.update(kwargs)
@@ -324,8 +322,6 @@ class CoreScene:
             """
             The point lies on the same side to the line as the given point.
             """
-            if isinstance(point, CoreScene.Line) and isinstance(line, CoreScene.Point):
-                point, line = line, point
             for cnstr in self.scene.constraints(Constraint.Kind.same_side):
                 if line == cnstr.params[2] and set(cnstr.params[0:2]) == {self, point}:
                     cnstr.update(kwargs)
