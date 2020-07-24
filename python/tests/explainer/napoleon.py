@@ -14,9 +14,8 @@ class NapoleonOutward(ExplainerTest):
         def napoleonic(A, B, C):
             equilateral = scene.equilateral_triangle(A, B, C.label + '1')
             _, _, V = equilateral.points
-            line = A.line_through(B, layer='auxiliary')
             comment = Comment('$%{triangle:equilateral}$ is facing away from $%{triangle:triangle}$', {'equilateral': equilateral, 'triangle': triangle})
-            V.opposite_side_constraint(C, line, comment=comment)
+            V.opposite_side_constraint(C, A.segment(B), comment=comment)
             D = scene.incentre_point(equilateral, label=C.label + '2')
 
         napoleonic(A, B, C)
@@ -39,9 +38,8 @@ class NapoleonInward(ExplainerTest):
         def napoleonic(A, B, C):
             equilateral = scene.equilateral_triangle(A, B, C.label + '1')
             _, _, V = equilateral.points
-            line = A.line_through(B, layer='auxiliary')
             comment = Comment('$%{triangle:equilateral}$ is facing into $%{triangle:triangle}$', {'equilateral': equilateral, 'triangle': triangle})
-            V.same_side_constraint(C, line, comment=comment)
+            V.same_side_constraint(C, A.segment(B), comment=comment)
             D = scene.incentre_point(equilateral, label=C.label + '2')
 
         napoleonic(A, B, C)

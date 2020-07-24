@@ -28,8 +28,8 @@ class TestRoG4578_orthocentre_outside(PlacementTest):
         triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
         A, B, C = triangle.points
         D = scene.orthocentre_point(triangle)
-        D.opposite_side_constraint(B.line_through(C), A)
-        D.opposite_side_constraint(A.line_through(C), B)
+        D.opposite_side_constraint(A, B.segment(C))
+        D.opposite_side_constraint(B, A.segment(C))
         A.segment(B).congruent_constraint(C.segment(D))
 
         return iterative_placement(scene)

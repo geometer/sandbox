@@ -130,8 +130,8 @@ class LineSidesTest(ExplainerTest):
         A.not_equal_constraint(B)
         A.not_equal_constraint(C)
         A.collinear_constraint(B, C)
-        E.opposite_side_constraint(D, A.line_through(B))
-        F.same_side_constraint(D, A.line_through(B))
+        E.opposite_side_constraint(D, A.segment(B))
+        F.same_side_constraint(D, A.segment(B))
 
         return scene
 
