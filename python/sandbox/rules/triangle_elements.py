@@ -312,7 +312,7 @@ class CorrespondingSidesInSimilarTrianglesRule(Rule):
                         yield (
                             PointsCoincidenceProperty(*sides0[j].points, True),
                             Comment(
-                                '$|%{segment:side}| = %{multiplier:ratio} * |%{segment:side}|$ as $%{segment:size}$ is a side in similar but non-congruent $%{triangle:tr0}$ and $%{triangle:tr1}$',
+                                '$|%{segment:side}| = %{multiplier:ratio} * |%{segment:side}|$ as $%{segment:side}$ is a side in similar but non-congruent $%{triangle:tr0}$ and $%{triangle:tr1}$',
                                 {'side': sides0[j], 'ratio': ratio, 'tr0': prop.triangle0, 'tr1': prop.triangle1}
                             ),
                             [prop, lr]
