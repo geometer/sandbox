@@ -93,6 +93,8 @@ class PerpendicularInAcuteAngleRule(Rule):
                 foot, premises = self.context.foot_of_perpendicular(pt, v1.as_segment)
                 if foot is None:
                     continue
+                if foot == v1.start:
+                    continue
                 if foot == v1.end:
                     degree = 0
                 else:
