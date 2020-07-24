@@ -181,6 +181,7 @@ class Explainer:
             ZeroAngleWithLengthInequalityRule,
 
             LineAndAcuteAngleRule,
+            LineAndTwoAnglesRule,
         ]
 
         if 'circles' in extra_rules:
@@ -304,28 +305,6 @@ class Explainer:
 #                                zero = base.vertex.angle(vec0.end, pt)
 #                                yield (AngleValueProperty(zero, 180), None, comment, [col, oa, ka])
 #                            break
-
-            for ka in self.context.nondegenerate_angle_value_properties():
-                base = ka.angle
-                if ka.degree == 180 or base.vertex is None:
-                    continue
-                ka_is_too_old = ka.reason.obsolete
-                for vec0, vec1 in [base.vectors, reversed(base.vectors)]:
-                    for pt in self.context.collinear_points(vec0.as_segment):
-                        col = self.context.collinearity_property(pt, *vec0.points)
-                        reasons_are_too_old = ka_is_too_old and col.reason.obsolete
-                        for angle in [pt.angle(vec1.end, p) for p in vec0.points]:
-                            ka2 = self.context.angle_value_property(angle)
-                            if ka2 is None or reasons_are_too_old and ka2.reason.obsolete:
-                                continue
-                            if ka2.degree > ka.degree:
-                                comment = Comment(
-                                    '$%{point:pt0}$, $%{point:pt1}$, $%{point:pt2}$ are collinear and $%{anglemeasure:angle0}$ > $%{anglemeasure:angle1}$',
-                                    {'pt0': pt, 'pt1': vec0.points[0], 'pt2': vec0.points[1], 'angle0': angle, 'angle1': base}
-                                )
-                                zero = base.vertex.angle(vec0.end, pt)
-                                yield (AngleValueProperty(zero, 0), None, comment, [col, ka2, ka])
-                            break
 
             for aa0, aa1 in itertools.combinations([a for a in self.context.list(AngleKindProperty) if a.angle.vertex and a.kind == AngleKindProperty.Kind.acute], 2):
                 vertex = aa0.angle.vertex
