@@ -1873,8 +1873,13 @@ class AlternateInteriorAnglesRule(Rule):
         return self.context.angle_value_properties_for_degree(180, lambda a: len(a.point_set) == 4)
 
     def apply(self, prop):
-        self.processed.add(prop)
         vecs = prop.angle.vectors
+        neq = self.context.coincidence_property(vecs[0].start, vecs[1].start)
+        if neq is None:
+            return
+        self.processed.add(prop)
+        if neq.coincident:
+            return
         angle0 = vecs[0].start.angle(vecs[0].end, vecs[1].start)
         angle1 = vecs[1].start.angle(vecs[1].end, vecs[0].start)
         yield (
@@ -1883,7 +1888,7 @@ class AlternateInteriorAnglesRule(Rule):
                 'alternate interior angles: transversal $%{line:common}$, and $%{ray:vec0} \\uparrow\\!\\!\\!\\downarrow %{ray:vec1}$',
                 {'common': vecs[0].start.segment(vecs[1].start), 'vec0': vecs[0], 'vec1': vecs[1]}
             ),
-            [prop]
+            [prop, neq]
         )
 
 @processed_cache(set())
