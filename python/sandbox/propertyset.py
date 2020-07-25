@@ -497,6 +497,34 @@ class LineSet:
             return prop
 
         triangle = Scene.Triangle(*pts)
+
+        pattern = '$%{point:pt0}$ and $%{point:pt1}$ are on $%{line:line}$, $%{point:pt2}$ is not'
+        for vertex, side in zip(triangle.points, triangle.sides):
+            line = self.__segment_to_line.get(side)
+            if line is None or vertex not in line.points_not_on:
+                continue
+
+            common_params = {'pt0': side.points[0], 'pt1': side.points[1], 'pt2': vertex}
+            for seg in line.segments:
+                premises = []
+                premises2 = []
+                for pt in [*side.points, vertex]:
+                    if pt not in seg.points:
+                        premises.append(line.point_on_line_property(seg, pt))
+                        premises2.append(self.__collinearity.get(frozenset([*seg.points, pt])))
+
+                prop = PointsCollinearityProperty(*pts, False)
+                params = dict(common_params)
+                params['line'] = seg
+                candidates.append(_synthetic_property(
+                    prop, Comment(pattern, params), premises
+                ))
+                if None not in premises2:
+                    prop = PointsCollinearityProperty(*pts, False)
+                    candidates.append(_synthetic_property(
+                        prop, Comment(pattern, params), premises2
+                    ))
+
         lines = [(triangle.sides[i], self.__segment_to_line.get(triangle.sides[i]), triangle.points[i]) for i in range(0, 3)]
         lines = [lw for lw in lines if lw[1]]
         for (side, line, vertex) in lines:
