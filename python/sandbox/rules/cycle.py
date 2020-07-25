@@ -74,7 +74,7 @@ class RotatedAngleRule(Rule):
         yield (
             AngleRatioProperty(new_angle0, new_angle1, 1),
             Comment(
-                '$%{angle:angle0}$ is $%{angle:angle1}$ rotated by $%{orientedangle:rot_angle0} \\cong %{orientedangle:rot_angle1}$',
+                '$%{angle:angle1}$ is $%{angle:angle0}$ rotated by $%{orientedangle:rot_angle0} \\cong %{orientedangle:rot_angle1}$',
                 {'angle0': new_angle0, 'angle1': new_angle1, 'rot_angle0': ang0, 'rot_angle1': ang1}
             ),
             [eq]
