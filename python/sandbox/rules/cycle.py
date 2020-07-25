@@ -54,37 +54,28 @@ class CyclicOrderRule(Rule):
 @accepts_auto
 class RotatedAngleRule(Rule):
     def sources(self):
-        return [(a0, a1) for a0, a1 in self.context.congruent_angles_with_vertex() if a0.vertex == a1.vertex]
+        return [(a0, a1) for a0, a1 in self.context.congruent_oriented_angles() if a0.vertex == a1.vertex]
 
     def apply(self, src):
         ang0, ang1 = src
         vertex = ang0.vertex
+        self.processed.add(src)
+        self.processed.add((ang1, ang0))
+
         pts0 = ang0.endpoints
         pts1 = ang1.endpoints
         if next((p for p in pts0 if p in pts1), None) is not None:
-            self.processed.add(src)
-            self.processed.add((ang1, ang0))
             return
         if self.context.collinearity(vertex, *pts0):
-            self.processed.add(src)
-            self.processed.add((ang1, ang0))
             return
-        co = self.context.same_cyclic_order_property(Cycle(vertex, *pts0), Cycle(vertex, *pts1))
-        if co is None:
-            pts1 = (pts1[1], pts1[0])
-            co = self.context.same_cyclic_order_property(Cycle(vertex, *pts0), Cycle(vertex, *pts1))
-        if co is None:
-            return
-        self.processed.add(src)
-        self.processed.add((ang1, ang0))
-        ca = self.context.angle_ratio_property(ang0, ang1)
+        eq = self.context.congruent_oriented_angles_property(ang0, ang1)
         new_angle0 = vertex.angle(pts0[0], pts1[0])
         new_angle1 = vertex.angle(pts0[1], pts1[1])
         yield (
             AngleRatioProperty(new_angle0, new_angle1, 1),
             Comment(
-                '$%{angle:angle0}$ is $%{angle:angle1}$ rotated by $%{anglemeasure:rot_angle0} = %{anglemeasure:rot_angle1}$',
+                '$%{angle:angle0}$ is $%{angle:angle1}$ rotated by $%{orientedangle:rot_angle0} \\cong %{orientedangle:rot_angle1}$',
                 {'angle0': new_angle0, 'angle1': new_angle1, 'rot_angle0': ang0, 'rot_angle1': ang1}
             ),
-            [ca, co]
+            [eq]
         )
