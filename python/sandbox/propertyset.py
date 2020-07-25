@@ -793,6 +793,16 @@ class CyclicOrderPropertySet:
             self.families.append(fam)
         fam.premises_graph.add_edge(prop.cycle0, prop.cycle1, prop=prop)
 
+    def compare(self, cycle0, cycle1):
+        fam = self.__find_by_cycle(cycle0)
+        if fam is None:
+            return None
+        if cycle1 in fam.cycle_set:
+            return True
+        if cycle1.reversed in fam.cycle_set:
+            return False
+        return None
+
     def same_order_property(self, cycle0, cycle1, use_cache=True):
         if use_cache:
             key = (cycle0, cycle1)
@@ -1857,6 +1867,55 @@ class PropertySet(LineSet):
     def congruent_angles_for(self, angle):
         return self.__angle_ratios.congruent_angles_for(angle)
 
+    def congruent_oriented_angles(self):
+        for a0, a1 in self.congruent_angles_with_vertex():
+            cycle0 = Cycle(a0.vertex, *a0.endpoints)
+            cycle1 = Cycle(a1.vertex, *a1.endpoints)
+            comparison = self.compare_cyclic_order(cycle0, cycle1)
+            if comparison == True:
+                yield (
+                    OrientedAngle(a0.vertex, *a0.endpoints),
+                    OrientedAngle(a1.vertex, *a1.endpoints)
+                )
+                yield (
+                    OrientedAngle(a0.vertex, *reversed(a0.endpoints)),
+                    OrientedAngle(a1.vertex, *reversed(a1.endpoints))
+                )
+            elif comparison == False:
+                yield (
+                    OrientedAngle(a0.vertex, *reversed(a0.endpoints)),
+                    OrientedAngle(a1.vertex, *a1.endpoints)
+                )
+                yield (
+                    OrientedAngle(a0.vertex, *a0.endpoints),
+                    OrientedAngle(a1.vertex, *reversed(a1.endpoints))
+                )
+
+    def congruent_oriented_angles_property(self, angle0, angle1):
+        prop = CongruentOrientedAnglesProperty(angle0, angle1)
+        eq = self.angle_ratio_property(angle0.angle, angle1.angle)
+        cycle0 = angle0.cycle
+        cycle1 = angle1.cycle
+        if cycle0 == cycle1:
+            return _synthetic_property(
+                prop,
+                Comment(
+                    '$%{orientedangle:angle0}$ and $%{orientedangle:angle1}$ are congruent angles of $%{triangle}$',
+                    {'angle0': angle0, 'angle1': angle1, triangle: Scene.Triangle(*angle0.point_set)}
+                ),
+                [eq]
+            )
+        else:
+            cyc = self.same_cyclic_order_property(cycle0, cycle1)
+            return _synthetic_property(
+                prop,
+                Comment(
+                    '$%{anglemeasure:angle0} = %{anglemeasure:angle1}$ and $%{cycle:cycle0}$ has same order as $%{cycle:cycle1}$',
+                    {'angle0': angle0.angle, 'angle1': angle1.angle, 'cycle0': cycle0, 'cycle1': cycle1}
+                ),
+                [eq, cyc]
+            )
+
     def sum_of_angles(self, *angles):
         return self.__angle_ratios.sum_of_angles(*angles)
 
@@ -1927,6 +1986,9 @@ class PropertySet(LineSet):
 
     def equal_length_ratios_property(self, segment0, segment1, segment2, segment3, use_cache=True):
         return self.__length_ratios.equality_property((segment0, segment1), (segment2, segment3), use_cache=use_cache)
+
+    def compare_cyclic_order(self, cycle0, cycle1):
+        return self.__cyclic_orders.compare(cycle0, cycle1)
 
     def same_cyclic_order_property(self, cycle0, cycle1, use_cache=True):
         return self.__cyclic_orders.same_order_property(cycle0, cycle1, use_cache=use_cache)

@@ -115,6 +115,7 @@ class Explainer:
             CongruentAnglesWithCommonPartRule,
             RotatedAngleSimplifiedRule,
             RotatedAngleRule,
+            CongruentOrientedAnglesWithPerpendicularSidesRule,
             AngleTypeByDegreeRule,
             PointsCollinearityByAngleDegreeRule,
             EqualAnglesToCollinearityRule,

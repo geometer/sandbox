@@ -3,6 +3,35 @@ from ..util import Comment
 
 from .abstract import Rule, accepts_auto, processed_cache, source_type
 
+@processed_cache(set())
+class CongruentOrientedAnglesWithPerpendicularSidesRule(Rule):
+    def sources(self):
+        return self.context.congruent_oriented_angles()
+
+    def apply(self, pair):
+        key = frozenset(pair)
+        if key in self.processed:
+            return
+        a0, a1 = pair
+        side0 = a0.vertex.segment(a0.endpoints[0])
+        side1 = a1.vertex.segment(a1.endpoints[0])
+        perp = self.context[PerpendicularSegmentsProperty(side0, side1)]
+        if perp is None:
+            return
+        self.processed.add(key)
+        cong = self.context.congruent_oriented_angles_property(a0, a1)
+        yield (
+            PerpendicularSegmentsProperty(
+                a0.vertex.segment(a0.endpoints[1]),
+                a1.vertex.segment(a1.endpoints[1])
+            ),
+            Comment(
+                'congruent oriented angles $%{orientedangle:a0}$ and $%{orientedangle:a1}$ with perpendicular sides $%{segment:side0}$ and $%{segment:side1}$',
+                {'a0': a0, 'a1': a1, 'side0': side0, 'side1': side1}
+            ),
+            [cong, perp]
+        )
+
 @source_type(SameOrOppositeSideProperty)
 @processed_cache(set())
 @accepts_auto
