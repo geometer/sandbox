@@ -14,14 +14,15 @@ from .util import LazyComment, Comment, common_endpoint, divide
 def _edge_comp(v0, v1, edge):
     return edge['prop'].reason.cost
 
-def _synthetic_property(prop, comment, premises):
-    prop.reason = Reason(
+def _synthetic_property(prop, comment, premises, optimize=True):
+    reason = Reason(
         SyntheticPropertyRule.instance(),
         1 + max(p.reason.generation for p in premises),
         comment,
         premises
     )
-    prop.reason.obsolete = all(p.reason.obsolete for p in premises)
+    reason.obsolete = all(p.reason.obsolete for p in premises)
+    prop.add_reason(reason, optimize=optimize)
     return prop
 
 class ContradictionError(Exception):
@@ -611,19 +612,9 @@ class LineSet:
             )
             prop = IntersectionOfLinesProperty(common, segment0, segment1)
             colli = self.collinearity_property(*set(segment0.points + segment1.points))
-            prop.add_reason(Reason(
-                SyntheticPropertyRule.instance(),
-                colli.reason.generation + 1,
-                comment,
-                [colli]
-            ))
+            _synthetic_property(prop, comment, [colli])
             ncl = self.lines_coincidence_property(segment0, segment1)
-            prop.add_reason(Reason(
-                SyntheticPropertyRule.instance(),
-                ncl.reason.generation + 1,
-                comment,
-                [ncl]
-            ))
+            _synthetic_property(prop, comment, [ncl])
             self.__lines_intersection[key] = prop
             return prop
 
@@ -1370,14 +1361,7 @@ class AngleRatioPropertySet:
             for angle, a in zip(angles, known_angles):
                 if angle != a:
                     premises.append(self.ratio_property(angle, a))
-            reason = Reason(
-                SyntheticPropertyRule.instance(),
-                1 + max(p.reason.generation for p in premises),
-                comment,
-                premises
-            )
-            reason.obsolete = all(p.reason.obsolete for p in premises)
-            prop.add_reason(reason, optimize=False)
+            _synthetic_property(prop, comment, premises, optimize=False)
 
         if prop:
             prop.optimize()
@@ -1618,7 +1602,7 @@ class LengthRatioPropertySet:
             value = divide(1, fam.ratio_value)
         comment, premises = fam.value_explanation(ratio)
         prop = LengthRatioProperty(*ratio, fam.ratio_value)
-        prop = _synthetic_property(prop, comment, premises)
+        _synthetic_property(prop, comment, premises)
         pair = (prop, value)
         self.__cache[key] = pair
         return pair
