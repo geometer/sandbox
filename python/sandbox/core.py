@@ -328,8 +328,8 @@ class CoreScene:
                 if line == cnstr.params[2] and set(cnstr.params[0:2]) == {self, point}:
                     cnstr.update(kwargs)
                     return
-            self.not_collinear_constraint(line.point0, line.point1, **kwargs)
-            point.not_collinear_constraint(line.point0, line.point1, **kwargs)
+            #self.not_collinear_constraint(line.point0, line.point1, **kwargs)
+            #point.not_collinear_constraint(line.point0, line.point1, **kwargs)
             self.scene.constraint(Constraint.Kind.same_side, self, point, line, **kwargs)
             from .property import SameOrOppositeSideProperty
             self.scene.add_property(SameOrOppositeSideProperty(segment, self, point, True), None)
