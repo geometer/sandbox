@@ -458,7 +458,7 @@ class LineSet:
                 return True
 
         return None
-        
+
     def collinearity_property(self, *pts, use_cache=True):
         if use_cache:
             key = frozenset(pts)
@@ -1621,7 +1621,8 @@ class PropertySet(LineSet):
         self.__similar_triangles = {} # (three points) => {(three points)}
         self.__two_points_relative_to_line = {} # key => SameOrOppositeSideProperty
         self.__points_inside_angle = {} # key => PointInsideAngleProperty
-        self.__lengths_inequlaities = {} # key => LengthsInequalityProperty
+        self.__lengths_inequalities = {} # key => LengthsInequalityProperty
+        self.__angles_inequalities = {} # angle => {angle => AnglesInequalityProperty}
         self.__points_inside_triangle = {} # {vertices} => [points]
 
     def add(self, prop):
@@ -1666,7 +1667,9 @@ class PropertySet(LineSet):
                 else:
                     self.__similar_triangles[key1] = {key0}
         elif type_key == LengthsInequalityProperty:
-            self.__lengths_inequlaities[prop.property_key] = prop
+            self.__lengths_inequalities[prop.property_key] = prop
+        elif type_key == AnglesInequalityProperty:
+            self.__cache_angles_inequality_property(*prop.angles, prop)
         elif type_key == PointInsideAngleProperty:
             self.__points_inside_angle[prop.property_key] = prop
         elif type_key == PointInsideTriangleProperty:
@@ -1978,7 +1981,112 @@ class PropertySet(LineSet):
         return prop if value == 1 else None
 
     def lengths_inequality_property(self, segment0, segment1):
-        return self.__lengths_inequlaities.get(LengthsInequalityProperty.unique_key(segment0, segment1))
+        return self.__lengths_inequalities.get(LengthsInequalityProperty.unique_key(segment0, segment1))
+
+    def __cache_angles_inequality_property(self, angle0, angle1, prop):
+            dct = self.__angles_inequalities.get(angle0)
+            if dct:
+                dct[angle1] = prop
+            else:
+                self.__angles_inequalities[angle0] = {angle1: prop}
+            dct = self.__angles_inequalities.get(angle1)
+            if dct:
+                dct[angle0] = prop
+            else:
+                self.__angles_inequalities[angle1] = {angle0: prop}
+
+    def angles_inequality_property(self, angle0, angle1, use_cache=True):
+        assert angle0 != angle1
+
+        def saved_property(a0, a1):
+            dct = self.__angles_inequalities.get(a0)
+            return dct.get(a1) if dct else None
+
+        prop = saved_property(angle0, angle1)
+        if use_cache and prop:
+            return prop
+
+        computed = [prop]
+        def get_prop(first_is_less):
+            if computed[0] is None:
+                if first_is_less:
+                    computed[0] = AnglesInequalityProperty(angle0, angle1)
+                else:
+                    computed[0] = AnglesInequalityProperty(angle1, angle0)
+            return computed[0]
+
+        arp = self.angle_ratio_property(angle0, angle1)
+        if arp:
+            if arp.value == 1:
+                self.__cache_angles_inequality_property(angle0, angle1, None)
+                return None
+            _synthetic_property(
+                get_prop(angle0 == arp.angle1),
+                Comment(
+                    '$%{anglemeasure:less} < %{multiplier:coef}%{anglemeasure:less} = %{anglemeasure:greater}$',
+                    {'less': arp.angle1, 'greater': angle1, 'coef': arp.value}
+                ),
+                [arp]
+            )
+
+        congruency = {} # angle => congruency property
+        def congruency_prop(angle, index):
+            cached = congruency.get(angle)
+            if cached:
+                return cached
+            cong = self.angle_ratio_property(angle0 if index == 0 else angle1, angle)
+            congruency[angle] = cong
+            return cong
+
+        congruents0 = list(self.congruent_angles_for(angle0))
+        congruents1 = list(self.congruent_angles_for(angle1))
+
+        for a in congruents0:
+            ineq = saved_property(a, angle1)
+            if ineq is None:
+                continue
+            cong = congruency_prop(a, 0) 
+            _synthetic_property(
+                get_prop(a == ineq.angles[0]),
+                Comment(
+                    '$%{anglemeasure:angle} = %{anglemeasure:angle0} < %{anglemeasure:angle1}$',
+                    {'angle': a, 'angle0': ineq.angles[0], 'angle1': ineq.angles[1]}
+                ),
+                [cong, ineq]
+            )
+
+        for a in congruents1:
+            ineq = saved_property(angle0, a)
+            if ineq is None:
+                continue
+            cong = congruency_prop(a, 1) 
+            _synthetic_property(
+                get_prop(a == ineq.angles[1]),
+                Comment(
+                    '$%{anglemeasure:angle0} < %{anglemeasure:angle1} = %{anglemeasure:angle}$',
+                    {'angle': a, 'angle0': ineq.angles[0], 'angle1': ineq.angles[1]}
+                ),
+                [ineq, cong]
+            )
+
+        for a0, a1 in itertools.product(congruents0, congruents1):
+            ineq = saved_property(a0, a1)
+            if ineq is None:
+                continue
+            cong0 = congruency_prop(a0, 0) 
+            cong1 = congruency_prop(a1, 1) 
+            _synthetic_property(
+                get_prop(a0 == ineq.angles[0]),
+                Comment(
+                    '$%{anglemeasure:angle0} = %{anglemeasure:known0} < %{anglemeasure:known1} = %{anglemeasure:angle1}$',
+                    {'angle0': a0, 'angle1': a1, 'known0': ineq.angles[0], 'known1': ineq.angles[1]}
+                ),
+                [cong0, ineq, cong1]
+            )
+
+        if use_cache and computed[0]:
+            self.__cache_angles_inequality_property(angle0, angle1, computed[0])
+        return computed[0]
 
     def triangles_are_similar(self, points0, points1):
         triples = self.__similar_triangles.get(points0)

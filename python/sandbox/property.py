@@ -933,6 +933,27 @@ class LengthsInequalityProperty(Property):
     def compare_values(self, other):
         return self.segments[0] == other.segments[0]
 
+class AnglesInequalityProperty(Property):
+    """
+    Angle is less than another
+    """
+    @staticmethod
+    def unique_key(angle0, angle1):
+        return frozenset((angle0, angle1))
+
+    def __init__(self, angle0, angle1):
+        self.angles = (angle0, angle1)
+        super().__init__(AnglesInequalityProperty.unique_key(angle0, angle1), {*angle0.point_set, *angle1.point_set})
+
+    @property
+    def description(self):
+        return Comment('$%{anglemeasure:angle0} < %{anglemeasure:angle1}$', {
+            'angle0': self.angles[0], 'angle1': self.angles[1]
+        })
+
+    def compare_values(self, other):
+        return self.angles[0] == other.angles[0]
+
 class EqualLengthProductsProperty(Property):
     """
     Two segment lengths products are equal

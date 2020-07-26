@@ -29,40 +29,6 @@ class ZeroAngleWithLengthInequalityRule(Rule):
             ),
             [prop, ineq]
         )
-    
-@source_type(LengthsInequalityProperty)
-@processed_cache(set())
-class LengthsInequalityAndEqualityRule(Rule):
-    def apply(self, prop):
-        for seg in self.context.congruent_segments_for(prop.segments[0]):
-            key = (prop, seg)
-            if key in self.processed:
-                continue
-            self.processed.add(key)
-            cong = self.context.congruent_segments_property(prop.segments[0], seg, allow_zeroes=True)
-            yield (
-                LengthsInequalityProperty(seg, prop.segments[1]),
-                Comment(
-                    '$|%{segment:seg}| = |%{segment:seg0}| < |%{segment:seg1}|$',
-                    {'seg': seg, 'seg0': prop.segments[0], 'seg1': prop.segments[1]}
-                ),
-                [prop, cong]
-            )
-
-        for seg in self.context.congruent_segments_for(prop.segments[1]):
-            key = (prop, seg)
-            if key in self.processed:
-                continue
-            self.processed.add(key)
-            cong = self.context.congruent_segments_property(seg, prop.segments[1], allow_zeroes=True)
-            yield (
-                LengthsInequalityProperty(prop.segments[0], seg),
-                Comment(
-                    '$|%{segment:seg0}| < |%{segment:seg1}| = |%{segment:seg}|$',
-                    {'seg': seg, 'seg0': prop.segments[0], 'seg1': prop.segments[1]}
-                ),
-                [prop, cong]
-            )
 
 @source_type(AngleKindProperty)
 @processed_cache(set())

@@ -13,6 +13,7 @@ from .rules.basic import *
 from .rules.circle import *
 from .rules.complex import *
 from .rules.cycle import *
+from .rules.inequality import *
 from .rules.length import *
 from .rules.line import *
 from .rules.linear import *
@@ -122,7 +123,10 @@ class Explainer:
             RightAngleDegreeRule,
             AngleTypesInObtuseangledTriangleRule,
             PointInsidePartOfAngleRule,
+            PartOfAngleIsLessThanWholeRule,
             PartOfAcuteAngleIsAcuteRule,
+            #AnglesInequalityAndEqualityRule,
+            InequalAnglesWithCommonSide,
             TwoPointsInsideSegmentRule,
             TwoPointsOnRayRule,
             FourPointsOnLineRule,
