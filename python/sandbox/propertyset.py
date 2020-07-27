@@ -1772,6 +1772,9 @@ class PropertySet(LineSet):
             elif isinstance(prop, SameCyclicOrderProperty):
                 if update_cyclic_order:
                     extra = self.same_cyclic_order_property(prop.cycle0, prop.cycle1, use_cache=False)
+            elif isinstance(prop, AnglesInequalityProperty):
+                if '*' in changeable or AnglesInequalityProperty in changeable:
+                    extra = self.angles_inequality_property(*prop.angles, use_cache=False)
             else:
                 continue
 
@@ -1807,6 +1810,8 @@ class PropertySet(LineSet):
                 existing = self.sum_of_angles_property(*prop.angles)
             elif isinstance(prop, ConcyclicPointsProperty):
                 existing = self.concyclicity_property(*prop.points)
+            elif isinstance(prop, AnglesInequalityProperty):
+                existing = self.angles_inequality_property(*prop.angles)
             #TODO: LengthRatioProperty
             #TODO: EqualLengthRatiosProperty
             else:
