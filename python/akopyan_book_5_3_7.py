@@ -4,7 +4,7 @@ from sandbox.property import *
 
 scene = Scene()
 
-A, B, C, D = scene.square('A', 'B', 'C', 'D').points
+A, B, C, D = scene.square('A', 'B', 'C', 'D', non_degenerate=True).points
 A.x = 0
 A.y = 0
 B.x = 1
