@@ -2045,7 +2045,7 @@ class PropertySet(LineSet):
             ineq = saved_property(a, angle1)
             if ineq is None:
                 continue
-            cong = congruency_prop(a, 0) 
+            cong = congruency_prop(a, 0)
             _synthetic_property(
                 get_prop(a == ineq.angles[0]),
                 Comment(
@@ -2059,7 +2059,7 @@ class PropertySet(LineSet):
             ineq = saved_property(angle0, a)
             if ineq is None:
                 continue
-            cong = congruency_prop(a, 1) 
+            cong = congruency_prop(a, 1)
             _synthetic_property(
                 get_prop(a == ineq.angles[1]),
                 Comment(
@@ -2073,8 +2073,8 @@ class PropertySet(LineSet):
             ineq = saved_property(a0, a1)
             if ineq is None:
                 continue
-            cong0 = congruency_prop(a0, 0) 
-            cong1 = congruency_prop(a1, 1) 
+            cong0 = congruency_prop(a0, 0)
+            cong1 = congruency_prop(a1, 1)
             _synthetic_property(
                 get_prop(a0 == ineq.angles[0]),
                 Comment(
