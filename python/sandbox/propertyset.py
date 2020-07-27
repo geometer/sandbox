@@ -2046,28 +2046,50 @@ class PropertySet(LineSet):
             if ineq is None:
                 continue
             cong = congruency_prop(a, 0)
-            _synthetic_property(
-                get_prop(a == ineq.angles[0]),
-                Comment(
-                    '$%{anglemeasure:angle} = %{anglemeasure:angle0} < %{anglemeasure:angle1}$',
-                    {'angle': a, 'angle0': ineq.angles[0], 'angle1': ineq.angles[1]}
-                ),
-                [cong, ineq]
-            )
+            params = {'angle': a, 'angle0': angle0, 'angle1': angle1}
+            if a == ineq.angles[0]:
+                _synthetic_property(
+                    get_prop(True),
+                    Comment(
+                        '$%{anglemeasure:angle0} = %{anglemeasure:angle} < %{anglemeasure:angle1}$',
+                        params
+                    ),
+                    [cong, ineq]
+                )
+            else:
+                _synthetic_property(
+                    get_prop(False),
+                    Comment(
+                        '$%{anglemeasure:angle1} < %{anglemeasure:angle} = %{anglemeasure:angle0}$',
+                        params
+                    ),
+                    [ineq, cong]
+                )
 
         for a in congruents1:
             ineq = saved_property(angle0, a)
             if ineq is None:
                 continue
             cong = congruency_prop(a, 1)
-            _synthetic_property(
-                get_prop(a == ineq.angles[1]),
-                Comment(
-                    '$%{anglemeasure:angle0} < %{anglemeasure:angle1} = %{anglemeasure:angle}$',
-                    {'angle': a, 'angle0': ineq.angles[0], 'angle1': ineq.angles[1]}
-                ),
-                [ineq, cong]
-            )
+            params = {'angle': a, 'angle0': angle0, 'angle1': angle1}
+            if a == ineq.angles[1]:
+                _synthetic_property(
+                    get_prop(True),
+                    Comment(
+                        '$%{anglemeasure:angle0} < %{anglemeasure:angle} = %{anglemeasure:angle1}$',
+                        params
+                    ),
+                    [cong, ineq]
+                )
+            else:
+                _synthetic_property(
+                    get_prop(False),
+                    Comment(
+                        '$%{anglemeasure:angle1} = %{anglemeasure:angle} < %{anglemeasure:angle0}$',
+                        params
+                    ),
+                    [ineq, cong]
+                )
 
         for a0, a1 in itertools.product(congruents0, congruents1):
             ineq = saved_property(a0, a1)
@@ -2075,11 +2097,12 @@ class PropertySet(LineSet):
                 continue
             cong0 = congruency_prop(a0, 0)
             cong1 = congruency_prop(a1, 1)
+            prop = get_prop(a0 == ineq.angles[0])
             _synthetic_property(
-                get_prop(a0 == ineq.angles[0]),
+                prop,
                 Comment(
                     '$%{anglemeasure:angle0} = %{anglemeasure:known0} < %{anglemeasure:known1} = %{anglemeasure:angle1}$',
-                    {'angle0': a0, 'angle1': a1, 'known0': ineq.angles[0], 'known1': ineq.angles[1]}
+                    {'angle0': prop.angles[0], 'angle1': prop.angles[1], 'known0': ineq.angles[0], 'known1': ineq.angles[1]}
                 ),
                 [cong0, ineq, cong1]
             )
