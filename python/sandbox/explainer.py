@@ -252,7 +252,10 @@ class Explainer:
             was_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
             existing.merge(prop)
             is_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
-            if was_synthetic and not is_synthetic or self.context.prop_and_index(existing) is None:
+            if self.context.prop_and_index(existing) is None:
+                normalize_prop(existing)
+                self.context.add(existing)
+            elif was_synthetic and not is_synthetic:
                 self.context.add(existing)
 
     def explain(self):
