@@ -1625,7 +1625,7 @@ class PropertySet(LineSet):
         self.__angles_inequalities = {} # angle => {angle => AnglesInequalityProperty}
         self.__points_inside_triangle = {} # {vertices} => [points]
 
-    def insert(self, prop):
+    def insert(self, prop, do_lookup=True):
         def normalize_prop(prop):
             for base in prop.bases:
                 normalize_prop(base)
@@ -1647,7 +1647,7 @@ class PropertySet(LineSet):
 
         normalize_prop(prop)
 
-        existing = self[prop]
+        existing = self[prop] if do_lookup else None
         if existing is None:
             prop.reason.obsolete = False
             self.__insert_prop__(prop)
@@ -1852,6 +1852,8 @@ class PropertySet(LineSet):
             #TODO: EqualLengthRatiosProperty
             else:
                 existing = None
+            if existing:
+                self.insert(existing, do_lookup=False)
 
         if existing and not existing.compare_values(prop):
             raise ContradictionError('different values: `%s` vs `%s`' % (prop, existing))
