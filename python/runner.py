@@ -94,7 +94,7 @@ def run_sample(scene, props_generator):
         def all_premises(prop):
             premises = PropertySet(explainer.context.points)
             for p in prop.reason.all_premises:
-                premises.add(p)
+                premises.__insert_prop__(p)
             return premises
 
         for prop in props:
