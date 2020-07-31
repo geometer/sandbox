@@ -1773,8 +1773,7 @@ class PropertySet(LineSet):
                 if update_cyclic_order:
                     extra = self.same_cyclic_order_property(prop.cycle0, prop.cycle1, use_cache=False)
             elif isinstance(prop, AnglesInequalityProperty):
-                if '*' in changeable or AnglesInequalityProperty in changeable:
-                    extra = self.angles_inequality_property(*prop.angles, use_cache=False)
+                extra = self.angles_inequality_property(*prop.angles, use_cache=False)
             else:
                 continue
 
