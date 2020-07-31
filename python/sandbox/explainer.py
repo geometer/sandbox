@@ -367,6 +367,8 @@ class Explainer:
         def adjust0():
             changed = set()
             for prop in self.context.all:
+                prop.reason.reset_premises()
+            for prop in self.context.all:
                 if prop.optimize():
                     changed.add(type(prop))
             return changed
