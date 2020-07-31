@@ -218,7 +218,7 @@ class Explainer:
 
         self.__rules = [create_rule(clazz, self.context) for clazz in rule_classes]
 
-    def __reason(self, prop, rule, comment, premises=None):
+    def __reason(self, prop, rule, comment, premises):
         def normalize_prop(prop):
             for base in prop.bases:
                 normalize_prop(base)
