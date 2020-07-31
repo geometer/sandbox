@@ -1,3 +1,5 @@
+from copy import copy
+
 class AbstractRule:
     @classmethod
     def priority(clazz):
@@ -77,7 +79,7 @@ class processed_cache:
         return type(
             clazz.__name__,
             (clazz,),
-            {'processed': self.cache_object}
+            {'processed_proto': self.cache_object}
         )
 
 def accepts_auto(clazz):
@@ -89,8 +91,6 @@ def accepts_auto(clazz):
     )
 
 def create_rule(clazz, context):
-    if not hasattr(clazz, 'processed'):
-        print('WARNING: Rule %s has no attribute `processed`' % clazz.__name__)
     if not hasattr(clazz, 'accepts'):
         def generator(rule):
             for src in rule.sources():
@@ -101,4 +101,9 @@ def create_rule(clazz, context):
             (clazz,),
             {'generate': lambda inst: generator(inst)}
         )
-    return clazz(context)
+    obj = clazz(context)
+    if not hasattr(clazz, 'processed_proto'):
+        print('WARNING: Rule %s has no attribute `processed_proto`' % clazz.__name__)
+    else:
+        obj.processed = copy(clazz.processed_proto)
+    return obj
