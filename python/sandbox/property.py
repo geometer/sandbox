@@ -9,7 +9,7 @@ from .util import Comment, divide, normalize_number, keys_for_triangle
 
 class Property:
     def __init__(self, property_key, point_set):
-        self.implications = []
+#        self.implications = []
         self.property_key = property_key
         self.point_set = point_set
         self.__hash = None
@@ -54,16 +54,16 @@ class Property:
             return
 
         if self.__reason:
-            for pre in self.__reason.premises:
-                pre.implications = [p for p in pre.implications if p is not self]
+#            for pre in self.__reason.premises:
+#                pre.implications = [p for p in pre.implications if p is not self]
             self.__alternate_reasons.append(self.__reason)
 
         if value in self.__alternate_reasons:
             self.__alternate_reasons.remove(value)
         self.__reason = value
-        for pre in self.__reason.premises:
-            pre.implications.append(self)
-        self.fire_premises_change()
+#        for pre in self.__reason.premises:
+#            pre.implications.append(self)
+#        self.fire_premises_change()
 
     def merge(self, other_prop):
         assert self == other_prop, '`%s` != `%s`' % (self, other_prop)
@@ -109,10 +109,10 @@ class Property:
     def __priority__(self):
         return 3
 
-    def fire_premises_change(self):
-        self.reason.reset_premises()
-        for impl in self.implications:
-            impl.fire_premises_change()
+#    def fire_premises_change(self):
+#        self.reason.reset_premises()
+#        for impl in self.implications:
+#            impl.fire_premises_change()
 
     def keys(self):
         return []
