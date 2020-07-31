@@ -364,7 +364,7 @@ class LineSet:
         else:
             storage[prop.point] = {prop}
 
-    def add(self, prop):
+    def __insert_prop__(self, prop):
         if isinstance(prop, LinesCoincidenceProperty):
             self.__lines_coincidence[prop.property_key] = prop
             if prop.coincident:
@@ -1625,7 +1625,44 @@ class PropertySet(LineSet):
         self.__angles_inequalities = {} # angle => {angle => AnglesInequalityProperty}
         self.__points_inside_triangle = {} # {vertices} => [points]
 
-    def add(self, prop):
+    def insert(self, prop):
+        def normalize_prop(prop):
+            for base in prop.bases:
+                normalize_prop(base)
+            for r in prop.proper_reasons:
+                normalize(r)
+            prop.reason = prop.reason
+
+        def normalize(reason):
+            for index, pre in enumerate(reason.premises):
+                prop_and_index = self.prop_and_index(pre)
+                existing = prop_and_index[0] if prop_and_index else None
+                if existing is None:
+                    normalize_prop(pre)
+                    self.__insert_prop__(pre)
+                elif pre is not existing:
+                    normalize_prop(pre)
+                    existing.merge(pre)
+                    reason.premises[index] = existing
+
+        normalize_prop(prop)
+
+        existing = self[prop]
+        if existing is None:
+            prop.reason.obsolete = False
+            self.__insert_prop__(prop)
+        else:
+            prop.reason.obsolete = existing.reason.obsolete
+            was_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
+            existing.merge(prop)
+            is_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
+            if self.prop_and_index(existing) is None:
+                normalize_prop(existing)
+                self.__insert_prop__(existing)
+            elif was_synthetic and not is_synthetic:
+                self.__insert_prop__(existing)
+
+    def __insert_prop__(self, prop):
         def put(key):
             lst = self.__combined.get(key)
             if lst:
@@ -1651,7 +1688,7 @@ class PropertySet(LineSet):
         elif type_key == SameCyclicOrderProperty:
             self.__cyclic_orders.add(prop)
         elif type_key in (PointsCoincidenceProperty, LinesCoincidenceProperty, PointOnLineProperty, PointsCollinearityProperty, CircleCoincidenceProperty, PointAndCircleProperty, ConcyclicPointsProperty):
-            super().add(prop)
+            super().__insert_prop__(prop)
         elif type_key == SameOrOppositeSideProperty:
             self.__two_points_relative_to_line[prop.property_key] = prop
         elif type_key in (SimilarTrianglesProperty, CongruentTrianglesProperty):
@@ -2184,5 +2221,5 @@ class PropertySet(LineSet):
     def clone(self, extra_points):
         copy = PropertySet(self.points + extra_points)
         for prop in self.all:
-            copy.add(prop)
+            copy.__insert_prop__(prop)
         return copy
