@@ -838,94 +838,6 @@ class CyclicOrderPropertySet:
             self.cache[(cycle1, cycle0)] = prop
         return prop
 
-class LinearAngleSet:
-    def __init__(self):
-        self.properties = []
-
-    def add(self, prop):
-        self.properties.append(prop)
-
-    def dump(self):
-        values = {} # angle => num
-        equivalents = {} # angle => list(angle)
-        others = []
-        for prop in self.properties:
-            if isinstance(prop, AngleValueProperty):
-                values[prop.angle] = prop.degree
-            #elif isinstance(prop, AngleRatioProperty) and prop.same:
-            elif isinstance(prop, AngleRatioProperty) and prop.value == 1:
-                equ0 = equivalents.get(prop.angle0)
-                equ1 = equivalents.get(prop.angle1)
-                if equ0 and equ1:
-                    if equ0 != equ1:
-                        equ0 += equ1
-                        for angle in equ1:
-                            equivalents[angle] = equ0
-                elif equ0:
-                    equ0.append(prop.angle1)
-                elif equ1:
-                    equ1.append(prop.angle0)
-                else:
-                    lst = [prop.angle0, prop.angle1]
-                    equivalents[prop.angle0] = lst
-                    equivalents[prop.angle1] = lst
-            else:
-                others.append(prop)
-
-        def angle_to_expression(angle):
-            val = values.get(angle)
-            if val is not None:
-                return val
-            equi_set = equivalents.get(angle)
-            if equi_set:
-                angle = equi_set[0]
-            return sp.Symbol(str(angle))
-
-        equations = [prop.equation(angle_to_expression) for prop in others]
-        equations = [eq for eq in equations if eq != 0]
-
-        class Group:
-            def __init__(self, symbols):
-                self.symbols = set(symbols)
-                self.equations = []
-
-            def update(self, other):
-                self.symbols.update(other.symbols)
-                self.equations += other.equations
-
-        symbol_to_group = {}
-        for eq in equations:
-            groups = list(set(filter(None, [symbol_to_group.get(sym) for sym in eq.free_symbols])))
-            if groups:
-                the_group = groups[0]
-                for gro in groups[1:]:
-                    the_group.update(gro)
-                    for sym in gro.symbols:
-                        symbol_to_group[sym] = the_group
-                the_group.symbols.update(eq.free_symbols)
-            else:
-                the_group = Group(eq.free_symbols)
-            for sym in eq.free_symbols:
-                symbol_to_group[sym] = the_group
-            the_group.equations.append(eq)
-
-#        for eq in subset.equations:
-#            print(eq)
-        #print('Total: %d symbols' % len(symbols))
-        print('Total: %d equations' % len(equations))
-        for group in set(symbol_to_group.values()):
-            print('Group: %d symbols' % len(group.symbols))
-            print('Group: %d equations' % len(group.equations))
-            if len(group.equations) < 10:
-                for eq in group.equations:
-                    print('%s' % eq)
-            #solution = sp.solve(group.equations)
-            solution = sp.groebner(group.equations, *group.symbols)
-            #print(solution)
-#        for elt in solution.items():
-#            print(elt)
-#        print('Total: %d elements' % len(solution))
-
 class AngleRatioPropertySet:
     class CommentFromPath:
         def __init__(self, path, premises, multiplier, angle_to_ratio):
@@ -1632,7 +1544,6 @@ class PropertySet(LineSet):
         self.__combined = {} # (type, key) => [prop] and type => prop
         self.__full_set = {} # prop => (prop, index)
         self.__angle_kinds = {} # angle => prop
-        self.__linear_angles = LinearAngleSet()
         self.__angle_ratios = AngleRatioPropertySet()
         self.__length_ratios = LengthRatioPropertySet()
         self.__cyclic_orders = CyclicOrderPropertySet()
@@ -1695,8 +1606,6 @@ class PropertySet(LineSet):
                 put((type_key, key))
             self.__full_set[prop] = (prop, len(self.__full_set))
 
-        if isinstance(prop, LinearAngleProperty):
-            self.__linear_angles.add(prop)
         if type_key in (AngleValueProperty, AngleRatioProperty, SumOfAnglesProperty):
             self.__angle_ratios.add(prop)
         elif type_key == AngleKindProperty:

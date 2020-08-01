@@ -656,11 +656,7 @@ class AngleKindProperty(Property):
     def compare_values(self, other):
         return self.kind == other.kind
 
-class LinearAngleProperty(Property):
-    def equation(self, angle_to_expression):
-        raise Exception('The method should be implemented in descendants')
-
-class AngleValueProperty(LinearAngleProperty):
+class AngleValueProperty(Property):
     """
     Angle value
     """
@@ -694,9 +690,6 @@ class AngleValueProperty(LinearAngleProperty):
         self.angle = angle
         self.degree = normalize_number(degree)
         super().__init__(angle, self.angle.point_set)
-
-    def equation(self, angle_to_expression):
-        return angle_to_expression(self.angle) - self.degree
 
     @property
     def __priority__(self):
@@ -754,7 +747,7 @@ class MiddleOfSegmentProperty(Property):
             {'point': self.point, 'segment': self.segment}
         )
 
-class AngleRatioProperty(LinearAngleProperty):
+class AngleRatioProperty(Property):
     """
     Two angle values ratio
     """
@@ -776,9 +769,6 @@ class AngleRatioProperty(LinearAngleProperty):
 
     def keys(self):
         return [self.angle0, self.angle1]
-
-    def equation(self, angle_to_expression):
-        return angle_to_expression(self.angle0) - self.value * angle_to_expression(self.angle1)
 
     @property
     def __priority__(self):
@@ -802,7 +792,7 @@ class AngleRatioProperty(LinearAngleProperty):
     def compare_values(self, other):
         return self.value == other.value
 
-class SumOfAnglesProperty(LinearAngleProperty):
+class SumOfAnglesProperty(Property):
     """
     Sum of angles is equal to degree
     """
@@ -816,9 +806,6 @@ class SumOfAnglesProperty(LinearAngleProperty):
 
     def keys(self):
         return self.angles
-
-    def equation(self, angle_to_expression):
-        return sum(angle_to_expression(ngl) for ngl in self.angles) - self.degree
 
     @property
     def __priority__(self):
