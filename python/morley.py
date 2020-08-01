@@ -28,6 +28,6 @@ angleC.ratio_constraint(C.angle(A1, B), 3)
 
 #X = scene.perpendicular_foot_point(A1, B.line_through(C), label='X')
 
-prop = EquilateralTriangleProperty((A1, B1, C1))
+props = lambda: (EquilateralTriangleProperty((A1, B1, C1)),)
 
-run_sample(scene, prop)
+run_sample(scene, props)
