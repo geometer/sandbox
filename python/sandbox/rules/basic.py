@@ -979,30 +979,50 @@ class PerpendicularTransitivityRule(Rule):
         )
 
 @source_type(PerpendicularSegmentsProperty)
+@processed_cache({})
 class PerpendicularToEquidistantRule(Rule):
     def apply(self, prop):
-        if len({*prop.segments[0].points, *prop.segments[1].points}) != 4:
+        if common_endpoint(*prop.segments) is not None:
             return
-        for seg0, seg1 in (prop.segments, reversed(prop.segments)):
+
+        mask = self.processed.get(prop, 0)
+        if mask == 0xF:
+            return
+        original = mask
+
+        pattern = '$%{point:point}$ lies on the perpendicular bisector to $%{segment:base}$'
+        for seg0, seg1, bit in ((*prop.segments, 0x1), (prop.segments[1], prop.segments[0], 0x4)):
             segments = (
                 [seg0.points[0].segment(pt) for pt in seg1.points],
                 [seg0.points[1].segment(pt) for pt in seg1.points]
             )
-            cs = self.context.congruent_segments_property(*segments[0], True)
-            pattern = '$%{point:point}$ lies on the perpendicular bisector to $%{segment:base}$'
-            if cs and not(prop.reason.obsolete and cs.reason.obsolete):
-                yield (
-                    ProportionalLengthsProperty(*segments[1], 1),
-                    Comment(pattern, {'point': seg0.points[1], 'base': seg1}),
-                    [prop, cs]
-                )
-            cs = self.context.congruent_segments_property(*segments[1], True)
-            if cs and not(prop.reason.obsolete and cs.reason.obsolete):
-                yield (
-                    ProportionalLengthsProperty(*segments[0], 1),
-                    Comment(pattern, {'point': seg0.points[0], 'base': seg1}),
-                    [prop, cs]
-                )
+            if (mask & bit) == 0:
+                ratio, value = self.context.length_ratio_property_and_value(*segments[0], True)
+                if ratio is not None:
+                    mask |= bit
+                    if value != 1:
+                        mask |= bit << 1
+                    else:
+                        yield (
+                            ProportionalLengthsProperty(*segments[1], 1),
+                            Comment(pattern, {'point': seg0.points[1], 'base': seg1}),
+                            [prop, ratio]
+                        )
+            if (mask & (bit << 1)) == 0:
+                ratio, value = self.context.length_ratio_property_and_value(*segments[1], True)
+                if ratio is not None:
+                    mask |= bit << 1
+                    if value != 1:
+                        mask |= bit
+                    else:
+                        yield (
+                            ProportionalLengthsProperty(*segments[0], 1),
+                            Comment(pattern, {'point': seg0.points[0], 'base': seg1}),
+                            [prop, ratio]
+                        )
+
+        if mask != original:
+            self.processed[prop] = mask
 
 class EquidistantToPerpendicularRule(Rule):
     def sources(self):
