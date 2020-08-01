@@ -224,7 +224,7 @@ class LineSet:
         self.__concyclicity = {}  # {point, point, point, point} => prop
         self.__point_on_line = {} # (point, segment) => prop
         self.__point_and_circle = {} # (point, set of three points) => prop
-        self.__lines_intersection = {} # {segment,segment} => prop
+        self.__lines_intersection = {} # ({segment, segment}, crossing_point) => prop
 
     def __add_same_line_property(self, prop):
         line0 = self.__segment_to_line.get(prop.segments[0])
@@ -596,53 +596,37 @@ class LineSet:
 
         return next((pt for pt in line0.points_on if pt in line1.points_on), None)
 
-    def intersection_property(self, segment0, segment1):
-        key = frozenset((segment0, segment1))
+    def intersection_property(self, crossing, segment0, segment1):
+        key = (frozenset((segment0, segment1)), crossing)
         cached = self.__lines_intersection.get(key)
         if cached:
             return cached
 
-        if segment0 == segment1 or self.lines_coincidence(segment0, segment1) != False:
-            return None
-        common = common_endpoint(segment0, segment1)
-        if common:
+        if crossing in segment0.points and crossing in segment1.points:
             comment = Comment(
                 '$%{point:common}$ is common point of different lines $%{line:line0}$ and $%{line:line1}$',
-                {'common': common, 'line0': segment0, 'line1': segment1}
+                {'common': crossing, 'line0': segment0, 'line1': segment1}
             )
-            prop = IntersectionOfLinesProperty(common, segment0, segment1)
+            prop = IntersectionOfLinesProperty(crossing, segment0, segment1)
             colli = self.collinearity_property(*set(segment0.points + segment1.points))
             _synthetic_property(prop, comment, [colli])
             ncl = self.lines_coincidence_property(segment0, segment1)
             _synthetic_property(prop, comment, [ncl])
-            self.__lines_intersection[key] = prop
-            return prop
-
-        line0 = self.__segment_to_line.get(segment0)
-        if line0 is None:
-            return None
-        line1 = self.__segment_to_line.get(segment1)
-        if line1 is None:
-            return None
-
-        pt = next((pt for pt in line0.points_on if pt in line1.points_on), None)
-        if pt is None:
-            return None
-
-        premises = []
-        if pt not in segment0.points:
-            premises.append(self.collinearity_property(pt, *segment0.points))
-        if pt not in segment1.points:
-            premises.append(self.collinearity_property(pt, *segment1.points))
-        premises.append(self.lines_coincidence_property(segment0, segment1))
-        prop = _synthetic_property(
-            IntersectionOfLinesProperty(pt, segment0, segment1),
-            Comment(
-                '$%{point:pt}$ belongs to both $%{line:line0}$ and $%{line:line1}$',
-                {'pt': pt, 'line0': segment0, 'line1': segment1}
-            ),
-            premises
-        )
+        else:
+            premises = []
+            if crossing not in segment0.points:
+                premises.append(self.collinearity_property(crossing, *segment0.points))
+            if crossing not in segment1.points:
+                premises.append(self.collinearity_property(crossing, *segment1.points))
+            premises.append(self.lines_coincidence_property(segment0, segment1))
+            prop = _synthetic_property(
+                IntersectionOfLinesProperty(crossing, segment0, segment1),
+                Comment(
+                    '$%{point:pt}$ belongs to both $%{line:line0}$ and $%{line:line1}$',
+                    {'pt': crossing, 'line0': segment0, 'line1': segment1}
+                ),
+                premises
+            )
         self.__lines_intersection[key] = prop
         return prop
 

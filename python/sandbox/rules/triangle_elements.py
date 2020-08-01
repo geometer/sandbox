@@ -429,7 +429,7 @@ class CeviansIntersectionRule(Rule):
         if crossing is None:
             return
         self.processed.add(key)
-        crossing_prop = self.context.intersection_property(cevian0, cevian1)
+        crossing_prop = self.context.intersection_property(crossing, cevian0, cevian1)
         triangle = Scene.Triangle(vertex, pt0, pt1)
         comment = Comment(
             '$%{point:crossing}$ is the intersection of cevians $%{segment:cevian0}$ and $%{segment:cevian1}$ with feet $%{point:foot0}$ and $%{point:foot1}$ on sides of $%{triangle:triangle}$',

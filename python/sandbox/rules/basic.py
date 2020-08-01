@@ -292,7 +292,7 @@ class SegmentWithEndpointsOnAngleSidesRule(Rule):
         if X in (A, B, C, D):
             return
 
-        X_prop = self.context.intersection_property(AD, BC)
+        X_prop = self.context.intersection_property(X, AD, BC)
         comment = Comment(
             '$%{point:X}$ is the intersection of ray $%{ray:ray}$ and segment $%{segment:segment}$',
             {'X': X, 'ray': A.vector(D), 'segment': B.segment(C)}
@@ -2247,7 +2247,7 @@ class PlanePositionsToLinePositionsRule(Rule):
         crossing = self.context.intersection(prop.segment, segment)
         if not crossing:
             return
-        crossing_prop = self.context.intersection_property(prop.segment, segment)
+        crossing_prop = self.context.intersection_property(crossing, prop.segment, segment)
         self.processed.add(prop)
         if prop.same:
             pattern = '$%{point:crossing}$ is the intersection of lines $%{line:line0}$ and $%{line:line1}$'

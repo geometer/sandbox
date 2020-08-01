@@ -242,7 +242,7 @@ class TwoChordsIntersectionRule(Rule):
             av = self.context.angle_value_property(crossing.angle(pt0, pt1))
             if av is None:
                 continue
-            crossing_prop = self.context.intersection_property(chord0, chord1)
+            crossing_prop = self.context.intersection_property(crossing, chord0, chord1)
             self.processed.add(key)
 
             circle = Circle(*points)
