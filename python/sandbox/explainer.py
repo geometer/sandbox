@@ -237,27 +237,6 @@ class Explainer:
 
     def __explain_all(self):
         def obsolete_loop_step():
-#            for oa in [p for p in self.context.list(AngleKindProperty) if p.kind == AngleKindProperty.Kind.obtuse]:
-#                base = oa.angle
-#                if base.vertex is None:
-#                    continue
-#                for vec0, vec1 in [base.vectors, reversed(base.vectors)]:
-#                    for pt in self.context.collinear_points(vec0.as_segment):
-#                        col = self.context.collinearity_property(pt, *vec0.points)
-#                        reasons_are_too_old = oa.reason.obsolete and col.reason.obsolete
-#                        for angle in [pt.angle(vec1.end, p) for p in vec0.points]:
-#                            ka = self.context.angle_value_property(angle)
-#                            if ka is None or reasons_are_too_old and ka.reason.obsolete:
-#                                continue
-#                            if ka.degree <= 90:
-#                                comment = LazyComment(
-#                                    '%s, %s, %s are collinear, %s is obtuse, and %s = %s',
-#                                    pt, *vec0.points, base, angle, ka.degree_str
-#                                )
-#                                zero = base.vertex.angle(vec0.end, pt)
-#                                yield (AngleValueProperty(zero, 180), None, comment, [col, oa, ka])
-#                            break
-
             for aa0, aa1 in itertools.combinations([a for a in self.context.list(AngleKindProperty) if a.angle.vertex and a.kind == AngleKindProperty.Kind.acute], 2):
                 vertex = aa0.angle.vertex
                 if vertex != aa1.angle.vertex:
