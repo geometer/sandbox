@@ -1,5 +1,4 @@
 import argparse
-import re
 
 from sandbox import iterative_placement
 from sandbox.core import CoreScene
