@@ -216,7 +216,7 @@ class Explainer:
                 LawOfSinesRule,
             ]
 
-        self.__rules = [create_rule(clazz, self.context) for clazz in rule_classes]
+        self.rules = [create_rule(clazz, self.context) for clazz in rule_classes]
 
     def __reason(self, prop, rule, comment, premises):
         reason = Reason(rule, self.__iteration_step_count, comment, premises)
@@ -307,7 +307,7 @@ class Explainer:
                 )
 
         def iteration():
-            for rule in self.__rules:
+            for rule in self.rules:
                 for prop, comment, premises in rule.generate():
                     yield (prop, rule, comment, premises)
 
