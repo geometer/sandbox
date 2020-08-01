@@ -62,8 +62,8 @@ class RomanticsOfGeometry4594Auxiliary(ExplainerTest):
 
         return scene
 
-    def explainer_options(self):
-        return {'max_layer': 'auxiliary'}
+    def context_points(self, scene):
+        return scene.points(max_layer='auxiliary')
 
     def testPointOnLine(self):
         A = self.scene.get('A')

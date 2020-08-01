@@ -32,7 +32,7 @@ class Explainer:
         self.optimization_time = 0
         self.__iteration_step_count = -1
 
-        if context:
+        if context is not None:
             self.context = context
         else:
             self.context = PropertySet(self.scene.points(max_layer='user'))

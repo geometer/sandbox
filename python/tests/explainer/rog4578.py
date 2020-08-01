@@ -52,8 +52,8 @@ class RomanticsOfGeometry4578Auxiliary(ExplainerTest):
 
         return scene
 
-    def explainer_options(self):
-        return {'max_layer': 'auxiliary'}
+    def context_points(self, scene):
+        return scene.points(max_layer='auxiliary')
 
     def testPointOnLine(self):
         prop = AngleValueProperty(self.scene.get('C').angle(self.scene.get('A'), self.scene.get('B')), 45)
