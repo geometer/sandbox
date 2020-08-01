@@ -492,10 +492,7 @@ class AngleKindProperty(Property):
     def compare_values(self, other):
         return self.kind == other.kind
 
-class LinearAngleProperty(Property):
-    pass
-
-class AngleValueProperty(LinearAngleProperty):
+class AngleValueProperty(Property):
     """
     Angle value
     """
@@ -575,7 +572,7 @@ class MiddleOfSegmentProperty(Property):
             {'point': self.point, 'segment': self.segment}
         )
 
-class AngleRatioProperty(LinearAngleProperty):
+class AngleRatioProperty(Property):
     """
     Two angle values ratio
     """
@@ -620,7 +617,7 @@ class AngleRatioProperty(LinearAngleProperty):
     def compare_values(self, other):
         return self.value == other.value
 
-class SumOfThreeAnglesProperty(LinearAngleProperty):
+class SumOfThreeAnglesProperty(Property):
     """
     Sum of three angles is equal to degree
     """
@@ -642,7 +639,7 @@ class SumOfThreeAnglesProperty(LinearAngleProperty):
     def compare_values(self, other):
         return self.degree == other.degree
 
-class SumOfTwoAnglesProperty(LinearAngleProperty):
+class SumOfTwoAnglesProperty(Property):
     """
     Sum of two angles is equal to degree
     """
