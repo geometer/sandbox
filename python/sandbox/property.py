@@ -1176,3 +1176,24 @@ class IntersectionOfLinesProperty(Property):
             '$%{point:point}$ is the intersection of $%{line:line0}$ and $%{line:line1}$',
             {'point': self.point, 'line0': self.segments[0], 'line1': self.segments[1]}
         )
+
+class FootOfPerpendicularProperty(Property):
+    """
+    Foot of the perpendicular from the given point to the given line
+    """
+    def __init__(self, foot, point, segment):
+        super().__init__((foot, point, segment), {foot, point, *segment.points})
+        self.foot = foot
+        self.point = point
+        self.segment = segment
+
+    @property
+    def __priority__(self):
+        return 2
+
+    @property
+    def description(self):
+        return Comment(
+            '$%{point:foot}$ is the foot of the perpendicular from $%{point:point}$ to $%{line:line}$',
+            {'foot': self.foot, 'point': self.point, 'line': self.segment}
+        )
