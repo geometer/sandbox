@@ -102,8 +102,8 @@ def create_rule(clazz, context):
             {'generate': lambda inst: generator(inst)}
         )
     obj = clazz(context)
-    if not hasattr(clazz, 'processed_proto'):
-        print('WARNING: Rule %s has no attribute `processed_proto`' % clazz.__name__)
-    else:
+    if hasattr(clazz, 'processed_proto'):
         obj.processed = copy(clazz.processed_proto)
+    else:
+        print('WARNING: Rule %s has no attribute `processed_proto`' % clazz.__name__)
     return obj
