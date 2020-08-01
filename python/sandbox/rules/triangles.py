@@ -337,8 +337,7 @@ class SimilarTrianglesWithCongruentSideRule(Rule):
 @processed_cache(set())
 class CongruentTrianglesByThreeSidesRule(Rule):
     def sources(self):
-        congruent_segments = [p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1]
-        return itertools.combinations(congruent_segments, 2)
+        return itertools.combinations(self.context.congruent_segments_properties(allow_zeroes=True), 2)
 
     def apply(self, src):
         key = frozenset(src)
@@ -453,7 +452,7 @@ class SimilarTrianglesByThreeSidesRule(Rule):
 @accepts_auto
 class EquilateralTriangleByThreeSidesRule(Rule):
     def sources(self):
-        return [p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1]
+        return self.context.congruent_segments_properties(allow_zeroes=True)
 
     def apply(self, prop):
         self.processed.add(prop)
@@ -499,9 +498,10 @@ class EquilateralTriangleByConrguentLegsAndAngleRule(Rule):
         )
 
 @processed_cache(set())
+@accepts_auto
 class IsoscelesTriangleByConrguentLegsRule(Rule):
     def sources(self):
-        return [p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1 and p not in self.processed]
+        return self.context.congruent_segments_properties(allow_zeroes=True)
 
     def apply(self, prop):
         apex = next((pt for pt in prop.segment0.points if pt in prop.segment1.points), None)

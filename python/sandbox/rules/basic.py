@@ -1026,7 +1026,7 @@ class PerpendicularToEquidistantRule(Rule):
 
 class EquidistantToPerpendicularRule(Rule):
     def sources(self):
-        return itertools.combinations([p for p in self.context.length_ratio_properties(allow_zeroes=True) if p.value == 1 and common_endpoint(p.segment0, p.segment1) is not None], 2)
+        return itertools.combinations([p for p in self.context.congruent_segments_properties(allow_zeroes=True) if common_endpoint(p.segment0, p.segment1) is not None], 2)
 
     def apply(self, src):
         cs0, cs1 = src
