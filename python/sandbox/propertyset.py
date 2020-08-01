@@ -2143,14 +2143,12 @@ class PropertySet(LineSet):
         if key in self.__perpendicular_feets:
             return self.__perpendicular_feets.get(key)
 
-        premises = []
         perp = point.segment(foot)
-        for prop in self.list(PerpendicularSegmentsProperty, [segment]):
-            if perp in prop.segments:
-                premises.append(prop)
-                break
-        else:
+        perp_prop = self[PerpendicularSegmentsProperty(segment, perp)]
+        if perp_prop is None:
             return None
+        premises = [perp_prop]
+
         if foot in segment.points:
             comment = Comment(
                 'segments $%{segment:perp}$ and $%{segment:segment}$ are perpendicular',
