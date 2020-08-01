@@ -1,6 +1,6 @@
 import itertools
+
 import networkx as nx
-import re
 import sympy as sp
 
 from .core import CoreScene
