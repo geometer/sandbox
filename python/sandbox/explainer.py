@@ -23,7 +23,7 @@ from .rules.triangles import *
 from .rules.trigonometric import *
 from .scene import Scene
 from .stats import Stats
-from .util import LazyComment, Comment
+from .util import Comment
 
 class Explainer:
     def __init__(self, scene, context=None, extra_rules=set()):
