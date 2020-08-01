@@ -1,5 +1,6 @@
 from enum import Enum, auto
 import itertools
+
 import numpy as np
 import sympy as sp
 
