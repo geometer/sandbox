@@ -7,6 +7,32 @@ from ..util import LazyComment, Comment, divide, common_endpoint, other_point
 from .abstract import Rule, accepts_auto, processed_cache, source_type
 
 @processed_cache(set())
+class TwoFootsOfSamePerpendicularRule(Rule):
+    def sources(self):
+        return self.context.angle_value_properties_for_degree(90, lambda a: a.vertex)
+
+    def apply(self, prop):
+        for vec0, vec1 in [prop.angle.vectors, reversed(prop.angle.vectors)]:
+            key = (prop.angle, vec1.end)
+            if key in self.processed:
+                continue
+            foot = self.context.foot_of_perpendicular(vec1.end, vec0.as_segment)
+            if foot is None:
+                continue
+            self.processed.add(key)
+            if foot in vec0.points:
+                continue
+            foot_prop = self.context.foot_of_perpendicular_property(foot, vec1.end, vec0.as_segment)
+            yield (
+                PointsCoincidenceProperty(prop.angle.vertex, foot, True),
+                Comment(
+                    '$%{point:foot}$ is the foot of the perpendicular from $%{point:pt}$ to $%{line:line}$, and $%{angle:angle}$ is right',
+                    {'foot': foot, 'pt': vec1.end, 'line': vec0, 'angle': prop.angle}
+                ),
+                [foot_prop, prop]
+            )
+
+@processed_cache(set())
 class FourPointsOnLineRule(Rule):
     def sources(self):
         props = self.context.angle_value_properties_for_degree(180, lambda a: a.vertex)
@@ -90,18 +116,17 @@ class PerpendicularInAcuteAngleRule(Rule):
                 if key in self.processed:
                     continue
 
-                foot, premises = self.context.foot_of_perpendicular(pt, v1.as_segment)
-                if foot is None:
-                    continue
-                if foot == v1.start:
+                foot = self.context.foot_of_perpendicular(pt, v1.as_segment)
+                if foot is None or foot == v1.start:
                     continue
                 if foot == v1.end:
+                    premises = [self.context.foot_of_perpendicular_property(foot, pt, v1.as_segment)]
                     degree = 0
                 else:
                     av = self.context.angle_value_property(v1.start.angle(foot, v1.end))
                     if av is None:
                         continue
-                    premises = premises + [av]
+                    premises = [self.context.foot_of_perpendicular_property(foot, pt, v1.as_segment), av]
                     degree = av.degree
 
                 self.processed.add(key)
@@ -130,7 +155,7 @@ class PerpendicularInAcuteAngleRule2(Rule):
                 if key in self.processed:
                     continue
 
-                foot, premises = self.context.foot_of_perpendicular(pt, v1.as_segment)
+                foot = self.context.foot_of_perpendicular(pt, v1.as_segment)
                 if foot is None:
                     continue
                 if foot == v1.end:
@@ -138,12 +163,13 @@ class PerpendicularInAcuteAngleRule2(Rule):
                     continue
 
                 if pt == v0.end:
+                    premises = [self.context.foot_of_perpendicular_property(foot, pt, v1.as_segment)]
                     degree = 0
                 else:
                     av = self.context.angle_value_property(v0.start.angle(pt, v0.end))
                     if av is None:
                         continue
-                    premises = premises + [av]
+                    premises = [self.context.foot_of_perpendicular_property(foot, pt, v1.as_segment), av]
                     degree = av.degree
 
                 self.processed.add(key)
@@ -214,10 +240,11 @@ class AngleTypeAndPerpendicularRule(Rule):
             key = (prop, vec0.end)
             if key in self.processed:
                 continue
-            foot, premises = self.context.foot_of_perpendicular(vec0.end, vec1.as_segment)
+            foot = self.context.foot_of_perpendicular(vec0.end, vec1.as_segment)
             if foot is None:
                 continue
             self.processed.add(key)
+            foot_prop = self.context.foot_of_perpendicular_property(foot, vec0.end, vec1.as_segment)
             comment = Comment(pattern, {'foot': foot, 'pt': vec0.end, 'angle': angle})
             new_props = [
                 PointsCollinearityProperty(vec0.end, foot, angle.vertex, False),
@@ -229,7 +256,7 @@ class AngleTypeAndPerpendicularRule(Rule):
                 else:
                     new_props.append(AngleValueProperty(angle.vertex.angle(foot, vec1.end), 180))
             for p in new_props:
-                yield (p, comment, [prop] + premises)
+                yield (p, comment, [prop, foot_prop])
 
 @source_type(PointInsideAngleProperty)
 @processed_cache(set())
@@ -1185,20 +1212,25 @@ class PointInsideSegmentRelativeToLineRule(Rule):
                 )
 
 @source_type(SameOrOppositeSideProperty)
+@processed_cache(set())
+@accepts_auto
 class TwoPerpendicularsRule(Rule):
     """
     Two perpendiculars to the same line are parallel
     """
     def apply(self, prop):
-        foot0, reasons0 = self.context.foot_of_perpendicular(prop.points[0], prop.segment)
+        foot0 = self.context.foot_of_perpendicular(prop.points[0], prop.segment)
         if foot0 is None:
             return
-        foot1, reasons1 = self.context.foot_of_perpendicular(prop.points[1], prop.segment)
+        foot1 = self.context.foot_of_perpendicular(prop.points[1], prop.segment)
         if foot1 is None:
             return
-        premises = [prop] + reasons0 + reasons1
-        if all(p.reason.obsolete for p in premises):
-            return
+        self.processed.add(prop)
+        premises = [
+            prop,
+            self.context.foot_of_perpendicular_property(foot0, prop.points[0], prop.segment),
+            self.context.foot_of_perpendicular_property(foot1, prop.points[1], prop.segment)
+        ]
         vec0 = foot0.vector(prop.points[0])
         vec1 = foot1.vector(prop.points[1]) if prop.same else prop.points[1].vector(foot1)
         yield (

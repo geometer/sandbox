@@ -9,7 +9,7 @@ from .property import *
 from .reason import Reason
 from .rules.abstract import SyntheticPropertyRule
 from .stats import Stats
-from .util import LazyComment, Comment, common_endpoint, divide
+from .util import LazyComment, Comment, common_endpoint, divide, other_point
 
 def _edge_comp(v0, v1, edge):
     return edge['prop'].reason.cost
@@ -598,9 +598,8 @@ class LineSet:
 
     def intersection_property(self, crossing, segment0, segment1):
         key = (frozenset((segment0, segment1)), crossing)
-        cached = self.__lines_intersection.get(key)
-        if cached:
-            return cached
+        if key in self.__lines_intersection:
+            return self.__lines_intersection.get(key)
 
         if crossing in segment0.points and crossing in segment1.points:
             comment = Comment(
@@ -609,16 +608,33 @@ class LineSet:
             )
             prop = IntersectionOfLinesProperty(crossing, segment0, segment1)
             colli = self.collinearity_property(*set(segment0.points + segment1.points))
+            if colli is None:
+                return None
+            if colli.collinear:
+                self.__lines_intersection[key] = None
+                return None
             _synthetic_property(prop, comment, [colli])
             ncl = self.lines_coincidence_property(segment0, segment1)
             _synthetic_property(prop, comment, [ncl])
         else:
             premises = []
-            if crossing not in segment0.points:
-                premises.append(self.collinearity_property(crossing, *segment0.points))
-            if crossing not in segment1.points:
-                premises.append(self.collinearity_property(crossing, *segment1.points))
-            premises.append(self.lines_coincidence_property(segment0, segment1))
+            for seg in segment0, segment1:
+                if crossing not in seg.points:
+                    colli = self.collinearity_property(crossing, *seg.points)
+                    if colli is None:
+                        return None
+                    if not colli.collinear:
+                        self.__lines_intersection[key] = None
+                        return None
+                    premises.append(colli)
+            coincidence = self.lines_coincidence_property(segment0, segment1)
+            if coincidence is None:
+                return None
+            if coincidence.coincident:
+                self.__lines_intersection[key] = None
+                return None
+            premises.append(coincidence)
+
             prop = _synthetic_property(
                 IntersectionOfLinesProperty(crossing, segment0, segment1),
                 Comment(
@@ -1537,6 +1553,7 @@ class PropertySet(LineSet):
         self.__lengths_inequalities = {} # key => LengthsInequalityProperty
         self.__angles_inequalities = {} # angle => {angle => AnglesInequalityProperty}
         self.__points_inside_triangle = {} # {vertices} => [points]
+        self.__perpendicular_feets = {} # (foot, point, segment) => prop
 
     def insert(self, prop, do_lookup=True):
         def normalize_prop(prop):
@@ -1759,6 +1776,10 @@ class PropertySet(LineSet):
                 existing = self.concyclicity_property(*prop.points)
             elif isinstance(prop, AnglesInequalityProperty):
                 existing = self.angles_inequality_property(*prop.angles)
+            elif isinstance(prop, IntersectionOfLinesProperty):
+                existing = self.intersection_property(prop.point, *prop.segments)
+            elif isinstance(prop, FootOfPerpendicularProperty):
+                existing = self.foot_of_perpendicular_property(prop.foot, prop.point, prop.segment)
             #TODO: LengthRatioProperty
             #TODO: EqualLengthRatiosProperty
             else:
@@ -2102,18 +2123,59 @@ class PropertySet(LineSet):
         return self.__cyclic_orders.same_order_property(cycle0, cycle1, use_cache=use_cache)
 
     def foot_of_perpendicular(self, point, segment):
-        #TODO: cache not-None values (?)
+        if point in segment.points or self.collinearity(*segment.points, point):
+            return point
+
         for prop in self.list(PerpendicularSegmentsProperty, [segment]):
             other = prop.segments[1] if segment == prop.segments[0] else prop.segments[0]
-            if not point in other.points:
+            if point not in other.points:
                 continue
-            candidate = next(pt for pt in other.points if pt != point)
-            if candidate in segment.points:
-                return (candidate, [prop])
-            col = self.collinearity_property(*segment.points, candidate)
-            if col and col.collinear:
-                return (candidate, [prop, col])
-        return (None, [])
+            candidate = other_point(other.points, point)
+            if candidate in segment.points or self.collinearity(*segment.points, candidate):
+                return candidate
+
+        return None
+
+    def foot_of_perpendicular_property(self, foot, point, segment):
+        assert foot != point
+
+        key = (foot, point, segment)
+        if key in self.__perpendicular_feets:
+            return self.__perpendicular_feets.get(key)
+
+        premises = []
+        perp = point.segment(foot)
+        for prop in self.list(PerpendicularSegmentsProperty, [segment]):
+            if perp in prop.segments:
+                premises.append(prop)
+                break
+        else:
+            return None
+        if foot in segment.points:
+            comment = Comment(
+                'segments $%{segment:perp}$ and $%{segment:segment}$ are perpendicular',
+                {'perp': perp, 'segment': segment}
+            )
+        else:
+            comment = Comment(
+                '$%{segment:perp}$ is perpendicular to $%{line:segment}$ and $%{point:foot}$ lies on $%{line:segment}$',
+                {'perp': perp, 'segment': segment, 'foot': foot}
+            )
+            col = self.collinearity_property(*segment.points, foot)
+            if col is None:
+                return None
+            if not col.collinear:
+                self.__perpendicular_feets[key] = None
+                return None
+            premises.append(col)
+
+        prop = _synthetic_property(
+            FootOfPerpendicularProperty(foot, point, segment),
+            comment,
+            premises
+        )
+        self.__perpendicular_feets[key] = prop
+        return prop
 
     def stats(self):
         for circle in self.circles:
