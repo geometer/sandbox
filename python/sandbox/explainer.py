@@ -62,7 +62,6 @@ class Explainer:
             EqualSumsOfAnglesRule,
             AngleTypeAndPerpendicularRule,
             CoincidenceTransitivityRule,
-            TwoPointsBelongsToTwoLinesRule,
             TwoPointsBelongsToTwoPerpendicularsRule,
             LengthRatioRule,
             IsoscelesNonzeroBaseImpliesNonzeroLegsRule,

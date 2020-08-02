@@ -515,61 +515,6 @@ class CoincidenceTransitivityRule(Rule):
             [co0, co1]
         )
 
-@source_type(PointsCollinearityProperty)
-class TwoPointsBelongsToTwoLinesRule(Rule):
-    """
-    If two points both belong to two different lines,
-    the points are coincident
-    """
-    def accepts(self, prop):
-        return prop.collinear
-
-    def apply(self, cl0):
-        triangle = Scene.Triangle(*cl0.points)
-        sides = triangle.sides
-        for side, pt0 in [(sides[i], triangle.points[i]) for i in range(0, 3)]:
-            third_points = [pt0]
-            for pt1 in self.context.collinear_points(side):
-                if pt1 == pt0:
-                    continue
-                third_points.append(pt1)
-
-                for ncl_pt in side.points:
-                    ncl = self.context.collinearity_property(pt0, pt1, ncl_pt)
-                    if ncl:
-                        break
-                else:
-                    continue
-                if ncl.collinear:
-                    continue
-                cl1 = self.context.collinearity_property(*side.points, pt1)
-                if cl0.reason.obsolete and cl1.reason.obsolete and ncl.reason.obsolete:
-                    continue
-                yield (
-                    PointsCoincidenceProperty(*side.points, True),
-                    Comment(
-                        '$%{point:pt0}$ and $%{point:pt1}$ belong to two different lines $%{line:line0}$ and $%{line:line1}$',
-                        {'pt0': side.points[0], 'pt1': side.points[1], 'line0': pt0.segment(ncl_pt), 'line1': pt1.segment(ncl_pt)}
-                    ),
-                    [cl0, cl1, ncl]
-                )
-                break
-            else:
-                for triple in itertools.combinations(third_points, 3):
-                    ncl = self.context.collinearity_property(*triple)
-                    if ncl and not ncl.collinear:
-                        cls = [self.context.collinearity_property(*side.points, pt) for pt in triple]
-                        lines = [pt.segment(side.points[0]) for pt in triple]
-                        yield (
-                            PointsCoincidenceProperty(*side.points, True),
-                            Comment(
-                                '$%{point:pt0}$ and $%{point:pt1}$ belong to three lines $%{line:line0}$, $%{line:line1}$, and $%{line:line2}$, at least two of them are different',
-                                {'pt0': side.points[0], 'pt1': side.points[0], 'line0': lines[0], 'line1': lines[1], 'line2': lines[2]}
-                            ),
-                            cls + [ncl]
-                        )
-                        break
-
 @processed_cache({})
 class AngleInTriangleWithTwoKnownAnglesRule(Rule):
     def sources(self):
