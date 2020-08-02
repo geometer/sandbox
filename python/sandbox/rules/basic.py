@@ -28,7 +28,7 @@ class TwoAnglesWithCommonAndCollinearSidesRule(Rule):
         collinearity = self.context.collinearity(k0.angle.vertex, other0, other1)
         if collinearity is None:
             return
-        
+
         self.processed.add(key)
         if not collinearity:
             return
