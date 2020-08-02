@@ -444,8 +444,10 @@ class LineSet:
         return None
 
     def collinearity(self, pt0, pt1, pt2):
-        triangle = Scene.Triangle(pt0, pt1, pt2)
-        for vertex, side in zip(triangle.points, triangle.sides):
+        pts = (pt0, pt1, pt2, pt0, pt1)
+        for i in range(0, 3):
+            vertex = pts[i]
+            side = pts[i + 1].segment(pts[i + 2])
             line = self.__segment_to_line.get(side)
             if line:
                 if vertex in line.points_on:
