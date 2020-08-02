@@ -26,7 +26,7 @@ from .stats import Stats
 from .util import Comment
 
 class Explainer:
-    def __init__(self, scene, context=None, extra_rules=set()):
+    def __init__(self, scene, context=None, extra_properties=[], extra_rules=set(), rules=None):
         self.scene = scene
         self.explanation_time = None
         self.optimization_time = 0
@@ -37,6 +37,16 @@ class Explainer:
         else:
             self.context = PropertySet(self.scene.points(max_layer='user'))
 
+        if extra_properties:
+            for prop, comment in extra_properties:
+                self.__reason(prop, PredefinedPropertyRule.instance(), comment, [])
+
+        if rules:
+            self.rules = rules
+        else:
+            self.__create_rules(extra_rules)
+
+    def __create_rules(self, extra_rules):
         rule_classes = [
             LineAndTwoPointsToNoncollinearityRule,
             SegmentWithEndpointsOnAngleSidesRule,
@@ -241,8 +251,9 @@ class Explainer:
                 for prop, comment, premises in rule.generate():
                     yield (prop, rule, comment, premises)
 
-        for prop, comment in enumerate_predefined_properties(self.scene, self.context.points):
-            self.__reason(prop, PredefinedPropertyRule.instance(), comment, [])
+        if len(self.context) == 0:
+            for prop, comment in enumerate_predefined_properties(self.scene, set(self.context.points)):
+                self.__reason(prop, PredefinedPropertyRule.instance(), comment, [])
 
         self.__iteration_step_count = 0
         while itertools.count():
