@@ -408,6 +408,7 @@ class LineSet:
             if cached:
                 return cached
         candidates = []
+        common_lines = []
         for line in self.__all_lines:
             if pt0 in line.points_on and pt1 in line.points_not_on:
                 candidates.append(line.non_coincidence_property(pt0, pt1))
@@ -415,11 +416,54 @@ class LineSet:
             elif pt1 in line.points_on and pt0 in line.points_not_on:
                 candidates.append(line.non_coincidence_property(pt1, pt0))
                 candidates += self.__non_coincidence_property_candidates(line, pt1, pt0)
+            elif pt0 in line.points_on and pt1 in line.points_on:
+                common_lines.append(line)
 
-        best = LineSet.best_candidate(candidates)
-        if use_cache and best:
-            self.__coincidence[key] = best
-        return best
+        if candidates:
+            best = LineSet.best_candidate(candidates)
+            if use_cache and best:
+                self.__coincidence[key] = best
+            return best
+
+        if len(common_lines) > 1:
+            prop = None
+            colli = {} # (segment, point) => collinearity
+            def colli_prop(segment, point):
+                key = (segment, point)
+                cached = colli.get(key)
+                if cached:
+                    return cached
+                gen = self.collinearity_property(*segment.points, point)
+                colli[key] = gen
+                return gen
+
+            for line0, line1 in itertools.combinations(common_lines, 2):
+                diffs = self.__different_lines.get(frozenset((line0, line1)))
+                if diffs is None:
+                    continue
+                if prop is None:
+                    prop = PointsCoincidenceProperty(pt0, pt1, True)
+                for diff in diffs:
+                    premises = []
+                    for seg in diff.segments:
+                        if pt0 not in seg.points:
+                            premises.append(colli_prop(seg, pt0))
+                        if pt1 not in seg.points:
+                            premises.append(colli_prop(seg, pt1))
+                    premises.append(diff)
+                    if None in premises:
+                        print('DEBUG %s' % premises)
+                    _synthetic_property(
+                        prop,
+                        Comment(
+                            '$%{point:pt0}$ and $%{point:pt1}$ both lie on different lines $%{line:line0}$ and $%{line:line1}$',
+                            {'pt0': pt0, 'pt1': pt1, 'line0': diff.segments[0], 'line1': diff.segments[1]}
+                        ),
+                        premises
+                    )
+            return prop
+
+        return None
 
     def point_on_line_property(self, segment, point, use_cache=True):
         if use_cache:

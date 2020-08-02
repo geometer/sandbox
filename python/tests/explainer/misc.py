@@ -70,3 +70,23 @@ class TwoFootsOfSamePerpendicular(ExplainerTest):
         self.assertIn(IntersectionOfLinesProperty(C, A.segment(B), C.segment(D)), self.explainer.context)
         self.assertIn(IntersectionOfLinesProperty(B, A.segment(B), C.segment(D)), self.explainer.context)
         self.assertNotIn(IntersectionOfLinesProperty(A, A.segment(B), C.segment(D)), self.explainer.context)
+
+class TwoPointsOnTwoDifferentLines(ExplainerTest):
+    def createScene(self):
+        scene = Scene()
+
+        A = scene.free_point(label='A')
+        B = scene.free_point(label='B')
+        C = scene.free_point(label='C')
+        D = scene.free_point(label='D')
+        scene.add_property(PointsCollinearityProperty(A, B, C, True), None)
+        scene.add_property(PointsCollinearityProperty(A, B, D, True), None)
+        scene.add_property(PointsCollinearityProperty(B, C, D, False), None)
+
+        return scene
+
+    def test(self):
+        A = self.scene.get('A')
+        B = self.scene.get('B')
+
+        self.assertIn(PointsCoincidenceProperty(A, B, True), self.explainer.context)
