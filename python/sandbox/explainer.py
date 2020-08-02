@@ -230,8 +230,7 @@ class Explainer:
         self.rules = [create_rule(clazz, self.context) for clazz in rule_classes]
 
     def __reason(self, prop, rule, comment, premises):
-        reason = Reason(rule, self.__iteration_step_count, comment, premises)
-        reason.obsolete = False
+        reason = Reason(rule, comment, premises)
         prop.reason = reason
         self.context.insert(prop)
 
@@ -261,8 +260,6 @@ class Explainer:
             for prop, rule, comment, premises in iteration():
                 count += 1
                 self.__reason(prop, rule, comment, premises)
-            for prop in self.context.all:
-                prop.reason.obsolete = prop.reason.generation < self.__iteration_step_count - 1
             self.__iteration_step_count += 1
             if count == 0:
                 break
@@ -309,7 +306,7 @@ class Explainer:
             explained = self.context.all
             explained.sort(key=lambda p: self.context.prop_and_index(p)[1])
             for prop in explained:
-                print('\t%2d (%d): %s [%s]' % (self.context.prop_and_index(prop)[1], prop.reason.generation, prop, to_string(prop.reason)))
+                print('\t%2d: %s [%s]' % (self.context.prop_and_index(prop)[1], prop, to_string(prop.reason)))
         if properties_to_explain:
             unexplained = [prop for prop in properties_to_explain if prop not in self.context]
             if len(unexplained) > 0:

@@ -1043,11 +1043,17 @@ class PerpendicularToEquidistantRule(Rule):
         if mask != original:
             self.processed[prop] = mask
 
+@processed_cache({})
 class EquidistantToPerpendicularRule(Rule):
     def sources(self):
         return itertools.combinations([p for p in self.context.congruent_segments_properties(allow_zeroes=True) if common_endpoint(p.segment0, p.segment1) is not None], 2)
 
     def apply(self, src):
+        key = frozenset(src)
+        mask = self.processed.get(key, 0)
+        if mask == 0x3:
+            return
+
         cs0, cs1 = src
 
         common0 = common_endpoint(cs0.segment0, cs0.segment1)
@@ -1055,34 +1061,47 @@ class EquidistantToPerpendicularRule(Rule):
         pts0 = [pt for pt in cs0.segment0.points + cs0.segment1.points if pt != common0]
         pts1 = [pt for pt in cs1.segment0.points + cs1.segment1.points if pt != common1]
         if set(pts0) != set(pts1):
+            self.processed[key] = 0x3
             return
-        segment0 = common0.segment(common1)
-        segment1 = pts0[0].segment(pts0[1])
-        if not (cs0.reason.obsolete and cs1.reason.obsolete):
+
+        original = mask
+        try:
+            segment0 = common0.segment(common1)
+            segment1 = pts0[0].segment(pts0[1])
+            if (mask & 0x1) == 0:
+                mask |= 0x1
+                yield (
+                    PerpendicularSegmentsProperty(segment0, segment1),
+                    Comment(
+                        'both $%{point:pt0}$ and $%{point:pt1}$ are equidistant from $%{point:endpoint0}$ and $%{point:endpoint1}$',
+                        {'pt0': common0, 'pt1': common1, 'endpoint0': pts0[0], 'endpoint1': pts0[1]}
+                    ),
+                    [cs0, cs1]
+                )
+
+            ne0 = self.context.coincidence_property(*segment0.points)
+            if ne0 is None:
+                return
+            if ne0.coincident:
+                mask |= 0x2
+                return
+            ne1 = self.context.coincidence_property(*segment1.points)
+            if ne1 is None:
+                return
+            mask |= 0x2
+            if ne1.coincident:
+                return
             yield (
-                PerpendicularSegmentsProperty(segment0, segment1),
+                SameOrOppositeSideProperty(segment0, *pts0, False),
                 Comment(
-                    'both $%{point:pt0}$ and $%{point:pt1}$ are equidistant from $%{point:endpoint0}$ and $%{point:endpoint1}$',
-                    {'pt0': common0, 'pt1': common1, 'endpoint0': pts0[0], 'endpoint1': pts0[1]}
+                    'perpendicular bisector $%{line:bisector}$ separates endpoints of $%{segment:segment}$',
+                    {'bisector': segment0, 'segment': segment1}
                 ),
-                [cs0, cs1]
+                [cs0, cs1, ne0, ne1]
             )
-        ne0 = self.context.not_equal_property(common0, common1)
-        if ne0 is None:
-            return
-        ne1 = self.context.not_equal_property(*pts0)
-        if ne1 is None:
-            return
-        if cs0.reason.obsolete and cs1.reason.obsolete and ne0.reason.obsolete and ne1.reason.obsolete:
-            return
-        yield (
-            SameOrOppositeSideProperty(segment0, *pts0, False),
-            Comment(
-                'perpendicular bisector $%{line:bisector}$ separates endpoints of $%{segment:segment}$',
-                {'bisector': segment0, 'segment': segment1}
-            ),
-            [cs0, cs1, ne0, ne1]
-        )
+        finally:
+            if mask != original:
+                self.processed[key] = mask
 
 @source_type(SameOrOppositeSideProperty)
 @processed_cache({})

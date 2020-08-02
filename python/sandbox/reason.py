@@ -1,7 +1,6 @@
 class Reason:
-    def __init__(self, rule, generation, comment, premises):
+    def __init__(self, rule, comment, premises):
         self.rule = rule
-        self.generation = generation
         self.comment = comment
         self.premises = []
         for pre in premises:

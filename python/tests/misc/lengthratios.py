@@ -12,8 +12,6 @@ class FakeReason:
         self.premises = []
         self.all_premises = {}
         self.rule = PredefinedPropertyRule.instance()
-        self.generation = 0
-        self.obsolete = False
 
     def reset_premises(self):
         pass

@@ -17,11 +17,9 @@ def _edge_comp(v0, v1, edge):
 def _synthetic_property(prop, comment, premises, optimize=True):
     reason = Reason(
         SyntheticPropertyRule.instance(),
-        1 + max(p.reason.generation for p in premises),
         comment,
         premises
     )
-    reason.obsolete = all(p.reason.obsolete for p in premises)
     prop.add_reason(reason, optimize=optimize)
     return prop
 
@@ -1625,10 +1623,8 @@ class PropertySet(LineSet):
 
         existing = self[prop] if do_lookup else None
         if existing is None:
-            prop.reason.obsolete = False
             self.__insert_prop__(prop)
         else:
-            prop.reason.obsolete = existing.reason.obsolete
             was_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
             existing.merge(prop)
             is_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
