@@ -112,3 +112,100 @@ class TwoPointsOnThreeDifferentLines(ExplainerTest):
         B = self.scene.get('B')
 
         self.assertIn(PointsCoincidenceProperty(A, B, True), self.explainer.context)
+
+class TwoAcuteAnglesWithCommonSide(ExplainerTest):
+    def createScene(self):
+        scene = Scene()
+
+        A = scene.free_point(label='A')
+        B = scene.free_point(label='B')
+        C = scene.free_point(label='C')
+        D = scene.free_point(label='D')
+        scene.add_property(PointsCoincidenceProperty(A, B, False), None)
+        scene.add_property(PointsCoincidenceProperty(A, C, False), None)
+        scene.add_property(PointsCoincidenceProperty(A, D, False), None)
+        scene.add_property(AngleKindProperty(A.angle(B, C), AngleKindProperty.Kind.acute), None)
+        scene.add_property(AngleKindProperty(A.angle(B, D), AngleKindProperty.Kind.acute), None)
+        scene.add_property(PointsCollinearityProperty(A, C, D, True), None)
+
+        return scene
+
+    def test(self):
+        A = self.scene.get('A')
+        C = self.scene.get('C')
+        D = self.scene.get('D')
+
+        self.assertIn(AngleValueProperty(A.angle(C, D), 0), self.explainer.context)
+
+class TwoObtuseAnglesWithCommonSide(ExplainerTest):
+    def createScene(self):
+        scene = Scene()
+
+        A = scene.free_point(label='A')
+        B = scene.free_point(label='B')
+        C = scene.free_point(label='C')
+        D = scene.free_point(label='D')
+        scene.add_property(PointsCoincidenceProperty(A, B, False), None)
+        scene.add_property(PointsCoincidenceProperty(A, C, False), None)
+        scene.add_property(PointsCoincidenceProperty(A, D, False), None)
+        scene.add_property(AngleKindProperty(A.angle(B, C), AngleKindProperty.Kind.obtuse), None)
+        scene.add_property(AngleKindProperty(A.angle(B, D), AngleKindProperty.Kind.obtuse), None)
+        scene.add_property(PointsCollinearityProperty(A, C, D, True), None)
+
+        return scene
+
+    def test(self):
+        A = self.scene.get('A')
+        C = self.scene.get('C')
+        D = self.scene.get('D')
+
+        self.assertIn(AngleValueProperty(A.angle(C, D), 0), self.explainer.context)
+
+class AcuteAndObtuseAnglesWithCommonSide(ExplainerTest):
+    def createScene(self):
+        scene = Scene()
+
+        A = scene.free_point(label='A')
+        B = scene.free_point(label='B')
+        C = scene.free_point(label='C')
+        D = scene.free_point(label='D')
+        scene.add_property(PointsCoincidenceProperty(A, B, False), None)
+        scene.add_property(PointsCoincidenceProperty(A, C, False), None)
+        scene.add_property(PointsCoincidenceProperty(A, D, False), None)
+        scene.add_property(AngleKindProperty(A.angle(B, C), AngleKindProperty.Kind.acute), None)
+        scene.add_property(AngleKindProperty(A.angle(B, D), AngleKindProperty.Kind.obtuse), None)
+        scene.add_property(PointsCollinearityProperty(A, C, D, True), None)
+
+        return scene
+
+    def test(self):
+        A = self.scene.get('A')
+        C = self.scene.get('C')
+        D = self.scene.get('D')
+
+        self.assertIn(AngleValueProperty(A.angle(C, D), 180), self.explainer.context)
+
+class TwoRightAnglesWithCommonSide(ExplainerTest):
+    def createScene(self):
+        scene = Scene()
+
+        A = scene.free_point(label='A')
+        B = scene.free_point(label='B')
+        C = scene.free_point(label='C')
+        D = scene.free_point(label='D')
+        scene.add_property(PointsCoincidenceProperty(A, B, False), None)
+        scene.add_property(PointsCoincidenceProperty(A, C, False), None)
+        scene.add_property(PointsCoincidenceProperty(A, D, False), None)
+        scene.add_property(AngleKindProperty(A.angle(B, C), AngleKindProperty.Kind.right), None)
+        scene.add_property(AngleKindProperty(A.angle(B, D), AngleKindProperty.Kind.right), None)
+        scene.add_property(PointsCollinearityProperty(A, C, D, True), None)
+
+        return scene
+
+    def test(self):
+        A = self.scene.get('A')
+        C = self.scene.get('C')
+        D = self.scene.get('D')
+
+        self.assertNotIn(AngleValueProperty(A.angle(C, D), 0), self.explainer.context)
+        self.assertNotIn(AngleValueProperty(A.angle(C, D), 180), self.explainer.context)

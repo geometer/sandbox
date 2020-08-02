@@ -7,6 +7,53 @@ from ..util import LazyComment, Comment, divide, common_endpoint, other_point
 from .abstract import Rule, accepts_auto, processed_cache, source_type
 
 @processed_cache(set())
+class TwoAnglesWithCommonAndCollinearSidesRule(Rule):
+    def sources(self):
+        kinds = [a for a in self.context.list(AngleKindProperty) if a.angle.vertex and a.kind != AngleKindProperty.Kind.right]
+        for k0, k1 in itertools.combinations(kinds, 2):
+            if k0.angle.vertex != k1.angle.vertex:
+                continue
+            if k0.angle.vectors[0] in k1.angle.vectors or k0.angle.vectors[1] in k1.angle.vectors:
+                yield (k0, k1)
+
+    def apply(self, pair):
+        key = frozenset(pair)
+        if key in self.processed:
+            return
+
+        k0, k1 = pair
+        common = next(pt for pt in k0.angle.endpoints if pt in k1.angle.endpoints)
+        other0 = other_point(k0.angle.endpoints, common)
+        other1 = other_point(k1.angle.endpoints, common)
+        collinearity = self.context.collinearity(k0.angle.vertex, other0, other1)
+        if collinearity is None:
+            return
+        
+        self.processed.add(key)
+        if not collinearity:
+            return
+        collinearity_prop = self.context.collinearity_property(k0.angle.vertex, other0, other1)
+
+        if k0.kind == k1.kind:
+            value = 0
+            if k0.kind == AngleKindProperty.Kind.acute:
+                pattern = '$%{point:vertex}$, $%{point:other0}$, and $%{point:other1}$ are collinear, and both $%{angle:angle0}$ and $%{angle:angle1}$ are acute'
+            else:
+                pattern = '$%{point:vertex}$, $%{point:other0}$, and $%{point:other1}$ are collinear, and both $%{angle:angle0}$ and $%{angle:angle1}$ are obtuse'
+        else:
+            value = 180
+            pattern = '$%{point:vertex}$, $%{point:other0}$, and $%{point:other1}$ are collinear, $%{anglemeasure:angle0} \\neq %{anglemeasure:angle1}$'
+
+        yield (
+            AngleValueProperty(k0.angle.vertex.angle(other0, other1), value),
+            Comment(
+                pattern,
+                {'angle0': k0.angle, 'angle1': k1.angle, 'vertex': k0.angle.vertex, 'other0': other0, 'other1': other1}
+            ),
+            [collinearity_prop, k0, k1]
+        )
+
+@processed_cache(set())
 class TwoFootsOfSamePerpendicularRule(Rule):
     def sources(self):
         return self.context.angle_value_properties_for_degree(90, lambda a: a.vertex)

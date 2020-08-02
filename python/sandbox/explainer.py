@@ -188,6 +188,7 @@ class Explainer:
             LineAndAcuteAngleRule,
             LineAndTwoAnglesRule,
             TwoFootsOfSamePerpendicularRule,
+            TwoAnglesWithCommonAndCollinearSidesRule,
         ]
 
         if 'circles' in extra_rules:
@@ -235,38 +236,10 @@ class Explainer:
         self.explanation_time = time.time() - start
 
     def __explain_all(self):
-        def obsolete_loop_step():
-            for aa0, aa1 in itertools.combinations([a for a in self.context.list(AngleKindProperty) if a.angle.vertex and a.kind == AngleKindProperty.Kind.acute], 2):
-                vertex = aa0.angle.vertex
-                if vertex != aa1.angle.vertex:
-                    continue
-                vectors0 = aa0.angle.vectors
-                vectors1 = aa1.angle.vectors
-                common = next((v for v in vectors0 if v in vectors1), None)
-                if common is None:
-                    continue
-                other0 = next(v for v in vectors0 if v != common)
-                other1 = next(v for v in vectors1 if v != common)
-                col = self.context.collinearity_property(*other0.points, other1.end)
-                if col is None or not col.collinear or aa0.reason.obsolete and aa1.reason.obsolete and col.reason.obsolete:
-                    continue
-                yield (
-                    AngleValueProperty(other0.angle(other1), 0),
-                    None,
-                    Comment(
-                        'both $%{angle:angle0}$ and $%{angle:angle1}$ are acute',
-                        {'angle0': aa0.angle, 'angle1': aa1.angle}
-                    ),
-                    [aa0, aa1, col]
-                )
-
         def iteration():
             for rule in self.rules:
                 for prop, comment, premises in rule.generate():
                     yield (prop, rule, comment, premises)
-
-            for four in obsolete_loop_step():
-                yield four
 
         for prop, comment in enumerate_predefined_properties(self.scene, self.context.points):
             self.__reason(prop, PredefinedPropertyRule.instance(), comment, [])
