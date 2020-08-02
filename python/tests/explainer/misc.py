@@ -90,3 +90,25 @@ class TwoPointsOnTwoDifferentLines(ExplainerTest):
         B = self.scene.get('B')
 
         self.assertIn(PointsCoincidenceProperty(A, B, True), self.explainer.context)
+
+class TwoPointsOnThreeDifferentLines(ExplainerTest):
+    def createScene(self):
+        scene = Scene()
+
+        A = scene.free_point(label='A')
+        B = scene.free_point(label='B')
+        C = scene.free_point(label='C')
+        D = scene.free_point(label='D')
+        E = scene.free_point(label='E')
+        scene.add_property(PointsCollinearityProperty(A, B, C, True), None)
+        scene.add_property(PointsCollinearityProperty(A, B, D, True), None)
+        scene.add_property(PointsCollinearityProperty(A, B, E, True), None)
+        scene.add_property(PointsCollinearityProperty(C, D, E, False), None)
+
+        return scene
+
+    def test(self):
+        A = self.scene.get('A')
+        B = self.scene.get('B')
+
+        self.assertIn(PointsCoincidenceProperty(A, B, True), self.explainer.context)
