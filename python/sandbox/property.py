@@ -49,7 +49,9 @@ class Property:
 
     @reason.setter
     def reason(self, value):
-        value = self.__acceptable_reason(value)
+        self.__set_reason(self.__acceptable_reason(value))
+
+    def __set_reason(self, value):
         if self.__reason == value:
             return
 
@@ -78,18 +80,18 @@ class Property:
                 cost = reason.cost
                 candidate = reason
         if candidate:
-            self.reason = candidate
+            self.__set_reason(candidate)
             return True
         return False
 
     def add_reason(self, reason, optimize=True):
         reason = self.__acceptable_reason(reason)
         if self.__reason is None:
-            self.reason = reason
+            self.__set_reason(reason)
         elif reason == self.__reason:
             return
         elif optimize and reason.cost < self.__reason.cost:
-            self.reason = reason
+            self.__set_reason(reason)
         elif reason not in self.alternate_reasons:
             self.__alternate_reasons.append(reason)
 
