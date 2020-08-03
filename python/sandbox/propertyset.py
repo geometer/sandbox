@@ -448,8 +448,6 @@ class LineSet:
                         if pt1 not in seg.points:
                             premises.append(colli_prop(seg, pt1))
                     premises.append(diff)
-                    if None in premises:
-                        print('DEBUG %s' % premises)
                     _synthetic_property(
                         prop,
                         Comment(
