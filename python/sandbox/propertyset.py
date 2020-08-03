@@ -1906,21 +1906,21 @@ class PropertySet(LineSet):
             comparison = self.compare_cyclic_order(cycle0, cycle1)
             if comparison == True:
                 yield (
-                    OrientedAngle(a0.vertex, *a0.endpoints),
-                    OrientedAngle(a1.vertex, *a1.endpoints)
+                    a0.vertex.oriented_angle(*a0.endpoints),
+                    a1.vertex.oriented_angle(*a1.endpoints)
                 )
                 yield (
-                    OrientedAngle(a0.vertex, *reversed(a0.endpoints)),
-                    OrientedAngle(a1.vertex, *reversed(a1.endpoints))
+                    a0.vertex.oriented_angle(*reversed(a0.endpoints)),
+                    a1.vertex.oriented_angle(*reversed(a1.endpoints))
                 )
             elif comparison == False:
                 yield (
-                    OrientedAngle(a0.vertex, *reversed(a0.endpoints)),
-                    OrientedAngle(a1.vertex, *a1.endpoints)
+                    a0.vertex.oriented_angle(*reversed(a0.endpoints)),
+                    a1.vertex.oriented_angle(*a1.endpoints)
                 )
                 yield (
-                    OrientedAngle(a0.vertex, *a0.endpoints),
-                    OrientedAngle(a1.vertex, *reversed(a1.endpoints))
+                    a0.vertex.oriented_angle(*a0.endpoints),
+                    a1.vertex.oriented_angle(*reversed(a1.endpoints))
                 )
 
     def congruent_oriented_angles_property(self, angle0, angle1):

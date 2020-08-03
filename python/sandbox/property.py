@@ -1094,34 +1094,10 @@ class SameCyclicOrderProperty(Property):
             {'cycle0': self.cycle0, 'cycle1': self.cycle1}
         )
 
-class OrientedAngle(Figure):
-    def __init__(self, vertex, pt0, pt1):
-        self.vertex = vertex
-        self.endpoints = (pt0, pt1)
-        self.point_set = {vertex, pt0, pt1}
-        self.__key = (vertex, pt0, pt1)
-
-    @property
-    def angle(self):
-        return self.vertex.angle(*self.endpoints)
-
-    @property
-    def cycle(self):
-        return self.vertex.cycle(*self.endpoints)
-
-    def __str__(self):
-        return '\\angle %s %s %s' % (self.endpoints[0], self.vertex, self.endpoints[1])
-
-    def __eq__(self, other):
-        return other and self.__key == other.__key
-
-    def __hash__(self):
-        return hash(self.__key)
-
 class CongruentOrientedAnglesProperty(Property):
     def __init__(self, angle0, angle1):
-        assert isinstance(angle0, OrientedAngle)
-        assert isinstance(angle1, OrientedAngle)
+        assert isinstance(angle0, Scene.OrientedAngle)
+        assert isinstance(angle1, Scene.OrientedAngle)
         assert angle0 != angle1
         self.angles = (angle0, angle1)
         super().__init__(frozenset([angle0, angle1]), {*angle0.point_set, *angle1.point_set})

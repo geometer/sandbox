@@ -107,7 +107,6 @@ class Comment:
         assert isinstance(format_string, str)
         from .scene import Scene
         from .figure import Circle
-        from .property import OrientedAngle
         # TODO: validate format string + check that all params are presented in the map
         # 1) balanced $'s
         parts = format_string.split('$')
@@ -150,7 +149,7 @@ class Comment:
                 elif kind == 'cycle':
                     assert isinstance(obj, Scene.Cycle), 'Parameter `%s` of type `%s`, expected `%s`' % (name, type(obj), kind)
                 elif kind == 'orientedangle':
-                    assert isinstance(obj, OrientedAngle), 'Parameter `%s` of type `%s`, expected `%s`' % (name, type(obj), kind)
+                    assert isinstance(obj, Scene.OrientedAngle), 'Parameter `%s` of type `%s`, expected `%s`' % (name, type(obj), kind)
                 else:
                     assert False, 'Parameter `%s` of unknown type `%s`' % (name, kind)
 

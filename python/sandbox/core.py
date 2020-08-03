@@ -257,6 +257,9 @@ class CoreScene:
             assert point0 != point1, 'Angle endpoints should be different'
             return self.scene._get_angle(self.vector(point0), self.vector(point1))
 
+        def oriented_angle(self, point0, point1):
+            return self.scene._get_oriented_angle(self, point0, point1)
+
         def belongs_to(self, line_or_circle):
             self.scene.assert_line_or_circle(line_or_circle)
             if not self.scene.is_frozen and self not in line_or_circle.all_points:
@@ -853,6 +856,41 @@ class CoreScene:
                 return '\\angle %s %s %s' % (self.vectors[0].end, self.vertex, self.vectors[1].end)
             return '\\angle(%s, %s)' % self.vectors
 
+    def _get_oriented_angle(self, vertex, endpoint0, endpoint1):
+        assert isinstance(vertex, CoreScene.Point)
+        assert isinstance(endpoint0, CoreScene.Point)
+        assert isinstance(endpoint1, CoreScene.Point)
+        assert vertex.scene == self
+        assert endpoint0.scene == self
+        assert endpoint1.scene == self
+        assert vertex != endpoint0
+        assert vertex != endpoint1
+        assert endpoint0 != endpoint1
+
+        key = (vertex, endpoint0, endpoint1)
+        angle = self.__oriented_angles.get(key)
+        if angle is None:
+            angle = CoreScene.OrientedAngle(vertex, endpoint0, endpoint1)
+            self.__oriented_angles[key] = angle
+        return angle
+
+    class OrientedAngle(Figure):
+        def __init__(self, vertex, pt0, pt1):
+            self.vertex = vertex
+            self.endpoints = (pt0, pt1)
+            self.point_set = {vertex, pt0, pt1}
+
+        @property
+        def angle(self):
+            return self.vertex.angle(*self.endpoints)
+
+        @property
+        def cycle(self):
+            return self.vertex.cycle(*self.endpoints)
+
+        def __str__(self):
+            return '\\angle %s %s %s' % (self.endpoints[0], self.vertex, self.endpoints[1])
+
     class Triangle(Figure):
         def __init__(self, pt0, pt1, pt2):
             self.points = (pt0, pt1, pt2)
@@ -949,6 +987,7 @@ class CoreScene:
         self.__properties = {}
         self.__frozen = False
         self.__angles = {} # {vector, vector} => angle
+        self.__oriented_angles = {} # (vertex, endpoint0, endpoint1) => angle
         self.__segments = {} # {point, point} => segment
         self.__cycles = {} # (point, point, point) => cycle
 
