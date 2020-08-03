@@ -976,10 +976,12 @@ class PerpendicularTransitivityRule(Rule):
         if common_point is None:
             self.processed.add(key)
             return
-        ne = self.context.not_equal_property(*common.points)
+        ne = self.context.coincidence_property(*common.points)
         if ne is None:
             return
         self.processed.add(key)
+        if ne.coincident:
+            return
         pt0 = next(pt for pt in seg0.points if pt != common_point)
         pt1 = next(pt for pt in seg1.points if pt != common_point)
         comment = Comment(
@@ -1268,10 +1270,12 @@ class TwoPerpendicularsRule2(Rule):
         if common is None:
             self.processed.add(key)
             return
-        ne = self.context.not_equal_property(*common.points)
+        ne = self.context.coincidence_property(*common.points)
         if ne is None:
             return
         self.processed.add(key)
+        if ne.coincident:
+            return
         other0 = next(seg for seg in perp0.segments if seg != common)
         other1 = next(seg for seg in perp1.segments if seg != common)
         yield (
