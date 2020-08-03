@@ -39,8 +39,8 @@ class CyclicOrderRule(Rule):
     def apply(self, prop):
         self.processed.add(prop)
 
-        cycle0 = Cycle(*prop.segment.points, prop.points[0])
-        cycle1 = Cycle(*prop.segment.points, prop.points[1])
+        cycle0 = prop.points[0].cycle(*prop.segment.points)
+        cycle1 = prop.points[1].cycle(*prop.segment.points)
         if not prop.same:
             cycle1 = cycle1.reversed
             pattern = '$%{line:line}$ separates $%{point:pt0}$ and $%{point:pt1}$'

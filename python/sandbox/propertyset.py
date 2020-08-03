@@ -1901,8 +1901,8 @@ class PropertySet(LineSet):
 
     def congruent_oriented_angles(self):
         for a0, a1 in self.congruent_angles_with_vertex():
-            cycle0 = Cycle(a0.vertex, *a0.endpoints)
-            cycle1 = Cycle(a1.vertex, *a1.endpoints)
+            cycle0 = a0.vertex.cycle(*a0.endpoints)
+            cycle1 = a1.vertex.cycle(*a1.endpoints)
             comparison = self.compare_cyclic_order(cycle0, cycle1)
             if comparison == True:
                 yield (

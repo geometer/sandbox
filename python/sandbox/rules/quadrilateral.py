@@ -49,12 +49,7 @@ class PointInsideSquareRule(Rule):
             new_properties.append(SameOrOppositeSideProperty(side, prop.point, verts2[i + 2], True))
             new_properties.append(SameOrOppositeSideProperty(side, prop.point, verts2[i + 3], True))
 
-        cycles = (
-            Cycle(verts[0], verts[1], prop.point),
-            Cycle(verts[1], verts[2], prop.point),
-            Cycle(verts[2], verts[3], prop.point),
-            Cycle(verts[3], verts[0], prop.point)
-        )
+        cycles = [prop.point.cycle(verts2[i], verts2[i + 1]) for i in range(0, 4)]
         for c0, c1 in itertools.combinations(cycles, 2):
             new_properties.append(SameCyclicOrderProperty(c0, c1))
             new_properties.append(SameCyclicOrderProperty(c0.reversed, c1.reversed))

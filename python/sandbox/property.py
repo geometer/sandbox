@@ -1072,35 +1072,13 @@ class IsoscelesTriangleProperty(Property):
             {'isosceles': self.triangle, 'apex': self.apex}
         )
 
-class Cycle(Figure):
-    def __init__(self, pt0, pt1, pt2):
-        self.points = (pt0, pt1, pt2)
-        self.__key = frozenset([(pt0, pt1, pt2), (pt1, pt2, pt0), (pt2, pt0, pt1)])
-        self.__reversed = None
-
-    @property
-    def reversed(self):
-        if self.__reversed is None:
-            self.__reversed = Cycle(*reversed(self.points))
-            self.__reversed.__reversed = self
-        return self.__reversed
-
-    def __str__(self):
-        return '\\circlearrowleft %s %s %s' % self.points
-
-    def __eq__(self, other):
-        return other and self.__key == other.__key
-
-    def __hash__(self):
-        return hash(self.__key)
-
 class SameCyclicOrderProperty(Property):
     """
     Two triples of points have the same cyclic order
     """
     def __init__(self, cycle0, cycle1):
-        assert isinstance(cycle0, Cycle)
-        assert isinstance(cycle1, Cycle)
+        assert isinstance(cycle0, Scene.Cycle)
+        assert isinstance(cycle1, Scene.Cycle)
         self.cycle0 = cycle0
         self.cycle1 = cycle1
         super().__init__(frozenset([cycle0, cycle1]), {*cycle0.points, *cycle1.points})
@@ -1129,7 +1107,7 @@ class OrientedAngle(Figure):
 
     @property
     def cycle(self):
-        return Cycle(self.vertex, *self.endpoints)
+        return self.vertex.cycle(*self.endpoints)
 
     def __str__(self):
         return '\\angle %s %s %s' % (self.endpoints[0], self.vertex, self.endpoints[1])

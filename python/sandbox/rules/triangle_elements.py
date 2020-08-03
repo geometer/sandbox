@@ -529,10 +529,10 @@ class PointInsideTriangleRule(Rule):
             new_properties.append(SameOrOppositeSideProperty(pt.segment(prop.point), *side.points, False))
             new_properties.append(SameOrOppositeSideProperty(side, pt, prop.point, True))
         cycles = (
-            Cycle(*verts),
-            Cycle(verts[0], verts[1], prop.point),
-            Cycle(verts[1], verts[2], prop.point),
-            Cycle(verts[2], verts[0], prop.point)
+            verts[0].cycle(verts[1], verts[2]),
+            prop.point.cycle(verts[0], verts[1]),
+            prop.point.cycle(verts[1], verts[2]),
+            prop.point.cycle(verts[2], verts[0])
         )
         for c0, c1 in itertools.combinations(cycles, 2):
             new_properties.append(SameCyclicOrderProperty(c0, c1))

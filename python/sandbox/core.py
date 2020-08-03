@@ -250,6 +250,9 @@ class CoreScene:
             assert self != point, 'Cannot create segment from a single point'
             return self.scene._get_segment(self, point)
 
+        def cycle(self, point0, point1):
+            return self.scene._get_cycle(self, point0, point1)
+
         def angle(self, point0, point1):
             assert point0 != point1, 'Angle endpoints should be different'
             return self.scene._get_angle(self.vector(point0), self.vector(point1))
@@ -696,6 +699,40 @@ class CoreScene:
         def __str__(self):
             return '%s %s' % self.points
 
+    def _get_cycle(self, point0, point1, point2):
+        assert isinstance(point0, CoreScene.Point)
+        assert isinstance(point1, CoreScene.Point)
+        assert isinstance(point2, CoreScene.Point)
+        assert point0.scene == self
+        assert point1.scene == self
+        assert point2.scene == self
+        assert point0 != point1
+        assert point0 != point2
+        assert point1 != point2
+        key0 = (point0, point1, point2)
+        cycle = self.__cycles.get(key0)
+        if cycle is None:
+            cycle = CoreScene.Cycle(point0, point1, point2)
+            self.__cycles[key0] = cycle
+            self.__cycles[(point1, point2, point0)] = cycle
+            self.__cycles[(point2, point0, point1)] = cycle
+        return cycle
+
+    class Cycle(Figure):
+        def __init__(self, pt0, pt1, pt2):
+            self.points = (pt0, pt1, pt2)
+            self.__reversed = None
+
+        @property
+        def reversed(self):
+            if self.__reversed is None:
+                self.__reversed = self.points[0].scene._get_cycle(*reversed(self.points))
+                self.__reversed.__reversed = self
+            return self.__reversed
+
+        def __str__(self):
+            return '\\circlearrowleft %s %s %s' % self.points
+
     def _get_angle(self, vector0, vector1):
         assert isinstance(vector0, CoreScene.Vector)
         assert isinstance(vector1, CoreScene.Vector)
@@ -912,7 +949,8 @@ class CoreScene:
         self.__properties = {}
         self.__frozen = False
         self.__angles = {} # {vector, vector} => angle
-        self.__segments = {} # {point, point} => angle
+        self.__segments = {} # {point, point} => segment
+        self.__cycles = {} # (point, point, point) => cycle
 
     def add_property(self, prop, comment):
         if prop not in self.__properties:
