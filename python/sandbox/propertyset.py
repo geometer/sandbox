@@ -101,29 +101,25 @@ class LineSet:
 
             return LineSet.best_candidate(candidates)
 
-        def non_coincidence_property(self, pt_on, pt_not_on):
-            candidates = []
+        def non_coincidence_reasons(self, pt_on, pt_not_on):
             for prop_not_on in self.points_not_on.get(pt_not_on):
                 seg0 = prop_not_on.segment
                 if pt_on in seg0.points:
-                    prop = PointsCoincidenceProperty(pt_on, pt_not_on, False)
                     comment = Comment(
                         'two of three non-collinear points $%{point:pt0}$, $%{point:pt1}$, and $%{point:pt2}$',
                         {'pt0': pt_not_on, 'pt1': seg0.points[0], 'pt2': seg0.points[1]}
                     )
                     premises = [prop_not_on]
-                    candidates.append(_synthetic_property(prop, comment, premises))
+                    yield (comment, premises)
                 for seg1 in [seg for seg in self.segments if seg != seg0 and pt_on in seg.points]:
-                    prop = PointsCoincidenceProperty(pt_on, pt_not_on, False)
                     comment = Comment(
                         'point $%{point:pt_on}$ lies on line $%{line:line}$, $%{point:pt_not_on}$ does not',
                         {'pt_on': pt_on, 'line': seg0, 'pt_not_on': pt_not_on}
                     )
                     premises = [self.same_line_property(seg0, seg1), prop_not_on]
-                    candidates.append(_synthetic_property(prop, comment, premises))
+                    yield (comment, premises)
                 for prop_on in self.points_on.get(pt_on):
                     seg1 = prop_on.segment
-                    prop = PointsCoincidenceProperty(pt_on, pt_not_on, False)
                     comment = Comment(
                         'point $%{point:pt_on}$ lies on line $%{line:line}$, $%{point:pt_not_on}$ does not',
                         {'pt_on': pt_on, 'line': seg0, 'pt_not_on': pt_not_on}
@@ -132,9 +128,7 @@ class LineSet:
                         premises = [*prop_on.reason.premises, *prop_not_on.reason.premises]
                     else:
                         premises = [prop_on, self.same_line_property(seg0, seg1), prop_not_on]
-                    candidates.append(_synthetic_property(prop, comment, premises))
-
-            return LineSet.best_candidate(candidates)
+                    yield (comment, premises)
 
     class Circle:
         def __init__(self):
@@ -386,18 +380,15 @@ class LineSet:
         elif isinstance(prop, ConcyclicPointsProperty):
             self.__concyclicity[frozenset(prop.points)] = prop
 
-    def __non_coincidence_property_candidates(self, line, pt_on, pt_not_on):
-        candidates = []
+    def __non_coincidence_property_reasons(self, line, pt_on, pt_not_on):
         for key in [seg for seg in line.segments if pt_on not in seg.points]:
             col = self.collinearity_property(pt_on, *key.points)
             ncol = self.collinearity_property(pt_not_on, *key.points)
-            prop = PointsCoincidenceProperty(pt_on, pt_not_on, False)
             comment = Comment(
                 'point $%{point:pt_on}$ lies on line $%{line:line}$, $%{point:pt_not_on}$ does not',
                 {'pt_on': pt_on, 'pt_not_on': pt_not_on, 'line': key}
             )
-            candidates.append(_synthetic_property(prop, comment, [col, ncol]))
-        return candidates
+            yield (comment, [col, ncol])
 
     def coincidence_property(self, pt0, pt1, use_cache=True):
         if use_cache:
@@ -405,23 +396,31 @@ class LineSet:
             cached = self.__coincidence.get(key)
             if cached:
                 return cached
+
         candidates = []
         common_lines = []
         for line in self.__all_lines:
             if pt0 in line.points_on and pt1 in line.points_not_on:
-                candidates.append(line.non_coincidence_property(pt0, pt1))
-                candidates += self.__non_coincidence_property_candidates(line, pt0, pt1)
+                for reason in line.non_coincidence_reasons(pt0, pt1):
+                    candidates.append(reason)
+                for reason in self.__non_coincidence_property_reasons(line, pt0, pt1):
+                    candidates.append(reason)
             elif pt1 in line.points_on and pt0 in line.points_not_on:
-                candidates.append(line.non_coincidence_property(pt1, pt0))
-                candidates += self.__non_coincidence_property_candidates(line, pt1, pt0)
+                for reason in line.non_coincidence_reasons(pt1, pt0):
+                    candidates.append(reason)
+                for reason in self.__non_coincidence_property_reasons(line, pt1, pt0):
+                    candidates.append(reason)
             elif pt0 in line.points_on and pt1 in line.points_on:
                 common_lines.append(line)
 
         if candidates:
-            best = LineSet.best_candidate(candidates)
-            if use_cache and best:
-                self.__coincidence[key] = best
-            return best
+            prop = PointsCoincidenceProperty(pt0, pt1, False)
+            for comment, premises in candidates:
+                _synthetic_property(prop, comment, premises, optimize=False)
+            prop.optimize()
+            if use_cache:
+                self.__coincidence[key] = prop
+            return prop
 
         if len(common_lines) > 1:
             prop = None
