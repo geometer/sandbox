@@ -1608,7 +1608,6 @@ class PropertySet(LineSet):
                 normalize_prop(base)
             for r in prop.proper_reasons:
                 normalize(r)
-            prop.reason = prop.reason
 
         def normalize(reason):
             for index, pre in enumerate(reason.premises):

@@ -231,6 +231,8 @@ class Explainer:
 
     def __reason(self, prop, rule, comment, premises):
         reason = Reason(rule, comment, premises)
+        if prop in reason.all_premises:
+            return
         prop.reason = reason
         self.context.insert(prop)
 

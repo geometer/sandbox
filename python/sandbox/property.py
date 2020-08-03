@@ -49,7 +49,7 @@ class Property:
 
     @reason.setter
     def reason(self, value):
-        self.__set_reason(self.__acceptable_reason(value))
+        self.__set_reason(value)
 
     def __set_reason(self, value):
         if self.__reason == value:
