@@ -486,6 +486,10 @@ class LineSet:
         return None
 
     def collinearity(self, pt0, pt1, pt2):
+        cached = self.__collinearity.get(frozenset((pt0, pt1, pt2)))
+        if cached:
+            return cached.collinear
+
         pts = (pt0, pt1, pt2, pt0, pt1)
         for i in range(0, 3):
             vertex = pts[i]
