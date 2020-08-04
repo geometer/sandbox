@@ -1920,8 +1920,13 @@ class ConsecutiveInteriorAnglesRule(Rule):
         return self.context.angle_value_properties_for_degree(0, lambda a: len(a.point_set) == 4)
 
     def apply(self, prop):
-        self.processed.add(prop)
         vecs = prop.angle.vectors
+        ne = self.context.coincidence_property(vecs[0].start, vecs[1].start)
+        if ne is None:
+            return
+        self.processed.add(prop)
+        if ne.coincident:
+            return
         angle0 = vecs[0].start.angle(vecs[0].end, vecs[1].start)
         angle1 = vecs[1].start.angle(vecs[1].end, vecs[0].start)
         yield (
@@ -1930,7 +1935,7 @@ class ConsecutiveInteriorAnglesRule(Rule):
                 'consecutive interior angles: transversal $%{line:common}$, and $%{ray:vec0} \\uparrow\\!\\!\\!\\uparrow %{ray:vec1}$',
                 {'common': vecs[0].start.segment(vecs[1].start), 'vec0': vecs[0], 'vec1': vecs[1]}
             ),
-            [prop]
+            [prop, ne]
         )
 
 @processed_cache(set())

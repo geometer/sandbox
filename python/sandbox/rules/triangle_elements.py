@@ -173,7 +173,12 @@ class CorrespondingAnglesInSimilarTrianglesRule2(Rule):
 @accepts_auto
 class BaseAnglesOfIsoscelesRule(Rule):
     def apply(self, prop):
+        ne = self.context.coincidence_property(*prop.base.points)
+        if ne is None:
+            return
         self.processed.add(prop)
+        if ne.coincident:
+            return
         yield (
             AngleRatioProperty(
                 prop.base.points[0].angle(prop.apex, prop.base.points[1]),
@@ -181,7 +186,7 @@ class BaseAnglesOfIsoscelesRule(Rule):
                 1
             ),
             Comment('base angles of isosceles $%{triangle:tr}$', {'tr': prop.triangle}),
-            [prop]
+            [prop, ne]
         )
 
 @source_type(IsoscelesTriangleProperty)
