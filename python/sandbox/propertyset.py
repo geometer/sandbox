@@ -1600,38 +1600,35 @@ class PropertySet(LineSet):
         self.__points_inside_triangle = {} # {vertices} => [points]
         self.__perpendicular_feets = {} # (foot, point, segment) => prop
 
-    def insert(self, prop, do_lookup=True):
-        def normalize_prop(prop):
-            for base in prop.bases:
-                normalize_prop(base)
-            for r in prop.proper_reasons:
-                normalize(r)
+    def __normalize_prop(self, prop):
+        for base in prop.bases:
+            self.__normalize_prop(base)
+        for r in prop.proper_reasons:
+            self.__normalize_reason(r)
 
-        def normalize(reason):
-            for index, pre in enumerate(reason.premises):
-                prop_and_index = self.prop_and_index(pre)
-                existing = prop_and_index[0] if prop_and_index else None
-                if existing is None:
-                    normalize_prop(pre)
-                    self.__insert_prop__(pre)
-                elif pre is not existing:
-                    normalize_prop(pre)
-                    existing.merge(pre)
-                    reason.premises[index] = existing
+    def __normalize_reason(self, reason):
+        for index, pre in enumerate(reason.premises):
+            prop_and_index = self.prop_and_index(pre)
+            existing = prop_and_index[0] if prop_and_index else None
+            if existing is None:
+                self.__normalize_prop(pre)
+                self.__insert_prop__(pre)
+            elif pre is not existing:
+                self.__normalize_prop(pre)
+                existing.merge(pre)
+                reason.premises[index] = existing
 
-        normalize_prop(prop)
-
-        existing = self[prop] if do_lookup else None
+    def insert_prop_and_reason(self, prop, reason):
+        existing = self[prop]
         if existing is None:
+            prop.reason = reason
+            self.__normalize_prop(prop)
             self.__insert_prop__(prop)
-        else:
+        elif existing not in reason.all_premises:
+            self.__normalize_reason(reason)
+            existing.add_reason(reason)
             was_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
-            existing.merge(prop)
-            is_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
-            if self.prop_and_index(existing) is None:
-                normalize_prop(existing)
-                self.__insert_prop__(existing)
-            elif was_synthetic and not is_synthetic:
+            if self.prop_and_index(existing) is None or was_synthetic:
                 self.__insert_prop__(existing)
 
     def __insert_prop__(self, prop):
@@ -1827,7 +1824,8 @@ class PropertySet(LineSet):
             else:
                 existing = None
             if existing:
-                self.insert(existing, do_lookup=False)
+                self.__normalize_prop(existing)
+                self.__insert_prop__(existing)
 
         if existing and not existing.compare_values(prop):
             raise ContradictionError('different values: `%s` vs `%s`' % (prop, existing))
