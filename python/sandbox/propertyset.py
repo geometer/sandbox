@@ -832,7 +832,7 @@ class CyclicOrderPropertySet:
         return None
 
     def add(self, prop):
-        if prop.reason and prop.reason.rule == SyntheticPropertyRule.instance():
+        if prop.is_synthetic:
             return
         self.cache[(prop.cycle0, prop.cycle1)] = prop
         self.cache[(prop.cycle1, prop.cycle0)] = prop
@@ -1174,7 +1174,7 @@ class AngleRatioPropertySet:
                     yield a
 
     def add(self, prop):
-        if prop.reason and prop.reason.rule == SyntheticPropertyRule.instance():
+        if prop.is_synthetic:
             return
         if isinstance(prop, AngleRatioProperty):
             self.__add_ratio_property(prop)
@@ -1462,7 +1462,7 @@ class LengthRatioPropertySet:
             self.ratio_to_family[ratio1] = fam
 
     def add(self, prop):
-        if prop.reason.rule == SyntheticPropertyRule.instance():
+        if prop.is_synthetic:
             return
         if isinstance(prop, EqualLengthRatiosProperty):
             self.__add_elr(prop)
@@ -1633,8 +1633,11 @@ class PropertySet(LineSet):
             self.__normalize_prop(prop)
             self.__insert_prop__(prop)
         elif existing not in reason.all_premises:
+            was_synthetic = existing.is_synthetic
             self.__normalize_reason(reason)
             existing.add_reason(reason)
+            if was_synthetic:
+                self.__insert_prop__(existing)
 
     def __insert_prop__(self, prop):
         def put(key):

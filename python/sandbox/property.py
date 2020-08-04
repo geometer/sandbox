@@ -5,6 +5,7 @@ import numpy as np
 import sympy as sp
 
 from .figure import Figure, Circle
+from .rules.abstract import SyntheticPropertyRule
 from .scene import Scene
 from .util import Comment, divide, normalize_number, keys_for_triangle
 
@@ -28,6 +29,17 @@ class Property:
     def add_base(self, base):
         if base not in self.bases:
             self.bases.append(base)
+
+    @property
+    def is_synthetic(self):
+        if self.bases:
+            return False
+        if not isinstance(self.reason, SyntheticPropertyRule):
+            return False
+        for r in self.__alternate_reasons:
+            if not isinstance(r, SyntheticPropertyRule):
+                return False
+        return True
 
     @property
     def reason(self):
