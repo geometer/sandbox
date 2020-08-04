@@ -2216,17 +2216,6 @@ class PropertySet(LineSet):
         return prop
 
     def stats(self):
-        for circle in self.circles:
-            print('CIRCLE')
-            for key in circle.keys:
-                print('KEY %s %s %s' % tuple(key))
-            for pt in circle.points_on:
-                print('ON %s' % pt)
-            for pt in circle.points_inside:
-                print('INSIDE %s' % pt)
-            for pt in circle.points_outside:
-                print('OUTSIDE %s' % pt)
-
         def type_presentation(kind):
             return kind.__doc__.strip() if kind.__doc__ else kind.__name__
 
