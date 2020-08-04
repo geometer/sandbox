@@ -1601,8 +1601,16 @@ class PropertySet(LineSet):
         self.__perpendicular_feets = {} # (foot, point, segment) => prop
 
     def __normalize_prop(self, prop):
-        for base in prop.bases:
-            self.__normalize_prop(base)
+        for index, base in enumerate(prop.bases):
+            prop_and_index = self.prop_and_index(base)
+            existing = prop_and_index[0] if prop_and_index else None
+            if existing is None:
+                self.__normalize_prop(base)
+                self.__insert_prop__(base)
+            elif base is not existing:
+                self.__normalize_prop(base)
+                existing.merge(base)
+                prop.bases[index] = existing
         for r in prop.proper_reasons:
             self.__normalize_reason(r)
 
