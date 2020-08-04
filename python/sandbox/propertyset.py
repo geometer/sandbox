@@ -1627,9 +1627,6 @@ class PropertySet(LineSet):
         elif existing not in reason.all_premises:
             self.__normalize_reason(reason)
             existing.add_reason(reason)
-            was_synthetic = existing.reason.rule == SyntheticPropertyRule.instance()
-            if self.prop_and_index(existing) is None or was_synthetic:
-                self.__insert_prop__(existing)
 
     def __insert_prop__(self, prop):
         def put(key):
