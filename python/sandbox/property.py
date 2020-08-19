@@ -10,9 +10,9 @@ from .scene import Scene
 from .util import Comment, divide, normalize_number, keys_for_triangle
 
 class Property:
-    def __init__(self, property_key, point_set):
+    def __init__(self, property_key, object_set):
         self.property_key = property_key
-        self.point_set = point_set
+        self.object_set = object_set
         self.__hash = None
         self.__reason = None
         self.__alternate_reasons = []

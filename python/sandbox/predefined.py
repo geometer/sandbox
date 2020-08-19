@@ -2,11 +2,11 @@ from .core import Constraint, CoreScene
 from .property import *
 from .util import Comment, LazyComment
 
-def enumerate_predefined_properties(scene, points):
-    def is_visible(pt):
-        return pt in points
-    def all_visible(pts):
-        return all(pt in points for pt in pts)
+def enumerate_predefined_properties(scene, objects):
+    def is_visible(obj):
+        return obj in objects
+    def all_visible(objs):
+        return all(o in objects for o in objs)
 
     for cnstr in scene.constraints(Constraint.Kind.collinear):
         if all_visible(cnstr.params):
@@ -138,5 +138,5 @@ def enumerate_predefined_properties(scene, points):
             )
 
     for prop, comment in scene.properties.items():
-        if all_visible(prop.point_set):
+        if all_visible(prop.object_set):
             yield (prop, comment if comment else Comment(''))

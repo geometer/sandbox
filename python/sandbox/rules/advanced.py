@@ -12,7 +12,7 @@ class IntersectionOfTwoAltitudesIsTheOrthocentreRule(Rule):
     def sources(self):
         groups = {}
         for perp in self.context.list(PerpendicularSegmentsProperty):
-            key = perp.point_set
+            key = perp.object_set
             if len(key) < 4:
                 continue
             key = frozenset(key)
@@ -28,11 +28,11 @@ class IntersectionOfTwoAltitudesIsTheOrthocentreRule(Rule):
 
     def apply(self, pair):
         p0, p1 = pair
-        for centre in p0.point_set:
+        for centre in p0.object_set:
             key = (frozenset(pair), centre)
             if key in self.processed:
                 continue
-            triple = [pt for pt in p0.point_set if pt != centre]
+            triple = [pt for pt in p0.object_set if pt != centre]
             ncl = self.context.collinearity_property(*triple)
             if ncl is None:
                 continue
