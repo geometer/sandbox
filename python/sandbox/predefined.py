@@ -107,6 +107,14 @@ def enumerate_predefined_properties(scene, objects):
                     Comment('three points on $%{line:line}$', {'line': line})
                 )
 
+    for line in scene.lines(max_layer='auxiliary'):
+        for pt in line.all_points:
+            if is_visible(pt):
+                yield (
+                    PointOnLineProperty(pt, line, True),
+                    Comment('$%{point:point}$ lies on $%{line:line}$', {'point': pt, 'line': line})
+                )
+
     for circle in scene.circles(max_layer='user'):
         radiuses = [circle.centre.segment(pt) for pt in circle.all_points]
         if circle.centre not in circle.radius.points:

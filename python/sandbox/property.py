@@ -223,14 +223,20 @@ class ConcyclicPointsProperty(Property):
             dict((str(index), pt) for index, pt in enumerate(self.points))
         )
 
+def _objects(line_key):
+    if isinstance(line_key, Scene.Segment):
+        return line_key.points
+    assert isinstance(line_key, Scene.Line)
+    return (line_key,)
+
 class PointOnLineProperty(Property):
     """
     A point lies [not] on a line
     """
-    def __init__(self, point, segment, on_line):
-        super().__init__((point, segment), {point, *segment.points})
+    def __init__(self, point, line_key, on_line):
+        super().__init__((point, line_key), {point, *_objects(line_key)})
         self.point = point
-        self.segment = segment
+        self.line_key = line_key
         self.on_line = on_line
 
     @property
@@ -243,14 +249,14 @@ class PointOnLineProperty(Property):
             pattern = '$%{point:point}$ lies on line $%{line:line}$'
         else:
             pattern = '$%{point:point}$ does not lie on line $%{line:line}$'
-        return Comment(pattern, {'point': self.point, 'line': self.segment})
+        return Comment(pattern, {'point': self.point, 'line': self.line_key})
 
     def compare_values(self, other):
         return self.on_line == other.on_line
 
 class LinesCoincidenceProperty(Property):
     """
-    Two lines (defined by segments) are [not] coincident
+    Two lines (defined by keys) are [not] coincident
     """
     def __init__(self, segment0, segment1, coincident):
         self.segments = (segment0, segment1)
