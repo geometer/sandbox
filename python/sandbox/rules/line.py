@@ -165,25 +165,25 @@ class MissingLineKeysRule(Rule):
         return self.context.lines
 
     def apply(self, line):
-        segments = set(line.segments)
+        line_keys = set(line.keys)
         for pt0, pt1 in itertools.combinations(line.points_on, 2):
             key = pt0.segment(pt1)
-            if key in segments:
+            if key in line_keys:
                 continue
             ne = self.context.coincidence_property(pt0, pt1)
             if ne is None or ne.coincident:
                 continue
-            for seg in segments:
+            for existing in line_keys:
                 premises = []
-                if pt0 not in seg.points:
-                    premises.append(self.context.point_on_line_property(pt0, seg))
-                if pt1 not in seg.points:
-                    premises.append(self.context.point_on_line_property(pt1, seg))
+                if not isinstance(existing, Scene.Segment) or pt0 not in existing.points:
+                    premises.append(self.context.point_on_line_property(pt0, existing))
+                if not isinstance(existing, Scene.Segment) or pt1 not in existing.points:
+                    premises.append(self.context.point_on_line_property(pt1, existing))
                 yield (
-                    LinesCoincidenceProperty(key, seg, True),
+                    LinesCoincidenceProperty(key, existing, True),
                     Comment(
                         'non-coincident points $%{point:pt0}$ and $%{point:pt1}$ belong to $%{line:line}$',
-                        {'pt0': pt0, 'pt1': pt1, 'line': seg}
+                        {'pt0': pt0, 'pt1': pt1, 'line': existing}
                     ),
                     premises + [ne]
                 )

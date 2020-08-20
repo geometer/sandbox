@@ -46,9 +46,9 @@ class LineSet:
             for key in prop.line_keys:
                 if not isinstance(key, Scene.Segment):
                     continue
-            for pt in key.points:
-                if pt not in self.points_on:
-                    self.points_on[pt] = set()
+                for pt in key.points:
+                    if pt not in self.points_on:
+                        self.points_on[pt] = set()
 
         def same_line_explanation(self, segment0, segment1):
             edge = self.premises_graph.get_edge_data(segment0, segment1)
@@ -449,8 +449,10 @@ class LineSet:
                 if prop is None:
                     prop = PointsCoincidenceProperty(pt0, pt1, True)
                 for diff in diffs:
+                    if not all(isinstance(key, Scene.Segment) for key in diff.line_keys):
+                        continue
                     premises = []
-                    for seg in diff.segments:
+                    for seg in diff.line_keys:
                         if pt0 not in seg.points:
                             premises.append(colli_prop(seg, pt0))
                         if pt1 not in seg.points:
@@ -460,7 +462,7 @@ class LineSet:
                         prop,
                         Comment(
                             '$%{point:pt0}$ and $%{point:pt1}$ both lie on different lines $%{line:line0}$ and $%{line:line1}$',
-                            {'pt0': pt0, 'pt1': pt1, 'line0': diff.segments[0], 'line1': diff.segments[1]}
+                            {'pt0': pt0, 'pt1': pt1, 'line0': diff.line_keys[0], 'line1': diff.line_keys[1]}
                         ),
                         premises
                     )
