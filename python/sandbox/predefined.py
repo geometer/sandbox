@@ -99,9 +99,10 @@ def enumerate_predefined_properties(scene, objects):
                 cnstr.comment
             )
 
-    for line in scene.lines(max_layer='user'):
-        for pt in line.all_points:
-            if is_visible(pt):
+    for line in scene.lines():
+        points = [pt for pt in line.all_points if is_visible(pt)]
+        if line.layer == 'user' or len(points) > 2:
+            for pt in points:
                 yield (
                     PointOnLineProperty(pt, line, True),
                     Comment('$%{point:point}$ lies on $%{line:line}$', {'point': pt, 'line': line})
