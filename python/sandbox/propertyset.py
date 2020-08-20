@@ -530,17 +530,17 @@ class LineSet:
         for line in self.__all_lines:
             if any(pt not in line.points_on for pt in pts):
                 continue
-            for seg in line.segments:
+            for key in line.keys:
                 premises = []
                 for pt in pts:
-                    if pt in seg.points:
+                    if isinstance(key, Scene.Segment) and pt in key.points:
                         continue
-                    pol = self.__point_on_line.get((pt, seg))
+                    pol = self.__point_on_line.get((pt, key))
                     if pol is None:
-                        pol = line.point_on_line_property(pt, seg)
+                        pol = line.point_on_line_property(pt, key)
                     premises.append(pol)
                 params = dict(common_params)
-                params['line'] = seg
+                params['line'] = key
                 prop = PointsCollinearityProperty(*pts, True) if len(pts) == 3 else MultiPointsCollinearityProperty(*pts)
                 candidates.append(_synthetic_property(
                     prop, Comment(pattern, params), premises

@@ -3,6 +3,23 @@ from sandbox.property import *
 
 from .base import ExplainerTest
 
+class Collinearity(ExplainerTest):
+    def createScene(self):
+        scene = Scene()
+
+        A = scene.free_point(label='A')
+        B = scene.free_point(label='B')
+        l = A.line_through(B, label='l')
+        C = l.free_point(label='C')
+
+        return scene
+
+    def test(self):
+        A = self.scene.get('A')
+        B = self.scene.get('B')
+        C = self.scene.get('C')
+        self.assertIn(PointsCollinearityProperty(A, B, C, True), self.explainer.context)
+
 class PointOnLine(ExplainerTest):
     def createScene(self):
         scene = Scene()
@@ -25,6 +42,8 @@ class PointOnLine(ExplainerTest):
         D = self.scene.get('D')
         E = self.scene.get('E')
         l = self.scene.get('l')
+        self.assertIn(LinesCoincidenceProperty(A.segment(B), l, True), self.explainer.context)
+        self.assertIn(LinesCoincidenceProperty(A.segment(D), l, False), self.explainer.context)
         self.assertIn(PointOnLineProperty(A, l, True), self.explainer.context)
         self.assertIn(PointOnLineProperty(B, l, True), self.explainer.context)
         self.assertIn(PointOnLineProperty(C, A.segment(B), True), self.explainer.context)
