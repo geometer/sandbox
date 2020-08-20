@@ -99,15 +99,7 @@ def enumerate_predefined_properties(scene, objects):
                 cnstr.comment
             )
 
-    for line in scene.lines(max_layer='auxiliary'):
-        for pts in itertools.combinations([p for p in line.all_points], 3):
-            if all_visible(pts):
-                yield (
-                    PointsCollinearityProperty(*pts, True),
-                    Comment('three points on $%{line:line}$', {'line': line})
-                )
-
-    for line in scene.lines(max_layer='auxiliary'):
+    for line in scene.lines(max_layer='user'):
         for pt in line.all_points:
             if is_visible(pt):
                 yield (
