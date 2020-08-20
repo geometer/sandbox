@@ -1135,10 +1135,10 @@ class IntersectionOfLinesProperty(Property):
     """
     Point is the intersection of two different lines
     """
-    def __init__(self, point, segment0, segment1):
+    def __init__(self, point, line_key0, line_key1):
         self.point = point
-        self.segments = (segment0, segment1)
-        super().__init__((point, frozenset([segment0, segment1])), {point, *segment0.points, *segment1.points})
+        self.line_keys = (line_key0, line_key1)
+        super().__init__((point, frozenset([line_key0, line_key1])), {point, *_objects(line_key0), *_objects(line_key1)})
 
     @property
     def __priority__(self):
@@ -1148,7 +1148,7 @@ class IntersectionOfLinesProperty(Property):
     def description(self):
         return Comment(
             '$%{point:point}$ is the intersection of $%{line:line0}$ and $%{line:line1}$',
-            {'point': self.point, 'line0': self.segments[0], 'line1': self.segments[1]}
+            {'point': self.point, 'line0': self.line_keys[0], 'line1': self.line_keys[1]}
         )
 
 class FootOfPerpendicularProperty(Property):

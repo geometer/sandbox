@@ -651,38 +651,38 @@ class LineSet:
 
         return next((pt for pt in line0.points_on if pt in line1.points_on), None)
 
-    def intersection_property(self, crossing, segment0, segment1):
-        key = (frozenset((segment0, segment1)), crossing)
+    def intersection_property(self, crossing, line_key0, line_key1):
+        key = (frozenset((line_key0, line_key1)), crossing)
         if key in self.__lines_intersection:
             return self.__lines_intersection.get(key)
 
-        if crossing in segment0.points and crossing in segment1.points:
+        if isinstance(line_key0, Scene.Segment) and isinstance(line_key1, Scene.Segment) and crossing in line_key0.points and crossing in line_key1.points:
             comment = Comment(
                 '$%{point:common}$ is common point of different lines $%{line:line0}$ and $%{line:line1}$',
-                {'common': crossing, 'line0': segment0, 'line1': segment1}
+                {'common': crossing, 'line0': line_key0, 'line1': line_key1}
             )
-            prop = IntersectionOfLinesProperty(crossing, segment0, segment1)
-            colli = self.collinearity_property(*set(segment0.points + segment1.points))
+            prop = IntersectionOfLinesProperty(crossing, line_key0, line_key1)
+            colli = self.collinearity_property(*set(line_key0.points + line_key1.points))
             if colli is None:
                 return None
             if colli.collinear:
                 self.__lines_intersection[key] = None
                 return None
             _synthetic_property(prop, comment, [colli])
-            ncl = self.lines_coincidence_property(segment0, segment1)
+            ncl = self.lines_coincidence_property(line_key0, line_key1)
             _synthetic_property(prop, comment, [ncl])
         else:
             premises = []
-            for seg in segment0, segment1:
-                if crossing not in seg.points:
-                    colli = self.collinearity_property(crossing, *seg.points)
-                    if colli is None:
+            for line_key in line_key0, line_key1:
+                if not isinstance(line_key, Scene.Segment) or crossing not in line_key.points:
+                    on_line = self.point_on_line_property(crossing, line_key)
+                    if on_line is None:
                         return None
-                    if not colli.collinear:
+                    if not on_line.on_line:
                         self.__lines_intersection[key] = None
                         return None
-                    premises.append(colli)
-            coincidence = self.lines_coincidence_property(segment0, segment1)
+                    premises.append(on_line)
+            coincidence = self.lines_coincidence_property(line_key0, line_key1)
             if coincidence is None:
                 return None
             if coincidence.coincident:
@@ -691,10 +691,10 @@ class LineSet:
             premises.append(coincidence)
 
             prop = _synthetic_property(
-                IntersectionOfLinesProperty(crossing, segment0, segment1),
+                IntersectionOfLinesProperty(crossing, line_key0, line_key1),
                 Comment(
                     '$%{point:pt}$ belongs to both $%{line:line0}$ and $%{line:line1}$',
-                    {'pt': crossing, 'line0': segment0, 'line1': segment1}
+                    {'pt': crossing, 'line0': line_key0, 'line1': line_key1}
                 ),
                 premises
             )
@@ -1834,7 +1834,7 @@ class PropertySet(LineSet):
             elif isinstance(prop, AnglesInequalityProperty):
                 existing = self.angles_inequality_property(*prop.angles)
             elif isinstance(prop, IntersectionOfLinesProperty):
-                existing = self.intersection_property(prop.point, *prop.segments)
+                existing = self.intersection_property(prop.point, *prop.line_keys)
             elif isinstance(prop, FootOfPerpendicularProperty):
                 existing = self.foot_of_perpendicular_property(prop.foot, prop.point, prop.segment)
             #TODO: LengthRatioProperty
