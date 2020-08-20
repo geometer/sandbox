@@ -42,8 +42,11 @@ class LineSet:
             return [node for node in self.premises_graph.nodes if isinstance(node, Scene.Segment)]
 
         def add(self, prop):
-            self.premises_graph.add_edge(*prop.segments, prop=prop)
-            for pt in (*prop.segments[0].points, *prop.segments[1].points):
+            self.premises_graph.add_edge(*prop.line_keys, prop=prop)
+            for key in prop.line_keys:
+                if not isinstance(key, Scene.Segment):
+                    continue
+            for pt in key.points:
                 if pt not in self.points_on:
                     self.points_on[pt] = set()
 
@@ -223,8 +226,8 @@ class LineSet:
         self.__lines_intersection = {} # ({segment, segment}, crossing_point) => prop
 
     def __add_same_line_property(self, prop):
-        line0 = self.__key_to_line.get(prop.segments[0])
-        line1 = self.__key_to_line.get(prop.segments[1])
+        line0 = self.__key_to_line.get(prop.line_keys[0])
+        line1 = self.__key_to_line.get(prop.line_keys[1])
         if line0 and line1:
             if line0 != line1:
                 for key in line1.keys:
@@ -251,15 +254,15 @@ class LineSet:
             line0.add(prop)
         elif line0:
             line0.add(prop)
-            self.__key_to_line[prop.segments[1]] = line0
+            self.__key_to_line[prop.line_keys[1]] = line0
         elif line1:
             line1.add(prop)
-            self.__key_to_line[prop.segments[0]] = line1
+            self.__key_to_line[prop.line_keys[0]] = line1
         else:
             line = LineSet.Line()
             line.add(prop)
-            self.__key_to_line[prop.segments[0]] = line
-            self.__key_to_line[prop.segments[1]] = line
+            self.__key_to_line[prop.line_keys[0]] = line
+            self.__key_to_line[prop.line_keys[1]] = line
             self.__all_lines.append(line)
 
     def __add_same_circle_property(self, prop):
@@ -327,8 +330,8 @@ class LineSet:
         return circle
 
     def __add_different_lines_property(self, prop):
-        line0 = self.__line_by_key(prop.segments[0])
-        line1 = self.__line_by_key(prop.segments[1])
+        line0 = self.__line_by_key(prop.line_keys[0])
+        line1 = self.__line_by_key(prop.line_keys[1])
         key = frozenset((line0, line1))
         ar = self.__different_lines.get(key)
         if ar:
@@ -729,11 +732,11 @@ class LineSet:
         line = self.__key_to_line.get(segment)
         return list(line.points_not_on.keys()) if line else []
 
-    def lines_coincidence(self, segment0, segment1):
-        line0 = self.__key_to_line.get(segment0)
+    def lines_coincidence(self, key0, key1):
+        line0 = self.__key_to_line.get(key0)
         if line0 is None:
             return None
-        line1 = self.__key_to_line.get(segment1)
+        line1 = self.__key_to_line.get(key1)
         if line1 is None:
             return None
 
@@ -743,55 +746,55 @@ class LineSet:
             return False
         return None
 
-    def lines_coincidence_property(self, segment0, segment1, use_cache=True):
+    def lines_coincidence_property(self, key0, key1, use_cache=True):
         if use_cache:
-            key = frozenset([segment0, segment1])
+            key = frozenset([key0, key1])
             cached = self.__lines_coincidence.get(key)
             if cached:
                 return cached
 
-        prop = self.__lines_coincidence_property(segment0, segment1)
+        prop = self.__lines_coincidence_property(key0, key1)
         if use_cache and prop:
             self.__lines_coincidence[key] = prop
         return prop
 
-    def __lines_coincidence_property(self, segment0, segment1):
-        line0 = self.__key_to_line.get(segment0)
+    def __lines_coincidence_property(self, key0, key1):
+        line0 = self.__key_to_line.get(key0)
         if line0 is None:
             return None
-        line1 = self.__key_to_line.get(segment1)
+        line1 = self.__key_to_line.get(key1)
         if line1 is None:
             return None
 
         if line0 == line1:
-            return line0.same_line_property(segment0, segment1)
+            return line0.same_line_property(key0, key1)
 
         known = self.__different_lines.get(frozenset([line0, line1]))
         if known is None:
             return None
 
         for prop in known:
-            if segment0 in prop.segments and segment1 in prop.segments:
+            if key0 in prop.line_keys and key1 in prop.line_keys:
                 return prop
 
         candidates = []
         for prop in known:
-            seg0, seg1 = prop.segments
-            if self.__key_to_line[seg0] == line1:
-                seg0, seg1 = seg1, seg0
+            k0, k1 = prop.line_keys
+            if self.__key_to_line[k0] == line1:
+                k0, k1 = k1, k0
             premises = [prop]
-            params = {'line0': seg0, 'line1': seg1, 'given0': segment0, 'given1': segment1}
-            if seg0 == segment0:
+            params = {'line0': k0, 'line1': k1, 'given0': key0, 'given1': key1}
+            if k0 == key0:
                 pattern = '$%{line:given0}$ and $%{line:line1}$ are different lines, $%{line:line1}$ is the same as $%{line:given1}$'
-                premises.append(line1.same_line_property(seg1, segment1))
-            elif seg1 == segment1:
+                premises.append(line1.same_line_property(k1, key1))
+            elif k1 == key1:
                 pattern = '$%{line:given1}$ and $%{line:line0}$ are different lines, $%{line:line0}$ is the same as $%{line:given0}$'
-                premises.append(line0.same_line_property(seg0, segment0))
+                premises.append(line0.same_line_property(k0, key0))
             else:
                 pattern = '$%{line:line0}$ and $%{line:line1}$ are different lines, $%{line:line0}$ is the same as $%{line:given0}$, and $%{line:line1}$ is the same as $%{line:given1}$'
-                premises.append(line0.same_line_property(seg0, segment0))
-                premises.append(line1.same_line_property(seg1, segment1))
-            prop = LinesCoincidenceProperty(segment0, segment1, False)
+                premises.append(line0.same_line_property(k0, key0))
+                premises.append(line1.same_line_property(k1, key1))
+            prop = LinesCoincidenceProperty(key0, key1, False)
             candidates.append(_synthetic_property(prop, Comment(pattern, params), premises))
 
         return LineSet.best_candidate(candidates)
@@ -1782,7 +1785,7 @@ class PropertySet(LineSet):
             elif isinstance(prop, PointOnLineProperty):
                 extra = self.point_on_line_property(prop.line_key, prop.point, use_cache=False)
             elif isinstance(prop, LinesCoincidenceProperty):
-                extra = self.lines_coincidence_property(*prop.segments, use_cache=False)
+                extra = self.lines_coincidence_property(*prop.line_keys, use_cache=False)
             elif isinstance(prop, EqualLengthRatiosProperty):
                 if update_length_ratios:
                     extra = self.equal_length_ratios_property(*prop.segments, use_cache=False)
@@ -1821,7 +1824,7 @@ class PropertySet(LineSet):
             elif isinstance(prop, PointOnLineProperty):
                 existing = self.point_on_line_property(prop.line_key, prop.point)
             elif isinstance(prop, LinesCoincidenceProperty):
-                existing = self.lines_coincidence_property(*prop.segments)
+                existing = self.lines_coincidence_property(*prop.line_keys)
             elif isinstance(prop, SumOfAnglesProperty):
                 existing = self.sum_of_angles_property(*prop.angles)
             elif isinstance(prop, ConcyclicPointsProperty):

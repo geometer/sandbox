@@ -258,9 +258,9 @@ class LinesCoincidenceProperty(Property):
     """
     Two lines (defined by keys) are [not] coincident
     """
-    def __init__(self, segment0, segment1, coincident):
-        self.segments = (segment0, segment1)
-        super().__init__(frozenset(self.segments), {*segment0.points, *segment1.points})
+    def __init__(self, line_key0, line_key1, coincident):
+        self.line_keys = (line_key0, line_key1)
+        super().__init__(frozenset(self.line_keys), {*_objects(line_key0), *_objects(line_key1)})
         self.coincident = coincident
 
     @property
@@ -273,7 +273,7 @@ class LinesCoincidenceProperty(Property):
             pattern = '$%{line:line0}$ is the same line as $%{line:line1}$'
         else:
             pattern = '$%{line:line0}$ and $%{line:line1}$ are different lines'
-        return Comment(pattern, {'line0': self.segments[0], 'line1': self.segments[1]})
+        return Comment(pattern, {'line0': self.line_keys[0], 'line1': self.line_keys[1]})
 
     def compare_values(self, other):
         return self.coincident == other.coincident
