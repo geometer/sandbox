@@ -3,6 +3,36 @@ from sandbox.property import *
 
 from .base import ExplainerTest
 
+class PointOnLine(ExplainerTest):
+    def createScene(self):
+        scene = Scene()
+
+        A = scene.free_point(label='A')
+        B = scene.free_point(label='B')
+        C = scene.free_point(label='C')
+        D = scene.free_point(label='D')
+        E = scene.free_point(label='E')
+        l = A.line_through(B, label='l')
+        scene.add_property(PointsCollinearityProperty(A, B, C, True), None)
+        scene.add_property(PointsCollinearityProperty(A, B, D, False), None)
+
+        return scene
+
+    def test(self):
+        A = self.scene.get('A')
+        B = self.scene.get('B')
+        C = self.scene.get('C')
+        D = self.scene.get('D')
+        E = self.scene.get('E')
+        l = self.scene.get('l')
+        self.assertIn(PointOnLineProperty(A, l, True), self.explainer.context)
+        self.assertIn(PointOnLineProperty(B, l, True), self.explainer.context)
+        self.assertIn(PointOnLineProperty(C, A.segment(B), True), self.explainer.context)
+        self.assertIn(PointOnLineProperty(C, l, True), self.explainer.context)
+        self.assertIn(PointOnLineProperty(D, A.segment(B), False), self.explainer.context)
+        self.assertIn(PointOnLineProperty(D, l, False), self.explainer.context)
+        self.assertNotIn(PointOnLineProperty(E, l, True), self.explainer.context)
+
 class SameSide(ExplainerTest):
     def createScene(self):
         scene = Scene()
