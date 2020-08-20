@@ -176,9 +176,9 @@ class MissingLineKeysRule(Rule):
             for seg in segments:
                 premises = []
                 if pt0 not in seg.points:
-                    premises.append(self.context.point_on_line_property(seg, pt0))
+                    premises.append(self.context.point_on_line_property(pt0, seg))
                 if pt1 not in seg.points:
-                    premises.append(self.context.point_on_line_property(seg, pt1))
+                    premises.append(self.context.point_on_line_property(pt1, seg))
                 yield (
                     LinesCoincidenceProperty(key, seg, True),
                     Comment(

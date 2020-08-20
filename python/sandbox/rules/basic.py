@@ -876,7 +876,7 @@ class Degree90ToPerpendicularSegmentsRule2(Rule):
                         '$%{segment:seg0} \\perp %{segment:seg1}$, $%{point:pt}$ lies on $%{line:seg0}$',
                         {'seg0': seg0, 'seg1': seg1, 'pt': pt}
                     ),
-                    [prop, self.context.point_on_line_property(seg0, pt)]
+                    [prop, self.context.point_on_line_property(pt, seg0)]
                 )
         for pt in self.context.collinear_points(seg1):
             key = (prop, 1, pt)
@@ -891,7 +891,7 @@ class Degree90ToPerpendicularSegmentsRule2(Rule):
                         '$%{segment:seg1} \\perp %{segment:seg0}$, $%{point:pt}$ lies on $%{line:seg1}$',
                         {'seg0': seg0, 'seg1': seg1, 'pt': pt}
                     ),
-                    [prop, self.context.point_on_line_property(seg1, pt)]
+                    [prop, self.context.point_on_line_property(pt, seg1)]
                 )
 
 @processed_cache(set())

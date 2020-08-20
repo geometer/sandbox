@@ -76,7 +76,7 @@ class LineSet:
                 LinesCoincidenceProperty(segment0, segment1, True), comment, premises
             )
 
-        def point_on_line_property(self, line_key, point):
+        def point_on_line_property(self, point, line_key):
             if point in self.points_on:
                 on = True
                 prop_set = self.points_on[point]
@@ -468,14 +468,14 @@ class LineSet:
 
         return None
 
-    def point_on_line_property(self, segment, point, use_cache=True):
+    def point_on_line_property(self, point, line_key, use_cache=True):
         if use_cache:
-            key = (point, segment)
+            key = (point, line_key)
             prop = self.__point_on_line.get(key)
             if prop:
                 return prop
-        line = self.__key_to_line.get(segment)
-        prop = line.point_on_line_property(segment, point) if line else None
+        line = self.__key_to_line.get(line_key)
+        prop = line.point_on_line_property(point, line_key) if line else None
         if use_cache and prop:
             self.__point_on_line[key] = prop
         return prop
@@ -535,7 +535,7 @@ class LineSet:
                         continue
                     pol = self.__point_on_line.get((pt, seg))
                     if pol is None:
-                        pol = line.point_on_line_property(seg, pt)
+                        pol = line.point_on_line_property(pt, seg)
                     premises.append(pol)
                 params = dict(common_params)
                 params['line'] = seg
@@ -564,7 +564,7 @@ class LineSet:
                 premises2 = []
                 for pt in [*side.points, vertex]:
                     if pt not in seg.points:
-                        premises.append(line.point_on_line_property(seg, pt))
+                        premises.append(line.point_on_line_property(pt, seg))
                         premises2.append(self.__collinearity.get(frozenset([*seg.points, pt])))
 
                 prop = PointsCollinearityProperty(*pts, False)
@@ -1783,7 +1783,7 @@ class PropertySet(LineSet):
             elif isinstance(prop, PointsCollinearityProperty):
                 extra = self.collinearity_property(*prop.points, use_cache=False)
             elif isinstance(prop, PointOnLineProperty):
-                extra = self.point_on_line_property(prop.line_key, prop.point, use_cache=False)
+                extra = self.point_on_line_property(prop.point, prop.line_key, use_cache=False)
             elif isinstance(prop, LinesCoincidenceProperty):
                 extra = self.lines_coincidence_property(*prop.line_keys, use_cache=False)
             elif isinstance(prop, EqualLengthRatiosProperty):
@@ -1822,7 +1822,7 @@ class PropertySet(LineSet):
             elif isinstance(prop, MultiPointsCollinearityProperty):
                 existing = self.collinearity_property(*prop.points)
             elif isinstance(prop, PointOnLineProperty):
-                existing = self.point_on_line_property(prop.line_key, prop.point)
+                existing = self.point_on_line_property(prop.point, prop.line_key)
             elif isinstance(prop, LinesCoincidenceProperty):
                 existing = self.lines_coincidence_property(*prop.line_keys)
             elif isinstance(prop, SumOfAnglesProperty):
