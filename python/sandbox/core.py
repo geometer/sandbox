@@ -312,24 +312,24 @@ class CoreScene:
                 A = self.scene.get(A)
             return self.segment(A).length_constraint(distance, **kwargs)
 
-        def opposite_side_constraint(self, point, segment, **kwargs):
+        def opposite_side_constraint(self, point, line_key, **kwargs):
             """
-            Self and point lie on the opposite sides of the line through the segment.
+            Self and point lie on the opposite sides of the line
             """
-            line = segment.line_through()
+            line = line_key.line_through() if isinstance(line_key, CoreScene.Segment) else line_key
             for cnstr in self.scene.constraints(Constraint.Kind.opposite_side):
                 if line == cnstr.params[2] and set(cnstr.params[0:2]) == {self, point}:
                     cnstr.update(kwargs)
                     return
             self.scene.constraint(Constraint.Kind.opposite_side, self, point, line, **kwargs)
-            from .property import SameOrOppositeSideProperty
-            self.scene.add_property(SameOrOppositeSideProperty(segment, self, point, False), None)
+            from .property import LineAndTwoPointsProperty
+            self.scene.add_property(LineAndTwoPointsProperty(line_key, self, point, False), None)
 
-        def same_side_constraint(self, point, segment, **kwargs):
+        def same_side_constraint(self, point, line_key, **kwargs):
             """
-            Self and point lie on the same side of the line through the segment.
+            Self and point lie on the same side of the line
             """
-            line = segment.line_through()
+            line = line_key.line_through() if isinstance(line_key, CoreScene.Segment) else line_key
             for cnstr in self.scene.constraints(Constraint.Kind.same_side):
                 if line == cnstr.params[2] and set(cnstr.params[0:2]) == {self, point}:
                     cnstr.update(kwargs)
@@ -337,8 +337,8 @@ class CoreScene:
             #self.not_collinear_constraint(line.point0, line.point1, **kwargs)
             #point.not_collinear_constraint(line.point0, line.point1, **kwargs)
             self.scene.constraint(Constraint.Kind.same_side, self, point, line, **kwargs)
-            from .property import SameOrOppositeSideProperty
-            self.scene.add_property(SameOrOppositeSideProperty(segment, self, point, True), None)
+            from .property import LineAndTwoPointsProperty
+            self.scene.add_property(LineAndTwoPointsProperty(line_key, self, point, True), None)
 
         def same_direction_constraint(self, A, B, **kwargs):
             """
@@ -380,9 +380,6 @@ class CoreScene:
                 self.scene.constraint(Constraint.Kind.inside_angle, self, angle, **kwargs)
             from .property import PointInsideTriangleProperty
             self.scene.add_property(PointInsideTriangleProperty(self, triangle), None)
-            from .property import SameOrOppositeSideProperty
-            for vertex, side in zip(triangle.points, triangle.sides):
-                self.scene.add_property(SameOrOppositeSideProperty(side, vertex, self, True), None)
 
     class Line(Object):
         prefix = 'Ln_'

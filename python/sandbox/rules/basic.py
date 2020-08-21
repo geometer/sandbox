@@ -323,7 +323,7 @@ class PointInsideAngleConfigurationRule(Rule):
             )
 
         yield (
-            SameOrOppositeSideProperty(prop.angle.vertex.segment(prop.point), *prop.angle.endpoints, False),
+            LineAndTwoPointsProperty(prop.angle.vertex.segment(prop.point), *prop.angle.endpoints, False),
             Comment(
                 'ray $%{ray:ray}$ inside $%{angle:angle}$ separates points $%{point:pt0}$ and $%{point:pt1}$',
                 {'ray': prop.angle.vertex.vector(prop.point), 'angle': prop.angle, 'pt0': prop.angle.endpoints[0], 'pt1': prop.angle.endpoints[1]}
@@ -332,7 +332,7 @@ class PointInsideAngleConfigurationRule(Rule):
         )
         pattern = '$%{ray:side}$ is a side of $%{angle:angle}$, $%{point:other}$ lies on the other side, and $%{point:inside}$ lies inside the angle'
         yield (
-            SameOrOppositeSideProperty(prop.angle.vectors[0].as_segment, prop.point, prop.angle.vectors[1].end, True),
+            LineAndTwoPointsProperty(prop.angle.vectors[0].as_segment, prop.point, prop.angle.vectors[1].end, True),
             Comment(
                 pattern,
                 {'side': prop.angle.vectors[0], 'angle': prop.angle, 'other': prop.angle.vectors[1].end, 'inside': prop.point}
@@ -340,7 +340,7 @@ class PointInsideAngleConfigurationRule(Rule):
             [prop]
         )
         yield (
-            SameOrOppositeSideProperty(prop.angle.vectors[1].as_segment, prop.point, prop.angle.vectors[0].end, True),
+            LineAndTwoPointsProperty(prop.angle.vectors[1].as_segment, prop.point, prop.angle.vectors[0].end, True),
             Comment(
                 pattern,
                 {'side': prop.angle.vectors[1], 'angle': prop.angle, 'other': prop.angle.vectors[0].end, 'inside': prop.point}
@@ -376,51 +376,60 @@ class SegmentWithEndpointsOnAngleSidesRule(Rule):
         yield (AngleValueProperty(C.angle(B, X), 0), comment, [X_prop, prop])
         yield (AngleValueProperty(X.angle(B, C), 180), comment, [X_prop, prop])
 
-@source_type(SameOrOppositeSideProperty)
+@source_type(LineAndTwoPointsProperty)
 @processed_cache(set())
 @accepts_auto
 class LineAndTwoPointsToNoncollinearityRule(Rule):
     def apply(self, prop):
         self.processed.add(prop)
+        if not isinstance(prop.line_key, Scene.Segment):
+            return
+
         for pt in prop.points:
             yield (
-                PointsCollinearityProperty(pt, *prop.segment.points, False),
+                PointsCollinearityProperty(pt, *prop.line_key.points, False),
                 Comment(
                     '$%{point:pt}$ does not lie on $%{line:line}$',
-                    {'pt': pt, 'line': prop.segment}
+                    {'pt': pt, 'line': prop.line_key}
                 ),
                 [prop]
             )
 
-@source_type(SameOrOppositeSideProperty)
+@source_type(LineAndTwoPointsProperty)
 @processed_cache(set())
 class KnownSumOfAnglesWithCommonSideRule(Rule):
     def accepts(self, prop):
-        return not prop.same
+        return not prop.same_side
 
     def apply(self, prop):
-        for pt0, pt1 in (prop.segment.points, reversed(prop.segment.points)):
-            key = (prop, pt0)
-            if key in self.processed:
-                continue
-            summand0 = pt0.angle(prop.points[0], pt1)
-            summand1 = pt0.angle(pt1, prop.points[1])
-            sum_prop = self.context.sum_of_angles_property(summand0, summand1)
-            if sum_prop is None:
-                continue
-            big_angle = pt0.angle(*prop.points)
-            self.processed.add(key)
-            if sum_prop.degree <= 180:
-                degree = sum_prop.degree
-                pattern = '$%{angle:big}$ consists of $%{angle:summand0}$ and $%{angle:summand1}$'
-            else:
-                degree = 360 - sum_prop.degree
-                pattern = 'complement of $%{angle:big}$ consists of $%{angle:summand0}$ and $%{angle:summand1}$'
-            yield (
-                AngleValueProperty(big_angle, degree),
-                Comment(pattern, {'big': big_angle, 'summand0': summand0, 'summand1': summand1}),
-                [sum_prop, prop]
-            )
+        pt_set = frozenset(prop.points)
+        for segment in self.context.line_for_key(prop.line_key).segments:
+            ltp_prop = prop if segment == prop.line_key else None
+            for pt0, pt1 in (segment.points, reversed(segment.points)):
+                key = (pt_set, pt0, pt1)
+                if key in self.processed:
+                    continue
+                summand0 = pt0.angle(prop.points[0], pt1)
+                summand1 = pt0.angle(pt1, prop.points[1])
+                sum_prop = self.context.sum_of_angles_property(summand0, summand1)
+                if sum_prop is None:
+                    continue
+                self.processed.add(key)
+
+                if ltp_prop is None:
+                    ltp_prop = self.context.line_and_two_points_property(segment, *prop.points)
+                big_angle = pt0.angle(*prop.points)
+                if sum_prop.degree <= 180:
+                    degree = sum_prop.degree
+                    pattern = '$%{angle:big}$ consists of $%{angle:summand0}$ and $%{angle:summand1}$'
+                else:
+                    degree = 360 - sum_prop.degree
+                    pattern = 'complement of $%{angle:big}$ consists of $%{angle:summand0}$ and $%{angle:summand1}$'
+                yield (
+                    AngleValueProperty(big_angle, degree),
+                    Comment(pattern, {'big': big_angle, 'summand0': summand0, 'summand1': summand1}),
+                    [sum_prop, ltp_prop]
+                )
 
 @source_type(ProportionalLengthsProperty)
 @processed_cache({})
@@ -1094,7 +1103,7 @@ class EquidistantToPerpendicularRule(Rule):
             if ne1.coincident:
                 return
             yield (
-                SameOrOppositeSideProperty(segment0, *pts0, False),
+                LineAndTwoPointsProperty(segment0, *pts0, False),
                 Comment(
                     'perpendicular bisector $%{line:bisector}$ separates endpoints of $%{segment:segment}$',
                     {'bisector': segment0, 'segment': segment1}
@@ -1105,66 +1114,65 @@ class EquidistantToPerpendicularRule(Rule):
             if mask != original:
                 self.processed[key] = mask
 
-@source_type(SameOrOppositeSideProperty)
-@processed_cache({})
+@source_type(LineAndTwoPointsProperty)
+@processed_cache(set())
 class EqualAnglesToCollinearityRule(Rule):
     def accepts(self, prop):
-        return prop.same
+        return prop.same_side
 
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
-        if mask == 0x3:
-            return
+        for segment in self.context.line_for_key(prop.line_key).segments:
+            ltp_prop = prop if segment == prop.line_key else None
+            pt_set = frozenset(prop.points)
+            for p0, p1 in (segment.points, reversed(segment.points)):
+                key = (pt_set, p0, p1)
+                if key in self.processed:
+                    continue
+                angles = [p0.angle(p1, pt) for pt in prop.points]
+                ratio = self.context.angle_ratio(*angles)
+                if ratio is None:
+                    continue
+                self.processed.add(key)
+                if ratio != 1:
+                    continue
 
-        original = mask
-        for (p0, p1), bit in ((prop.segment.points, 1), (reversed(prop.segment.points), 2)):
-            if mask & bit:
-                continue
-            angles = [p0.angle(p1, pt) for pt in prop.points]
-            ratio = self.context.angle_ratio(*angles)
-            if ratio is None:
-                continue
-            mask |= bit
-            if ratio != 1:
-                continue
-            ca = self.context.angle_ratio_property(*angles)
-            comment = Comment(
-                '$%{anglemeasure:angle0} = %{anglemeasure:angle1}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$',
-                {'angle0': angles[0], 'angle1': angles[1], 'pt0': prop.points[0], 'pt1': prop.points[1], 'line': prop.segment}
-            )
-            yield (
-                AngleValueProperty(p0.angle(*prop.points), 0),
-                comment,
-                [ca, prop]
-            )
-            yield (
-                PointsCollinearityProperty(p0, *prop.points, True),
-                comment,
-                [ca, prop]
-            )
+                if ltp_prop is None:
+                    ltp_prop = self.context.line_and_two_points_property(segment, *prop.points)
+                ca = self.context.angle_ratio_property(*angles)
+                comment = Comment(
+                    '$%{anglemeasure:angle0} = %{anglemeasure:angle1}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$',
+                    {'angle0': angles[0], 'angle1': angles[1], 'pt0': prop.points[0], 'pt1': prop.points[1], 'line': segment}
+                )
+                yield (
+                    AngleValueProperty(p0.angle(*prop.points), 0),
+                    comment,
+                    [ca, ltp_prop]
+                )
+                yield (
+                    PointsCollinearityProperty(p0, *prop.points, True),
+                    comment,
+                    [ca, ltp_prop]
+                )
 
-        if mask != original:
-            self.processed[prop] = mask
-
-@source_type(SameOrOppositeSideProperty)
+@source_type(LineAndTwoPointsProperty)
 @processed_cache(set())
 class PointsSeparatedByLineAreNotCoincidentRule(Rule):
     """
     If two points are separated by a line, the points are not coincident
     """
     def accepts(self, prop):
-        return not prop.same and prop not in self.processed
+        return not prop.same_side and prop not in self.processed
 
     def apply(self, prop):
         self.processed.add(prop)
 
         yield (
             PointsCoincidenceProperty(prop.points[0], prop.points[1], False),
-            Comment('the points are separated by $%{line:line}$', {'line': prop.segment}),
+            Comment('the points are separated by $%{line:line}$', {'line': prop.line_key}),
             [prop]
         )
 
-@source_type(SameOrOppositeSideProperty)
+@source_type(LineAndTwoPointsProperty)
 @processed_cache(set())
 class SameSidePointInsideSegmentRule(Rule):
     """
@@ -1172,7 +1180,7 @@ class SameSidePointInsideSegmentRule(Rule):
     then any point inside the segment in on the same side too
     """
     def accepts(self, prop):
-        return prop.same
+        return prop.same_side
 
     def apply(self, prop):
         segment = prop.points[0].segment(prop.points[1])
@@ -1183,48 +1191,59 @@ class SameSidePointInsideSegmentRule(Rule):
             self.processed.add(key)
             comment = Comment(
                 'segment $%{segment:segment}$ contains $%{point:inside}$ and does not cross line $%{line:line}$',
-                {'segment': segment, 'line': prop.segment, 'inside': inside}
+                {'segment': segment, 'line': prop.line_key, 'inside': inside}
             )
             inside_prop = self.context.angle_value_property(inside.angle(*prop.points))
-            for new_prop in (
-                SameOrOppositeSideProperty(prop.segment, prop.points[0], inside, True),
-                SameOrOppositeSideProperty(prop.segment, prop.points[1], inside, True),
-                PointsCollinearityProperty(inside, *prop.segment.points, False),
-            ):
-                yield (new_prop, comment, [prop, inside_prop])
+            new_props = [
+                LineAndTwoPointsProperty(prop.line_key, prop.points[0], inside, True),
+                LineAndTwoPointsProperty(prop.line_key, prop.points[1], inside, True),
+                PointOnLineProperty(inside, prop.line_key, False)
+            ]
+            if isinstance(prop.line_key, Scene.Segment):
+                new_props.append(PointsCollinearityProperty(inside, *prop.line_key.points, False))
+            for p in new_props:
+                yield (p, comment, [prop, inside_prop])
 
-@source_type(SameOrOppositeSideProperty)
+@source_type(LineAndTwoPointsProperty)
 @processed_cache(set())
 class PointInsideSegmentRelativeToLineRule(Rule):
     def apply(self, prop):
-        for index, (pt_on, pt_not_on) in enumerate(itertools.product(prop.segment.points, prop.points)):
-            segment = pt_on.segment(pt_not_on)
-            for inside in self.context.points_inside_segment(segment):
-                if inside in prop.points:
-                    continue
-                key = (prop, index, inside)
-                if key in self.processed:
-                    continue
-                self.processed.add(key)
-                pt2 = prop.points[1] if pt_not_on == prop.points[0] else prop.points[0]
-                if prop.same:
-                    pattern = '$%{point:pt_not_on}$ and $%{point:pt2}$ are on the same side of $%{line:line}$ and $%{point:inside}$ lies inside $%{segment:segment}$'
-                else:
-                    pattern = '$%{point:pt_not_on}$ and $%{point:pt2}$ are on opposite sides of $%{line:line}$ and $%{point:inside}$ lies inside $%{segment:segment}$'
-                inside_prop = self.context.angle_value_property(inside.angle(*segment.points))
-                yield (
-                    SameOrOppositeSideProperty(prop.segment, inside, pt2, prop.same),
-                    Comment(pattern, {
-                        'pt_not_on': pt_not_on,
-                        'pt2': pt2,
-                        'line': prop.segment,
-                        'inside': inside,
-                        'segment': segment
-                    }),
-                    [prop, inside_prop]
-                )
+        for pt_on in self.context.line_for_key(prop.line_key).points_on:
+            on_prop = None
+            needs_on_prop = not isinstance(prop.line_key, Scene.Segment) or pt_on not in prop.line_key.points
+            for pt_not_on in prop.points:
+                segment = pt_on.segment(pt_not_on)
+                for inside in self.context.points_inside_segment(segment):
+                    if inside in prop.points:
+                        continue
+                    key = (prop, pt_on, pt_not_on, inside)
+                    if key in self.processed:
+                        continue
+                    self.processed.add(key)
+                    pt2 = prop.points[1] if pt_not_on == prop.points[0] else prop.points[0]
+                    if prop.same_side:
+                        pattern = '$%{point:pt_not_on}$ and $%{point:pt2}$ are on the same side of $%{line:line}$ and $%{point:inside}$ lies inside $%{segment:segment}$'
+                    else:
+                        pattern = '$%{point:pt_not_on}$ and $%{point:pt2}$ are on opposite sides of $%{line:line}$ and $%{point:inside}$ lies inside $%{segment:segment}$'
+                    premises = [prop]
+                    if needs_on_prop:
+                        if on_prop is None:
+                            on_prop = self.context.point_on_line_property(pt_on, prop.line_key)
+                        premises.append(on_prop)
+                    premises.append(self.context.angle_value_property(inside.angle(*segment.points)))
+                    yield (
+                        LineAndTwoPointsProperty(prop.line_key, inside, pt2, prop.same_side),
+                        Comment(pattern, {
+                            'pt_not_on': pt_not_on,
+                            'pt2': pt2,
+                            'line': prop.line_key,
+                            'inside': inside,
+                            'segment': segment
+                        }),
+                        premises
+                    )
 
-@source_type(SameOrOppositeSideProperty)
+@source_type(LineAndTwoPointsProperty)
 @processed_cache(set())
 @accepts_auto
 class TwoPerpendicularsRule(Rule):
@@ -1232,23 +1251,23 @@ class TwoPerpendicularsRule(Rule):
     Two perpendiculars to the same line are parallel
     """
     def apply(self, prop):
-        foot0 = self.context.foot_of_perpendicular(prop.points[0], prop.segment)
+        foot0 = self.context.foot_of_perpendicular(prop.points[0], prop.line_key)
         if foot0 is None:
             return
-        foot1 = self.context.foot_of_perpendicular(prop.points[1], prop.segment)
+        foot1 = self.context.foot_of_perpendicular(prop.points[1], prop.line_key)
         if foot1 is None:
             return
         self.processed.add(prop)
         premises = [
             prop,
-            self.context.foot_of_perpendicular_property(foot0, prop.points[0], prop.segment),
-            self.context.foot_of_perpendicular_property(foot1, prop.points[1], prop.segment)
+            self.context.foot_of_perpendicular_property(foot0, prop.points[0], prop.line_key),
+            self.context.foot_of_perpendicular_property(foot1, prop.points[1], prop.line_key)
         ]
         vec0 = foot0.vector(prop.points[0])
-        vec1 = foot1.vector(prop.points[1]) if prop.same else prop.points[1].vector(foot1)
+        vec1 = foot1.vector(prop.points[1]) if prop.same_side else prop.points[1].vector(foot1)
         yield (
             ParallelVectorsProperty(vec0, vec1),
-            Comment('two perpendiculars to $%{line:line}$', {'line': prop.segment}),
+            Comment('two perpendiculars to $%{line:line}$', {'line': prop.line_key}),
             premises
         )
 
@@ -1318,21 +1337,21 @@ class ZeroAngleVectorsToPointAndLineConfigurationRule(Rule):
             )
             premises = [prop, ncl]
             for new_prop in (
-                SameOrOppositeSideProperty(ang.vectors[0].as_segment, *ang.vectors[1].points, True),
-                SameOrOppositeSideProperty(ang.vectors[1].as_segment, *ang.vectors[0].points, True),
-                SameOrOppositeSideProperty(
+                LineAndTwoPointsProperty(ang.vectors[0].as_segment, *ang.vectors[1].points, True),
+                LineAndTwoPointsProperty(ang.vectors[1].as_segment, *ang.vectors[0].points, True),
+                LineAndTwoPointsProperty(
                     ang.vectors[0].start.segment(ang.vectors[1].start),
                     ang.vectors[0].end, ang.vectors[1].end, True
                 ),
-                SameOrOppositeSideProperty(
+                LineAndTwoPointsProperty(
                     ang.vectors[0].end.segment(ang.vectors[1].end),
                     ang.vectors[0].start, ang.vectors[1].start, True
                 ),
-                SameOrOppositeSideProperty(
+                LineAndTwoPointsProperty(
                     ang.vectors[0].start.segment(ang.vectors[1].end),
                     ang.vectors[0].end, ang.vectors[1].start, False
                 ),
-                SameOrOppositeSideProperty(
+                LineAndTwoPointsProperty(
                     ang.vectors[1].start.segment(ang.vectors[0].end),
                     ang.vectors[1].end, ang.vectors[0].start, False
                 ),
@@ -1373,7 +1392,7 @@ class ParallelSameSideRule(Rule):
                     mask = 0xF
                     break
                 yield (
-                    SameOrOppositeSideProperty(seg0, *seg1.points, True),
+                    LineAndTwoPointsProperty(seg0, *seg1.points, True),
                     comment, [prop, ncl]
                 )
 
@@ -1385,26 +1404,29 @@ class RotatedAngleSimplifiedRule(Rule):
     def sources(self):
         for prop in self.context.angle_value_properties_for_degree(180, lambda a: a.vertex):
             segment = prop.angle.endpoints[0].segment(prop.angle.endpoints[1])
-            for oppo in self.context.list(SameOrOppositeSideProperty, [segment]):
-                if oppo.same:
-                    yield (prop, oppo)
+            line = self.context.line_for_key(segment)
+            if line:
+                for pt0, pt1, same in line.line_and_two_points:
+                    if same:
+                        yield (prop, segment, pt0, pt1)
 
     def apply(self, src):
         mask = self.processed.get(src, 0)
         if mask == 0x3:
             return
-        prop, oppo = src
+        prop, segment, pt0, pt1 = src
         ang = prop.angle
         angles0 = (
-            ang.vertex.angle(ang.endpoints[0], oppo.points[0]),
-            ang.vertex.angle(ang.endpoints[1], oppo.points[1])
+            ang.vertex.angle(ang.endpoints[0], pt0),
+            ang.vertex.angle(ang.endpoints[1], pt1)
         )
         angles1 = (
-            ang.vertex.angle(ang.endpoints[0], oppo.points[1]),
-            ang.vertex.angle(ang.endpoints[1], oppo.points[0])
+            ang.vertex.angle(ang.endpoints[0], pt1),
+            ang.vertex.angle(ang.endpoints[1], pt0)
         )
 
         original = mask
+        oppo = None
         for angs0, angs1, bit in [(angles0, angles1, 1), (angles1, angles0, 2)]:
             if mask & bit:
                 continue
@@ -1415,6 +1437,8 @@ class RotatedAngleSimplifiedRule(Rule):
                 mask = 0x3
                 break
             mask |= bit
+            if oppo is None:
+                oppo = self.context.line_and_two_points_property(segment, pt0, pt1)
             yield (
                 AngleRatioProperty(*angs1, 1),
                 LazyComment('TODO: write comment'),
@@ -1424,55 +1448,53 @@ class RotatedAngleSimplifiedRule(Rule):
         if mask != original:
             self.processed[src] = mask
 
-@source_type(SameOrOppositeSideProperty)
-@processed_cache({})
+@source_type(LineAndTwoPointsProperty)
+@processed_cache(set())
 class TwoAcuteOrRightAnglesWithCommonSideRule(Rule):
     def accepts(self, prop):
-        return not prop.same
+        return not prop.same_side
 
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
-        if mask == 0x3:
-            return
-        original = mask
+        for segment in self.context.line_for_key(prop.line_key).segments:
+            ltp_prop = prop if segment == prop.line_key else None
+            pt_set = frozenset(prop.points)
+            for v0, v1 in (segment.points, reversed(segment.points)):
+                key = (pt_set, v0, v1)
+                if key in self.processed:
+                    continue
 
-        for v0, v1, bit in [(*prop.segment.points, 0x1), (*reversed(prop.segment.points), 0x2)]:
-            if mask & bit:
-                continue
+                kind0 = self.context.angle_kind_property(v0.angle(prop.points[0], v1))
+                if kind0 is None:
+                    continue
+                if kind0.kind == AngleKindProperty.Kind.obtuse:
+                    self.processed.add(key)
+                    continue
+                kind1 = self.context.angle_kind_property(v0.angle(prop.points[1], v1))
+                if kind1 is None:
+                    continue
+                self.processed.add(key)
+                if kind1.kind == AngleKindProperty.Kind.obtuse:
+                    continue
+                if kind1.kind == AngleKindProperty.Kind.right and kind0.kind == kind1.kind:
+                    continue
 
-            kind0 = self.context.angle_kind_property(v0.angle(prop.points[0], v1))
-            if kind0 is None:
-                continue
-            if kind0.kind == AngleKindProperty.Kind.obtuse:
-                mask |= bit
-                continue
-            kind1 = self.context.angle_kind_property(v0.angle(prop.points[1], v1))
-            if kind1 is None:
-                continue
-            mask |= bit
-            if kind1.kind == AngleKindProperty.Kind.obtuse:
-                continue
-            if kind1.kind == AngleKindProperty.Kind.right and kind0.kind == kind1.kind:
-                continue
-
-            if kind0.kind == AngleKindProperty.Kind.acute:
-                if kind1.kind == AngleKindProperty.Kind.acute:
-                    pattern = 'acute angles $%{angle:angle0}$ and $%{angle:angle1}$ with common side $%{ray:side}$'
+                if kind0.kind == AngleKindProperty.Kind.acute:
+                    if kind1.kind == AngleKindProperty.Kind.acute:
+                        pattern = 'acute angles $%{angle:angle0}$ and $%{angle:angle1}$ with common side $%{ray:side}$'
+                    else:
+                        pattern = 'acute $%{angle:angle0}$ and right $%{angle:angle1}$ with common side $%{ray:side}$'
                 else:
-                    pattern = 'acute $%{angle:angle0}$ and right $%{angle:angle1}$ with common side $%{ray:side}$'
-            else:
-                pattern = 'acute $%{angle:angle1}$ and right $%{angle:angle0}$ with common side $%{ray:side}$'
-            yield (
-                PointInsideAngleProperty(v1, v0.angle(*prop.points)),
-                Comment(
-                    pattern,
-                    {'angle0': kind0.angle, 'angle1': kind1.angle, 'side': v0.vector(v1)}
-                ),
-                [kind0, kind1, prop]
-            )
-
-        if mask != original:
-            self.processed[prop] = mask
+                    pattern = 'acute $%{angle:angle1}$ and right $%{angle:angle0}$ with common side $%{ray:side}$'
+                if ltp_prop is None:
+                    ltp_prop = self.context.line_and_two_points_property(segment, *prop.points)
+                yield (
+                    PointInsideAngleProperty(v1, v0.angle(*prop.points)),
+                    Comment(
+                        pattern,
+                        {'angle0': kind0.angle, 'angle1': kind1.angle, 'side': v0.vector(v1)}
+                    ),
+                    [kind0, kind1, ltp_prop]
+                )
 
 @processed_cache({})
 class CongruentAnglesWithCommonPartRule(Rule):
@@ -1711,33 +1733,36 @@ class VerticalAnglesRule(Rule):
             [av0, av1]
         )
 
-@processed_cache({})
+@processed_cache(set())
 class ReversedVerticalAnglesRule(Rule):
     def sources(self):
         return self.context.angle_value_properties_for_degree(180, lambda a: a.vertex)
 
     def apply(self, prop):
         angle = prop.angle
-        line = angle.vectors[0].end.segment(angle.vectors[1].end)
-        for oppo in self.context.list(SameOrOppositeSideProperty, [line]):
-            if oppo.same:
+        segment = angle.vectors[0].end.segment(angle.vectors[1].end)
+        line = self.context.line_for_key(segment)
+        if line is None:
+            return
+
+        for ptA, ptB, same in line.line_and_two_points:
+            if same:
                 continue
-            key = (prop, oppo)
-            mask = self.processed.get(key, 0)
-            if mask == 0x3:
-                continue
-            original = mask
-            for pt0, pt1, bit in ((*oppo.points, 0x1), (*reversed(oppo.points), 0x2)):
-                if mask & bit:
+            oppo = None
+            for pt0, pt1 in ((ptA, ptB), (ptB, ptA)):
+                key = (angle, pt0, pt1)
+                if key in self.processed:
                     continue
                 ang0 = angle.vertex.angle(angle.vectors[0].end, pt0)
                 ang1 = angle.vertex.angle(angle.vectors[1].end, pt1)
                 ar = self.context.angle_ratio_property(ang0, ang1)
                 if ar is None:
                     continue
-                mask |= bit
+                self.processed.add(key)
                 if ar.value != 1:
                     continue
+                if oppo is None:
+                    oppo = self.context.line_and_two_points_property(segment, pt0, pt1)
                 yield (
                     AngleValueProperty(angle.vertex.angle(pt0, pt1), 180),
                     Comment(
@@ -1746,61 +1771,58 @@ class ReversedVerticalAnglesRule(Rule):
                     ),
                     [ar, prop, oppo]
                 )
-            if mask != original:
-                self.processed[key] = mask
 
-@source_type(SameOrOppositeSideProperty)
-@processed_cache({})
+@source_type(LineAndTwoPointsProperty)
+@processed_cache(set())
 class CorrespondingAndAlternateAnglesRule(Rule):
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
-        if mask == 0x3:
-            return
-        original = mask
-
-        lp0 = prop.segment.points[0]
-        lp1 = prop.segment.points[1]
-        for pt0, pt1, bit in [(*prop.points, 1), (*reversed(prop.points), 2)]:
-            if mask & bit:
-                continue
-            angle0 = lp0.angle(pt0, lp1)
-            angle1 = lp1.angle(pt1, lp0)
-            if prop.same:
-                sum_degree = self.context.sum_of_angles(angle0, angle1)
-                if sum_degree is None:
+        for segment in self.context.line_for_key(prop.line_key).segments:
+            ltp_prop = prop if segment == prop.line_key else None
+            lp0 = segment.points[0]
+            lp1 = segment.points[1]
+            for pt0, pt1, bit in [(*prop.points, 1), (*reversed(prop.points), 2)]:
+                key = (segment, pt0, pt1)
+                if key in self.processed:
                     continue
-                mask |= bit
-                if sum_degree != 180:
-                    continue
-                sum_reason = self.context.sum_of_angles_property(angle0, angle1)
-                for p in AngleValueProperty.generate(lp0.vector(pt0), lp1.vector(pt1), 0):
-                    yield (
-                        p,
-                        Comment(
-                            'sum of consecutive angles: $%{anglemeasure:angle0} + %{anglemeasure:angle1} = %{degree:180}$',
-                            {'angle0': angle0, 'angle1': angle1, '180': 180}
-                        ),
-                        [prop, sum_reason]
-                    )
-            else:
-                ratio_reason = self.context.angle_ratio_property(angle0, angle1)
-                if ratio_reason is None:
-                    continue
-                mask |= bit
-                if ratio_reason.value != 1:
-                    continue
-                for p in AngleValueProperty.generate(lp0.vector(pt0), pt1.vector(lp1), 0):
-                    yield (
-                        p,
-                        Comment(
-                            'alternate angles $%{angle:angle0}$ and $%{angle:angle1}$ are congruent',
-                            {'angle0': angle0, 'angle1': angle1}
-                        ),
-                        [prop, ratio_reason]
-                    )
-
-        if mask != original:
-            self.processed[prop] = mask
+                angle0 = lp0.angle(pt0, lp1)
+                angle1 = lp1.angle(pt1, lp0)
+                if prop.same_side:
+                    sum_degree = self.context.sum_of_angles(angle0, angle1)
+                    if sum_degree is None:
+                        continue
+                    self.processed.add(key)
+                    if sum_degree != 180:
+                        continue
+                    sum_reason = self.context.sum_of_angles_property(angle0, angle1)
+                    if ltp_prop is None:
+                        ltp_prop = self.context.line_and_two_points_property(segment, *prop.points)
+                    for p in AngleValueProperty.generate(lp0.vector(pt0), lp1.vector(pt1), 0):
+                        yield (
+                            p,
+                            Comment(
+                                'sum of consecutive angles: $%{anglemeasure:angle0} + %{anglemeasure:angle1} = %{degree:180}$',
+                                {'angle0': angle0, 'angle1': angle1, '180': 180}
+                            ),
+                            [ltp_prop, sum_reason]
+                        )
+                else:
+                    ratio_reason = self.context.angle_ratio_property(angle0, angle1)
+                    if ratio_reason is None:
+                        continue
+                    self.processed.add(key)
+                    if ratio_reason.value != 1:
+                        continue
+                    if ltp_prop is None:
+                        ltp_prop = self.context.line_and_two_points_property(segment, *prop.points)
+                    for p in AngleValueProperty.generate(lp0.vector(pt0), pt1.vector(lp1), 0):
+                        yield (
+                            p,
+                            Comment(
+                                'alternate angles $%{angle:angle0}$ and $%{angle:angle1}$ are congruent',
+                                {'angle0': angle0, 'angle1': angle1}
+                            ),
+                            [ltp_prop, ratio_reason]
+                        )
 
 @processed_cache(set())
 class SupplementaryAnglesRule(Rule):
@@ -2252,7 +2274,7 @@ class ZeroAngleToSameSideRule(Rule):
                 self.processed.add(key)
                 ncl = self.context.collinearity_property(*pair, pt)
                 yield (
-                    SameOrOppositeSideProperty(angle.vertex.segment(pt), *angle.endpoints, True),
+                    LineAndTwoPointsProperty(angle.vertex.segment(pt), *angle.endpoints, True),
                     LazyComment('%s, %s', prop, ncl), #TODO: better comment
                     [prop, ncl]
                 )
@@ -2273,22 +2295,22 @@ class Angle180ToSameOppositeSideRule(Rule):
                 self.processed.add(key)
                 ncl = self.context.collinearity_property(*pair, pt)
                 yield (
-                    SameOrOppositeSideProperty(angle.vertex.segment(pt), *angle.endpoints, False),
+                    LineAndTwoPointsProperty(angle.vertex.segment(pt), *angle.endpoints, False),
                     LazyComment('%s, %s', prop, ncl), #TODO: better comment
                     [prop, ncl]
                 )
                 yield (
-                    SameOrOppositeSideProperty(angle.endpoints[0].segment(pt), *angle.vectors[1].points, True),
+                    LineAndTwoPointsProperty(angle.endpoints[0].segment(pt), *angle.vectors[1].points, True),
                     LazyComment('%s, %s', prop, ncl), #TODO: better comment
                     [prop, ncl]
                 )
                 yield (
-                    SameOrOppositeSideProperty(angle.endpoints[1].segment(pt), *angle.vectors[0].points, True),
+                    LineAndTwoPointsProperty(angle.endpoints[1].segment(pt), *angle.vectors[0].points, True),
                     LazyComment('%s, %s', prop, ncl), #TODO: better comment
                     [prop, ncl]
                 )
 
-@source_type(SameOrOppositeSideProperty)
+@source_type(LineAndTwoPointsProperty)
 @processed_cache(set())
 @accepts_auto
 class PlanePositionsToLinePositionsRule(Rule):
@@ -2296,12 +2318,12 @@ class PlanePositionsToLinePositionsRule(Rule):
         pt0 = prop.points[0]
         pt1 = prop.points[1]
         segment = pt0.segment(pt1)
-        crossing = self.context.intersection(prop.segment, segment)
+        crossing = self.context.intersection(prop.line_key, segment)
         if not crossing:
             return
-        crossing_prop = self.context.intersection_property(crossing, prop.segment, segment)
+        crossing_prop = self.context.intersection_property(crossing, prop.line_key, segment)
         self.processed.add(prop)
-        if prop.same:
+        if prop.same_side:
             pattern = '$%{point:crossing}$ is the intersection of lines $%{line:line0}$ and $%{line:line1}$'
             new_prop = AngleValueProperty(crossing.angle(pt0, pt1), 0)
         else:
@@ -2309,7 +2331,7 @@ class PlanePositionsToLinePositionsRule(Rule):
             new_prop = AngleValueProperty(crossing.angle(pt0, pt1), 180)
         yield (
             new_prop,
-            Comment(pattern, {'crossing': crossing, 'line0': pt0.segment(pt1), 'line1': prop.segment}),
+            Comment(pattern, {'crossing': crossing, 'line0': pt0.segment(pt1), 'line1': prop.line_key}),
             [crossing_prop, prop]
         )
 
@@ -2385,175 +2407,169 @@ class TwoAnglesWithCommonSideDegreeRule(Rule):
         if mask != original:
             self.processed[prop] = mask
 
-@source_type(SameOrOppositeSideProperty)
-@processed_cache({})
+@source_type(LineAndTwoPointsProperty)
+@processed_cache(set())
 class KnownAnglesWithCommonSideRule(Rule):
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
-        if mask == 0x3:
-            return
-        original = mask
-
-        for (sp0, sp1), bit in ((prop.segment.points, 0x1), (reversed(prop.segment.points), 0x2)):
-            if mask & bit:
-                continue
-            pt0, pt1 = prop.points
-            av0 = self.context.angle_value_property(sp0.angle(sp1, pt0))
-            if av0 is None:
-                continue
-            av1 = self.context.angle_value_property(sp0.angle(sp1, pt1))
-            if av1 is None:
-                continue
-            mask |= bit
-
-            if av0.degree < av1.degree:
-                pt0, pt1 = pt1, pt0
-                av0, av1 = av1, av0
-            params = {
-                'angle0': av0.angle,
-                'angle1': av1.angle,
-                'degree0': av0.degree,
-                'degree1': av1.degree,
-                '180': 180,
-                'pt0': pt0,
-                'pt1': pt1,
-                'line': prop.segment
-            }
-            if prop.same:
-                if av0.degree == av1.degree:
-                    comment = Comment(
-                        '$%{anglemeasure:angle0} = %{degree:degree0} = %{anglemeasure:angle1}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$',
-                        params
-                    )
-                    yield (
-                        PointsCollinearityProperty(sp0, pt0, pt1, True),
-                        comment,
-                        [av0, av1, prop]
-                    )
-                    yield (
-                        AngleValueProperty(sp0.angle(pt0, pt1), 0),
-                        comment,
-                        [av0, av1, prop]
-                    )
+        pt_set = frozenset(prop.points)
+        for segment in self.context.line_for_key(prop.line_key).segments:
+            ltp_prop = prop if segment == prop.line_key else None
+            for sp0, sp1 in (segment.points, reversed(segment.points)):
+                key = (pt_set, sp0, sp1)
+                if key in self.processed:
                     continue
-                yield (
-                    PointInsideAngleProperty(pt1, av0.angle),
-                    Comment(
-                        '$%{anglemeasure:angle0} = %{degree:degree0} > %{degree:degree1} = %{anglemeasure:angle1}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$',
-                        params
-                    ),
-                    [av1, av0, prop]
-                )
-                yield (
-                    AngleValueProperty(sp0.angle(*prop.points), av0.degree - av1.degree),
-                    Comment(
-                        '$%{anglemeasure:angle0} = %{degree:degree0}$, $%{anglemeasure:angle1} = %{degree:degree1}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$',
-                        params
-                    ),
-                    [av0, av1, prop]
-                )
-            else:
-                if av0.degree + av1.degree == 180:
-                    comment = Comment(
-                        '$%{anglemeasure:angle0} + %{anglemeasure:angle1} = %{degree:180}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on opposite sides of $%{line:line}$',
-                        params
-                    )
-                    yield (
-                        PointsCollinearityProperty(sp0, *prop.points, True),
-                        comment,
-                        [av0, av1, prop]
-                    )
-                    yield (
-                        AngleValueProperty(sp0.angle(*prop.points), 180),
-                        comment,
-                        [av0, av1, prop]
-                    )
+                pt0, pt1 = prop.points
+                av0 = self.context.angle_value_property(sp0.angle(sp1, pt0))
+                if av0 is None:
                     continue
-                comment = Comment(
-                    '$%{anglemeasure:angle0} = %{degree:degree0}$, $%{anglemeasure:angle1} = %{degree:degree1}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on opposite sides of $%{line:line}$',
-                    params
-                )
-                degree_sum = av0.degree + av1.degree
-                if degree_sum < 180:
+                av1 = self.context.angle_value_property(sp0.angle(sp1, pt1))
+                if av1 is None:
+                    continue
+                self.processed.add(key)
+
+                if ltp_prop is None:
+                    ltp_prop = self.context.line_and_two_points_property(segment, *prop.points)
+                if av0.degree < av1.degree:
+                    pt0, pt1 = pt1, pt0
+                    av0, av1 = av1, av0
+                params = {
+                    'angle0': av0.angle,
+                    'angle1': av1.angle,
+                    'degree0': av0.degree,
+                    'degree1': av1.degree,
+                    '180': 180,
+                    'pt0': pt0,
+                    'pt1': pt1,
+                    'line': segment
+                }
+                if prop.same_side:
+                    if av0.degree == av1.degree:
+                        comment = Comment(
+                            '$%{anglemeasure:angle0} = %{degree:degree0} = %{anglemeasure:angle1}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$',
+                            params
+                        )
+                        yield (
+                            PointsCollinearityProperty(sp0, pt0, pt1, True),
+                            comment,
+                            [av0, av1, ltp_prop]
+                        )
+                        yield (
+                            AngleValueProperty(sp0.angle(pt0, pt1), 0),
+                            comment,
+                            [av0, av1, ltp_prop]
+                        )
+                        continue
                     yield (
-                        PointInsideAngleProperty(sp1, sp0.angle(pt0, pt1)),
+                        PointInsideAngleProperty(pt1, av0.angle),
                         Comment(
-                            '$%{anglemeasure:angle0} + %{anglemeasure:angle1} = %{degree:degree0} + %{degree:degree1} < %{degree:180}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$',
+                            '$%{anglemeasure:angle0} = %{degree:degree0} > %{degree:degree1} = %{anglemeasure:angle1}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$',
                             params
                         ),
-                        [av1, av0, prop]
+                        [av1, av0, ltp_prop]
                     )
-                if degree_sum > 180:
-                    degree_sum = 360 - degree_sum
-                yield (
-                    AngleValueProperty(sp0.angle(*prop.points), degree_sum),
-                    comment,
-                    [av0, av1, prop]
-                )
+                    yield (
+                        AngleValueProperty(sp0.angle(*prop.points), av0.degree - av1.degree),
+                        Comment(
+                            '$%{anglemeasure:angle0} = %{degree:degree0}$, $%{anglemeasure:angle1} = %{degree:degree1}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$',
+                            params
+                        ),
+                        [av0, av1, ltp_prop]
+                    )
+                else:
+                    if av0.degree + av1.degree == 180:
+                        comment = Comment(
+                            '$%{anglemeasure:angle0} + %{anglemeasure:angle1} = %{degree:180}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on opposite sides of $%{line:line}$',
+                            params
+                        )
+                        yield (
+                            PointsCollinearityProperty(sp0, *prop.points, True),
+                            comment,
+                            [av0, av1, ltp_prop]
+                        )
+                        yield (
+                            AngleValueProperty(sp0.angle(*prop.points), 180),
+                            comment,
+                            [av0, av1, ltp_prop]
+                        )
+                        continue
+                    comment = Comment(
+                        '$%{anglemeasure:angle0} = %{degree:degree0}$, $%{anglemeasure:angle1} = %{degree:degree1}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on opposite sides of $%{line:line}$',
+                        params
+                    )
+                    degree_sum = av0.degree + av1.degree
+                    if degree_sum < 180:
+                        yield (
+                            PointInsideAngleProperty(sp1, sp0.angle(pt0, pt1)),
+                            Comment(
+                                '$%{anglemeasure:angle0} + %{anglemeasure:angle1} = %{degree:degree0} + %{degree:degree1} < %{degree:180}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$',
+                                params
+                            ),
+                            [av1, av0, ltp_prop]
+                        )
+                    if degree_sum > 180:
+                        degree_sum = 360 - degree_sum
+                    yield (
+                        AngleValueProperty(sp0.angle(*prop.points), degree_sum),
+                        comment,
+                        [av0, av1, ltp_prop]
+                    )
 
-        if mask != original:
-            self.processed[prop] = mask
-
-@source_type(SameOrOppositeSideProperty)
-@processed_cache({})
+@source_type(LineAndTwoPointsProperty)
+@processed_cache(set())
 class OppositeSidesToInsideTriangleRule(Rule):
     def accepts(self, prop):
-        return not prop.same
+        return not prop.same_side
 
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
-        if mask == 0xF:
-            return
-
-        original = mask
-        index = 0
-        for (centre, pt1) in (prop.segment.points, reversed(prop.segment.points)):
-            for (pt0, pt2) in (prop.points, reversed(prop.points)):
-                index += 1
-                bit = 1 << index
-                if mask & bit:
-                    continue
-                prop1 = self.context.two_points_relative_to_line_property(centre.segment(pt0), pt1, pt2)
-                if prop1 is None:
-                    continue
-                mask |= bit
-                if prop1.same:
-                    continue
-                triangle = Scene.Triangle(pt0, pt1, pt2)
-                comment = Comment(
-                    'line $%{line:line0}$ separates $%{point:pt0}$ and $%{point:pt1}$, line $%{line:line1}$ separates $%{point:pt2}$ and $%{point:pt3}$',
-                    {
-                        'line0': prop.segment,
-                        'pt0': prop.points[0],
-                        'pt1': prop.points[1],
-                        'line1': prop1.segment,
-                        'pt2': prop1.points[0],
-                        'pt3': prop1.points[1]
-                    }
-                )
-                yield (
-                    PointInsideTriangleProperty(centre, triangle),
-                    comment,
-                    [prop, prop1]
-                )
-        if mask != original:
-            self.processed[prop] = mask
+        for segment in self.context.line_for_key(prop.line_key).segments:
+            ltp_prop = prop if segment == prop.line_key else None
+            for (centre, pt1) in (segment.points, reversed(segment.points)):
+                for (pt0, pt2) in (prop.points, reversed(prop.points)):
+                    key = (centre, pt0, pt1, pt2)
+                    if key in self.processed:
+                        continue
+                    ltp1 = self.context.line_and_two_points(centre.segment(pt0), pt1, pt2)
+                    if ltp1 is None:
+                        continue
+                    self.processed.add(key)
+                    if ltp1:
+                        continue
+                    if ltp_prop is None:
+                        ltp_prop = self.context.line_and_two_points_property(segment, *prop.points)
+                    ltp_prop1 = self.context.line_and_two_points_property(centre.segment(pt0), pt1, pt2)
+                    triangle = Scene.Triangle(pt0, pt1, pt2)
+                    comment = Comment(
+                        'line $%{line:line0}$ separates $%{point:pt0}$ and $%{point:pt1}$, line $%{line:line1}$ separates $%{point:pt2}$ and $%{point:pt3}$',
+                        {
+                            'line0': ltp_prop.line_key,
+                            'pt0': ltp_prop.points[0],
+                            'pt1': ltp_prop.points[1],
+                            'line1': ltp_prop1.line_key,
+                            'pt2': ltp_prop1.points[0],
+                            'pt3': ltp_prop1.points[1]
+                        }
+                    )
+                    yield (
+                        PointInsideTriangleProperty(centre, triangle),
+                        comment,
+                        [ltp_prop, ltp_prop1]
+                    )
 
 @processed_cache(set())
 class TwoPointsRelativeToLineTransitivityRule(Rule):
     def sources(self):
-        for p0 in self.context.list(SameOrOppositeSideProperty):
-            for p1 in self.context.list(SameOrOppositeSideProperty, [p0.segment]):
-                if p0 != p1:
-                    yield (p0, p1)
+        for line in self.context.lines:
+            for p0, p1 in itertools.combinations(line.line_and_two_points_properties, 2):
+                yield (line, p0, p1)
 
     def apply(self, src):
-        key = frozenset(src)
+        line, sos0, sos1 = src
+
+        key = frozenset((sos0, sos1))
         if key in self.processed:
             return
         self.processed.add(key)
 
-        sos0, sos1 = src
         if sos0.points[0] in sos1.points:
             common = sos0.points[0]
             other0 = sos0.points[1]
@@ -2563,15 +2579,18 @@ class TwoPointsRelativeToLineTransitivityRule(Rule):
         else:
             return
         other1 = sos1.points[0] if sos1.points[1] == common else sos1.points[1]
-        if sos0.same and sos1.same:
+        if other0 == other1:
+            return
+
+        if sos0.same_side and sos1.same_side:
             pattern = '$%{point:other0}$, $%{point:common}$, and $%{point:other1}$ lie on the same side of $%{line:line}$'
             pts = (other0, other1)
             premises = [sos0, sos1]
-        elif sos0.same:
+        elif sos0.same_side:
             pattern = '$%{point:other0}$ and $%{point:common}$ lie on the same side of $%{line:line}$, $%{point:other1}$ is on the opposite side'
             pts = (other0, other1)
             premises = [sos0, sos1]
-        elif sos1.same:
+        elif sos1.same_side:
             pattern = '$%{point:other1}$ and $%{point:common}$ lie on the same side of $%{line:line}$, $%{point:other0}$ is on the opposite side'
             pts = (other1, other0)
             premises = [sos1, sos0]
@@ -2580,41 +2599,21 @@ class TwoPointsRelativeToLineTransitivityRule(Rule):
             pts = (other0, other1)
             premises = [sos0, sos1]
 
-        yield (
-            SameOrOppositeSideProperty(sos0.segment, *pts, sos0.same == sos1.same),
-            Comment(
-                pattern,
-                {'other0': other0, 'other1': other1, 'common': common, 'line': sos0.segment}
-            ),
-            premises
-        )
+        if sos0.line_key != sos1.line_key:
+            keys = [sos0.line_key, sos1.line_key]
+            premises.append(line.same_line_property(sos0.line_key, sos1.line_key))
+        else:
+            keys = [sos0.line_key]
 
-@source_type(SameOrOppositeSideProperty)
-@processed_cache(set())
-class TwoPointsRelativeToLineTransitivityRule2(Rule):
-    def apply(self, prop):
-        for other in self.context.collinear_points(prop.segment):
-            colli = None
-            for pt in prop.segment.points:
-                key = (prop, other, pt)
-                if key in self.processed:
-                    continue
-                ne = self.context.coincidence_property(other, pt)
-                if ne is None:
-                    continue
-                self.processed.add(key)
-                if ne.coincident:
-                    continue
-                if colli is None:
-                    colli = self.context.collinearity_property(other, *prop.segment.points)
-                yield (
-                    SameOrOppositeSideProperty(other.segment(pt), *prop.points, prop.same),
-                    Comment(
-                        '$%{line:line0}$ is the same line as $%{line:line1}$',
-                        {'line0': other.segment(pt), 'line1': prop.segment}
-                    ),
-                    [colli, ne, prop]
-                )
+        for line_key in keys:
+            yield (
+                LineAndTwoPointsProperty(line_key, *pts, sos0.same_side == sos1.same_side),
+                Comment(
+                    pattern,
+                    {'other0': other0, 'other1': other1, 'common': common, 'line': line_key}
+                ),
+                premises
+            )
 
 @processed_cache(set())
 class CongruentAnglesDegeneracyRule(Rule):
@@ -2676,67 +2675,65 @@ class CongruentAnglesKindRule(Rule):
                 [ca, kind]
             )
 
-@source_type(SameOrOppositeSideProperty)
-@processed_cache({})
+@source_type(LineAndTwoPointsProperty)
+@processed_cache(set())
 class PointAndAngleRule(Rule):
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
-        if mask == 0x0F:
-            return
-        original = mask
-        for vertex, bit0 in zip(prop.segment.points, (0x1, 0x4)):
-            pt0 = other_point(prop.segment.points, vertex)
-            for pt1, bit in zip(prop.points, (bit0, bit0 << 1)):
-                if mask & bit:
-                    continue
-                fourth = other_point(prop.points, pt1)
-                prop1 = self.context.two_points_relative_to_line_property(
-                    vertex.segment(pt1), pt0, fourth
-                )
-                if prop1 is None:
-                    continue
-                mask |= bit
-                # TODO: update self.processed[prop1]
-                if not prop.same and not prop1.same:
-                    continue
-
-                params = {
-                    'pt0': pt0,
-                    'pt1': pt1,
-                    'fourth': fourth,
-                    'side0': vertex.vector(pt0),
-                    'side1': vertex.vector(pt1)
-                }
-                if prop.same and prop1.same:
-                    yield (
-                        PointInsideAngleProperty(fourth, vertex.angle(pt0, pt1)),
-                        Comment(
-                            '$%{point:fourth}$ lies on the same side of $%{ray:side0}$ as $%{point:pt1}$ and on the same side of $%{ray:side1}$ as $%{point:pt0}$',
-                            params
-                        ),
-                        [prop, prop1]
+        for segment in self.context.line_for_key(prop.line_key).segments:
+            ltp_prop = prop if segment == prop.line_key else None
+            for vertex, pt0 in (segment.points, reversed(segment.points)):
+                for pt1, fourth in (prop.points, reversed(prop.points)):
+                    key = (vertex, frozenset((pt0, pt1)), fourth)
+                    if key in self.processed:
+                        continue
+                    ltp1 = self.context.line_and_two_points(
+                        vertex.segment(pt1), pt0, fourth
                     )
-                elif prop.same:
-                    yield (
-                        PointInsideAngleProperty(pt1, vertex.angle(pt0, fourth)),
-                        Comment(
-                            '$%{point:pt1}$ lies on the same side of $%{ray:side0}$ as $%{point:fourth}$ and $%{ray:side1}$ separates $%{point:pt0}$ and $%{point:fourth}$',
-                            params
-                        ),
-                        [prop, prop1]
-                    )
-                else:
-                    yield (
-                        PointInsideAngleProperty(pt0, vertex.angle(fourth, pt1)),
-                        Comment(
-                            '$%{point:pt0}$ lies on the same side of $%{ray:side1}$ as $%{point:fourth}$ and $%{ray:side0}$ separates $%{point:pt1}$ and $%{point:fourth}$',
-                            params
-                        ),
-                        [prop1, prop]
+                    if ltp1 is None:
+                        continue
+                    self.processed.add(key)
+                    if not prop.same_side and not ltp1:
+                        continue
+                    if ltp_prop is None:
+                        ltp_prop = self.context.line_and_two_points_property(segment, *prop.points)
+                    ltp_prop1 = self.context.line_and_two_points_property(
+                        vertex.segment(pt1), pt0, fourth
                     )
 
-        if mask != original:
-            self.processed[prop] = mask
+                    params = {
+                        'pt0': pt0,
+                        'pt1': pt1,
+                        'fourth': fourth,
+                        'side0': vertex.vector(pt0),
+                        'side1': vertex.vector(pt1)
+                    }
+                    if prop.same_side and ltp1:
+                        yield (
+                            PointInsideAngleProperty(fourth, vertex.angle(pt0, pt1)),
+                            Comment(
+                                '$%{point:fourth}$ lies on the same side of $%{ray:side0}$ as $%{point:pt1}$ and on the same side of $%{ray:side1}$ as $%{point:pt0}$',
+                                params
+                            ),
+                            [ltp_prop, ltp_prop1]
+                        )
+                    elif prop.same_side:
+                        yield (
+                            PointInsideAngleProperty(pt1, vertex.angle(pt0, fourth)),
+                            Comment(
+                                '$%{point:pt1}$ lies on the same side of $%{ray:side0}$ as $%{point:fourth}$ and $%{ray:side1}$ separates $%{point:pt0}$ and $%{point:fourth}$',
+                                params
+                            ),
+                            [ltp_prop, ltp_prop1]
+                        )
+                    else:
+                        yield (
+                            PointInsideAngleProperty(pt0, vertex.angle(fourth, pt1)),
+                            Comment(
+                                '$%{point:pt0}$ lies on the same side of $%{ray:side1}$ as $%{point:fourth}$ and $%{ray:side0}$ separates $%{point:pt1}$ and $%{point:fourth}$',
+                                params
+                            ),
+                            [ltp_prop1, ltp_prop]
+                        )
 
 @source_type(AngleKindProperty)
 @processed_cache(set())
@@ -2748,7 +2745,7 @@ class PerpendicularToSideOfObtuseAngleRule(Rule):
         for vec0, vec1 in (prop.angle.vectors, reversed(prop.angle.vectors)):
             for perp in self.context.list(PerpendicularSegmentsProperty, [vec0.as_segment]):
                 other = next(seg for seg in perp.segments if seg != vec0.as_segment)
-                if vec0.end not in other.points or self.context.line_for_segment(other) is None:
+                if vec0.end not in other.points or self.context.line_for_key(other) is None:
                     continue
                 key = (prop.angle, other)
                 if key in self.processed:
@@ -2756,7 +2753,7 @@ class PerpendicularToSideOfObtuseAngleRule(Rule):
                 self.processed.add(key)
                 ne = self.context.coincidence_property(*other.points)
                 yield (
-                    SameOrOppositeSideProperty(other, *vec1.points, True),
+                    LineAndTwoPointsProperty(other, *vec1.points, True),
                     Comment(
                         '$%{line:perp} \\perp %{segment:side}$ and $%{angle:obtuse}$ is obtuse',
                         {'perp': other, 'side': vec0, 'obtuse': prop.angle}
@@ -2841,7 +2838,7 @@ class PointOnSegmentWithEndpointsOnSidesOfAngleRule(Rule):
                 [prop, ncl]
             )
             yield (
-                SameOrOppositeSideProperty(prop.angle.vertex.segment(vertex), *prop.angle.endpoints, False),
+                LineAndTwoPointsProperty(prop.angle.vertex.segment(vertex), *prop.angle.endpoints, False),
                 Comment(
                     '$%{point:pt_on}$ lies on segment $%{segment:segment}$, and $%{point:pt_not_on}$ is not on the line $%{line:segment}$',
                     {'pt_on': prop.angle.vertex, 'pt_not_on': vertex, 'segment': segment}

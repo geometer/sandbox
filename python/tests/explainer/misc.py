@@ -3,6 +3,107 @@ from sandbox.property import *
 
 from .base import ExplainerTest
 
+class PointInsideTriangle(ExplainerTest):
+    def createScene(self):
+        scene = Scene()
+
+        A = scene.free_point(label='A')
+        B = scene.free_point(label='B')
+        C = scene.free_point(label='C')
+        D = scene.free_point(label='D')
+        scene.add_property(LineAndTwoPointsProperty(A.segment(B), C, D, True), None)
+        scene.add_property(LineAndTwoPointsProperty(A.segment(C), B, D, True), None)
+        scene.add_property(LineAndTwoPointsProperty(B.segment(C), A, D, True), None)
+
+        return scene
+
+    def test(self):
+        A = self.scene.get('A')
+        B = self.scene.get('B')
+        C = self.scene.get('C')
+        D = self.scene.get('D')
+
+        self.assertIn(PointInsideTriangleProperty(D, Scene.Triangle(A, B, C)), self.explainer.context)
+
+class PointInsideTriangle1(ExplainerTest):
+    def createScene(self):
+        scene = Scene()
+
+        A = scene.free_point(label='A')
+        B = scene.free_point(label='B')
+        C = scene.free_point(label='C')
+        D = scene.free_point(label='D')
+        scene.add_property(LineAndTwoPointsProperty(A.segment(D), B, C, False), None)
+        scene.add_property(LineAndTwoPointsProperty(B.segment(D), A, C, False), None)
+        scene.add_property(LineAndTwoPointsProperty(C.segment(D), A, B, False), None)
+
+        return scene
+
+    def test(self):
+        A = self.scene.get('A')
+        B = self.scene.get('B')
+        C = self.scene.get('C')
+        D = self.scene.get('D')
+
+        self.assertIn(PointInsideTriangleProperty(D, Scene.Triangle(A, B, C)), self.explainer.context)
+
+class ConvexQuadranlgeByTwoDiagonals(ExplainerTest):
+    def createScene(self):
+        scene = Scene()
+
+        A = scene.free_point(label='A')
+        B = scene.free_point(label='B')
+        C = scene.free_point(label='C')
+        D = scene.free_point(label='D')
+        scene.add_property(LineAndTwoPointsProperty(A.line_through(C), B, D, False), None)
+        scene.add_property(LineAndTwoPointsProperty(B.segment(D), A, C, False), None)
+
+        return scene
+
+    def test(self):
+        A = self.scene.get('A')
+        B = self.scene.get('B')
+        C = self.scene.get('C')
+        D = self.scene.get('D')
+
+        self.assertIn(ConvexQuadrilateralProperty(Scene.Polygon(A, B, C, D)), self.explainer.context)
+
+class InscribedQuarilateral(ExplainerTest):
+    def extra_rules(self):
+        return {'circles'}
+
+    def createScene(self):
+        scene = Scene()
+
+        triangle = scene.nondegenerate_triangle(labels=('A', 'B', 'C'))
+        A, B, C = triangle.points
+        c = scene.circumcircle(triangle)
+        D = c.free_point(label='D')
+        D.opposite_side_constraint(C, A.line_through(B))
+
+        return scene
+
+    def test(self):
+        A = self.scene.get('A')
+        B = self.scene.get('B')
+        C = self.scene.get('C')
+        D = self.scene.get('D')
+
+        self.assertIn(PointsCollinearityProperty(A, B, C, False), self.explainer.context)
+        self.assertIn(PointsCollinearityProperty(A, B, D, False), self.explainer.context)
+        self.assertIn(PointsCollinearityProperty(A, C, D, False), self.explainer.context)
+        self.assertIn(PointsCollinearityProperty(B, C, D, False), self.explainer.context)
+        self.assertIn(LineAndTwoPointsProperty(A.line_through(B), C, D, False), self.explainer.context)
+        self.assertIn(LineAndTwoPointsProperty(A.segment(B), C, D, False), self.explainer.context)
+        self.assertIn(LineAndTwoPointsProperty(C.segment(D), A, B, False), self.explainer.context)
+        self.assertIn(LineAndTwoPointsProperty(A.segment(C), B, D, True), self.explainer.context)
+        self.assertIn(LineAndTwoPointsProperty(A.segment(D), B, C, True), self.explainer.context)
+        self.assertIn(ConvexQuadrilateralProperty(Scene.Polygon(A, C, B, D)), self.explainer.context)
+        self.assertIn(AngleRatioProperty(A.angle(B, C), D.angle(B, C), 1), self.explainer.context)
+        self.assertIn(AngleRatioProperty(B.angle(A, D), C.angle(A, D), 1), self.explainer.context)
+        self.assertIn(SumOfAnglesProperty(A.angle(C, D), B.angle(C, D), degree=180), self.explainer.context)
+        self.assertIn(SumOfAnglesProperty(C.angle(A, B), D.angle(A, B), degree=180), self.explainer.context)
+
 class Collinearity(ExplainerTest):
     def createScene(self):
         scene = Scene()
@@ -67,7 +168,7 @@ class SameSide(ExplainerTest):
         B = self.scene.get('B')
         C = self.scene.get('C')
         D = self.scene.get('D')
-        prop = SameOrOppositeSideProperty(A.segment(C), B, D, True)
+        prop = LineAndTwoPointsProperty(A.segment(C), B, D, True)
         self.assertIn(prop, self.explainer.context)
 
 class ThreeSegmentPoints(ExplainerTest):
@@ -86,9 +187,9 @@ class ThreeSegmentPoints(ExplainerTest):
         C = self.scene.get('C')
         D = self.scene.get('D')
 
-        self.assertIn(SameOrOppositeSideProperty(A.segment(C), B, D, False), self.explainer.context)
-        self.assertIn(SameOrOppositeSideProperty(B.segment(C), A, D, True), self.explainer.context)
-        self.assertIn(SameOrOppositeSideProperty(D.segment(C), B, A, True), self.explainer.context)
+        self.assertIn(LineAndTwoPointsProperty(A.segment(C), B, D, False), self.explainer.context)
+        self.assertIn(LineAndTwoPointsProperty(B.segment(C), A, D, True), self.explainer.context)
+        self.assertIn(LineAndTwoPointsProperty(D.segment(C), B, A, True), self.explainer.context)
 
 class TwoFootsOfSamePerpendicular(ExplainerTest):
     def createScene(self):

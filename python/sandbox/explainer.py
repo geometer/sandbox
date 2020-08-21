@@ -165,7 +165,6 @@ class Explainer:
             TwoAnglesWithCommonSideDegreeRule,
             KnownAnglesWithCommonSideRule,
             TwoPointsRelativeToLineTransitivityRule,
-            TwoPointsRelativeToLineTransitivityRule2,
             CongruentAnglesDegeneracyRule,
             CongruentAnglesKindRule,
             PointAndAngleRule,
@@ -212,6 +211,7 @@ class Explainer:
                 #PointsOnChordRule,
                 TwoChordsIntersectionRule,
                 #ThreeCollinearPointsOnCircleRule,
+                InscribedQuadrilateralIsConvexRule,
             ]
         if 'advanced' in extra_rules:
             rule_classes += [

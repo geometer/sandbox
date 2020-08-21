@@ -1,5 +1,5 @@
 from sandbox import Scene
-from sandbox.property import PointsCollinearityProperty, PointOnLineProperty, SameOrOppositeSideProperty
+from sandbox.property import *
 from sandbox.propertyset import ContradictionError
 
 from .base import ExplainerTest
@@ -144,12 +144,12 @@ class LineSidesTest(ExplainerTest):
         F = self.scene.get('F')
 
         props = (
-            SameOrOppositeSideProperty(A.segment(B), D, E, False),
-            SameOrOppositeSideProperty(A.segment(C), D, E, False),
-            SameOrOppositeSideProperty(A.segment(B), D, F, True),
-            SameOrOppositeSideProperty(A.segment(C), D, F, True),
-            SameOrOppositeSideProperty(A.segment(B), F, E, False),
-            SameOrOppositeSideProperty(A.segment(C), F, E, False),
+            LineAndTwoPointsProperty(A.segment(B), D, E, False),
+            LineAndTwoPointsProperty(A.segment(C), D, E, False),
+            LineAndTwoPointsProperty(A.segment(B), D, F, True),
+            LineAndTwoPointsProperty(A.segment(C), D, F, True),
+            LineAndTwoPointsProperty(A.segment(B), F, E, False),
+            LineAndTwoPointsProperty(A.segment(C), F, E, False),
         )
         for prop in props:
             self.assertIn(prop, self.explainer.context)

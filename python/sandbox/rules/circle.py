@@ -7,6 +7,36 @@ from ..util import LazyComment, Comment
 from .abstract import Rule, processed_cache, source_type
 
 @processed_cache(set())
+class InscribedQuadrilateralIsConvexRule(Rule):
+    def sources(self):
+        for circle in self.context.circles:
+            for four in itertools.combinations(circle.points_on, 4):
+                yield four
+
+    def apply(self, four):
+        prop = None
+        for pair in itertools.combinations(four, 2):
+            segment = pair[0].segment(pair[1])
+            points = [pt for pt in four if pt not in pair]
+            key = LineAndTwoPointsProperty.unique_key(segment, *points)
+            if key in self.processed:
+                continue
+            ltp = self.context.line_and_two_points(segment, *points)
+            if ltp is None:
+                continue
+            self.processed.add(key)
+            if ltp:
+                continue
+            if prop is None:
+                prop = self.context.concyclicity_property(*four)
+            sep = self.context.line_and_two_points_property(segment, *points)
+            yield (
+                ConvexQuadrilateralProperty(Scene.Polygon(pair[0], points[0], pair[1], points[1])),
+                Comment('#TODO'),
+                [prop, sep]
+            )
+
+@processed_cache(set())
 class CyclicQuadrilateralRule(Rule):
     def sources(self):
         right_angles = [prop for prop in self.context.list(PerpendicularSegmentsProperty) if len(set((*prop.segments[0].points, *prop.segments[1].points))) == 3]
@@ -52,37 +82,47 @@ class CyclicQuadrilateralRule(Rule):
             [perp0, perp1]
         )
 
-@source_type(SameOrOppositeSideProperty)
+@source_type(LineAndTwoPointsProperty)
 @processed_cache(set())
 class CyclicQuadrilateralRule2(Rule):
     def accepts(self, prop):
-        return not prop.same and prop not in self.processed
+        return not prop.same_side
 
     def apply(self, prop):
-        angle0 = prop.points[0].angle(*prop.segment.points)
-        angle1 = prop.points[1].angle(*prop.segment.points)
-        sum_degree = self.context.sum_of_angles(angle0, angle1)
-        if sum_degree is None:
-            return
-        self.processed.add(prop)
-        if sum_degree != 180:
-            return
-        sum_prop = self.context.sum_of_angles_property(angle0, angle1)
+        line = self.context.line_for_key(prop.line_key)
+        pt_set = frozenset(prop.points)
+        for segment in line.segments:
+            key = (segment, pt_set)
+            if key in self.processed:
+                continue
+            angle0 = prop.points[0].angle(*segment.points)
+            angle1 = prop.points[1].angle(*segment.points)
+            sum_degree = self.context.sum_of_angles(angle0, angle1)
+            if sum_degree is None:
+                continue
+            self.processed.add(key)
+            if sum_degree != 180:
+                continue
+            premises = [self.context.sum_of_angles_property(angle0, angle1)]
+            if segment == prop.line_key:
+                premises.append(prop)
+            else:
+                premises.append(self.context.line_and_two_points_property(segment, *prop.points))
 
-        points = (prop.points[0], prop.segment.points[0], prop.points[1], prop.segment.points[1])
-        yield (
-            ConcyclicPointsProperty(*points),
-            Comment(
-                'quadrilateral $%{polygon:quad}$ with sum of opposite angles $%{anglemeasure:angle0} + %{anglemeasure:angle1} = %{degree:180}$ is cyclic',
-                {
-                    'quad': Scene.Polygon(*points),
-                    'angle0': angle0,
-                    'angle1': angle1,
-                    '180': 180
-                }
-            ),
-            [sum_prop, prop]
-        )
+            points = (prop.points[0], segment.points[0], prop.points[1], segment.points[1])
+            yield (
+                ConcyclicPointsProperty(*points),
+                Comment(
+                    'quadrilateral $%{polygon:quad}$ with sum of opposite angles $%{anglemeasure:angle0} + %{anglemeasure:angle1} = %{degree:180}$ is cyclic',
+                    {
+                        'quad': Scene.Polygon(*points),
+                        'angle0': angle0,
+                        'angle1': angle1,
+                        '180': 180
+                    }
+                ),
+                premises
+            )
 
 @source_type(ConcyclicPointsProperty)
 @processed_cache(set())
@@ -306,30 +346,28 @@ class InscribedAnglesWithCommonCircularArcRule(Rule):
             for four in itertools.combinations(circle.points_on, 4):
                 yield four
 
-    def apply(self, points):
-        key = frozenset(points)
-        if key in self.processed:
-            return
-
+    def apply(self, four):
         prop = None
 
-        for pt0, pt1 in itertools.combinations(points, 2):
-            pt2, pt3 = [pt for pt in points if pt not in (pt0, pt1)]
-            sos = self.context.two_points_relative_to_line_property(
-                pt0.segment(pt1), pt2, pt3
-            )
+        for pair in itertools.combinations(four, 2):
+            segment = pair[0].segment(pair[1])
+            points = tuple(pt for pt in four if pt not in pair)
+            key = LineAndTwoPointsProperty.unique_key(segment, *points)
+            if key in self.processed:
+                continue
+
+            sos = self.context.line_and_two_points_property(segment, *points)
             if sos is None:
                 continue
             self.processed.add(key)
             if prop is None:
-                prop = self.context.concyclicity_property(*points)
-            p0 = (pt0, pt1)
-            p1 = (pt2, pt3)
-            for pp0, pp1 in ((p0, p1), (p1, p0)):
+                prop = self.context.concyclicity_property(*four)
+
+            for pp0, pp1 in ((pair, points), (points, pair)):
                 ang0 = pp0[0].angle(*pp1)
                 ang1 = pp0[1].angle(*pp1)
                 circle = Circle(*ang0.point_set)
-                if sos.same:
+                if sos.same_side:
                     pattern = '$%{angle:angle0}$ and $%{angle:angle1}$ are inscribed in $%{circle:circle}$ and subtend the same arc'
                     new_prop = AngleRatioProperty(ang0, ang1, 1)
                 else:

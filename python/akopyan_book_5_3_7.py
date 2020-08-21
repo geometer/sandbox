@@ -35,9 +35,9 @@ props = lambda: (
 #    PerpendicularSegmentsProperty(E.segment(G), A.segment(C)),
 #    ProportionalLengthsProperty(E1.segment(A), E.segment(A), 1),
 #    PointInsideTriangleProperty(E1, Scene.Triangle(A, C, B)),
-#    SameOrOppositeSideProperty(A.segment(C), E, E1, False),
-#    SameOrOppositeSideProperty(A.segment(C), B, E1, True),
-#    SameOrOppositeSideProperty(A.segment(B), C, E1, True),
+#    LineAndTwoPointsProperty(A.segment(C), E, E1, False),
+#    LineAndTwoPointsProperty(A.segment(C), B, E1, True),
+#    LineAndTwoPointsProperty(A.segment(B), C, E1, True),
 #    AnglesInequalityProperty(A.angle(E, C), A.angle(D, C)),
 #    AnglesInequalityProperty(A.angle(E1, C), A.angle(B, C)),
 )

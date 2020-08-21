@@ -17,8 +17,8 @@ prop = lambda: (
 #    A.vector(D).angle(B.vector(C)),
 #    A.vector(D).angle(B.vector(E)),
 #    A.vector(D).angle(K.vector(F)),
-#    SameOrOppositeSideProperty(K.segment(F), A, D, True),
-#    SameOrOppositeSideProperty(D.segment(F), C, K, False),
+#    LineAndTwoPointsProperty(K.segment(F), A, D, True),
+#    LineAndTwoPointsProperty(D.segment(F), C, K, False),
 #    SameCyclicOrderProperty(Cycle(D, F, C), Cycle(K, F, D)),
     MultiPointsCollinearityProperty(D, N, M, F),
 )

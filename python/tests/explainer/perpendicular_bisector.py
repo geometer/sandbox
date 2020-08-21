@@ -1,5 +1,5 @@
 from sandbox import Scene
-from sandbox.property import PointsCollinearityProperty, SameOrOppositeSideProperty
+from sandbox.property import LineAndTwoPointsProperty, PointsCollinearityProperty
 
 from .base import ExplainerTest
 
@@ -23,7 +23,7 @@ class ThreePointsOnPerpendicularBisectorCollinearity1(ExplainerTest):
         D = self.scene.get('D')
         E = self.scene.get('E')
         prop0 = PointsCollinearityProperty(C, D, E, True)
-        prop1 = SameOrOppositeSideProperty(D.segment(E), A, B, False)
+        prop1 = LineAndTwoPointsProperty(D.segment(E), A, B, False)
         self.assertIn(prop0, self.explainer.context)
         self.assertNotIn(prop1, self.explainer.context)
         self.assertEqual(len(self.explainer.explanation(prop0).reason.all_premises), 6)
@@ -49,6 +49,6 @@ class ThreePointsOnPerpendicularBisectorCollinearity2(ExplainerTest):
         D = self.scene.get('D')
         E = self.scene.get('E')
         prop0 = PointsCollinearityProperty(C, D, E, True)
-        prop1 = SameOrOppositeSideProperty(D.segment(E), A, B, False)
+        prop1 = LineAndTwoPointsProperty(D.segment(E), A, B, False)
         self.assertIn(prop0, self.explainer.context)
         self.assertIn(prop1, self.explainer.context)

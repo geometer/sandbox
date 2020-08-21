@@ -16,39 +16,45 @@ class PartOfAngleIsLessThanWholeRule(Rule):
                 [prop]
             )
 
-@source_type(SameOrOppositeSideProperty)
+@source_type(LineAndTwoPointsProperty)
 @processed_cache(set())
 class InequalAnglesWithCommonSide(Rule):
     def accepts(self, prop):
-        return prop.same
+        return prop.same_side
 
     def apply(self, prop):
-        for pt0, pt1 in (prop.segment.points, reversed(prop.segment.points)):
-            key = (prop, pt0)
-            if key in self.processed:
-                continue
+        line = self.context.line_for_key(prop.line_key)
+        pt_set = frozenset(prop.points)
+        for segment in line.segments:
+            same_side_prop = None
+            for pt0, pt1 in (segment.points, reversed(segment.points)):
+                key = (pt0, pt1, pt_set)
+                if key in self.processed:
+                    continue
 
-            angle0 = pt0.angle(pt1, prop.points[0])
-            angle1 = pt0.angle(pt1, prop.points[1])
-            inequality = self.context.angles_inequality_property(angle0, angle1)
-            if inequality is None:
-                continue
+                angle0 = pt0.angle(pt1, prop.points[0])
+                angle1 = pt0.angle(pt1, prop.points[1])
+                inequality = self.context.angles_inequality_property(angle0, angle1)
+                if inequality is None:
+                    continue
 
-            self.processed.add(key)
-            if prop.points[0] in inequality.angles[0].endpoints:
-                point = prop.points[0]
-            else:
-                point = prop.points[1]
-            
-            yield (
-                PointInsideAngleProperty(point, inequality.angles[1]),
-                Comment(
-                    '$%{angle:part}$ is part of $%{angle:whole}$',
-                    {'part': inequality.angles[0], 'whole': inequality.angles[1]}
-                ),
-                [prop, inequality]
-            )
+                self.processed.add(key)
+                if prop.points[0] in inequality.angles[0].endpoints:
+                    point = prop.points[0]
+                else:
+                    point = prop.points[1]
 
+                if same_side_prop is None:
+                    same_side_prop = self.context.line_and_two_points_property(segment, *prop.points)
+                
+                yield (
+                    PointInsideAngleProperty(point, inequality.angles[1]),
+                    Comment(
+                        '$%{angle:part}$ is part of $%{angle:whole}$',
+                        {'part': inequality.angles[0], 'whole': inequality.angles[1]}
+                    ),
+                    [same_side_prop, inequality]
+                )
 
 @source_type(LengthsInequalityProperty)
 @processed_cache(set())

@@ -426,37 +426,34 @@ class PointsCoincidenceProperty(Property):
     def compare_values(self, other):
         return self.coincident == other.coincident
 
-class SameOrOppositeSideProperty(Property):
+class LineAndTwoPointsProperty(Property):
     """
     Two points on opposite/same sides of a line
     """
     @staticmethod
-    def unique_key(segment, point0, point1):
-        return frozenset([segment, point0, point1])
+    def unique_key(line_key, point0, point1):
+        return frozenset([line_key, point0, point1])
 
-    def __init__(self, segment, point0, point1, same):
-        self.segment = segment
+    def __init__(self, line_key, point0, point1, same_side):
+        self.line_key = line_key
         self.points = (point0, point1)
-        self.same = same
-        super().__init__(SameOrOppositeSideProperty.unique_key(segment, point0, point1), {point0, point1, *segment.points})
+        self.same_side = same_side
+        super().__init__(LineAndTwoPointsProperty.unique_key(line_key, point0, point1), {point0, point1, *_objects(line_key)})
 
     @property
     def __priority__(self):
         return 1
 
-    def keys(self):
-        return [self.segment]
-
     @property
     def description(self):
-        if self.same:
+        if self.same_side:
             pattern = '$%{point:pt0}$, $%{point:pt1}$ located on the same side of line $%{line:line}$'
         else:
             pattern = '$%{point:pt0}$, $%{point:pt1}$ located on opposite sides of line $%{line:line}$'
-        return Comment(pattern, {'pt0': self.points[0], 'pt1': self.points[1], 'line': self.segment})
+        return Comment(pattern, {'pt0': self.points[0], 'pt1': self.points[1], 'line': self.line_key})
 
     def compare_values(self, other):
-        return self.same == other.same
+        return self.same_side == other.same_side
 
 class PointInsideAngleProperty(Property):
     """
@@ -1155,11 +1152,11 @@ class FootOfPerpendicularProperty(Property):
     """
     Foot of the perpendicular from the given point to the given line
     """
-    def __init__(self, foot, point, segment):
-        super().__init__((foot, point, segment), {foot, point, *segment.points})
+    def __init__(self, foot, point, line_key):
+        super().__init__((foot, point, line_key), {foot, point, *_objects(line_key)})
         self.foot = foot
         self.point = point
-        self.segment = segment
+        self.line_key = line_key
 
     @property
     def __priority__(self):
@@ -1169,5 +1166,5 @@ class FootOfPerpendicularProperty(Property):
     def description(self):
         return Comment(
             '$%{point:foot}$ is the foot of the perpendicular from $%{point:point}$ to $%{line:line}$',
-            {'foot': self.foot, 'point': self.point, 'line': self.segment}
+            {'foot': self.foot, 'point': self.point, 'line': self.line_key}
         )

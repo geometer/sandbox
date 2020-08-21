@@ -32,23 +32,32 @@ class CongruentOrientedAnglesWithPerpendicularSidesRule(Rule):
             [cong, perp]
         )
 
-@source_type(SameOrOppositeSideProperty)
+@source_type(LineAndTwoPointsProperty)
 @processed_cache(set())
-@accepts_auto
 class CyclicOrderRule(Rule):
     def apply(self, prop):
-        self.processed.add(prop)
+        line = self.context.line_for_key(prop.line_key)
+        pt_set = frozenset(prop.points)
+        for segment in line.segments:
+            key = (segment, pt_set)
+            if key in self.processed:
+                continue
+            self.processed.add(key)
 
-        cycle0 = prop.points[0].cycle(*prop.segment.points)
-        cycle1 = prop.points[1].cycle(*prop.segment.points)
-        if not prop.same:
-            cycle1 = cycle1.reversed
-            pattern = '$%{line:line}$ separates $%{point:pt0}$ and $%{point:pt1}$'
-        else:
-            pattern = '$%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$'
-        comment = Comment(pattern, {'line': prop.segment, 'pt0': prop.points[0], 'pt1': prop.points[1]})
-        yield (SameCyclicOrderProperty(cycle0, cycle1), comment, [prop])
-        yield (SameCyclicOrderProperty(cycle0.reversed, cycle1.reversed), comment, [prop])
+            if segment == prop.line_key:
+                premises = [prop]
+            else:
+                premises = [self.context.line_and_two_points_property(segment, *prop.points)]
+            cycle0 = prop.points[0].cycle(*segment.points)
+            cycle1 = prop.points[1].cycle(*segment.points)
+            if not prop.same_side:
+                cycle1 = cycle1.reversed
+                pattern = '$%{line:line}$ separates $%{point:pt0}$ and $%{point:pt1}$'
+            else:
+                pattern = '$%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$'
+            comment = Comment(pattern, {'line': segment, 'pt0': prop.points[0], 'pt1': prop.points[1]})
+            yield (SameCyclicOrderProperty(cycle0, cycle1), comment, premises)
+            yield (SameCyclicOrderProperty(cycle0.reversed, cycle1.reversed), comment, premises)
 
 @processed_cache(set())
 @accepts_auto

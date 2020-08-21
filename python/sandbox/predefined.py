@@ -6,7 +6,7 @@ def enumerate_predefined_properties(scene, objects):
     def is_visible(obj):
         return obj in objects
     def all_visible(objs):
-        return all(o in objects for o in objs)
+        return all(o in objects or o.layer == 'user' for o in objs)
 
     for cnstr in scene.constraints(Constraint.Kind.collinear):
         if all_visible(cnstr.params):

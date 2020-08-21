@@ -46,8 +46,8 @@ class PointInsideSquareRule(Rule):
         verts2 = verts * 2
         for i in range(0, 4):
             side = verts2[i].segment(verts2[i + 1])
-            new_properties.append(SameOrOppositeSideProperty(side, prop.point, verts2[i + 2], True))
-            new_properties.append(SameOrOppositeSideProperty(side, prop.point, verts2[i + 3], True))
+            new_properties.append(LineAndTwoPointsProperty(side, prop.point, verts2[i + 2], True))
+            new_properties.append(LineAndTwoPointsProperty(side, prop.point, verts2[i + 3], True))
 
         cycles = [prop.point.cycle(verts2[i], verts2[i + 1]) for i in range(0, 4)]
         for c0, c1 in itertools.combinations(cycles, 2):
@@ -107,83 +107,85 @@ class PointOnSideOfConvexQuadrialteralRule(Rule):
                         continue
                     yield (PointsCollinearityProperty(pt, v0, v1, False), comment, premises)
 
-@source_type(SameOrOppositeSideProperty)
-@processed_cache({})
+@source_type(LineAndTwoPointsProperty)
+@processed_cache(set())
 class KnownAnglesToConvexQuadrilateralRule(Rule):
     def accepts(self, prop):
-        return prop.same
+        return prop.same_side
 
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
-        if mask == 0x3:
-            return
-        original = mask
+        pt0, pt1 = prop.points
+        pt_set = frozenset(prop.points)
+        for segment in self.context.line_for_key(prop.line_key).segments:
+            ltp_prop = prop if segment == prop.line_key else None
+            for sp0, sp1 in (segment.points, reversed(segment.points)):
+                key = (pt_set, sp0, sp1)
+                if key in self.processed:
+                    continue
 
-        for (sp0, sp1), bit in ((prop.segment.points, 0x1), (reversed(prop.segment.points), 0x2)):
-            if mask & bit:
-                continue
-            pt0, pt1 = prop.points
-            av0 = self.context.angle_value_property(sp0.angle(sp1, pt0))
-            if av0 is None:
-                continue
-            av1 = self.context.angle_value_property(sp1.angle(sp0, pt1))
-            if av1 is None:
-                continue
-            mask |= bit
+                av0 = self.context.angle_value_property(sp0.angle(sp1, pt0))
+                if av0 is None:
+                    continue
+                av1 = self.context.angle_value_property(sp1.angle(sp0, pt1))
+                if av1 is None:
+                    continue
+                self.processed.add(key)
 
-            sum_degree = av0.degree + av1.degree
-            if sum_degree < 180:
-                continue
-            params = {
-                'angle0': av0.angle,
-                'angle1': av1.angle,
-                'sum': sum_degree,
-                '180': 180,
-                'pt0': pt0,
-                'pt1': pt1,
-                'line': prop.segment
-            }
-            if sum_degree == 180:
-                pattern = '$%{anglemeasure:angle0} + %{anglemeasure:angle1} = %{degree:sum}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$'
-            else:
-                pattern = '$%{anglemeasure:angle0} + %{anglemeasure:angle1} = %{degree:sum} > %{degree:180}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$'
-            yield (
-                ConvexQuadrilateralProperty(Scene.Polygon(pt0, sp0, sp1, pt1)),
-                Comment(pattern, params),
-                [av0, av1, prop]
-            )
+                if ltp_prop is None:
+                    ltp_prop = self.context.line_and_two_points_property(segment, pt0, pt1)
 
-        if mask != original:
-            self.processed[prop] = mask
+                sum_degree = av0.degree + av1.degree
+                if sum_degree < 180:
+                    continue
+                params = {
+                    'angle0': av0.angle,
+                    'angle1': av1.angle,
+                    'sum': sum_degree,
+                    '180': 180,
+                    'pt0': pt0,
+                    'pt1': pt1,
+                    'line': segment
+                }
+                if sum_degree == 180:
+                    pattern = '$%{anglemeasure:angle0} + %{anglemeasure:angle1} = %{degree:sum}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$'
+                else:
+                    pattern = '$%{anglemeasure:angle0} + %{anglemeasure:angle1} = %{degree:sum} > %{degree:180}$, and points $%{point:pt0}$ and $%{point:pt1}$ are on the same side of $%{line:line}$'
+                yield (
+                    ConvexQuadrilateralProperty(Scene.Polygon(pt0, sp0, sp1, pt1)),
+                    Comment(pattern, params),
+                    [av0, av1, ltp_prop]
+                )
 
-@source_type(SameOrOppositeSideProperty)
+@source_type(LineAndTwoPointsProperty)
 @processed_cache(set())
 class PointsToConvexQuadrilateralRule(Rule):
     def accepts(self, prop):
-        return not prop.same and prop not in self.processed
+        return not prop.same_side
 
     def apply(self, prop):
-        alt = self.context.two_points_relative_to_line_property(
-            prop.points[0].segment(prop.points[1]), *prop.segment.points
-        )
-        if alt is None:
-            return
-        self.processed.add(prop)
-        if alt.same:
-            return
-        self.processed.add(alt)
+        alt_segment = prop.points[0].segment(prop.points[1])
+        for segment in self.context.line_for_key(prop.line_key).segments:
+            key = frozenset((segment, alt_segment))
+            if key in self.processed:
+                continue
+            ltp = self.context.line_and_two_points(alt_segment, *segment.points)
+            if ltp is None:
+                continue
+            self.processed.add(key)
+            if ltp:
+                continue
+            prop0 = prop if segment == prop.line_key else self.context.line_and_two_points_property(segment, *prop.points)
+            prop1 = self.context.line_and_two_points_property(alt_segment, *segment.points)
 
-        p0 = prop.points
-        p1 = alt.points
-        quad = Scene.Polygon(p0[0], p1[0], p0[1], p1[1])
-        yield (
-            ConvexQuadrilateralProperty(quad),
-            Comment(
-                'both diagonals $%{segment:d0}$ and $%{segment:d1}$ divide quadrilateral $%{polygon:quad}$',
-                {'d0': prop.segment, 'd1': alt.segment, 'quad': quad}
-            ),
-            [prop, alt]
-        )
+            quad = Scene.Polygon(segment.points[0], prop.points[0], segment.points[1], prop.points[1])
+            yield (
+                ConvexQuadrilateralProperty(quad),
+                Comment(
+                    'both diagonals $%{segment:d0}$ and $%{segment:d1}$ divide quadrilateral $%{polygon:quad}$',
+                    {'d0': segment, 'd1': alt_segment, 'quad': quad}
+                ),
+                [prop0, prop1]
+            )
 
 @source_type(ConvexQuadrilateralProperty)
 @processed_cache(set())
@@ -223,7 +225,7 @@ class ConvexQuadrilateralRule(Rule):
                 PointsCollinearityProperty(*pts[:3], False)
             )
             new_properties.append(
-                SameOrOppositeSideProperty(pts[0].segment(pts[1]), pts[2], pts[3], True)
+                LineAndTwoPointsProperty(pts[0].segment(pts[1]), pts[2], pts[3], True)
             )
             new_properties.append(
                 PointInsideAngleProperty(pts[0], pts[2].angle(pts[1], pts[3]))
@@ -231,7 +233,7 @@ class ConvexQuadrilateralRule(Rule):
         for i in range(0, 2):
             pts = [points[j] for j in range(i, i + 4)]
             new_properties.append(
-                SameOrOppositeSideProperty(pts[0].segment(pts[2]), pts[1], pts[3], False)
+                LineAndTwoPointsProperty(pts[0].segment(pts[2]), pts[1], pts[3], False)
             )
 
         comment = Comment(pattern, {'quad': quad})

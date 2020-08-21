@@ -30,11 +30,11 @@ A.angle(B, C).is_acute_constraint(comment='assumption')
 B.angle(A, C).is_acute_constraint(comment='assumption')
 C.angle(B, A).is_acute_constraint(comment='assumption')
 
-props = (
+props_generator = lambda: (
     AngleRatioProperty(B.angle(B1, C), A.angle(B1, B2), 1),
     AngleRatioProperty(A.angle(B1, H), B.angle(B1, C), 1),
     AngleRatioProperty(A.angle(B1, H), A.angle(B1, B2), 1),
     ProportionalLengthsProperty(B1.segment(H), B1.segment(B2), 1),
 )
 
-run_sample(scene, *props)
+run_sample(scene, props_generator)

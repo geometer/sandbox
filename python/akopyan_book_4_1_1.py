@@ -28,14 +28,14 @@ C.angle(B, A).is_acute_constraint(comment='assumption')
 
 props = lambda: (
     ConcyclicPointsProperty(A, B, C, A2, B2, C2),
+#    ConcyclicPointsProperty(A, B, C, A2),
 #    PointsCollinearityProperty(A, B, C2, False),
 #    AngleRatioProperty(H.angle(A, B), H.angle(A1, B1), 1),
 #    B1.angle(H, B2),
 #    H.angle(B, B2),
-#    SameOrOppositeSideProperty(B.segment(C), A, A2, False),
-#    SameOrOppositeSideProperty(B.segment(C), H, A2, False),
-#    SameOrOppositeSideProperty(B.segment(C), H, A, True),
-#    ConcyclicPointsProperty(A, B, C, A2, B2, C2),
+#    LineAndTwoPointsProperty(B.segment(C), A, A2, False),
+#    LineAndTwoPointsProperty(B.segment(C), H, A2, False),
+#    LineAndTwoPointsProperty(B.segment(C), H, A, True),
 #    SumOfAnglesProperty(C.angle(B, A), C2.angle(A, B), degree=180),
 #    PointInsideTriangleProperty(H, triangle),
     #A1.angle(A, A2),

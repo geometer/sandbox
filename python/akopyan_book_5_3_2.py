@@ -31,7 +31,7 @@ def props():
     #    PointsCoincidenceProperty(D, X, False),
     #    PointsCoincidenceProperty(F, X, False),
    #     SumOfAnglesProperty(X.angle(F, C), X.angle(B, C), degree=90),
-    #    SameOrOppositeSideProperty(C.segment(X), F, B, False),
+    #    LineAndTwoPointsProperty(C.segment(X), F, B, False),
      #   X.angle(B, F),
     #    PerpendicularSegmentsProperty(B.segment(X), F.segment(X)),
     #    AngleKindProperty(C.angle(E, D), AngleKindProperty.Kind.acute),

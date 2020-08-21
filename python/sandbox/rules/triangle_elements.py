@@ -531,8 +531,8 @@ class PointInsideTriangleRule(Rule):
         for angle in prop.triangle.angles:
             new_properties.append(PointInsideAngleProperty(prop.point, angle))
         for pt, side in zip(verts, prop.triangle.sides):
-            new_properties.append(SameOrOppositeSideProperty(pt.segment(prop.point), *side.points, False))
-            new_properties.append(SameOrOppositeSideProperty(side, pt, prop.point, True))
+            new_properties.append(LineAndTwoPointsProperty(pt.segment(prop.point), *side.points, False))
+            new_properties.append(LineAndTwoPointsProperty(side, pt, prop.point, True))
         cycles = (
             verts[0].cycle(verts[1], verts[2]),
             prop.point.cycle(verts[0], verts[1]),
