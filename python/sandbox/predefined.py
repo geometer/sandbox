@@ -101,12 +101,9 @@ def enumerate_predefined_properties(scene, objects):
 
     for line in scene.lines():
         points = [pt for pt in line.all_points if is_visible(pt)]
-        if line.layer == 'user' or len(points) > 2:
+        if line.layer == 'user' or len(points) >= 2:
             for pt in points:
-                yield (
-                    PointOnLineProperty(pt, line, True),
-                    Comment('$%{point:point}$ lies on $%{line:line}$', {'point': pt, 'line': line})
-                )
+                yield (PointOnLineProperty(pt, line, True), None)
 
     for circle in scene.circles(max_layer='user'):
         radiuses = [circle.centre.segment(pt) for pt in circle.all_points]

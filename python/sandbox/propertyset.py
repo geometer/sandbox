@@ -2095,16 +2095,16 @@ class PropertySet(LineSet):
         return self.__lengths_inequalities.get(LengthsInequalityProperty.unique_key(segment0, segment1))
 
     def __cache_angles_inequality_property(self, angle0, angle1, prop):
-            dct = self.__angles_inequalities.get(angle0)
-            if dct:
-                dct[angle1] = prop
-            else:
-                self.__angles_inequalities[angle0] = {angle1: prop}
-            dct = self.__angles_inequalities.get(angle1)
-            if dct:
-                dct[angle0] = prop
-            else:
-                self.__angles_inequalities[angle1] = {angle0: prop}
+        dct = self.__angles_inequalities.get(angle0)
+        if dct:
+            dct[angle1] = prop
+        else:
+            self.__angles_inequalities[angle0] = {angle1: prop}
+        dct = self.__angles_inequalities.get(angle1)
+        if dct:
+            dct[angle0] = prop
+        else:
+            self.__angles_inequalities[angle1] = {angle0: prop}
 
     def angles_inequality_property(self, angle0, angle1, use_cache=True):
         assert angle0 != angle1
