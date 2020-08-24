@@ -2750,8 +2750,12 @@ class PerpendicularToSideOfObtuseAngleRule(Rule):
                 key = (prop.angle, other)
                 if key in self.processed:
                     continue
-                self.processed.add(key)
                 ne = self.context.coincidence_property(*other.points)
+                if ne is None:
+                    continue
+                self.processed.add(key)
+                if ne.coincident:
+                    continue
                 yield (
                     LineAndTwoPointsProperty(other, *vec1.points, True),
                     Comment(
