@@ -2106,6 +2106,42 @@ class PropertySet(LineSet):
         else:
             self.__angles_inequalities[angle1] = {angle0: prop}
 
+    def compare_angles(self, angle0, angle1):
+        assert angle0 != angle1
+
+        def saved_property(a0, a1):
+            dct = self.__angles_inequalities.get(a0)
+            return dct.get(a1) if dct else None
+
+        prop = saved_property(angle0, angle1)
+        if prop:
+            return -1 if prop.angles[0] == angle0 else 1
+
+        ar = self.angle_ratio(angle0, angle1)
+        if ar:
+            if ar == 1:
+                return 0
+            return -1 if ar < 1 else 1
+
+        congruents0 = list(self.congruent_angles_for(angle0))
+        for a in congruents0:
+            ineq = saved_property(a, angle1)
+            if ineq:
+                return -1 if ineq.angles[0] == a else 1
+
+        congruents1 = list(self.congruent_angles_for(angle1))
+        for a in congruents1:
+            ineq = saved_property(angle0, a)
+            if ineq:
+                return 1 if ineq.angles[0] == a else -1
+
+        for a0, a1 in itertools.product(congruents0, congruents1):
+            ineq = saved_property(a0, a1)
+            if ineq:
+                return -1 if ineq.angles[0] == a0 else 1
+
+        return None
+
     def angles_inequality_property(self, angle0, angle1, use_cache=True):
         assert angle0 != angle1
 

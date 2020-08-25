@@ -34,11 +34,14 @@ class InequalAnglesWithCommonSide(Rule):
 
                 angle0 = pt0.angle(pt1, prop.points[0])
                 angle1 = pt0.angle(pt1, prop.points[1])
-                inequality = self.context.angles_inequality_property(angle0, angle1)
-                if inequality is None:
+                comp = self.context.compare_angles(angle0, angle1)
+                if comp is None:
                     continue
-
                 self.processed.add(key)
+                if comp == 0:
+                    continue
+                inequality = self.context.angles_inequality_property(angle0, angle1)
+
                 if prop.points[0] in inequality.angles[0].endpoints:
                     point = prop.points[0]
                 else:
