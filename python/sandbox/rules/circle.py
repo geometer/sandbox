@@ -166,7 +166,7 @@ class ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule(Rule):
 @processed_cache({})
 class PointsOnCircleRule(Rule):
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
+        mask = self.processed.get(prop.property_key, 0)
         if mask == 0xF:
             return
 
@@ -190,13 +190,13 @@ class PointsOnCircleRule(Rule):
                 [prop, ncl]
             )
         if mask != original:
-            self.processed[prop] = mask
+            self.processed[prop.property_key] = mask
 
 @source_type(ConcyclicPointsProperty)
 @processed_cache({})
 class ConcyclicToSameCircleRule(Rule):
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
+        mask = self.processed.get(prop.property_key, 0)
         if mask == 0x3F:
             return
 
@@ -228,7 +228,7 @@ class ConcyclicToSameCircleRule(Rule):
                 [prop, ncl0, ncl1]
             )
         if mask != original:
-            self.processed[prop] = mask
+            self.processed[prop.property_key] = mask
 
 @processed_cache(set())
 class ThreeCollinearPointsOnCircleRule(Rule):

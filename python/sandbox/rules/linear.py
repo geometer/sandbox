@@ -9,7 +9,7 @@ from .abstract import Rule, processed_cache, source_type
 @processed_cache({})
 class EliminateAngleFromSumRule(Rule):
     def apply(self, prop):
-        processed_angles = self.processed.get(prop, set())
+        processed_angles = self.processed.get(prop.property_key, set())
         length = len(processed_angles)
         if length == len(prop.angles):
             return
@@ -40,7 +40,7 @@ class EliminateAngleFromSumRule(Rule):
             )
 
         if len(processed_angles) != length:
-            self.processed[prop] = processed_angles
+            self.processed[prop.property_key] = processed_angles
 
 @source_type(SumOfAnglesProperty)
 @processed_cache({})
@@ -49,7 +49,7 @@ class AngleBySumOfThreeRule(Rule):
         return len(prop.angles) == 3
 
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
+        mask = self.processed.get(prop.property_key, 0)
         if mask == 0x7:
             return
 
@@ -87,7 +87,7 @@ class AngleBySumOfThreeRule(Rule):
                 [prop, av0, av1]
             )
         if mask != original:
-            self.processed[prop] = mask
+            self.processed[prop.property_key] = mask
 
 @source_type(SumOfAnglesProperty)
 @processed_cache(set())
@@ -169,11 +169,13 @@ class EqualSumsOfAnglesRule(Rule):
                 yield (s0, s1)
 
     def apply(self, src):
-        mask = self.processed.get(src, 0)
+        sum0, sum1 = src
+
+        key = (sum0.property_key, sum1.property_key)
+        mask = self.processed.get(key, 0)
         if mask == 0xF:
             return
 
-        sum0, sum1 = src
         original = mask
         for index in range(0, 4):
             bit = 1 << index
@@ -208,4 +210,4 @@ class EqualSumsOfAnglesRule(Rule):
             )
 
         if original != mask:
-            self.processed[src] = mask
+            self.processed[key] = mask

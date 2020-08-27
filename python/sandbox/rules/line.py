@@ -13,7 +13,7 @@ class CollinearityToSameLineRule(Rule):
         return prop.collinear
 
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
+        mask = self.processed.get(prop.property_key, 0)
         if mask == 0x7:
             return
 
@@ -38,7 +38,7 @@ class CollinearityToSameLineRule(Rule):
             )
 
         if mask != original:
-            self.processed[prop] = mask
+            self.processed[prop.property_key] = mask
 
 @source_type(PointsCollinearityProperty)
 @processed_cache({})
@@ -47,7 +47,7 @@ class CollinearityToPointOnLineRule(Rule):
         return prop.collinear
 
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
+        mask = self.processed.get(prop.property_key, 0)
         if mask == 0x7:
             return
 
@@ -73,7 +73,7 @@ class CollinearityToPointOnLineRule(Rule):
             )
 
         if mask != original:
-            self.processed[prop] = mask
+            self.processed[prop.property_key] = mask
 
 @processed_cache(set())
 class NonCollinearityToDifferentLinesRule(Rule):

@@ -168,7 +168,7 @@ class LengthEqualityToRatioEqualityRule(Rule):
 @processed_cache({})
 class LengthProductEqualityToRatioRule(Rule):
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
+        mask = self.processed.get(prop.property_key, 0)
         if mask == 0xF:
             return
 
@@ -209,4 +209,4 @@ class LengthProductEqualityToRatioRule(Rule):
                 )
 
         if mask != original:
-            self.processed[prop] = mask
+            self.processed[prop.property_key] = mask

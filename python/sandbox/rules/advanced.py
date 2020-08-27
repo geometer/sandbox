@@ -99,7 +99,7 @@ class Triangle30_60_90SidesRule(Rule):
         return self.context.angle_value_properties_for_degree(90, lambda a: a.vertex)
 
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
+        mask = self.processed.get(prop.property_key, 0)
         if mask == 0x3:
             return
 
@@ -152,7 +152,7 @@ class Triangle30_60_90SidesRule(Rule):
             )
 
         if mask != original:
-            self.processed[prop] = mask
+            self.processed[prop.property_key] = mask
 
 @source_type(IsoscelesTriangleProperty)
 @processed_cache(set())

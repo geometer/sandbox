@@ -436,7 +436,7 @@ class KnownSumOfAnglesWithCommonSideRule(Rule):
 @processed_cache({})
 class ProportionalLengthsToLengthsRatioRule(Rule):
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
+        mask = self.processed.get(prop.property_key, 0)
         if mask == 0x3:
             return
 
@@ -457,7 +457,7 @@ class ProportionalLengthsToLengthsRatioRule(Rule):
             )
 
         if mask != original:
-            self.processed[prop] = mask
+            self.processed[prop.property_key] = mask
 
 @processed_cache(set())
 class LengthRatiosWithCommonDenominatorRule(Rule):
@@ -579,7 +579,7 @@ class AngleInTriangleWithTwoKnownAnglesRule(Rule):
         return [p for p in self.context.angle_value_properties() if p.angle.vertex and p.degree not in (0, 180)];
 
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
+        mask = self.processed.get(prop.property_key, 0)
         if mask == 0x3:
             return
 
@@ -609,7 +609,7 @@ class AngleInTriangleWithTwoKnownAnglesRule(Rule):
                 [prop, av]
             )
         if mask != original:
-            self.processed[prop] = mask
+            self.processed[prop.property_key] = mask
 
 @processed_cache(set())
 @accepts_auto
@@ -1020,7 +1020,7 @@ class PerpendicularToEquidistantRule(Rule):
         if common_endpoint(*prop.segments) is not None:
             return
 
-        mask = self.processed.get(prop, 0)
+        mask = self.processed.get(prop.property_key, 0)
         if mask == 0xF:
             return
         original = mask
@@ -1057,7 +1057,7 @@ class PerpendicularToEquidistantRule(Rule):
                         )
 
         if mask != original:
-            self.processed[prop] = mask
+            self.processed[prop.property_key] = mask
 
 @processed_cache({})
 class EquidistantToPerpendicularRule(Rule):
@@ -1318,7 +1318,7 @@ class ZeroAngleVectorsToPointAndLineConfigurationRule(Rule):
         return self.context.angle_value_properties_for_degree(0, lambda a: len(a.point_set) == 4)
 
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
+        mask = self.processed.get(prop.property_key, 0)
         if mask == 0xF:
             return
         original = mask
@@ -1365,7 +1365,7 @@ class ZeroAngleVectorsToPointAndLineConfigurationRule(Rule):
                 yield (new_prop, comment, premises)
 
         if mask != original:
-            self.processed[prop] = mask
+            self.processed[prop.property_key] = mask
 
 @source_type(ParallelSegmentsProperty)
 @processed_cache({})
@@ -1374,7 +1374,7 @@ class ParallelSameSideRule(Rule):
         return common_endpoint(prop.segments[0], prop.segments[1]) is None
 
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
+        mask = self.processed.get(prop.property_key, 0)
         if mask == 0xF:
             return
         original = mask
@@ -1403,7 +1403,7 @@ class ParallelSameSideRule(Rule):
                 )
 
         if mask != original:
-            self.processed[prop] = mask
+            self.processed[prop.property_key] = mask
 
 @processed_cache({})
 class RotatedAngleSimplifiedRule(Rule):
@@ -2369,7 +2369,7 @@ class TwoAnglesWithCommonSideRule(Rule):
 @processed_cache({})
 class TwoAnglesWithCommonSideDegreeRule(Rule):
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
+        mask = self.processed.get(prop.property_key, 0)
         if mask == 0x7:
             return
 
@@ -2415,7 +2415,7 @@ class TwoAnglesWithCommonSideDegreeRule(Rule):
             )
 
         if mask != original:
-            self.processed[prop] = mask
+            self.processed[prop.property_key] = mask
 
 @source_type(LineAndTwoPointsProperty)
 @processed_cache(set())
@@ -2780,7 +2780,7 @@ class PerpendicularToSideOfObtuseAngleRule(Rule):
 @processed_cache({})
 class MiddleOfSegmentRule(Rule):
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
+        mask = self.processed.get(prop.property_key, 0)
         if mask == 0xF:
             return
         original = mask
@@ -2827,7 +2827,7 @@ class MiddleOfSegmentRule(Rule):
                 yield (p, comment, [prop, ne])
 
         if mask != original:
-            self.processed[prop] = mask
+            self.processed[prop.property_key] = mask
 
 @processed_cache(set())
 class PointOnSegmentWithEndpointsOnSidesOfAngleRule(Rule):

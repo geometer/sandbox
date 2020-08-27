@@ -95,7 +95,7 @@ class SideRatiosInNondegenerateSimilarTrianglesRule(Rule):
 @processed_cache({})
 class CorrespondingAnglesInSimilarTrianglesRule(Rule):
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
+        mask = self.processed.get(prop.property_key, 0)
         if mask == 0x7:
             return
 
@@ -137,7 +137,7 @@ class CorrespondingAnglesInSimilarTrianglesRule(Rule):
             )
 
         if original != mask:
-            self.processed[prop] = mask
+            self.processed[prop.property_key] = mask
 
 @source_types(SimilarNondegenerateTrianglesProperty, SimilarTrianglesProperty)
 @processed_cache(set())
@@ -259,7 +259,7 @@ class LegsOfIsoscelesRule(Rule):
 @processed_cache({})
 class CorrespondingAnglesInCongruentTrianglesRule(Rule):
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
+        mask = self.processed.get(prop.property_key, 0)
         if mask == 0x3:
             return
 
@@ -288,7 +288,7 @@ class CorrespondingAnglesInCongruentTrianglesRule(Rule):
                     )
 
         if mask != original:
-            self.processed[prop] = mask
+            self.processed[prop.property_key] = mask
 
 @source_type(CongruentTrianglesProperty)
 @processed_cache(set())
@@ -316,7 +316,7 @@ class CorrespondingSidesInCongruentTrianglesRule(Rule):
 @processed_cache({})
 class CorrespondingSidesInSimilarTrianglesRule(Rule):
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
+        mask = self.processed.get(prop.property_key, 0)
         if mask == 0x7:
             return
         sides0 = prop.triangle0.sides
@@ -354,13 +354,13 @@ class CorrespondingSidesInSimilarTrianglesRule(Rule):
                     )
 
         if original != mask:
-            self.processed[prop] = mask
+            self.processed[prop.property_key] = mask
 
 @source_type(EquilateralTriangleProperty)
 @processed_cache({})
 class EquilateralTriangleRule(Rule):
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
+        mask = self.processed.get(prop.property_key, 0)
         if mask == 0xF:
             return
         original = mask
@@ -410,7 +410,7 @@ class EquilateralTriangleRule(Rule):
                 )
 
         if mask != original:
-            self.processed[prop] = mask
+            self.processed[prop.property_key] = mask
 
 @processed_cache(set())
 class CeviansIntersectionRule(Rule):
@@ -550,7 +550,7 @@ class PointInsideTriangleRule(Rule):
 @processed_cache({})
 class CentreOfEquilateralTriangleRule(Rule):
     def apply(self, prop):
-        mask = self.processed.get(prop, 0)
+        mask = self.processed.get(prop.property_key, 0)
         if mask == 0xF:
             return
         original = mask
@@ -602,4 +602,4 @@ class CentreOfEquilateralTriangleRule(Rule):
                 yield (p, comment, [prop, ne])
 
         if mask != original:
-            self.processed[prop] = mask
+            self.processed[prop.property_key] = mask
