@@ -29,7 +29,7 @@ class IntersectionOfTwoAltitudesIsTheOrthocentreRule(Rule):
     def apply(self, pair):
         p0, p1 = pair
         for centre in p0.object_set:
-            key = (frozenset(pair), centre)
+            key = (frozenset((p0.property_key, p1.property_key)), centre)
             if key in self.processed:
                 continue
             triple = [pt for pt in p0.object_set if pt != centre]
@@ -73,12 +73,12 @@ class RightAngledTriangleMedianRule(Rule):
             if value is None:
                 continue
             if value != 2:
-                self.processed.add(prop)
+                self.processed.add(prop.property_key)
                 continue
             half1, value = self.context.length_ratio_property_and_value(hypot, med.segment(hypot.points[1]), True)
             if value is None:
                 continue
-            self.processed.add(prop)
+            self.processed.add(prop.property_key)
             if value != 2:
                 continue
             yield (
@@ -165,7 +165,7 @@ class Triangle30_30_120SidesRule(Rule):
         value = self.context.angle_value_property(prop.apex.angle(*prop.base.points))
         if value is None:
             return
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         if value.degree != 120:
             return
         for pt in prop.base.points:
@@ -189,7 +189,7 @@ class Triangle72_72_36SidesRule(Rule):
         value = self.context.angle_value_property(prop.apex.angle(*prop.base.points))
         if value is None:
             return
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         if value.degree != 36:
             return
         for pt in prop.base.points:
@@ -213,7 +213,7 @@ class Triangle36_36_108SidesRule(Rule):
         value = self.context.angle_value_property(prop.apex.angle(*prop.base.points))
         if value is None:
             return
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         if value.degree != 108:
             return
         for pt in prop.base.points:

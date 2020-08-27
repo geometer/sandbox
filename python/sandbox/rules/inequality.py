@@ -7,7 +7,7 @@ from .abstract import Rule, accepts_auto, processed_cache, source_type
 @accepts_auto
 class PartOfAngleIsLessThanWholeRule(Rule):
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         for vec in prop.angle.vectors:
             angle = prop.angle.vertex.angle(vec.end, prop.point)
             yield (
@@ -75,7 +75,7 @@ class LengthsInequalityAndEqualityRule(Rule):
             return cong
 
         for seg in congruents0:
-            key = (prop, seg)
+            key = (prop.property_key, seg)
             if key in self.processed:
                 continue
             self.processed.add(key)
@@ -90,7 +90,7 @@ class LengthsInequalityAndEqualityRule(Rule):
             )
 
         for seg in congruents1:
-            key = (prop, seg)
+            key = (prop.property_key, seg)
             if key in self.processed:
                 continue
             self.processed.add(key)
@@ -105,7 +105,7 @@ class LengthsInequalityAndEqualityRule(Rule):
             )
 
         for seg0, seg1 in itertools.product(congruents0, congruents1):
-            key = (prop, seg0, seg1)
+            key = (prop.property_key, seg0, seg1)
             if key in self.processed:
                 continue
             self.processed.add(key)

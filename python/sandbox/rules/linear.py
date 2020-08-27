@@ -96,13 +96,13 @@ class SumAndRatioOfTwoAnglesRule(Rule):
     If the sum and the ratio of two angles are known, we can find the values
     """
     def accepts(self, prop):
-        return len(prop.angles) == 2 and prop not in self.processed
+        return len(prop.angles) == 2 and prop.property_key not in self.processed
 
     def apply(self, prop):
         ar = self.context.angle_ratio_property(prop.angles[0], prop.angles[1])
         if ar is None:
             return
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         value1 = divide(prop.degree, 1 + ar.value)
         value0 = prop.degree - value1
         if ar.value == 1:
@@ -144,7 +144,7 @@ class EqualSumsOfAnglesWithCommonSummandRule(Rule):
 
     def apply(self, src):
         sum0, sum1, common = src
-        key = frozenset([sum0, sum1])
+        key = frozenset([sum0.property_key, sum1.property_key])
         if key in self.processed:
             return
         self.processed.add(key)

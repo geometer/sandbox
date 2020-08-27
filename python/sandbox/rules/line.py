@@ -126,7 +126,7 @@ class NonCollinearityToDifferentLinesRule2(Rule):
                 other = other_point(nc.points, pt)
                 if other in segment.points:
                     continue
-                key = (prop, nc)
+                key = (prop.property_key, nc.property_key)
                 if key in self.processed:
                     continue
                 self.processed.add(key)
@@ -143,10 +143,10 @@ class NonCollinearityToDifferentLinesRule2(Rule):
 @processed_cache(set())
 class NonCollinearityToPointNotOnLineRule(Rule):
     def accepts(self, prop):
-        return not prop.collinear and prop not in self.processed
+        return not prop.collinear and prop.property_key not in self.processed
 
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
 
         triangle = Scene.Triangle(*prop.points)
         for side, vertex in zip(triangle.sides, triangle.points):

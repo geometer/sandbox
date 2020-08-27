@@ -43,11 +43,12 @@ class CyclicQuadrilateralRule(Rule):
         return itertools.combinations(right_angles, 2)
 
     def apply(self, src):
-        key = frozenset(src)
+        perp0, perp1 = src
+
+        key = frozenset((perp0.property_key, perp1.property_key))
         if key in self.processed:
             return
 
-        perp0, perp1 = src
         vertex0 = next(pt for pt in perp0.segments[0].points if pt in perp0.segments[1].points)
         vertex1 = next(pt for pt in perp1.segments[0].points if pt in perp1.segments[1].points)
         if vertex0 == vertex1:
@@ -62,12 +63,12 @@ class CyclicQuadrilateralRule(Rule):
             next(pt for pt in perp1.segments[0].points if pt != vertex1),
             next(pt for pt in perp1.segments[1].points if pt != vertex1)
         ]
-        if set(pts0) != set(pts1):
-            self.processed.add(key)
-            return
 
-        points = [vertex0, vertex1, *pts0]
         self.processed.add(key)
+
+        if set(pts0) != set(pts1):
+            return
+        points = [vertex0, vertex1, *pts0]
 
         yield (
             ConcyclicPointsProperty(*points),
@@ -141,7 +142,7 @@ class ThreeNonCoincidentPointsOnACicrleAreNonCollinearRule(Rule):
 
         original = mask
         for triple in itertools.combinations(prop.points, 3):
-            key = (prop, triple)
+            key = (prop.property_key, triple)
             if key in self.processed:
                 continue
             premises = [prop]

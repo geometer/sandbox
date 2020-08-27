@@ -87,7 +87,7 @@ def accepts_auto(clazz):
     return type(
         clazz.__name__,
         (clazz,),
-        {'accepts': lambda inst, src: src not in inst.processed}
+        {'accepts': lambda inst, prop: prop.property_key not in inst.processed}
     )
 
 def create_rule(clazz, context):

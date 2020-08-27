@@ -17,11 +17,11 @@ class TwoAnglesWithCommonAndCollinearSidesRule(Rule):
                 yield (k0, k1)
 
     def apply(self, pair):
-        key = frozenset(pair)
+        k0, k1 = pair
+        key = frozenset((k0.property_key, k1.property_key))
         if key in self.processed:
             return
 
-        k0, k1 = pair
         common = next(pt for pt in k0.angle.endpoints if pt in k1.angle.endpoints)
         other0 = other_point(k0.angle.endpoints, common)
         other1 = other_point(k1.angle.endpoints, common)
@@ -88,12 +88,12 @@ class FourPointsOnLineRule(Rule):
                 yield (p0, p1)
 
     def apply(self, src):
-        if src in self.processed:
-            return
-
         prop0, prop1 = src
-        self.processed.add(src)
-        self.processed.add((prop1, prop0))
+
+        key = frozenset((prop0.property_key, prop1.property_key))
+        if key in self.processed:
+            return
+        self.processed.add(key)
 
         end0 = other_point(prop0.angle.endpoints, prop1.angle.vertex)
         end1 = other_point(prop1.angle.endpoints, prop0.angle.vertex)
@@ -126,11 +126,12 @@ class FourPointsOnLineRule2(Rule):
                 yield (p0, p1)
 
     def apply(self, src):
-        if src in self.processed:
-            return
-        self.processed.add(src)
-
         prop0, prop1 = src
+
+        key = (prop0.property_key, prop1.property_key)
+        if key in self.processed:
+            return
+        self.processed.add(key)
 
         end0 = other_point(prop0.angle.endpoints, prop1.angle.vertex)
         end1 = other_point(prop1.angle.endpoints, end0)
@@ -159,7 +160,7 @@ class PerpendicularInAcuteAngleRule(Rule):
     def apply(self, prop):
         for v0, v1 in (prop.angle.vectors, reversed(prop.angle.vectors)):
             for pt in self.context.collinear_points(v0.as_segment):
-                key = (prop, pt)
+                key = (prop.property_key, pt)
                 if key in self.processed:
                     continue
 
@@ -198,7 +199,7 @@ class PerpendicularInAcuteAngleRule2(Rule):
     def apply(self, prop):
         for v0, v1 in (prop.angle.vectors, reversed(prop.angle.vectors)):
             for pt in [v0.end, *self.context.collinear_points(v0.as_segment)]:
-                key = (prop, pt)
+                key = (prop.property_key, pt)
                 if key in self.processed:
                     continue
 
@@ -239,7 +240,7 @@ class PointInsideAngleAndSecantRule(Rule):
         col = self.context.collinearity_property(prop.point, *prop.angle.endpoints)
         if col is None:
             return
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
 
         if not col.collinear:
             return
@@ -258,7 +259,7 @@ class PointInsideAngleAndPointOnSideRule(Rule):
     def apply(self, prop):
         for vec in prop.angle.vectors:
             for pt in self.context.collinear_points(vec.as_segment):
-                key = (prop, pt)
+                key = (prop.property_key, pt)
                 if key in self.processed:
                     continue
                 self.processed.add(key)
@@ -284,7 +285,7 @@ class AngleTypeAndPerpendicularRule(Rule):
         else:
             pattern = '$%{point:foot}$ is the foot of perpendicular from point $%{point:pt}$ on side of obtuse $%{angle:angle}$ to extension of the second side'
         for vec0, vec1 in (angle.vectors, reversed(angle.vectors)):
-            key = (prop, vec0.end)
+            key = (prop.property_key, vec0.end)
             if key in self.processed:
                 continue
             foot = self.context.foot_of_perpendicular(vec0.end, vec1.as_segment)
@@ -310,7 +311,7 @@ class AngleTypeAndPerpendicularRule(Rule):
 @accepts_auto
 class PointInsideAngleConfigurationRule(Rule):
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
 
         for endpoint in prop.angle.endpoints:
             yield (
@@ -362,7 +363,7 @@ class SegmentWithEndpointsOnAngleSidesRule(Rule):
         X = self.context.intersection(AD, BC)
         if X is None:
             return
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         if X in (A, B, C, D):
             return
 
@@ -381,7 +382,7 @@ class SegmentWithEndpointsOnAngleSidesRule(Rule):
 @accepts_auto
 class LineAndTwoPointsToNoncollinearityRule(Rule):
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         if not isinstance(prop.line_key, Scene.Segment):
             return
 
@@ -492,12 +493,12 @@ class LengthRatioTransitivityRule(Rule):
         return itertools.combinations(self.context.length_ratio_properties(allow_zeroes=True), 2)
 
     def apply(self, src):
-        key = frozenset(src)
+        lr0, lr1 = src
+
+        key = frozenset((lr0.property_key, lr1.property_key))
         if key in self.processed:
             return
         self.processed.add(key)
-
-        lr0, lr1 = src
 
         def comment(seg0, seg1, seg2, coef1, coef2):
             if coef1 == 1:
@@ -548,12 +549,13 @@ class CoincidenceTransitivityRule(Rule):
         return itertools.combinations(self.context.list(PointsCoincidenceProperty), 2)
 
     def apply(self, src):
-        key = frozenset(src)
+        co0, co1 = src
+
+        key = frozenset((co0.property_key, co1.property_key))
         if key in self.processed:
             return
         self.processed.add(key)
 
-        co0, co1 = src
         if not co0.coincident and not co1.coincident:
             return
         common = next((pt for pt in co0.points if pt in co1.points), None)
@@ -610,14 +612,13 @@ class AngleInTriangleWithTwoKnownAnglesRule(Rule):
             self.processed[prop] = mask
 
 @processed_cache(set())
+@accepts_auto
 class SumOfTwoAnglesInTriangleRule(Rule):
     def sources(self):
         return [p for p in self.context.angle_value_properties() if p.angle.vertex and p.degree not in (0, 180)];
 
     def apply(self, prop):
-        if prop in self.processed:
-            return
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
 
         angle0 = prop.angle
         triangle = Scene.Triangle(angle0.vertex, *angle0.endpoints)
@@ -671,12 +672,13 @@ class SumOfThreeAnglesOnLineRule(Rule):
                 yield (av0, av1)
 
     def apply(self, src):
-        key = frozenset(src)
+        av0, av1 = src
+
+        key = frozenset((av0.property_key, av1.property_key))
         if key in self.processed:
             return
         self.processed.add(key)
 
-        av0, av1 = src
         third = next(pt for pt in av0.angle.point_set if pt not in (av0.angle.vertex, av1.angle.vertex))
         angle = third.angle(av0.angle.vertex, av1.angle.vertex)
         yield (
@@ -740,7 +742,7 @@ class IsoscelesNonzeroBaseImpliesNonzeroLegsRule(Rule):
         seg1 = prop.segment1
         common = common_endpoint(seg0, seg1)
         if common is None:
-            self.processed.add(prop)
+            self.processed.add(prop.property_key)
             return
 
         pt0 = other_point(seg0.points, common)
@@ -748,7 +750,7 @@ class IsoscelesNonzeroBaseImpliesNonzeroLegsRule(Rule):
         coinc = self.context.coincidence_property(pt0, pt1)
         if coinc is None:
             return
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         if coinc.coincident:
             return
 
@@ -775,12 +777,12 @@ class ParallelVectorsRule(Rule):
         if ne0 is None:
             return
         if ne0.coincident:
-            self.processed.add(para)
+            self.processed.add(para.property_key)
             return
         ne1 = self.context.coincidence_property(*vec1.points)
         if ne1 is None:
             return
-        self.processed.add(para)
+        self.processed.add(para.property_key)
         if ne1.coincident:
             return
         for prop in AngleValueProperty.generate(vec0, vec1, 0):
@@ -804,7 +806,7 @@ class PerpendicularSegmentsRule(Rule):
         ne1 = self.context.coincidence_property(*seg1.points)
         if ne0 is None or ne1 is None:
             return
-        self.processed.add(pv)
+        self.processed.add(pv.property_key)
         if ne0.coincident or ne1.coincident:
             return
         vec0 = seg0.points[0].vector(seg0.points[1])
@@ -834,7 +836,7 @@ class PerpendicularSegmentsRule2(Rule):
         ncl = self.context.collinearity_property(common, other0, other1)
         if ncl is None:
             return
-        self.processed.add(pv)
+        self.processed.add(pv.property_key)
         if ncl.collinear:
             return
         yield (
@@ -873,7 +875,7 @@ class Degree90ToPerpendicularSegmentsRule2(Rule):
         seg0 = prop.angle.vectors[0].as_segment
         seg1 = prop.angle.vectors[1].as_segment
         for pt in self.context.collinear_points(seg0):
-            key = (prop, 0, pt)
+            key = (prop.property_key, 0, pt)
             if key in self.processed:
                 continue
             self.processed.add(key)
@@ -888,7 +890,7 @@ class Degree90ToPerpendicularSegmentsRule2(Rule):
                     [prop, self.context.point_on_line_property(pt, seg0)]
                 )
         for pt in self.context.collinear_points(seg1):
-            key = (prop, 1, pt)
+            key = (prop.property_key, 1, pt)
             if key in self.processed:
                 continue
             self.processed.add(key)
@@ -912,7 +914,7 @@ class CommonPerpendicularRule(Rule):
         segments = (prop.angle.vectors[0].as_segment, prop.angle.vectors[1].as_segment)
         for seg0, seg1 in (segments, reversed(segments)):
             for perp in self.context.list(PerpendicularSegmentsProperty, [seg0]):
-                key = (prop, seg0, perp)
+                key = (prop.property_key, seg0, perp.property_key)
                 if key in self.processed:
                     continue
                 self.processed.add(key)
@@ -935,10 +937,12 @@ class TwoPointsBelongsToTwoPerpendicularsRule(Rule):
         return itertools.combinations(self.context.list(PerpendicularSegmentsProperty), 2)
 
     def apply(self, src):
-        key = frozenset(src)
+        perp0, perp1 = src
+
+        key = frozenset((perp0.property_key, perp1.property_key))
         if key in self.processed:
             return
-        perp0, perp1 = src
+
         common = next((seg for seg in perp0.segments if seg in perp1.segments), None)
         if common is None:
             self.processed.add(key)
@@ -970,11 +974,12 @@ class PerpendicularTransitivityRule(Rule):
         return itertools.combinations(self.context.list(PerpendicularSegmentsProperty), 2)
 
     def apply(self, src):
-        key = frozenset(src)
+        perp0, perp1 = src
+
+        key = frozenset((perp0.property_key, perp1.property_key))
         if key in self.processed:
             return
 
-        perp0, perp1 = src
         common = next((seg for seg in perp0.segments if seg in perp1.segments), None)
         if common is None:
             self.processed.add(key)
@@ -1161,10 +1166,10 @@ class PointsSeparatedByLineAreNotCoincidentRule(Rule):
     If two points are separated by a line, the points are not coincident
     """
     def accepts(self, prop):
-        return not prop.same_side and prop not in self.processed
+        return not prop.same_side and prop.property_key not in self.processed
 
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
 
         yield (
             PointsCoincidenceProperty(prop.points[0], prop.points[1], False),
@@ -1185,7 +1190,7 @@ class SameSidePointInsideSegmentRule(Rule):
     def apply(self, prop):
         segment = prop.points[0].segment(prop.points[1])
         for inside in self.context.points_inside_segment(segment):
-            key = (prop, inside)
+            key = (prop.property_key, inside)
             if key in self.processed:
                 continue
             self.processed.add(key)
@@ -1216,7 +1221,7 @@ class PointInsideSegmentRelativeToLineRule(Rule):
                 for inside in self.context.points_inside_segment(segment):
                     if inside in prop.points:
                         continue
-                    key = (prop, pt_on, pt_not_on, inside)
+                    key = (prop.property_key, pt_on, pt_not_on, inside)
                     if key in self.processed:
                         continue
                     self.processed.add(key)
@@ -1257,7 +1262,7 @@ class TwoPerpendicularsRule(Rule):
         foot1 = self.context.foot_of_perpendicular(prop.points[1], prop.line_key)
         if foot1 is None:
             return
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         premises = [
             prop,
             self.context.foot_of_perpendicular_property(foot0, prop.points[0], prop.line_key),
@@ -1280,11 +1285,12 @@ class TwoPerpendicularsRule2(Rule):
         return itertools.combinations(self.context.list(PerpendicularSegmentsProperty), 2)
 
     def apply(self, src):
-        key = frozenset(src)
+        perp0, perp1 = src
+
+        key = frozenset((perp0.property_key, perp1.property_key))
         if key in self.processed:
             return
 
-        perp0, perp1 = src
         common = next((seg for seg in perp0.segments if seg in perp1.segments), None)
         if common is None:
             self.processed.add(key)
@@ -1560,7 +1566,7 @@ class PointInsidePartOfAngleRule(Rule):
         for pt in prop.angle.endpoints:
             part = prop.angle.vertex.angle(pt, prop.point)
             for prop1 in self.context.list(PointInsideAngleProperty, [part]):
-                key = (prop, prop1)
+                key = (prop.property_key, prop1.property_key)
                 if key in self.processed:
                     continue
                 self.processed.add(key)
@@ -1588,7 +1594,7 @@ class PartOfAcuteAngleIsAcuteRule(Rule):
         kind = self.context.angle_kind_property(prop.angle)
         if kind is None:
             return
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         if kind.kind == AngleKindProperty.Kind.acute:
             pattern = '$%{angle:part}$ is a part of acute $%{angle:whole}$'
         elif kind.kind == AngleKindProperty.Kind.right:
@@ -1610,7 +1616,7 @@ class AngleTypeByDegreeRule(Rule):
         return self.context.nondegenerate_angle_value_properties()
 
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         if prop.degree in (0, 180):
             return
         pattern = '$%{degree:min} < %{anglemeasure:angle} = %{degree:degree} < %{degree:max}$'
@@ -1639,10 +1645,10 @@ class PointsCollinearityByAngleDegreeRule(Rule):
         return self.context.angle_value_properties()
 
     def accepts(self, prop):
-        return prop.angle.vertex and prop not in self.processed
+        return prop.angle.vertex and prop.property_key not in self.processed
 
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         yield (
             PointsCollinearityProperty(*prop.angle.point_set, prop.degree in (0, 180)),
             Comment(
@@ -1656,10 +1662,10 @@ class PointsCollinearityByAngleDegreeRule(Rule):
 @processed_cache(set())
 class RightAngleDegreeRule(Rule):
     def accepts(self, prop):
-        return prop.kind == AngleKindProperty.Kind.right and prop not in self.processed
+        return prop.kind == AngleKindProperty.Kind.right and prop.property_key not in self.processed
 
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
 
         yield (
             AngleValueProperty(prop.angle, 90),
@@ -1671,10 +1677,10 @@ class RightAngleDegreeRule(Rule):
 @processed_cache(set())
 class AngleTypesInObtuseangledTriangleRule(Rule):
     def accepts(self, prop):
-        return prop.angle.vertex and prop.kind != AngleKindProperty.Kind.acute and prop not in self.processed
+        return prop.angle.vertex and prop.kind != AngleKindProperty.Kind.acute and prop.property_key not in self.processed
 
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
 
         if prop.kind == AngleKindProperty.Kind.obtuse:
             pattern = 'an angle of $%{triangle:triangle}$, another $%{angle:other}$ is obtuse'
@@ -1690,7 +1696,6 @@ class AngleTypesInObtuseangledTriangleRule(Rule):
             )
 
 @processed_cache(set())
-@accepts_auto
 class VerticalAnglesRule(Rule):
     def sources(self):
         return itertools.combinations(self.context.angle_value_properties_for_degree(180, lambda a: a.vertex), 2)
@@ -1701,8 +1706,11 @@ class VerticalAnglesRule(Rule):
 
     def apply(self, src):
         av0, av1 = src
-        self.processed.add(src)
-        self.processed.add((av1, av0))
+
+        key = frozenset((av0.property_key, av1.property_key))
+        if key in self.processed:
+            return
+        self.processed.add(key)
 
         ng0 = av0.angle
         ng1 = av1.angle
@@ -1913,7 +1921,7 @@ class CorrespondingAnglesRule(Rule):
         for pt in self.context.collinear_points(segment):
             if pt in ang.point_set:
                 continue
-            key = (prop, pt)
+            key = (prop.property_key, pt)
             if key in self.processed:
                 continue
             av = self.context.angle_value_property(pt.angle(*starts))
@@ -1946,7 +1954,7 @@ class ConsecutiveInteriorAnglesRule(Rule):
         ne = self.context.coincidence_property(vecs[0].start, vecs[1].start)
         if ne is None:
             return
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         if ne.coincident:
             return
         angle0 = vecs[0].start.angle(vecs[0].end, vecs[1].start)
@@ -1971,7 +1979,7 @@ class AlternateInteriorAnglesRule(Rule):
         neq = self.context.coincidence_property(vecs[0].start, vecs[1].start)
         if neq is None:
             return
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         if neq.coincident:
             return
         angle0 = vecs[0].start.angle(vecs[0].end, vecs[1].start)
@@ -2103,11 +2111,13 @@ class SameAngleRule(Rule):
         return itertools.combinations([av for av in self.context.list(AngleValueProperty) if av.angle.vertex and av.degree == 0], 2)
 
     def apply(self, src):
-        if src in self.processed:
-            return
-        self.processed.add(src)
-
         av0, av1 = src
+
+        key = (av0.property_key, av1.property_key)
+        if key in self.processed:
+            return
+        self.processed.add(key)
+
         ng0 = av0.angle
         ng1 = av1.angle
         if ng0.vertex != ng1.vertex:
@@ -2268,7 +2278,7 @@ class ZeroAngleToSameSideRule(Rule):
         for pair in itertools.combinations(angle.point_set, 2):
             segment = pair[0].segment(pair[1])
             for pt in self.context.not_collinear_points(segment):
-                key = (prop, segment, pt)
+                key = (prop.property_key, segment, pt)
                 if key in self.processed:
                     continue
                 self.processed.add(key)
@@ -2289,7 +2299,7 @@ class Angle180ToSameOppositeSideRule(Rule):
         for pair in itertools.combinations(angle.point_set, 2):
             segment = pair[0].segment(pair[1])
             for pt in self.context.not_collinear_points(segment):
-                key = (prop, segment, pt)
+                key = (prop.property_key, segment, pt)
                 if key in self.processed:
                     continue
                 self.processed.add(key)
@@ -2322,7 +2332,7 @@ class PlanePositionsToLinePositionsRule(Rule):
         if not crossing:
             return
         crossing_prop = self.context.intersection_property(crossing, prop.line_key, segment)
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         if prop.same_side:
             pattern = '$%{point:crossing}$ is the intersection of lines $%{line:line0}$ and $%{line:line1}$'
             new_prop = AngleValueProperty(crossing.angle(pt0, pt1), 0)
@@ -2343,7 +2353,7 @@ class TwoAnglesWithCommonSideRule(Rule):
         av = self.context.angle_value_property(prop.angle)
         if av is None:
             return
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         angle0 = prop.angle.vertex.angle(prop.angle.vectors[0].end, prop.point)
         angle1 = prop.angle.vertex.angle(prop.angle.vectors[1].end, prop.point)
         yield (
@@ -2565,7 +2575,7 @@ class TwoPointsRelativeToLineTransitivityRule(Rule):
     def apply(self, src):
         line, sos0, sos1 = src
 
-        key = frozenset((sos0, sos1))
+        key = frozenset((sos0.property_key, sos1.property_key))
         if key in self.processed:
             return
         self.processed.add(key)
@@ -2622,10 +2632,11 @@ class CongruentAnglesDegeneracyRule(Rule):
 
     def apply(self, src):
         ca = None
-        for key in (src, (src[1], src[0])):
+        for ang0, ang1 in (src, reversed(src)):
+            key = (ang0, ang1)
             if key in self.processed:
                 continue
-            ang0, ang1 = key
+
             collinearity = self.context.collinearity(*ang0.point_set)
             if collinearity is None:
                 continue
@@ -2826,7 +2837,7 @@ class PointOnSegmentWithEndpointsOnSidesOfAngleRule(Rule):
     def apply(self, prop):
         segment = prop.angle.endpoints[0].segment(prop.angle.endpoints[1])
         for vertex in self.context.not_collinear_points(segment):
-            key = (prop, vertex)
+            key = (prop.property_key, vertex)
             if key in self.processed:
                 continue
             self.processed.add(key)

@@ -14,7 +14,7 @@ class OrthocenterLiesOnAltitudeRule(Rule):
         ncl = self.context.collinearity_property(*prop.triangle.points)
         if ncl is None:
             return
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         if ncl.collinear:
             return
         for vertex, side in zip(prop.triangle.points, prop.triangle.sides):
@@ -32,7 +32,7 @@ class OrthocenterLiesOnAltitudeRule(Rule):
 @accepts_auto
 class SideProductsInSimilarTrianglesRule(Rule):
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
 
         sides0 = prop.triangle0.sides
         sides1 = prop.triangle1.sides
@@ -53,7 +53,7 @@ class SideProductsInSimilarTrianglesRule(Rule):
 @accepts_auto
 class SideRatiosInNondegenerateSimilarTrianglesRule(Rule):
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         sides0 = prop.triangle0.sides
         sides1 = prop.triangle1.sides
         for i, j in itertools.combinations(range(0, 3), 2):
@@ -148,12 +148,12 @@ class CorrespondingAnglesInSimilarTrianglesRule2(Rule):
         if ncl0 is None:
             return
         if ncl0.collinear:
-            self.processed.add(prop)
+            self.processed.add(prop.property_key)
             return
         ncl1 = self.context.collinearity_property(*prop.triangle1.points)
         if ncl1 is None:
             return
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         if ncl1.collinear:
             # TODO: triangle1 is a point
             return
@@ -176,7 +176,7 @@ class BaseAnglesOfIsoscelesRule(Rule):
         ne = self.context.coincidence_property(*prop.base.points)
         if ne is None:
             return
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         if ne.coincident:
             return
         yield (
@@ -197,7 +197,7 @@ class SecondBaseAngleOfIsoscelesRule(Rule):
         triangle = Scene.Triangle(prop.apex, *prop.base.points)
         angles = triangle.angles[1:]
         for ang0, ang1 in (angles, reversed(angles)):
-            key = (prop, ang0)
+            key = (prop.property_key, ang0)
             if key in self.processed:
                 continue
             av = self.context.angle_value_property(ang0)
@@ -221,7 +221,7 @@ class BaseAnglesOfIsoscelesWithKnownApexAngleRule(Rule):
         av = self.context.angle_value_property(prop.apex.angle(*prop.base.points))
         if av is None:
             return
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         if av.degree == 0:
             return
 
@@ -243,7 +243,7 @@ class BaseAnglesOfIsoscelesWithKnownApexAngleRule(Rule):
 @accepts_auto
 class LegsOfIsoscelesRule(Rule):
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
 
         yield (
             ProportionalLengthsProperty(
@@ -295,7 +295,7 @@ class CorrespondingAnglesInCongruentTrianglesRule(Rule):
 @accepts_auto
 class CorrespondingSidesInCongruentTrianglesRule(Rule):
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
 
         sides0 = prop.triangle0.sides
         sides1 = prop.triangle1.sides
@@ -520,7 +520,7 @@ class PointInsideTwoAnglesOfTriangleRule(Rule):
 @accepts_auto
 class PointInsideTriangleRule(Rule):
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
 
         comment = Comment(
             '$%{point:pt}$ lies inside $%{triangle:triangle}$',

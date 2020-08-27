@@ -32,7 +32,7 @@ class PointInsideHalfOfSquareRule(Rule):
 @accepts_auto
 class PointInsideSquareRule(Rule):
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
 
         comment = Comment(
             '$%{point:pt}$ lies inside square $%{polygon:square}$',
@@ -70,7 +70,7 @@ class IntersectionOfDiagonalsOfConvexQuadrilateralRule(Rule):
         crossing = self.context.intersection(*diagonals)
         if crossing is None:
             return
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         crossing_prop = self.context.intersection_property(crossing, *diagonals)
         comment = Comment(
             '$%{point:crossing}$ in the intersection of diagonals $%{segment:d0}$ and $%{segment:d1}$ of convex $%{polygon:quad}$',
@@ -91,7 +91,7 @@ class PointOnSideOfConvexQuadrialteralRule(Rule):
             pattern = '$%{point:pt}$ lies on side $%{segment:side}$ of convex $%{polygon:quad}$'
         for side in quad.sides:
             for pt in self.context.points_inside_segment(side):
-                key = (prop, pt)
+                key = (prop.property_key, pt)
                 if key in self.processed:
                     continue
                 self.processed.add(key)
@@ -192,7 +192,7 @@ class PointsToConvexQuadrilateralRule(Rule):
 @accepts_auto
 class SumOfAnglesOfConvexQuadrilateralRule(Rule):
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
 
         yield (
             SumOfAnglesProperty(*prop.quadrilateral.angles, degree=360),
@@ -205,7 +205,7 @@ class SumOfAnglesOfConvexQuadrilateralRule(Rule):
 @accepts_auto
 class ConvexQuadrilateralRule(Rule):
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
 
         if isinstance(prop, NondegenerateSquareProperty):
             quad = prop.square
@@ -245,7 +245,7 @@ class ConvexQuadrilateralRule(Rule):
 @accepts_auto
 class SquareRule(Rule):
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
 
         sq = prop.square
         params = {'square': sq}
@@ -335,7 +335,7 @@ class SquareDegeneracyRule(Rule):
 @accepts_auto
 class NondegenerateSquareRule(Rule):
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
 
         sq = prop.square
         pts = sq.points * 2

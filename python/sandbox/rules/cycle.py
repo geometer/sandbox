@@ -60,17 +60,19 @@ class CyclicOrderRule(Rule):
             yield (SameCyclicOrderProperty(cycle0.reversed, cycle1.reversed), comment, premises)
 
 @processed_cache(set())
-@accepts_auto
 class RotatedAngleRule(Rule):
     def sources(self):
         return [(a0, a1) for a0, a1 in self.context.congruent_oriented_angles() if a0.vertex == a1.vertex]
 
     def apply(self, src):
         ang0, ang1 = src
-        vertex = ang0.vertex
-        self.processed.add(src)
-        self.processed.add((ang1, ang0))
 
+        key = frozenset((ang0, ang1))
+        if key in self.processed:
+            return
+        self.processed.add(key)
+
+        vertex = ang0.vertex
         pts0 = ang0.endpoints
         pts1 = ang1.endpoints
         if next((p for p in pts0 if p in pts1), None) is not None:

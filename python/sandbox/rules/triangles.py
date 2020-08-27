@@ -256,10 +256,9 @@ class SimilarTrianglesByAngleAndTwoSidesRule(Rule):
         )
 
 @processed_cache(set())
-@accepts_auto
 class SimilarTrianglesByAngleAndTwoSidesRule2(Rule):
     def sources(self):
-        return [(a0, a1) for a0, a1 in self.context.congruent_angles_with_vertex() if a0.point_set != a1.point_set]
+        return [(a0, a1) for a0, a1 in self.context.congruent_angles_with_vertex() if a0.point_set != a1.point_set and (a0, a1) not in self.processed]
 
     def apply(self, src):
         ang0, ang1 = src
@@ -301,7 +300,7 @@ class SimilarTrianglesWithCongruentSideRule(Rule):
             ne = self.context.not_equal_property(*sides0[i].points)
             if ne is None:
                 return
-            self.processed.add(prop)
+            self.processed.add(prop.property_key)
             yield (
                 CongruentTrianglesProperty(prop.triangle0, prop.triangle1),
                 Comment(
@@ -316,14 +315,14 @@ class SimilarTrianglesWithCongruentSideRule(Rule):
             if cs is None:
                 continue
             if value != 1:
-                self.processed.add(prop)
+                self.processed.add(prop.property_key)
                 return
             ne = self.context.not_equal_property(*sides0[i].points)
             if ne is None:
                 ne = self.context.not_equal_property(*sides1[i].points)
             if ne is None:
                 continue
-            self.processed.add(prop)
+            self.processed.add(prop.property_key)
             yield (
                 CongruentTrianglesProperty(prop.triangle0, prop.triangle1),
                 Comment(
@@ -340,12 +339,12 @@ class CongruentTrianglesByThreeSidesRule(Rule):
         return itertools.combinations(self.context.congruent_segments_properties(allow_zeroes=True), 2)
 
     def apply(self, src):
-        key = frozenset(src)
+        cs0, cs1 = src
+
+        key = frozenset((cs0.property_key, cs1.property_key))
         if key in self.processed:
             return
         self.processed.add(key)
-
-        cs0, cs1 = src
 
         for seg0, seg1 in [(cs0.segment0, cs0.segment1), (cs0.segment1, cs0.segment0)]:
             points0 = set((*seg0.points, *cs1.segment0.points))
@@ -455,7 +454,7 @@ class EquilateralTriangleByThreeSidesRule(Rule):
         return self.context.congruent_segments_properties(allow_zeroes=True)
 
     def apply(self, prop):
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         common = next((p for p in prop.segment0.points if p in prop.segment1.points), None)
         if common is None:
             return
@@ -506,12 +505,12 @@ class IsoscelesTriangleByConrguentLegsRule(Rule):
     def apply(self, prop):
         apex = next((pt for pt in prop.segment0.points if pt in prop.segment1.points), None)
         if apex is None:
-            self.processed.add(prop)
+            self.processed.add(prop.property_key)
             return
         base0 = next(pt for pt in prop.segment0.points if pt != apex)
         base1 = next(pt for pt in prop.segment1.points if pt != apex)
 
-        self.processed.add(prop)
+        self.processed.add(prop.property_key)
         yield (
             IsoscelesTriangleProperty(apex, base0.segment(base1)),
             Comment(
