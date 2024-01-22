@@ -5,7 +5,7 @@ import numpy as np
 from sandbox.core import CoreScene
 
 class PlacementTest(unittest.TestCase):
-    ERROR = np.float128(1e-5)
+    ERROR = np.float64(1e-5)
 
     def setUp(self):
         self.startTime = time.time()
@@ -55,7 +55,7 @@ class PlacementTest(unittest.TestCase):
 
     def assertDistance(self, pt0, pt1, distance):
         self.assertLess(
-            np.fabs(self.distance(pt0, pt1) - np.float128(distance)),
+            np.fabs(self.distance(pt0, pt1) - np.float64(distance)),
             PlacementTest.ERROR,
             '|%s,%s| != %d' % (pt0, pt1, distance)
         )

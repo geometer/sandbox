@@ -230,8 +230,8 @@ class Placement(BasePlacement):
                 try:
                     if p.origin == CoreScene.Point.Origin.free:
                         add(p, TwoDCoordinates(
-                            np.float128(p.x) if hasattr(p, 'x') else self.__get_coord(p.label + '.x'),
-                            np.float128(p.y) if hasattr(p, 'y') else self.__get_coord(p.label + '.y')
+                            np.float64(p.x) if hasattr(p, 'x') else self.__get_coord(p.label + '.x'),
+                            np.float64(p.y) if hasattr(p, 'y') else self.__get_coord(p.label + '.y')
                         ))
                     elif p.origin == CoreScene.Point.Origin.circle:
                         o = self.location(p.circle.centre)
@@ -253,7 +253,7 @@ class Placement(BasePlacement):
                         base = self.location(p.base)
                         start = self.location(p.delta.start)
                         end = self.location(p.delta.end)
-                        coef = np.float128(p.coef)
+                        coef = np.float64(p.coef)
                         add(p, TwoDCoordinates(
                             base.x + coef * (end.x - start.x),
                             base.y + coef * (end.y - start.y)
@@ -407,14 +407,14 @@ class Placement(BasePlacement):
     def __get_coord(self, label):
         value = self.params.get(label)
         if value is None:
-            value = np.float128(np.tan((np.random.random() - 0.5) * np.pi))
+            value = np.float64(np.tan((np.random.random() - 0.5) * np.pi))
             self.params[label] = value
         return value
 
     def __get_angle(self, label):
         value = self.params.get(label)
         if value is None:
-            value = np.float128(np.random.random() * 2 * np.pi)
+            value = np.float64(np.random.random() * 2 * np.pi)
             self.params[label] = value
         return value
 
@@ -460,11 +460,11 @@ class Placement(BasePlacement):
 
             if cnstr.kind == Constraint.Kind.distance:
                 has_distance_constraint = True
-                dist_square += (self.length(cnstr.params[0]) - np.float128(cnstr.params[1])) ** 2
+                dist_square += (self.length(cnstr.params[0]) - np.float64(cnstr.params[1])) ** 2
             elif cnstr.kind == Constraint.Kind.length_ratio:
                 seg0 = cnstr.params[0]
                 seg1 = cnstr.params[1]
-                coef = np.float128(cnstr.params[2])
+                coef = np.float64(cnstr.params[2])
                 numb_square += (self.length(seg0) / self.length(seg1) - coef) ** 2
             elif cnstr.kind == Constraint.Kind.equilateral:
                 triangle = cnstr.params[0]

@@ -8,7 +8,7 @@ from .property import *
 from .stats import Stats
 from .util import divide
 
-ERROR = np.float128(5e-6)
+ERROR = np.float64(5e-6)
 
 class AngleWrapper:
     # arc is always >= 0
