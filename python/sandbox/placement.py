@@ -71,6 +71,16 @@ class BasePlacement:
         end1 = self.location(vector1.end)
         return (end0.x - start0.x) * (end1.y - start1.y) - (end0.y - start0.y) * (end1.x - start1.x)
 
+    def distance(self, point0, point1):
+        if isinstance(point0, str):
+            point0 = self.scene.get(point0)
+        if isinstance(point1, str):
+            point1 = self.scene.get(point1)
+
+        if point0 == point1:
+            return 0
+        return self.length(point0.vector(point1))
+
     def angle(self, angle):
         vec0, vec1 = angle.vectors
         cos = self.scalar_product(vec0, vec1) / self.length(vec0) / self.length(vec1)
